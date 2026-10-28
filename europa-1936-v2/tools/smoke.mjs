@@ -1,5 +1,6 @@
 // Automatická kontrola hry v prohlížeči (Playwright): menu → výběr země → hra, klik na provincii, běh času, režimy, nabídka, výkon snímku
-// a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc).
+// a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc)
+// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry).
 // Spuštění:  npm run dev  (nebo npm run build && npm run preview)  a pak  node tools/smoke.mjs [šířka výška]
 //   URL=http://localhost:4173 node tools/smoke.mjs 1366 768
 // Potřebuje balíček playwright (npm i -D playwright && npx playwright install chromium). Snímky: tools/preview/smoke-*.png.
@@ -267,6 +268,49 @@ try {
   await page.waitForTimeout(300);
   const tplAfter = await page.locator('.tpl-card').count();
   check('návrhář šablon: nová šablona se uloží a objeví v seznamu', (await page.locator('.designer').count()) === 0 && tplAfter === tplBefore + 1, `${tplBefore} → ${tplAfter}`);
+
+  // průmysl (M19): panel Průmysl (I), stavba, linky výroby, obchod, režim mapy 8, tři dny hry
+  await page.keyboard.press('i');
+  await page.waitForSelector('.industry-panel', { timeout: 3000 });
+  const sum = await page.locator('.ind-sum').innerText();
+  check('klávesa I otevře panel Průmysl se souhrnem továren', (await ui()).panel === 'industry' && /Civilní/.test(sum) && /Vojenské/.test(sum), sum.replace(/\s+/g, ' '));
+  const b0 = await E(() => window.__e1936.gameStore.getState().ind.build.length);
+  await page.locator('.ind-new').getByRole('button', { name: 'Civilní továrna' }).click();
+  await page.waitForSelector('.ind-queue li', { timeout: 3000 });
+  const b1 = await E(() => window.__e1936.gameStore.getState().ind.build.length);
+  check('stavba: „Civilní továrna“ přidá projekt do fronty', b1 === b0 + 1 && (await page.locator('.ind-queue li').count()) === b1, `fronta ${b0} → ${b1}`);
+  await shot('industry-build');
+  await page.getByRole('tab', { name: 'Výroba' }).click();
+  await page.waitForSelector('.ind-line', { timeout: 3000 });
+  const nLines = await page.locator('.ind-line').count();
+  const fac0 = await E(() => window.__e1936.gameStore.getState().ind.lines.filter((l) => l.o === window.__e1936.engine.getWorld().ownerIdx.GER).reduce((a, l) => a + l.fac, 0));
+  await page.locator('.ind-line').first().getByRole('button', { name: 'Ubrat továrnu' }).click();
+  await page.waitForTimeout(250);
+  const fac1 = await E(() => window.__e1936.gameStore.getState().ind.lines.filter((l) => l.o === window.__e1936.engine.getWorld().ownerIdx.GER).reduce((a, l) => a + l.fac, 0));
+  check('výroba: linky jsou vidět a ubrání továrny je uvolní', nLines >= 3 && fac1 === fac0 - 1 && (await page.locator('.ind-note').count()) === 1, `${nLines} linek, továren ${fac0} → ${fac1}`);
+  await shot('industry-prod');
+  await page.getByRole('tab', { name: 'Obchod' }).click();
+  await page.waitForSelector('.ind-res', { timeout: 3000 });
+  check('obchod: tabulka šesti surovin a smlouvy', (await page.locator('.ind-res tbody tr').count()) === 6 && (await page.locator('.ind-trades li').count()) >= 1);
+  await shot('industry-trade');
+  await page.getByRole('tab', { name: 'Stavby' }).click();
+  await page.keyboard.press('8');
+  await page.waitForTimeout(500);
+  check('režim 8 = Průmysl s vysvětlivkami', (await page.locator('.rail-item > button.on').getAttribute('aria-label')) === 'Průmysl' && (await page.locator('.legend').innerText()).includes('továren'));
+  await shot('industry-map');
+  await page.keyboard.press('1');
+  const ind3 = await E(() => {
+    const { gameStore, engine } = window.__e1936;
+    const s0 = gameStore.getState();
+    const GER = engine.getWorld().ownerIdx.GER;
+    const s1 = engine.advance(s0, 72);
+    gameStore.setState(s1);
+    const mine = s1.ind.lines.filter((l) => l.o === GER);
+    return { prog: s1.ind.build.filter((b) => b.o === GER).reduce((a, b) => a + b.prog, 0), made: mine.reduce((a, l) => a + l.out, 0), eff: mine.every((l, i) => l.eff > s0.ind.lines.find((x) => x.id === l.id).eff) };
+  });
+  check('tři herní dny: stavba postoupila, linky vyrábějí a jejich efektivita roste', ind3.prog > 0 && ind3.made > 0 && ind3.eff, `body staveb ${Math.round(ind3.prog)}, kusů za poslední den ${ind3.made}`);
+  await page.keyboard.press('i');
+  await page.waitForTimeout(150);
 
   // výkon vrstvy žetonů (čas příkazů v jednom snímku)
   const unitsMs = await E(() => {

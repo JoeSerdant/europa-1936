@@ -309,7 +309,7 @@ Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé pl
   značky a popisky bez překrývání (země → státy → města) a rám listu. Změna vlastníků/režimu/ztlumení zvedne `version`, překreslí se jen viditelné dlaždice
   (při pohybu kamery s rozpočtem 9 ms na snímek, zbytek se dokreslí v dalších; do té doby se použije náhrada z jiné úrovně).
 - `controller.js` – `mapController` (singleton): kamera, animace `flyTo`, `viewForBox` (středění do volné plochy mimo panely – `insets`), pomalý pohyb v menu, smyčka kreslí jen při změně.
-- `colors.js` – sedm režimů (klávesy 1–7): politická, terén, státy, regiony, obyvatelé, vítězné body, **zásobování** (provincie hráče podle toku `supplyFlow`: červená → žlutá → zelená, ostatní ztlumené); `focus` ztlumí všechny země kromě jedné (výběr země).
+- `colors.js` – osm režimů (klávesy 1–8): politická, terén, státy, regiony, obyvatelé, vítězné body, **zásobování** (provincie hráče podle toku `supplyFlow`: červená → žlutá → zelená, ostatní ztlumené), **průmysl** (barva podle počtu továren ve státě; překreslí se jen při změně `ind.st`); `focus` ztlumí všechny země kromě jedné (výběr země).
   Okupované provincie (držitel ≠ vlastník) se v politickém režimu a v režimu států kreslí pruhy barvy držitele; změna držitele zneplatní jen dlaždice v okolí provincie (`invalidateProvinces`), v režimu zásobování celou mapu.
 - `labels.js` – kotvy jmen zemí (největší souvislá část) a států.
 - `MapView.jsx` – vazba na DOM: tažení, kolečko, hover/klik (práh 5 px), ResizeObserver, klávesy. Zvýraznění pod myší se při tažení ruší a když se kamera pohne pod nehybnou myší
@@ -323,18 +323,19 @@ Zrnění a ztmavení okrajů mapy je **CSS překryv** (`.map-host::after`), ne k
   Čistá data (`buildCounters`, `clusterCounters`, `routesOf`, `battlesOf`) jdou testovat bez plátna.
 - **Na mapě dál:** šipky pohybu (vlastní zeleně, vybrané zlatě, útoky červeně), značky bitev s poměrem sil, náhled trasy pod kurzorem při vybraných jednotkách, plán armády (modře držená oblast nebo linie, červeně cíle útoku se šipkami z linie).
 - **Výběr a rozkazy:** klik na žeton vybere divize, Shift přidává a odebírá, dvojklik vybere celou armádu, Shift + tažení vybere obdélníkem; pravé tlačítko = rozkaz (nepřátelská provincie = útok); `X` zastaví, `F` zaměří výběr. Cizí žeton jde vybrat jen k prohlídce.
-- **Boční panel** (`SidePanel`, vpravo, `INSETS.gameDossier` r = 394) se záložkami *Oblast* (karta provincie, země a válek), *Armáda* (`V`) a *Nábor* (`N`); je vidět, jen když je zvolená záložka nebo označená oblast.
+- **Boční panel** (`SidePanel`, vpravo, `INSETS.gameDossier` r = 394) se záložkami *Oblast* (karta provincie, země a válek, od M19 i **Průmysl státu** se stavbou), *Armáda* (`V`), *Nábor* (`N`) a *Průmysl* (`I`); je vidět, jen když je zvolená záložka nebo označená oblast.
 - **Panel Armáda:** strom skupin armád → armád → divizí (šipkou se sbalí; dvojklik přejmenuje; přetažením se přesouvají divize do armád a armády do skupin), souhrny síly a organizace, velitel (výběr z velitelů země s dovednostmi a rysy), plán (*Hájit oblast*, *Linie fronty*, režim útoku, *Zrušit plán*), rozpuštění.
 - **Lišta úpravy plánu** (`PlanBar`, nahoře uprostřed): nástroje Linie / Cíle útoku, *Použít aktuální frontu* (`suggestFront`), Vymazat, režim útoku, Potvrdit / Zrušit; klik na mapě provincii přidá nebo odebere, Shift + klik celý stát.
 - **Dolní lišta výběru** (`SelectionBar`): síla, organizace, statistiky divize (u více divizí souhrn), armáda a velitel; Nová armáda, Do armády, Zastavit, Zaměřit, Rozpustit (s potvrzením).
 - **Nábor** (`RecruitPanel`): sklady výzbroje a lidská síla, karty šablon s cenou a statistikami (Zařadit, × 5, úprava, smazání), fronta výcviku. **Návrhář šablon** (`TemplateDesigner`, okno): mřížka pluků a praporů 5 × 5, podpůrné roty, živé statistiky a kontrola `validateTemplate`.
+- **Panel Průmysl** (`ui/industry/IndustryPanel.jsx`, M19): souhrn (civilní, vojenské, spotřební zboží, body stavby, volné továrny) a záložky *Stavby* (volba státu a druhu stavby, fronta s odhadem dokončení, přeřazení a zrušení), *Výroba* (sklad, linky s výběrem výzbroje, počtem továren, efektivitou, výrobou za den a pokrytím surovin, nová linka) a *Obchod* (tabulka šesti surovin, formulář nové smlouvy s přebytkem partnera, seznam smluv s dodaným množstvím). Akce (`buildIn`, `newLine`, `newTrade` …) kontrolují vlastnictví hráče a při neúspěchu napíšou důvod.
 - Panely, tooltip a seznamy se při běhu času nepřekreslují každou herní hodinu: používají `useGameSlow(selektor, ms)` (nejvýš jedno překreslení za `ms`).
 
 **Pravidla UI:** selektory `useGame`/`useUi` vracejí stabilní hodnoty (primitiva nebo existující objekty); stav obrazovek je v `uiStore`, ne ve hře; plátno se překresluje jen při změně;
 změny stavu, UI a kamery dělají společně funkce v `actions.js`.
 
-**Klávesy:** tažení / WASD / šipky = posun; kolečko, Q/E, PageUp/PageDown = přiblížení; Home = celá mapa; mezerník = pauza; + − = rychlost; 1–7 = mapové režimy;
-V = panel Armáda, N = Nábor, X = zastavit vybrané divize, F = zaměřit výběr; F1 nebo ? = ovládání.
+**Klávesy:** tažení / WASD / šipky = posun; kolečko, Q/E, PageUp/PageDown = přiblížení; Home = celá mapa; mezerník = pauza; + − = rychlost; 1–8 = mapové režimy;
+V = panel Armáda, N = Nábor, I = Průmysl, X = zastavit vybrané divize, F = zaměřit výběr; F1 nebo ? = ovládání.
 Esc zavírá postupně: nápověda → herní nabídka → návrhář šablon → úprava plánu → výběr jednotek → boční panel / označená oblast → (nic nezbývá) herní nabídka.
 
 **Vzhled:** „mapový stůl“ – inkoustové plochy (`--ink-0…3`), mosazné linky (`--brass`), krémový papír (`--paper`) pro nadpisy; písma Jost (nadpisy) a Barlow Semi Condensed (text),
@@ -349,20 +350,22 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 
 ## 7. Ověření
 
-- `npm test` – **205 testů v 11 souborech**: svět (struktura, sousednosti, geometrie, regiony, slavná města), stav a příkazy, kamera/geometrie/barvy/popisky, dlaždice a vykreslovač (s falešným plátnem), akce rozhraní, formátování,
+- `npm test` – **242 testů ve 13 souborech**: svět (struktura, sousednosti, geometrie, regiony, slavná města), stav a příkazy, kamera/geometrie/barvy/popisky, dlaždice a vykreslovač (s falešným plátnem), akce rozhraní, formátování,
   `check-build.mjs` (oprava cest `src\main.jsx` a `src%2Fmain.jsx`, ochrana proti cestám mimo kořen a přepsání, chybějící soubor, velikost písmen, odkazy z `index.html`, čitelná zpráva) a **armáda** (`army-*.test.js`, pomůcky v `armyKit.js`):
   - `army-setup` (15): počáteční rozmístění všech zemí (platné odkazy, žádný velitel dvakrát, odpovídá `NATIONAL`, divize ve stavu zásobování, deterministické, čistý JSON), statistiky divize, kontrola šablon;
   - `army-commands` (30): šablony, nábor a zrušení výcviku, rozpuštění, rozkazy (doba pochodu), armády, skupiny, velitelé, plány (Linie fronty, Opatrně, Hájit oblast, ruční rozkaz, obranná AI), čistota příkazů;
   - `army-combat` (20): trvání a ztráty boje, převaha, ústup a zničení, obsazení, terén, řeka, zakopání, zkušenosti, tanky, zásobování, šířka fronty a záloha, směry útoku, determinismus a čistota (JSON, dělení kroků);
   - `army-war-supply` (16): války (symetrie, mír, AI plány), hledání cest (neutrální a nepřátelské území, průlivy), tok zásobování a jeho mezipaměť, denní krok batohu;
   - `army-system` (6): 45 dní velké války drží invarianty, je deterministická a nezávisí na dělení kroků, výcvik a doplňování za války, měsíční lidská síla;
+  - `industry` (28): počáteční rozmístění továren a těžby (sloty, součty, deterministické), stavby (sloty, fronta, dokončení, infrastruktura), výroba (sklad, efektivita, linky, nedostatek surovin, ztráta továren), suroviny a obchod (přebytek, válka, okupace), vliv infrastruktury na zásobování, čistota a invarianty;
+  - `industry-ui` (9): akce hráče (vlastnictví, sloty, fronta, linky, smlouvy, pozorovatel), režim mapy Průmysl a přebarvení vykreslovače;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **34 kontrol** při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **40 kontrol** (od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -373,7 +376,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 |---|---|---|
 | **M17** | **Svět**: generátor, formát, engine (stav, čas, vlastnictví), mapa (dlaždice, popisky, režimy), menu, výběr země, HUD, minimapa | **hotovo** |
 | **M18** | **Armáda**: divize a šablony, výzbroj, generálové, armády a skupiny armád, plány a rozkazy, zásobování, boj (šířka fronty, terén, organizace), minimální stav války a počáteční rozmístění všech zemí; rozhraní: žetony, výběr, panel Armáda, nábor, návrhář šablon, mapa zásobování | **hotovo** |
-| M19 | **Průmysl**: stát jako zdroj (kategorie, sloty), civilní/vojenské továrny, výroba, suroviny a obchod, konvoje, infrastruktura | |
+| **M19** | **Průmysl**: kategorie států a sloty, civilní/vojenské továrny, fronta staveb, výrobní linky, suroviny a obchod, spotřební zboží, infrastruktura; rozhraní: panel Průmysl, karta státu, mapový režim 8. Konvoje a námořní doprava zatím ne (obchod je abstraktní) | **hotovo** |
 | M20 | **Výzkum**: stromy technologií, sloty, bonusy, jednotky se odemykají | |
 | M21 | **Politika**: stabilita, podpora války, politická moc, poradci, zákony, ideologie | |
 | M22 | **Focusy a události**: stromy národních cílů, události, rozhodnutí, politické cesty | |

@@ -3,17 +3,18 @@
 Velká strategie ve stylu **Hearts of Iron IV**, odehrávající se v lednu 1936 na mapě Evropy, Středomoří, severní Afriky a Blízkého východu.
 Nová hra od základů: vlastní kód, vlastní mapa (generovaná z veřejných geodat Natural Earth), vlastní texty a grafika.
 
-**Stav: milník M18 – Armáda.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
+**Stav: milník M19 – Průmysl.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
 minimapa a panel s údaji o oblasti (M17) a **pozemní armáda**: divize ze šablon (vlastní návrhář), výzbroj a lidská síla, výcvik, velitelé, armády a skupiny armád, plány (Hájit oblast, Linie fronty),
 rozkazy, zásobování, boj s šířkou fronty, terénem a organizací a počáteční rozmístění všech zemí. Války se zatím vyhlašují z karty oblasti (dočasně).
-Průmysl, výzkum, politika, focusy a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, § 8).
+A od M19 **průmysl**: státy se sloty podle velikosti, civilní a vojenské továrny, fronta staveb, výrobní linky výzbroje s efektivitou, suroviny (ocel, hliník, ropa, wolfram, chrom, guma), obchodní smlouvy, spotřební zboží a vylepšování infrastruktury (zlepšuje pochod i zásobování). Výroba plní sklady výzbroje, ze kterých se nabírají divize.
+Výzkum, politika, focusy a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, § 8).
 
 ## Spuštění
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 205 testů
+npm test           # 242 testů
 npm run build      # kontrola vstupů (check-build.mjs) + produkční build do dist/
 ```
 
@@ -45,8 +46,8 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 | celá mapa | Home |
 | označit provincii nebo moře | klik |
 | pauza, rychlost | mezerník, + a − |
-| mapové režimy | 1–7 (politická, terén, státy, regiony, obyvatelé, vítězné body, zásobování) |
-| panel Armáda, Nábor | V, N |
+| mapové režimy | 1–8 (politická, terén, státy, regiony, obyvatelé, vítězné body, zásobování, průmysl) |
+| panel Armáda, Nábor, Průmysl | V, N, I |
 | vybrat jednotky | klik na žeton (Shift přidává, dvojklik = celá armáda), Shift + tažení = obdélník |
 | rozkaz | pravé tlačítko na mapě (nepřátelská provincie = útok), X = zastavit, F = zaměřit výběr |
 | zavřít okno, zrušit výběr, nabídka | Esc |
@@ -59,6 +60,14 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 3. **Hájit oblast** rozmístí divize po zvolených provinciích; **Linie fronty** drží linii a útočí na cílové provincie (režim Opatrně / Vyváženě / Zteče). *Použít aktuální frontu* označí provincie za tebe.
 4. V panelu **Nábor** (N) zařadíš divize do výcviku (stojí lidskou sílu a výzbroj) nebo si v **Návrháři šablon** sestavíš vlastní divizi z praporů a podpůrných rot.
 5. Válku vyhlásíš na kartě cizí provincie (záložka Oblast). Mapový režim **Zásobování** (7) ukáže, kam dorazí zásoby; divize bez zásob slábnou.
+
+### Jak na průmysl
+
+1. Panel **Průmysl** (I) ukazuje civilní a vojenské továrny, podíl spotřebního zboží a **body stavby** za den (civilní továrny po odečtení spotřebního zboží a dovozu).
+2. Záložka **Stavby**: vyber stát (ve státě je tolik slotů, kolik dává jeho kategorie + infrastruktura), zadej civilní nebo vojenskou továrnu či vylepšení infrastruktury. Stavět lze i na kartě státu (záložka Oblast). Fronta se řadí od nejdůležitějšího.
+3. Záložka **Výroba**: vojenské továrny jsou rozdělené do **linek** podle druhu výzbroje. Nová linka začíná s nízkou efektivitou a roste ke stropu; změna druhu výzbroje ji vynuluje. Hotové kusy jdou do skladu (vidět i v záložce Nábor).
+4. Záložka **Obchod**: tabulka surovin (těžba, dovoz, vývoz, potřeba, krytí) a smlouvy. Chybí-li surovina, linky vyrábějí pomaleji (nejméně 25 %). Dovoz stojí civilní továrny, vývozce dodá jen svůj přebytek a ve válce se smlouva přeruší.
+5. Mapový režim **Průmysl** (8) ukáže počet továren ve státech.
 
 ## Dokumentace
 

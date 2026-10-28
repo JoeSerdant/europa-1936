@@ -30,7 +30,7 @@ function Header({ sum }) {
       <Sum label="Vojenské" value={sum.mil} title="Vojenské továrny celkem" />
       <Sum label="Spotř. zboží" value={pct(sum.cons)} title={`Spotřební zboží ubírá ${fmtNum(sum.consFac, 1)} továren (nejdřív civilních)`} />
       <Sum label="Body stavby" value={fmtNum(sum.points, 0)} title="Body stavby za den (civilní továrny po odečtení spotřebního zboží a dovozu)" />
-      <Sum label="Volné vojenské" value={sum.milFree} title="Vojenské továrny, které nejsou přiřazené žádné lince" cls={sum.milFree > 0 ? 'warn' : ''} />
+      <Sum label="Volné" value={sum.milFree} title="Volné vojenské továrny: nejsou přiřazené žádné lince" cls={sum.milFree > 0 ? 'warn' : ''} />
     </section>
   );
 }
