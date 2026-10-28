@@ -19,10 +19,10 @@ function clearOrder(ctx, id) {
 
 /** Rychlost divize při vstupu do provincie `next` (index rychlosti, pěšák 4). */
 export function moveSpeed(ctx, d, st, next, kind) {
-  const w = getWorld(), g = geo(w);
+  const w = getWorld();
   const t = w.terrain[next];
   let mult = 1 + (st.terr[t]?.mov || 0) + (kind === 1 ? st.terr.r?.mov || 0 : 0) + modsOf(ctx, d).speed;
-  mult -= C.INFRA_SPEED * (5 - g.infra[next]);
+  mult -= C.INFRA_SPEED * (5 - ctx.infra[next]);
   const share = st.org ? d.org / st.org : 1;
   if (share < C.ORG_SPEED_LOW) mult += C.ORG_SPEED_ZERO * (1 - share / C.ORG_SPEED_LOW);
   mult += C.SUP_SPEED * lackOf(d);

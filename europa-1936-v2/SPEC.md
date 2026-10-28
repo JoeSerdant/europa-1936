@@ -35,11 +35,13 @@ src/
     selectors.js   dotazy na stav (vlastník, souhrny země; mezipaměť podle pole stateOwner)
     store.js       minimální store (getState/setState/update/subscribe)
     rng.js, time.js
+    industry/      M19 – průmysl (viz § 4b): constants (vyvážení), core (sloty, souhrn po zemích, toky surovin), setup (počáteční továrny), day (denní krok), commands, selectors, infra, system, index
     army/          M18 – armáda (viz § 4a): constants (vyvážení), geo, war, paths, heap, stats, unit, ctx (pracovní kontext hodiny), setup (počáteční rozmístění),
                    system (pořadí kroků), daily, training, movement, combat, supply, upkeep, leaders, plans, commands, selectors, index (veřejné rozhraní)
   data/
     world.json     GENEROVANÝ svět – needitovat ručně
     countries.js   popis zemí (vůdce, vláda, ideologie, vlajka, obtížnost, text)
+    industry/      M19 – data průmyslu: budovy, kategorie států, ceny výzbroje a suroviny, počáteční průmysl zemí a smlouvy
     army/          M18 – data armády: výzbroj, prapory a podpora, terén, šablony, národní sestavy, rysy a jména velitelů
   ui/
     store.js       gameStore + uiStore + useGame/useUi/useGameSlow
@@ -106,12 +108,12 @@ druhá města ≥ 60 tis. přidávají polovinu, hlavní město +10. Železnice:
 
 ## 4. Engine
 
-**Herní stav** (`createGame`, `GAME_VERSION = 2`, čistý JSON):
+**Herní stav** (`createGame`, `GAME_VERSION = 3`, čistý JSON):
 
 ```
-{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil }
+{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind }
 ```
-`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a).
+`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b).
 Čas: 1 tick = 1 herní hodina, start 1. 1. 1936 00:00; rychlosti 1–5 = `[12, 24, 48, 96, 240]` herních hodin za sekundu (`SPEEDS[0]` = pauza).
 Hra začíná pozastavená. `hoursForElapsed(state, ms, carry)` přenáší zlomky hodin.
 
@@ -214,12 +216,12 @@ a každý vlastní uzel má aspoň slabý místní tok `SUP_LOCAL` (kolonie, obk
 `supplyFlow(ctrl, o)` → `Float32Array` toku po provinciích (mezipaměť podle množiny provincií země); `tok × SUP_CAPACITY` = zásoby za hodinu v provincii, tok kolem 3 je dobré zásobování.
 Denně (`dailySupply`) dostane každá divize `sup = min(1, kapacita / spotřeba všech jednotek v provincii)`. `sg` (72 h) je zásoba v batohu: při `sup < 1` ubývá o 24 h denně, při plném zásobování se plní o 48 h denně.
 Po vyčerpání batohu (`lack = 1 − sup`): slabší útok a obrana, nižší strop organizace (až 35 %), pomalejší pohyb, ztráta síly (terénní únava). Zásobování **hlídá i rozmístění**: počáteční posádky vznikají jen tam, kde divize dostane zásoby.
-Infrastruktura provincie je zatím **odvozená ze světa** (`geo(w).infra`: terén, železnice, velká města); M19 ji nahradí stavbami.
+Infrastruktura provincie = základ ze světa (`geo(w).infra`: terén, železnice, velká města) + vylepšení státu (M19, `infraOf`).
 
 ### Doplňování a výcvik (`daily.js`, `training.js`, `upkeep.js`)
 Denně doplní divize mimo boj a se zásobováním ≥ 50 % (`REINF_PER_DAY` = 5 % maxima, léčení rot ho zvyšuje) část `hp` ze skladu (spotřebuje úměrně lidskou sílu a výzbroj). Organizace se obnovuje hodinově (nad 80 % pomaleji, pod 25 % rychleji, infrastruktura a velitel ji ovlivňují). Zakopání roste o 1 stupeň za den na místě (ženisté zrychlují).
 `recruit(state, tplId, prov, count ≤ 20)` odečte lidskou sílu a výzbroj hned (všechno, nebo nic), položky `QItem` s `done = tick + dny výcviku · 24` se mění v divize v `p` (nemá-li ji země už pod kontrolou, v nejbližší vlastní provincii nebo v hlavním městě); výcvik jde zrušit s plným vrácením.
-Měsíčně (1. dne) roste zásoba lidské síly (`MAN_GROWTH_MONTH` obyvatel). Výroba výzbroje v M18 neexistuje (sklady se jen spotřebovávají) – přijde s M19.
+Měsíčně (1. dne) roste zásoba lidské síly (`MAN_GROWTH_MONTH` obyvatel). Sklady od M19 doplňuje výroba (§ 4b).
 
 ### Velitelé, armády, plány (`leaders.js`, `plans.js`)
 Velitel dává bonusy podle dovedností (útok, obrana, plánování, logistika) a rysů (`TRAITS`); bonusy armády = její generál + 50 % bonusů polního maršála její skupiny (`armyMods`). Úroveň velitele = součet dovedností − 3; zkušenosti na další úroveň = `60 × aktuální úroveň` (lineárně), po dosažení se náhodně zvýší jedna dovednost (max. 9).
@@ -249,6 +251,51 @@ dále každou hodinu výcvik (dokončení) → **pohyb** → **boj** → údržb
 ### Záměrná zjednodušení proti vzoru
 Žádná letecká a námořní podpora, počasí a noc, pevnosti (M19), doktríny a bojové taktiky, dobrovolníci, zajatci, vyloďování, parašutisté; divize nenesou vlastní počty kusů výzbroje (síla `hp` je nahrazuje);
 velitelé divizí neexistují; pohyb po železnici (strategický přesun) zatím není. Číselné hodnoty jsou vlastní.
+
+## 4b. Průmysl (M19)
+
+Hospodářství podle vzoru HOI4: **státy mají kategorii a stavební sloty**, civilní továrny staví, vojenské továrny vyrábějí výzbroj na **linkách**, výroba spotřebovává **suroviny**, jejich přebytek jde do **obchodu**.
+Čísla jsou naše: data v `src/data/industry/*` (budovy, kategorie, ceny výzbroje a suroviny na kus, počáteční průmysl zemí, obchodní smlouvy na startu), vyvážení vzorců v `src/engine/industry/constants.js` (`IND`).
+Vše se počítá **jednou denně** (o půlnoci, `industryHour` v `advanceHour` hned po armádě). Příkazy nehlídají, komu věc patří vůči hráči – to dělá `ui/actions.js`. Námořní doprava a konvoje zatím nejsou: obchod se surovinami je abstraktní (viz „Zjednodušení“).
+
+### Tvar stavu (`state.ind`, `GAME_VERSION = 3`)
+```
+ind: {
+  ver,                          // zvyšuje se při změně struktury (stavba dokončena/zrušena, linky, smlouvy) – klíč mezipamětí UI
+  jn,                           // čítač id staveb, linek a smluv (id se nepoužije znovu)
+  st:   [null, {civ, mil, res:{surovina: množství/den}}…],   // podle id státu: továrny a těžba
+  inf:  [0, úroveň 0–3…],       // vylepšení infrastruktury podle id státu (mění se jen při dokončení stavby)
+  cons: [0, podíl 0–1…],        // spotřební zboží podle indexu země (M21: zákony)
+  build: [{id, o, s, k, prog}…],     // fronta staveb: o země, s stát, k 'civ'|'mil'|'inf', prog získané body; pořadí = priorita v rámci země
+  lines: [{id, o, eq, fac, eff, acc, f, out}…],   // linky: druh výzbroje, počet továren, efektivita, nahromaděné kusy 0–1, poměr výkonu (suroviny) a kusů za poslední den
+  trade: [{id, from, to, res, amt, got}…]          // smlouvy: vývozce → dovozce, množství za den a skutečně dodané minulý den
+}
+```
+Pole `st`/`inf` se kopírují jen při dokončení stavby. Továrny a těžba patří vlastníkovi státu; **okupovaný stát** (hlavní provincii drží jiná země) vlastníkovi nevyrábí a jeho těžba jde okupantovi (továrny se nepočítají nikomu).
+
+### Státy a sloty
+`STATE_CATEGORIES` podle obyvatel: osada (≤ 150 tis.) 2 sloty, městečko 4, město 6, velké město 8, velkoměsto 10, metropole 12. Sloty státu = základ kategorie + úroveň infrastruktury (`inf`). Slot zabírá civilní a vojenská továrna (i rozestavěná); infrastruktura ne (nejvýš `INF_MAX` = 3 vylepšení).
+Počáteční továrny se rozdělí D'Hondtem podle váhy státu (obyvatelé, vítězné body; vojenské dávají přednost vítězným bodům), těžba po třech státech (50 / 30 / 20 %, ocel a hliník podle obyvatel, ostatní podle rozlohy). Země má aspoň ocel na základní výrobu (0,9 na vojenskou továrnu).
+
+### Stavby (`day.js`)
+Přísun bodů = (civilní továrny − spotřební zboží − dovoz) × `IC_PER_FAC`. Projekty ve frontě země dostávají body v pořadí fronty, každý nejvýš `cost / days` za den (civilní 800 bodů / 45 dní, vojenská 700 / 45, infrastruktura 500 / 30). Dokončená stavba přidá továrnu nebo úroveň infrastruktury; projekt ve státě, který země ztratila nebo neovládá, zaniká.
+**Infrastruktura:** `infraOf(state)` = základ světa (`geo(w).infra`) + `inf[stát]`, nejvýš 5. Používá ji pohyb, obnova organizace i zásobování (`ctx.infra`, `supplyFlow(ctrl, o, infra)`); bez vylepšení je to přímo `geo(w).infra`.
+
+### Výroba (`day.js`, `core.js`)
+**Spotřební zboží** (`cons` × všechny továrny) ubírá nejdřív civilní, pak vojenské. Zbylé vojenské továrny se rozdělí na **linky** (jeden druh výzbroje, 1–`LINE_MAX_FAC` továren, nejvýš `LINES_MAX` linek na zemi; nedostupné továrny zkracují linky od posledních).
+Kusy za den = `fac × IC_PER_FAC × eff / cost`, krát poměr výkonu `f` podle nejhorší potřebné suroviny (nejméně `RES_FLOOR`). Celé kusy jdou do `mil.stock`, zbytek je v `acc`.
+Efektivita nové linky a po změně druhu výzbroje je `EFF_START`; denně roste o `EFF_GROW` podílu vzdálenosti ke stropu `EFF_CAP`; přidání továren ji zředí úměrně, ubrání ne. Linky na startu mají `EFF_INIT`. Země bez hráče mají výchozí linky podle `DEFAULT_SPLIT` (AI přijde v M24).
+
+### Suroviny a obchod
+Šest surovin (`ocel, hlinik, ropa, wolfram, chrom, guma`); `EQUIP_PROD[výzbroj].res` = suroviny na kus. Poptávka linek se spočítá z nominální výroby; pokrytí `f = min(1, (těžba − vývoz + dovoz) / poptávka)` za surovinu.
+**Smlouva** vývozce → dovozce: vývozce dodá nejvýš svůj přebytek (těžba − vlastní poptávka − už vyvezené, smlouvy v pořadí id); dovozce platí `TRADE_CIV` civilní továrny za dovezenou jednotku. Ve válce mezi stranami se smlouva přeruší (`got = 0`); příkaz ji ani nepřijme. Diplomacii (embarga, vztahy) přidá M23.
+
+### Příkazy (`engine/industry/commands.js`, čisté, neplatný vstup = tentýž stav)
+`build(s, stát, druh)`, `cancelBuild(id)`, `moveBuild(id, posun | -Infinity)`; `addLine(o, výzbroj, továrny)`, `setLineFactories(id, n)` (0 = zrušit), `setLineEquip(id, výzbroj)`, `removeLine(id)`; `addTrade(od, komu, surovina, množství)`, `setTradeAmount(id, množství)`, `cancelTrade(id)`.
+Selektory (`selectors.js`): `industryOf(state, o)` (továrny, spotřební zboží, dostupné a volné vojenské továrny, body stavby, linky s výrobou, toky surovin, stavby, smlouvy), `stateIndustry(state, s)` (kategorie, sloty, budovy, fronta státu), `projectEta`, `infraOf`.
+
+### Zjednodušení proti vzoru
+Žádné konvoje ani námořní doprava (obchod je abstraktní a bez trasy), žádná energie ani zásoby surovin, výzbroj bez úrovní a zastaralosti (M20), žádné stavby pevností ani protiletadlové obrany, přístavy a letiště (letectvo a loďstvo později), žádné poškození budov bombardováním, žádná výměna výzbroje mezi zeměmi. Spotřební zboží se mění až zákony (M21).
 
 ## 5. Rozhraní
 
@@ -296,7 +343,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 ## 6. Odchylky od vzoru (záměrné zjednodušení)
 
 - Mapa je vlastní, menší než světová: Evropa, Středomoří, severní Afrika, Blízký východ po 63,6° V; 2895 provincií místo desítek tisíc.
-- Stát je jednotka vlastnictví (jako ve vzoru), ale zatím nemá kategorii ani sloty staveb (přijde s průmyslem, M19).
+- Stát je jednotka vlastnictví (jako ve vzoru) s kategorií a sloty staveb podle obyvatel (M19); sloty jsou společné pro civilní a vojenské továrny, bez dalších budov.
 - Mimo hrací plochu neexistují hráčské země (Asie, Amerika) – zůstávají „prázdnou pevninou“; jejich vliv bude zastoupen událostmi a obchodem.
 - Pro každou větší funkci platí „hotová a zahrabaná“: radši menší a funkční než vše napůl.
 

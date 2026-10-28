@@ -5,6 +5,7 @@ import { C, xpLevel, XP_NAMES } from './constants.js';
 import { deriveStats, divisionName as nameOf } from './stats.js';
 import { atWar as warBetween, hasWar as warOf, enemiesOf as foesOf } from './war.js';
 import { supplyFlow } from './supply.js';
+import { infraOf } from '../industry/infra.js';
 import { genLevel, xpForLevel } from './leaders.js';
 import { adjacency } from './geo.js';
 
@@ -174,7 +175,7 @@ export function generalsOf(state, o) {
 
 // ---- zásobování ----
 /** Tok zásobování po provinciích země (Float32Array; zásoby za hodinu = tok · C.SUP_CAPACITY). Cachuje se podle obsazení provincií. */
-export const supplyReach = (state, o) => supplyFlow(state.ctrl, idxOf(o));
+export const supplyReach = (state, o) => supplyFlow(state.ctrl, idxOf(o), infraOf(state));
 
 // ---- fronta ----
 const frontCache = new WeakMap();

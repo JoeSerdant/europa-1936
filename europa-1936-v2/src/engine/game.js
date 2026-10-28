@@ -3,8 +3,9 @@
 import { getWorld } from './world.js';
 import { seedToState } from './rng.js';
 import { createMil } from './army/setup.js';
+import { createInd } from './industry/setup.js';
 
-export const GAME_VERSION = 2;
+export const GAME_VERSION = 3;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -19,6 +20,7 @@ export function createGame({ player = null, seed = 1936 } = {}) {
   const stateOwner = Array.from(w.stateOwner0);
   const ctrl = Array.from(w.provOwner0);
   const { mil, rng } = createMil(w, seedToState(seed));   // M18: armády, šablony, velitelé, sklady (viz SPEC § 4a)
+  const { ind } = createInd(w, seedToState(seed ^ 0x19a1));      // M19 (vlastní proud náhody, aby se nezměnil průběh armády): továrny, těžba, linky, obchod (viz SPEC § 4b)
   return {
     v: GAME_VERSION,
     tick: 0,
@@ -30,5 +32,6 @@ export function createGame({ player = null, seed = 1936 } = {}) {
     ctrl,
     ownerVer: 0,          // zvyšuje se při změně vlastnictví/kontroly – pro mezipaměti (mapa, souhrny)
     mil,
+    ind,
   };
 }

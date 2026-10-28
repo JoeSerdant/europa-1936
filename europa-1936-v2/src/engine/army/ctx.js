@@ -1,11 +1,13 @@
 // Pracovní kontext jedné herní hodiny. Systémy armády (pohyb, boj, zásobování …) v něm upravují divize, bitvy, kontrolu provincií a sklady
 // způsobem „kopíruj při prvním zápisu“: původní stav zůstává nedotčený a výsledek se složí v `closeCtx`. Když se nic nezměnilo, vrátí se stejný objekt.
 import { nextRandom } from '../rng.js';
+import { infraOf } from '../industry/infra.js';
 
 export function openCtx(state) {
   const mil = state.mil;
   return {
     state, mil,
+    infra: infraOf(state),                 // infrastruktura provincií (základ světa + stavby státu, M19)
     tick: state.tick,                      // hodina, která právě proběhla (stav už je o tick posunutý)
     rng: state.rng,
     divs: mil.divs, divsOwn: false, freshDivs: null,

@@ -19,17 +19,17 @@ function signature(ctrl, o, L) {
 }
 
 /** Tok zásobování po provinciích pro zemi `o` (selektor `supplyReach(state, o)` ho zabaluje) (Float32Array, index = provincie; 0 = bez zásob). */
-export function supplyFlow(ctrl, o) {
+export function supplyFlow(ctrl, o, infra = geo().infra) {
   const w = getWorld();
   const sig = signature(ctrl, o, w.L);
   const hit = cache.get(o);
-  if (hit && hit.sig === sig && hit.L === w.L) return hit.reach;
-  const reach = computeReach(ctrl, o, w);
-  cache.set(o, { sig, reach, L: w.L });
+  if (hit && hit.sig === sig && hit.L === w.L && hit.infra === infra) return hit.reach;
+  const reach = computeReach(ctrl, o, w, infra);
+  cache.set(o, { sig, reach, L: w.L, infra });
   return reach;
 }
 
-function computeReach(ctrl, o, w) {
+function computeReach(ctrl, o, w, infra) {
   const g = geo(w), adj = adjacency(w);
   const L = w.L;
   const reach = new Float32Array(L + 1);
@@ -74,7 +74,7 @@ function computeReach(ctrl, o, w) {
       if (ctrl[q] !== o || e.kind === 2) continue;
       const t = TERRAIN_RULES[w.terrain[q]];
       const dist = Math.max(0.5, Math.min(1.6, g.distKm(p, q) / C.PROV_KM));
-      const pen = (t.flow * (1 - C.SUP_INFRA_RELIEF * g.infra[q] / 5) + (e.kind === 1 ? RIVER.flow : 0)) * dist;
+      const pen = (t.flow * (1 - C.SUP_INFRA_RELIEF * infra[q] / 5) + (e.kind === 1 ? RIVER.flow : 0)) * dist;
       push(q, v - pen);
     }
   }

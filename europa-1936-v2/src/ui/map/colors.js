@@ -1,6 +1,7 @@
 // Barvy mapy: palety a vybarvení oblastí podle mapového režimu. Čisté funkce (bez DOM), takže jdou testovat.
 import { TERRAIN } from '../../engine/worldCore.js';
 import { supplyFlow } from '../../engine/army/supply.js';
+import { infraOf } from '../../engine/industry/infra.js';
 
 export const SEA_COLOR = '#17364f';
 export const LAKE_COLOR = '#3f6d8f';
@@ -74,7 +75,7 @@ export function fillColors(world, game, mode, focus = 0) {
   const ownerRgb = world.owners.map((o) => (o ? hexToRgb(o.color) : [128, 128, 128]));
   const terr = TERRAIN_COLORS.map(hexToRgb);
   const me = game && game.player ? world.ownerIdx[game.player] : 0;
-  const reach = mode === 'supply' && me ? supplyFlow(game.ctrl, me) : null;
+  const reach = mode === 'supply' && me ? supplyFlow(game.ctrl, me, infraOf(game)) : null;
   for (let p = 1; p <= L; p++) {
     const o = ownerOf(p);
     let c;
