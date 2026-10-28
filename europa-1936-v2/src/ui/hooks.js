@@ -28,7 +28,7 @@ export function useGameLoop(active) {
 const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;
 
 /**
- * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–7 = mapové režimy, V = panel Armáda, N = Nábor, X = zastavit vybrané divize,
+ * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, X = zastavit vybrané divize,
  * F = zaměřit výběr, Esc = zrušit/zavřít (nabídka → návrhář → úprava plánu → výběr jednotek → panel), F1 nebo ? = nápověda.
  */
 export function useHotkeys() {
@@ -54,10 +54,11 @@ export function useHotkeys() {
       if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') { e.preventDefault(); gameStore.update(changeSpeed, 1); return; }
       if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') { e.preventDefault(); gameStore.update(changeSpeed, -1); return; }
       if (ui.designer || ui.menuOpen) return;
-      if (/^[1-7]$/.test(e.key)) { const m = MODES[Number(e.key) - 1]; if (m) setMode(m.id); return; }
+      if (/^[1-8]$/.test(e.key)) { const m = MODES[Number(e.key) - 1]; if (m) setMode(m.id); return; }
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
       if (k === 'v') togglePanel('army');
       else if (k === 'n') togglePanel('recruit');
+      else if (k === 'i') togglePanel('industry');
       else if (k === 'x') stopSelected();
       else if (k === 'f') focusSelection();
     };

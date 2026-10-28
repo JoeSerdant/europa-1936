@@ -4,15 +4,17 @@ import { openPanel, closeSide } from '../actions.js';
 import { DossierView } from '../hud/Dossier.jsx';
 import { ArmyPanel } from './ArmyPanel.jsx';
 import { RecruitPanel } from './RecruitPanel.jsx';
+import { IndustryPanel } from '../industry/IndustryPanel.jsx';
 
 const TABS = [
   { id: null, name: 'Oblast', icon: 'provinces' },
   { id: 'army', name: 'Armáda', icon: 'army', key: 'V' },
   { id: 'recruit', name: 'Nábor', icon: 'recruit', key: 'N' },
+  { id: 'industry', name: 'Průmysl', icon: 'industry', key: 'I' },
 ];
 
 /**
- * Pravý panel se záložkami: Oblast (údaje o označené provincii), Armáda (strom velení) a Nábor (šablony a výcvik).
+ * Pravý panel se záložkami: Oblast (údaje o označené provincii), Armáda (strom velení), Nábor (šablony a výcvik) a Průmysl (stavby, výroba, obchod).
  * Je vidět, jen když je otevřená některá záložka nebo je označená oblast.
  */
 export function SidePanel() {
@@ -35,7 +37,7 @@ export function SidePanel() {
         })}
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít panel" title="Zavřít (Esc)"><Icon name="close" size={18} /></button>
       </nav>
-      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : <DossierView />}
+      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : panel === 'industry' ? <IndustryPanel /> : <DossierView />}
     </aside>
   );
 }

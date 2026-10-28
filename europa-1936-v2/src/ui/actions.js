@@ -6,6 +6,7 @@ import {
   createArmy, renameArmy, disbandArmy, assignDivisions, createGroup, renameGroup, disbandGroup, assignArmies, assignCommander,
   setPlan, clearPlan, setPlanMode, suggestFront,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
+  build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { mapController as mc } from './map/controller.js';
@@ -25,7 +26,7 @@ export function applyInsets() {
   mc.setInsets(u.selected || u.panel ? INSETS.gameDossier : INSETS.game);
 }
 
-const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, toast: null };
+const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', toast: null };
 
 export function goMenu() {
   gameStore.setState(createGame());
@@ -472,3 +473,54 @@ export function removeTemplate(tplId) {
 }
 
 export { uiStore };
+
+// ============================================================ průmysl (M19)
+// Engine průmysl nehlídá, komu věc patří vůči hráči – to se kontroluje tady (stát, stavba, linka a smlouva musí patřit hráči).
+const ownsState = (s, st) => { const me = playerIdx(s); return !!me && s.stateOwner[st] === me && s.ctrl[getWorld().states[st].cap] === me; };
+
+export const setIndTab = (indTab) => setUi({ indTab });
+
+/** Zadá stavbu továrny nebo infrastruktury ve státě hráče; při neúspěchu řekne proč. */
+export function buildIn(stateId, kind) {
+  const s = gameStore.getState();
+  if (!ownsState(s, stateId)) { toast('Stavět lze jen ve vlastním, neokupovaném státě.'); return false; }
+  const info = stateIndustry(s, stateId);
+  if (kind === 'inf' ? info.inf + info.queued.filter((b) => b.k === 'inf').length >= IND.INF_MAX : info.used >= info.slots) {
+    toast(kind === 'inf' ? 'Infrastruktura státu je na nejvyšší úrovni.' : 'Ve státě není volný stavební slot (rozestavěné se počítají).');
+    return false;
+  }
+  if (!run(build, stateId, kind)) { toast('Stavbu se nepodařilo zadat (fronta je plná).'); return false; }
+  toast(`${BUILDINGS[kind].n}: stavba zadána.`);
+  return true;
+}
+
+const ownProject = (s, id) => { const b = s.ind.build.find((x) => x.id === id); return !!b && b.o === playerIdx(s); };
+export const cancelProject = (id) => ownProject(gameStore.getState(), id) && run(cancelBuild, id);
+export const moveProject = (id, dir) => ownProject(gameStore.getState(), id) && run(moveBuild, id, dir);
+
+const ownLine = (s, id) => { const l = s.ind.lines.find((x) => x.id === id); return !!l && l.o === playerIdx(s); };
+/** Nová linka výroby s jednou továrnou (nebo `fac`). */
+export function newLine(eq, fac = 1) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me) return false;
+  if (!run(addLine, me, eq, fac)) { toast('Nová linka nejde založit: chybí volná vojenská továrna nebo je linek příliš mnoho.'); return false; }
+  return true;
+}
+export function setLineFac(id, fac) {
+  if (!ownLine(gameStore.getState(), id)) return false;
+  if (!run(setLineFactories, id, fac)) { toast('Továrny nejdou přidat – žádná není volná.'); return false; }
+  return true;
+}
+export const setLineEq = (id, eq) => ownLine(gameStore.getState(), id) && run(setLineEquip, id, eq);
+
+/** Obchodní smlouva: `out` = hráč vyváží, jinak dováží od partnera. */
+export function newTrade(partner, res, amt, out) {
+  const me = playerIdx();
+  if (!me || !partner) return false;
+  const ok = out ? run(addTrade, me, partner, res, amt) : run(addTrade, partner, me, res, amt);
+  if (!ok) toast('Smlouvu nelze uzavřít (válka, příliš mnoho smluv nebo neplatné množství).');
+  return ok;
+}
+const ownTrade = (s, id) => { const d = s.ind.trade.find((x) => x.id === id); const me = playerIdx(s); return !!d && (d.from === me || d.to === me); };
+export const changeTrade = (id, amt) => ownTrade(gameStore.getState(), id) && run(setTradeAmount, id, amt);
+export const dropTrade = (id) => ownTrade(gameStore.getState(), id) && run(cancelTrade, id);

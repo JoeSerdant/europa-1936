@@ -51,6 +51,13 @@ export function Legend() {
         <p className="legend-note">Ukazuje, kolik zásob dorazí z hlavního města a železničních uzlů do vašich provincií. Cizí provincie jsou ztlumené.</p>
       </>
     );
+  } else if (mode === 'industry') {
+    body = (
+      <>
+        <div className="ramp"><div style={{ background: RAMP_CSS }} /><span>bez továren</span><span>průmyslové jádro</span></div>
+        <p className="legend-note">Barva ukazuje počet továren (civilních i vojenských) ve státě. Stavět lze v panelu Průmysl (I) nebo na kartě státu.</p>
+      </>
+    );
   } else if (mode === 'states') {
     body = <p>Odstíny rozlišují jednotlivé státy – stát je jednotka vlastnictví.</p>;
   }

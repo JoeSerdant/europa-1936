@@ -1,0 +1,43 @@
+/* ------------------------------------------------------------------ průmysl (M19) */
+.industry-panel .ind-sum { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 12px 14px 10px; flex: none; border-bottom: 1px solid var(--rule); }
+.stat-cell.warn b { color: var(--amber); }
+.ind-tabs { display: flex; gap: 2px; padding: 8px 12px 0; flex: none; border-bottom: 1px solid var(--rule); }
+.ind-tabs button {
+  flex: 1; min-height: 32px; border: 0; font: 600 14px/1 var(--display); letter-spacing: 0.03em; color: var(--text-3); background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--rule); cursor: pointer;
+}
+.ind-tabs button:hover { color: var(--text); background: var(--ink-3); }
+.ind-tabs button.on { color: var(--paper); background: var(--ink-3); box-shadow: inset 0 -2px 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
+.ind-tabs button:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--brass); }
+.ind-new { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; padding: 10px 12px; background: rgba(15, 24, 33, 0.7); box-shadow: inset 0 0 0 1px var(--rule); }
+.ind-field { display: flex; align-items: center; gap: 10px; }
+.ind-field > span { font-size: 12.5px; color: var(--text-3); }
+.ind-field select { flex: 1; min-width: 0; }
+.ind-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.industry-panel select, .industry-panel input[type='number'] {
+  min-height: 30px; padding: 0 8px; font: 500 14px/1.2 var(--body); color: var(--paper); background: var(--ink-0); border: 0; box-shadow: inset 0 0 0 1px var(--rule-hi);
+}
+.industry-panel select:focus-visible, .industry-panel input:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--brass); }
+.industry-panel select:disabled { opacity: 0.4; }
+.ind-queue .q-top .muted { flex: 1; }
+.ind-line header { display: flex; align-items: center; gap: 10px; }
+.ind-line header select { flex: 1; min-width: 0; }
+.ind-fac { display: flex; align-items: center; gap: 4px; }
+.ind-fac b { min-width: 24px; text-align: center; font: 600 17px/1 var(--display); color: var(--paper); font-variant-numeric: tabular-nums; }
+.ind-stats { grid-template-columns: repeat(4, 1fr); }
+.ind-note { padding: 6px 8px; }
+.ind-stock { border-bottom: 0; padding: 10px 8px 4px; }
+.ind-res { width: 100%; margin: 6px 0 4px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ind-res th, .ind-res td { padding: 3px 6px; text-align: right; border-bottom: 1px dotted var(--rule); font-weight: 500; }
+.ind-res thead th { color: var(--text-3); font-size: 12px; }
+.ind-res tbody th { text-align: left; color: var(--text-2); }
+.ind-res tr.bad td { color: #ff9b86; }
+.ind-trade-form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ind-trade-form input { width: 100%; }
+.ind-trade-form .sbtn { grid-column: 1 / -1; }
+.ind-amt { min-width: 30px; text-align: center; font-variant-numeric: tabular-nums; }
+.ind-got.lack { color: #ff9b86; flex: none; text-align: left; }
+.ind-trades li { gap: 3px; }
+.icon.rot90 { transform: rotate(90deg); }
+.state-ind .kv { margin-bottom: 8px; }
+.state-ind .ind-btns { margin-top: 6px; }

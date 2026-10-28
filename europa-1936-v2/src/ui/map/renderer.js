@@ -64,6 +64,7 @@ export class MapRenderer {
     this.route = null;
     this.occ = new Uint8Array(world.L + 1);
     this.lastCtrl = null;
+    this.lastIndSt = null;   // továrny států (M19) – režim Průmysl se překreslí jen při jejich změně
     this.hatchCache = new Map();
     this.pairArcs = null;
     this.frontSrc = null;
@@ -104,6 +105,9 @@ export class MapRenderer {
   setGame(game) {
     if (game === this.game) return;
     const ownerChanged = !this.game || game.stateOwner !== this.lastOwner;
+    const indSt = game.ind ? game.ind.st : null;
+    const indChanged = indSt !== this.lastIndSt;
+    this.lastIndSt = indSt;
     this.game = game;
     if (ownerChanged) {
       this.lastOwner = game.stateOwner;
@@ -117,6 +121,7 @@ export class MapRenderer {
       if (this.mode === 'supply') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
       else if (HATCH_MODES.has(this.mode)) this.invalidateProvinces(changed);
     }
+    if (!ownerChanged && indChanged && this.mode === 'industry') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     this.units.player = game.player ? this.world.ownerIdx[game.player] : 0;
     if (this.showUnits) this.units.setGame(game);
   }

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
-import { getWorld, TERRAIN_CS, CLIMATE_CS, divisionsByProvince } from '../../engine/index.js';
-import { selectLabel, setSelection, declareWarOn, makePeaceWith } from '../actions.js';
-import { fmtInt, fmtPop, fmtArea, plural } from '../format.js';
+import { Icon } from '../common/Icon.jsx';
+import { getWorld, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
+import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn } from '../actions.js';
+import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
 const KIND_NOTE = ['', 'přes řeku', 'průliv'];
 const PORT_NAMES = ['', 'malý přístav', 'přístav', 'velký přístav', 'hlavní námořní přístav', 'světový přístav'];
@@ -52,6 +53,35 @@ function ProvinceUnits({ p }) {
           </button>
         ))}
       </div>
+    </section>
+  );
+}
+
+/** Průmysl státu: kategorie, sloty, továrny, těžba; hráč může ve svém státě zadat stavbu. Překresluje se jen při změně průmyslu. */
+function StateIndustry({ s }) {
+  const state = useGameSlow((g) => g, 600);
+  const info = stateIndustry(state, s);
+  const me = playerIdx(state);
+  if (!info) return null;
+  const mine = me && state.stateOwner[s] === me && state.ctrl[getWorld().states[s].cap] === me;
+  const res = Object.entries(info.res);
+  return (
+    <section className="state-ind">
+      <h3>Průmysl státu</h3>
+      <dl className="kv">
+        <Row label="Kategorie">{info.cat.n} · sloty {info.used}/{info.slots}</Row>
+        <Row label="Továrny">{info.civ} civilních · {info.mil} vojenských</Row>
+        {info.inf > 0 && <Row label="Infrastruktura">+{info.inf}</Row>}
+        {res.length > 0 && <Row label="Těžba">{res.map(([r, n]) => `${RESOURCES[r].n} ${fmtNum(n, 1)}`).join(' · ')}</Row>}
+        {info.queued.length > 0 && <Row label="Rozestavěno">{info.queued.length}</Row>}
+      </dl>
+      {mine && (
+        <div className="ind-btns">
+          {BUILDING_IDS.map((k) => (
+            <button key={k} className="sbtn" onClick={() => buildIn(s, k)} title={BUILDINGS[k].info}><Icon name="plus" size={14} />{BUILDINGS[k].n}</button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -146,6 +176,7 @@ function LandDossier({ p, owner, ctrl }) {
           <h3>Stát {st.n}</h3>
           <p>{st.v.length} {plural(st.v.length, 'provincie', 'provincie', 'provincií')} · {fmtPop(st.p)} · {fmtArea(st.a)}</p>
         </section>
+        <StateIndustry s={o.s} />
       </div>
     </>
   );

@@ -17,6 +17,7 @@ export const MODES = [
   { id: 'population', name: 'Obyvatelé', hint: 'Hustota obyvatel' },
   { id: 'victory', name: 'Vítězné body', hint: 'Města a jejich hodnota' },
   { id: 'supply', name: 'Zásobování', hint: 'Kolik zásob dorazí do vašich provincií' },
+  { id: 'industry', name: 'Průmysl', hint: 'Továrny ve státech' },
 ];
 
 export const CLIMATE_COLORS = {
@@ -101,6 +102,12 @@ export function fillColors(world, game, mode, focus = 0) {
       case 'victory': {
         const v = world.vp[p];
         c = v ? mix(GOLD_RAMP[1], GOLD_RAMP[2], clamp01(v / 40)) : mix(ownerRgb[o], [40, 44, 48], 0.62);
+        break;
+      }
+      case 'industry': {
+        const e = game && game.ind ? game.ind.st[world.provState[p]] : null;
+        const n = e ? e.civ + e.mil : 0;
+        c = n ? ramp(0.12 + n / 16) : mix(ownerRgb[o], [40, 44, 48], 0.62);
         break;
       }
       case 'supply': {

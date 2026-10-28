@@ -8,6 +8,7 @@ import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import './ui/theme.css';
 import './ui/army/army.css';
+import './ui/industry/industry.css';
 import App from './App.jsx';
 import { mapController } from './ui/map/controller.js';
 import { gameStore, uiStore } from './ui/store.js';
