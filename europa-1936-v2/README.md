@@ -3,7 +3,7 @@
 Velká strategie ve stylu **Hearts of Iron IV**, odehrávající se v lednu 1936 na mapě Evropy, Středomoří, severní Afriky a Blízkého východu.
 Nová hra od základů: vlastní kód, vlastní mapa (generovaná z veřejných geodat Natural Earth), vlastní texty a grafika.
 
-**Stav: milník M35 – Rozhodnutí.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
+**Stav: milník M36 – Konec hry.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
 minimapa a panel s údaji o oblasti (M17) a **pozemní armáda**: divize ze šablon (vlastní návrhář), výzbroj a lidská síla, výcvik, velitelé, armády a skupiny armád, plány (Hájit oblast, Linie fronty),
 rozkazy, zásobování, boj s šířkou fronty, terénem a organizací a počáteční rozmístění všech zemí. Války se zatím vyhlašují z karty oblasti (dočasně).
 A od M19 **průmysl**: státy se sloty podle velikosti, civilní a vojenské továrny, fronta staveb, výrobní linky výzbroje s efektivitou, suroviny (ocel, hliník, ropa, wolfram, chrom, guma), obchodní smlouvy, spotřební zboží a vylepšování infrastruktury (zlepšuje pochod i zásobování). Výroba plní sklady výzbroje, ze kterých se nabírají divize.
@@ -15,7 +15,7 @@ Rozhodnutí a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, �
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 442 testů
+npm test           # 448 testů
 npm run build      # kontrola vstupů (check-build.mjs) + produkční build do dist/
 ```
 
@@ -114,6 +114,10 @@ Nabídka (Esc) → **Uložit hru** / **Načíst hru**, nebo **Načíst hru** v h
 ### Jak na letectvo
 
 Okno **Letectvo** (A): letadla z výroby (linky v okně Výroba, Y) padají do rezervy; z rezervy sestavíte křídla na letištích (letiště stavíte v okně Stavby, T). Křídlu zadáte misi: **Hlídky** (stíhači kryjí stát a sestřelují nepřátelská letadla), **Podpora boje** (bonus k útoku vašich divizí ve zvoleném státě, nejlépe pod krytím hlídek) nebo **Bombardování** (válečný protivník ztrácí podporu války a zásoby). Mise se vyhodnocují o půlnoci.
+
+### Cíl hry a konec
+
+**Vítězství:** váš blok (členové a loutky) ovládá polovinu světa podle vítězných bodů. **Porážka:** vaše země kapitulovala. **Konec času:** 1. 1. 1946, s hodnocením (podíl světa, pořadí, skóre). Po konci můžete hrát dál.
 
 ### Rozhodnutí
 

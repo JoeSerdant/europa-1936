@@ -400,3 +400,13 @@ button.st-row:hover { background: var(--ink-3); }
 .dec-card.ready { box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
 .dec-card.used { opacity: 0.5; }
 @media (max-width: 1500px) { .dec-body { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ------------------------------------------------------------------ konec hry (M36) */
+.end-scrim { z-index: 40; }
+.end-dialog { gap: 14px; border-top: 3px solid var(--brass); }
+.end-dialog.win h2 { color: var(--green); }
+.end-dialog.lose h2 { color: var(--red); }
+.end-stats { display: flex; flex-direction: column; gap: 4px; }
+.end-stats > div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dotted var(--rule); padding: 3px 0; }
+.end-stats dt { color: var(--text-3); }
+.end-stats dd { font: 600 16px/1.2 var(--display); color: var(--paper); font-variant-numeric: tabular-nums; }

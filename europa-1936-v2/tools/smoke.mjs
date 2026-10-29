@@ -613,6 +613,13 @@ try {
   await page.getByRole('button', { name: /Loutkový stát/ }).click();
   await page.waitForTimeout(300);
   check('volba „Loutkový stát“ udělá z Polska loutku hráče', (await E(() => { const s = window.__e1936.gameStore.getState(), W2 = window.__e1936.engine.getWorld(); return s.dip.sub[W2.ownerIdx.POL] === W2.ownerIdx.GER && s.dip.conf.length === 0; })) && (await page.locator('.conference').count()) === 0);
+  await E(() => { const { gameStore, engine } = window.__e1936; gameStore.setState(engine.forceEnd(gameStore.getState(), 'time')); });
+  await page.waitForSelector('.end-dialog', { timeout: 3000 });
+  check('konec hry: dialog s pořadím a skóre', /Konec války/.test(await page.locator('.end-dialog').innerText()) && (await page.locator('.end-stats > div').count()) === 5);
+  await shot('end');
+  await page.getByRole('button', { name: 'Pokračovat ve hře' }).click();
+  await page.waitForTimeout(300);
+  check('„Pokračovat ve hře“ zavře dialog a potvrdí konec', (await page.locator('.end-dialog').count()) === 0 && (await E(() => window.__e1936.gameStore.getState().end.ack)) === 1);
   check('načtení z hlavního menu vrátí uloženou hru', tickLoaded === tickSaved && (await page.locator('.save-dialog').count()) === 0, `tick ${tickLoaded}`);
 } catch (e) {
   check('kontrola doběhla', false, e.message);

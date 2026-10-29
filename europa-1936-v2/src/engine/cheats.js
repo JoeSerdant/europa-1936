@@ -9,6 +9,7 @@ import { BUILDINGS } from '../data/industry/index.js';
 import { EQUIP } from '../data/army/equipment.js';
 import { PLANES } from '../data/air/planes.js';
 import { addXp } from './doc/commands.js';
+import { forceEnd } from './end.js';
 
 export const CHEAT_HELP = [
   'pp <n> – přidá politickou moc',
@@ -19,6 +20,7 @@ export const CHEAT_HELP = [
   'equip <id> <n> – přidá výzbroj do skladu (např. equip pusky 1000)',
   'plane <sti|bit|tac|str> <n> – přidá letadla do rezervy',
   'xp <land|air|sea> <n> – přidá zkušenosti doktrín',
+  'end <win|lose|time> – vyvolá konec hry',
   'tag <TAG> – přepne na jinou zemi (např. tag FRA)',
   'war <TAG> | peace <TAG> – válka / mír s danou zemí',
   'annex <TAG> – země kapitulace (okupanti dostanou její území)',
@@ -87,6 +89,10 @@ export function runCheat(state, text) {
       const err = needMe(), n = num(b);
       if (err || !['land', 'air', 'sea'].includes(a) || n === null) return same(state, err || 'Použití: xp <land|air|sea> <počet>');
       return { state: addXp(state, me, a, n), msg: `Zkušenosti ${a} ${n >= 0 ? '+' : ''}${n}.` };
+    }
+    case 'end': {
+      const err = needMe(), n = forceEnd(state, a);
+      return err || n === state ? same(state, err || 'Použití: end <win|lose|time> (jen když hra ještě neskončila)') : { state: n, msg: 'Konec hry.' };
     }
     case 'tag': {
       const t = tagOf(a);
