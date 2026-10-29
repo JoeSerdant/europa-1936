@@ -230,3 +230,21 @@ describe('čistota a determinismus', () => {
     expect(advanceHour(c).nat).toBe(c.nat);
   });
 });
+
+describe('historické události (M44)', () => {
+  it('data jsou platná: id, země, účinky a závislosti na příznacích', () => {
+    const hist = EVENTS.filter((e) => /^(ger|eng|fra|ita|sov|pol|cze|spr|swe|tur)_/.test(e.id) || ['refugees', 'arms_fair', 'cold_winter', 'war_heroes', 'war_bond'].includes(e.id));
+    expect(hist.length).toBeGreaterThanOrEqual(20);
+    const flags = new Set(EVENTS.flatMap((e) => e.opts.flatMap((o) => o.fx.filter((x) => x.t === 'flag').map((x) => x.id))));
+    for (const e of EVENTS) { if (e.cond.flag) expect(flags.has(e.cond.flag)).toBe(true); for (const o of e.opts) expect(o.n.length).toBeGreaterThan(3); }
+  });
+  it('dlouhá hra s historickými událostmi doběhne a hráč dostane příběhové události', () => {
+    let s = createGame({ player: 'GER', aiLevel: 2 });
+    const seen = new Set();
+    for (let k = 0; k < 24; k++) {
+      s = advance(s, 24 * 30);
+      for (const p of s.nat.pend) { if (p.o === W.ownerIdx.GER) { seen.add(p.id); s = chooseEvent(s, W.ownerIdx.GER, p.id, 0); } }
+    }
+    expect([...seen].some((id) => id.startsWith('ger_'))).toBe(true);
+  });
+});

@@ -540,6 +540,10 @@ Bez uloženého stavu: `weatherAt(tick, p)` (`src/engine/weather.js`) odvozuje p
 - **Pohyb** (`army/movement.js`): snížení rychlosti (`spd`). **Obnova organizace a opotřebení** (`army/upkeep.js`): pomalejší obnova (`org`), v mrazu větší ztráty bez zásob.
 - **Rozhraní:** řádek Počasí na kartě provincie, mapový režim Počasí (bílá = mráz, hnědá = bláto, oranžová = vedro; mění se s měsícem).
 
+## 4v. Historické události (M44)
+
+Datový balík `data/nat/events_hist.js` (`HIST_EVENTS`, připojený k `EVENTS`): 23 příběhových událostí (GER, ENG, FRA, ITA, SOV, POL, CZE, SPR, SWE, TUR a obecné doby). Stejný tvar a stejné podmínky jako u ostatních událostí (`tags`, `from`/`until`, `flag`/`noFlag`, `war`, `stabBelow/Above`, `wsBelow`); žádné nové typy účinků ani změna stavu. Příběhové události se na hráče nebo AI spustí jednou (příznak `noFlag`). Texty jsou vlastní, bez skutečných osob. Test: `test/nat.test.js` (platnost dat, 720 dní s hráčem GER vyvolá události `ger_*`).
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -724,6 +728,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M41** | **Zpravodajství**: agenti, operace proti cizím zemím, protišpionáž, AI, okno Zpravodajská agentura | **hotovo** |
 | **M42** | **Pevnosti**: provinční stavba s bonusem k obraně, AI na frontě, karta provincie | **hotovo** |
 | **M43** | **Počasí a roční období**: mráz, bláto a vedro podle podnebí a měsíce, účinky na boj, pohyb a organizaci, mapový režim Počasí | **hotovo** |
+| **M44** | **Historické události**: 23 příběhových událostí velmocí a obecných (datový balík) | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
