@@ -14,6 +14,7 @@ import {
   ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
+import { play } from './sound.js';
 import { mapController as mc } from './map/controller.js';
 import { writeSave, readSave, deleteSave, slotName } from './saves.js';
 
@@ -91,6 +92,7 @@ export function ownerTagAt(l) {
 let toastSeq = 0, toastTimer = 0;
 /** Krátké oznámení dole uprostřed (zmizí samo). */
 export function toast(text) {
+  play('notify');
   const id = ++toastSeq;
   setUi({ toast: { id, text } });
   clearTimeout(toastTimer);
@@ -324,6 +326,7 @@ export function declareWarOn(tag) {
   if (!me || !t || me === t) return false;
   if (!justReady(s, me, t)) { toast('Válka není ospravedlněná – nejdřív ji ospravedlněte (diplomacie, D).'); return false; }
   if (!run(startWar, me, t)) return false;
+  play('war');
   toast(`Vyhlásili jste válku: ${countryName(tag)}.`);
   return true;
 }

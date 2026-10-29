@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useGame } from '../store.js';
+import { play } from '../sound.js';
 import { ackGameEnd, goMenu } from '../actions.js';
 import { formatDate } from '../../engine/index.js';
 
@@ -11,6 +13,8 @@ const TEXT = {
 /** Konec hry: shrnutí (podíl světa, pořadí, skóre) a volba pokračovat nebo odejít do menu. */
 export function EndDialog() {
   const end = useGame((s) => s.end);
+  const shown = !!end && !end.ack;
+  useEffect(() => { if (shown) play('end'); }, [shown]);
   if (!end || end.ack) return null;
   const t = TEXT[end.kind];
   return (

@@ -633,13 +633,14 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `doctrine` (7): zkušenosti, cena a zámky, účinky, nezávislost větví, AI, uložení;
   - `decisions` (5): data, použití a obnova, podmínky, zkušenosti a jednorázovost, AI a uložení;
   - `end` (6): postavení, podmínky konce, porážka a loutka, potvrzení, uložení;
+  - `sound` (2): zvuky bez Web Audio, s falešným Web Audio a vypnutí, pamatování volby;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **92 kontrol** (od M36 dialog konce hry; od M35 okno Rozhodnutí; od M34 okno Důstojnický sbor; od M33 mírová konference po kapitulaci; od M32 letecké mise na mapě; od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **93 kontrol** (od M37 kurzory a přepínač zvuku; od M36 dialog konce hry; od M35 okno Rozhodnutí; od M34 okno Důstojnický sbor; od M33 mírová konference po kapitulaci; od M32 letecké mise na mapě; od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -668,6 +669,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M34** | **Doktríny**: zkušenosti tří větví, stromy po třech směrech a stupních, účinky na boj, letectvo a konvoje, AI, okno Důstojnický sbor | **hotovo** |
 | **M35** | **Rozhodnutí**: akce za politickou moc s podmínkami a obnovou, národní rozhodnutí, AI, okno Rozhodnutí | **hotovo** |
 | **M36** | **Konec hry**: vítězství, porážka, konec času s hodnocením, dialog | **hotovo** |
+| **M37** | **Kurzory a zvuky**: vlastní kurzory (šipka, ruka, otevřená a sevřená dlaň, zaměřovač) kreslené v SVG, syntetizované zvuky rozhraní (Web Audio) s přepínačem v nabídce | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

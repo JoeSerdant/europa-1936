@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useUi } from '../store.js';
+import { soundOn, setSound } from '../sound.js';
 import { goMenu, setHelp, setMenuOpen, openSaveDialog } from '../actions.js';
 
 /** Nabídka ve hře (Esc): pokračovat, ovládání, zpět do hlavního menu. */
 export function GameMenu() {
   const open = useUi((s) => s.menuOpen);
   const [confirm, setConfirm] = useState(false);
+  const [snd, setSnd] = useState(soundOn());
   useEffect(() => { if (!open) setConfirm(false); }, [open]);
   if (!open) return null;
   return (
@@ -17,6 +19,7 @@ export function GameMenu() {
           <button className="btn" onClick={() => { setMenuOpen(false); openSaveDialog('save'); }}>Uložit hru</button>
           <button className="btn" onClick={() => { setMenuOpen(false); openSaveDialog('load'); }}>Načíst hru</button>
           <button className="btn" onClick={() => { setMenuOpen(false); setHelp(true); }}>Ovládání</button>
+          <button className="btn" aria-pressed={snd} onClick={() => { setSound(!snd); setSnd(!snd); }}>Zvuk: {snd ? 'zapnutý' : 'vypnutý'}</button>
           {confirm ? (
             <div className="confirm">
               <p>Neuložená hra se ztratí. Opravdu odejít do hlavního menu?</p>
