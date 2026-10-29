@@ -14,6 +14,20 @@ export function stepHours(w, a, b, kind) {
   return C.PROV_HOURS * dist * TERRAIN_RULES[w.terrain[b]].cost * (kind === 1 ? 1 + RIVER.time : 1);
 }
 
+/** Úroveň železničního spoje mezi sousedy `a` a `b` (0 = žádný). */
+export function railLevel(w, a, b) {
+  for (let k = w.rails.start[a]; k < w.rails.start[a + 1]; k++) if (w.rails.to[k] === b) return w.rails.level[k];
+  return 0;
+}
+
+/** Hodiny kroku `a`→`b` pro zemi `o`: po železnici mezi vlastními provinciemi (M46) kratší než pochodem. */
+export function stepHoursFor(w, ctrl, o, a, b, kind) {
+  const h = stepHours(w, a, b, kind);
+  if (ctrl[a] !== o || ctrl[b] !== o) return h;
+  const L = railLevel(w, a, b);
+  return L ? h / (1 + C.RAIL_SPEED * L) : h;
+}
+
 /** Smí divize země `o` vstoupit do provincie s kontrolou `c`? Vlastní nebo nepřátelská ano, cizí neutrální ne. */
 export const canEnter = (mil, o, c) => c === o || atWar(mil, o, c);
 
@@ -42,7 +56,7 @@ export function findPath(mil, ctrl, o, from, to, opts = {}) {
       const q = e.to;
       if (e.kind === 2) continue;
       if (!canEnter(mil, o, ctrl[q])) continue;
-      const nd = d + stepHours(w, p, q, e.kind);
+      const nd = d + stepHoursFor(w, ctrl, o, p, q, e.kind);
       if (nd < dist[q] && nd <= maxH) { dist[q] = nd; prev[q] = p; heap.push(nd, q); }
     }
   }
@@ -53,13 +67,13 @@ export function findPath(mil, ctrl, o, from, to, opts = {}) {
 }
 
 /** Délka cesty v hodinách pro pěšáka (součet kroků). */
-export function pathHours(from, path) {
+export function pathHours(from, path, ctrl = null, o = 0) {
   const w = getWorld(), adj = adjacency(w);
   let h = 0, p = from;
   for (const q of path) {
     const e = adj[p].find((x) => x.to === q);
     if (!e) return Infinity;
-    h += stepHours(w, p, q, e.kind);
+    h += ctrl ? stepHoursFor(w, ctrl, o, p, q, e.kind) : stepHours(w, p, q, e.kind);
     p = q;
   }
   return h;

@@ -250,7 +250,7 @@ dále každou hodinu výcvik (dokončení) → **pohyb** → **boj** → údržb
 
 ### Záměrná zjednodušení proti vzoru
 Žádná letecká a námořní podpora, počasí a noc, pevnosti (M19), doktríny a bojové taktiky, dobrovolníci, zajatci, vyloďování, parašutisté; divize nenesou vlastní počty kusů výzbroje (síla `hp` je nahrazuje);
-velitelé divizí neexistují; pohyb po železnici (strategický přesun) zatím není. Číselné hodnoty jsou vlastní.
+velitelé divizí neexistují; pohyb po železnici viz § 4x (M46). Číselné hodnoty jsou vlastní.
 
 ## 4b. Průmysl (M19)
 
@@ -548,6 +548,10 @@ Datový balík `data/nat/events_hist.js` (`HIST_EVENTS`, připojený k `EVENTS`)
 
 `state.stat = { t: [tick…], m: { vp, divs, fac, stab }: [[hodnota podle indexu země]…] }` (`engine/stat/index.js`). Snímek se pořizuje při vzniku hry a pak každých 30 herních dní (`statHour` je vnější vrstva `advanceHour`); drží se nejvýše 130 snímků (`STAT.MAX`). Metriky: vítězné body pod kontrolou, divize, továrny (civilní + vojenské), stabilita (%). Selektory `seriesOf(state, metric, o)` a `topBy(state, metric, n)`. Stav je verze 20 (`GAME_VERSION`), `validateState` vyžaduje část `stat`. UI: okno Přehled zemí (O) má záložky Pořadí a Grafy (SVG čárový graf, 6 nejlepších zemí + hráč, přepínač ukazatelů). Test: `test/stat.test.js`.
 
+## 4x. Železniční pohyb (M46)
+
+Bez nového stavu a bez nového příkazu: krok `a`→`b` mezi dvěma provinciemi, které obě ovládá země divize, a se železničním spojem úrovně `L` (1–5) trvá `1 / (1 + RAIL_SPEED × L)` běžné doby (`RAIL_SPEED` 0,8, tedy úroveň 5 = 5× rychleji) a organizace ubývá jen `RAIL_ORG` (25 %) běžné ztráty. Platí pro každý rozkaz `orderMove`, i pro AI. `findPath` počítá s kratším krokem (cesta vede po železnici, kde se vyplatí) a `pathHours(from, path, ctrl, o)` dává odhad doby pro danou zemi. Pomocné funkce `railLevel(w,a,b)` a `stepHoursFor(w,ctrl,o,a,b,kind)` v `army/paths.js`. V nepřátelském a cizím území se pochoduje jako dřív. Test: `test/rail.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -734,6 +738,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M43** | **Počasí a roční období**: mráz, bláto a vedro podle podnebí a měsíce, účinky na boj, pohyb a organizaci, mapový režim Počasí | **hotovo** |
 | **M44** | **Historické události**: 23 příběhových událostí velmocí a obecných (datový balík) | **hotovo** |
 | **M45** | **Statistiky a grafy**: měsíční snímky zemí, záložka Grafy v Přehledu zemí | **hotovo** |
+| **M46** | **Železniční pohyb**: rychlejší a méně vyčerpávající přesuny po železnici ve vlastním území | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

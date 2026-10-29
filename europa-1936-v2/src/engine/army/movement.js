@@ -7,7 +7,7 @@ import { C } from './constants.js';
 import { geo, adjacency } from './geo.js';
 import { TERRAIN_RULES, RIVER } from '../../data/army/terrain.js';
 import { atWar } from './war.js';
-import { canEnter, stepHours } from './paths.js';
+import { canEnter, stepHours, railLevel } from './paths.js';
 import { atMap, editDiv, relocate, setCtrl, addBattle, editBattle, battleById } from './ctx.js';
 import { statsOf, lackOf, modsOf } from './unit.js';
 
@@ -65,10 +65,11 @@ export function movementStep(ctx) {
       continue;
     }
     const speed = moveSpeed(ctx, d0, st, next, e.kind);
-    const hours = stepHours(w, d0.p, next, e.kind) * (C.SPEED_REF / speed);
+    const rail = ctx.ctrl[d0.p] === d0.o && ctx.ctrl[next] === d0.o ? railLevel(w, d0.p, next) : 0;   // M46: železnice ve vlastním území
+    const hours = stepHours(w, d0.p, next, e.kind) * (C.SPEED_REF / speed) / (1 + C.RAIL_SPEED * rail);
     const d = editDiv(ctx, id);
     d.prog += 100 / Math.max(1, hours);
-    d.org = Math.max(Math.min(d.org, st.org * C.MIN_ORG_SHARE_MOVING), d.org - C.ORG_MOVE_COST);
+    d.org = Math.max(Math.min(d.org, st.org * C.MIN_ORG_SHARE_MOVING), d.org - C.ORG_MOVE_COST * (rail ? C.RAIL_ORG : 1));
     d.dig = 0;
     if (d.prog >= 100) {
       d.prog = Math.min(99, d.prog - 100);

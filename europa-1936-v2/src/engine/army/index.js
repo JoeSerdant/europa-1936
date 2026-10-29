@@ -2,7 +2,7 @@
 export * from './commands.js';
 export * from './selectors.js';
 export { deriveStats, validateTemplate, divisionName, templateUnits } from './stats.js';
-export { findPath, pathHours } from './paths.js';
+export { findPath, pathHours, railLevel, stepHoursFor } from './paths.js';
 export { C as ARMY, xpLevel, XP_NAMES } from './constants.js';
 export { PLAN_MODES, MODE_NAMES } from './plans.js';
 export { genLevel, xpForLevel, genMods } from './leaders.js';
