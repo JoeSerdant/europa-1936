@@ -25,7 +25,7 @@ export function baseRel(a, b) {
 /** Vztah dvou zemí −100…100 (základ + uložená změna). */
 export function relOf(state, a, b) {
   if (!a || !b || a === b) return 0;
-  return Math.max(-100, Math.min(100, baseRel(a, b) + (state.dip.rel[pairKey(a, b)] || 0)));
+  return Math.round(Math.max(-100, Math.min(100, baseRel(a, b) + (state.dip.rel[pairKey(a, b)] || 0))));
 }
 
 export const factionId = (state, o) => state.dip.fac[o] || 0;

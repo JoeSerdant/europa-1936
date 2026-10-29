@@ -1,6 +1,7 @@
 // Denní krok průmyslu (M19), pořadí: souhrn továren → linky zkrácené na dostupné továrny → obchod se surovinami → toky surovin → výroba → stavby.
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
+import { logAddMany } from '../log.js';
 import { BUILDINGS } from '../../data/industry/index.js';
 import { modsOf } from '../research/core.js';
 import { polModsOf, outMult, consOf } from '../politics/core.js';
@@ -92,5 +93,6 @@ export function industryDay(state) {
   const build = ind.build.filter((b) => !doneIds.has(b.id) && !dropped.has(b.id)).map((b) => (progress.has(b.id) ? { ...b, prog: progress.get(b.id) } : b));
   const next = { ...ind, st, inf, build, lines, trade, ver: ind.ver + (done.length || dropped.size ? 1 : 0) };
   const mil = stockOwn ? { ...state.mil, stock } : state.mil;
-  return { ...state, mil, ind: next };
+  const player = state.player ? w.ownerIdx[state.player] : 0;
+  return logAddMany({ ...state, mil, ind: next }, done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k })));
 }

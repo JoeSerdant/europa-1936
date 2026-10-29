@@ -1,6 +1,6 @@
 // Automatická kontrola hry v prohlížeči (Playwright): menu → výběr země → hra, klik na provincii, běh času, režimy, nabídka, výkon snímku
 // a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc)
-// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události) a diplomacie (ospravedlnění a vyhlášení války s bloky, panel Diplomacie) a AI zemí (volba obtížnosti při startu).
+// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události) a diplomacie (ospravedlnění a vyhlášení války s bloky, panel Diplomacie) a AI zemí (volba obtížnosti při startu) a zprávy a přehled zemí (panel Zprávy, okno Přehled).
 // Spuštění:  npm run dev  (nebo npm run build && npm run preview)  a pak  node tools/smoke.mjs [šířka výška]
 //   URL=http://localhost:4173 node tools/smoke.mjs 1366 768
 // Potřebuje balíček playwright (npm i -D playwright && npx playwright install chromium). Snímky: tools/preview/smoke-*.png.
@@ -419,6 +419,32 @@ try {
   await shot('diplomacy');
   await E(() => { const { gameStore, engine } = window.__e1936; const w = engine.getWorld(); gameStore.setState(engine.proposePeace(gameStore.getState(), w.ownerIdx.GER, w.ownerIdx.SWE)); });
   await page.keyboard.press('d');
+  await page.waitForTimeout(150);
+
+  // zprávy a přehled zemí (M26): panel Zprávy (L), okno Přehled zemí (O)
+  await page.keyboard.press('l');
+  await page.waitForSelector('.log-panel', { timeout: 3000 });
+  check('klávesa L otevře panel Zprávy se záznamy', (await ui()).panel === 'log' && (await page.locator('.log-row').count()) >= 3);
+  await page.getByRole('tab', { name: 'Moje' }).click();
+  await page.waitForTimeout(150);
+  const mineRows = await page.locator('.log-row').count();
+  await page.getByRole('tab', { name: 'Světové' }).click();
+  await page.waitForTimeout(150);
+  check('filtry zpráv: moje i světové záznamy se liší od celku', mineRows >= 1 && (await page.locator('.log-row').count()) >= 1);
+  await shot('log');
+  await page.keyboard.press('l');
+  await page.keyboard.press('o');
+  await page.waitForSelector('.overview-dialog', { timeout: 3000 });
+  check('klávesa O otevře Přehled zemí s řádkem hráče', (await page.locator('.ov-table tbody tr').count()) >= 30 && (await page.locator('.ov-table tr.me').count()) === 1);
+  await shot('overview');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  check('Esc zavře Přehled zemí', (await page.locator('.overview-dialog').count()) === 0);
+  await page.keyboard.press('o');
+  await page.locator('.ov-table tbody tr').nth(2).click();
+  await page.waitForTimeout(400);
+  check('klik na zemi v přehledu zavře okno a označí hlavní město', (await page.locator('.overview-dialog').count()) === 0 && (await E(() => window.__e1936.uiStore.getState().selected)) > 0);
+  await page.keyboard.press('Escape');
   await page.waitForTimeout(150);
 
   // výkon vrstvy žetonů (čas příkazů v jednom snímku)

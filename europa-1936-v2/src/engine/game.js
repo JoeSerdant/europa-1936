@@ -8,8 +8,9 @@ import { createTech } from './research/setup.js';
 import { createPol } from './politics/setup.js';
 import { createNat } from './nat/setup.js';
 import { createDip } from './dip/setup.js';
+import { createLog } from './log.js';
 
-export const GAME_VERSION = 8;
+export const GAME_VERSION = 9;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -41,6 +42,7 @@ export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = tru
     pol: createPol(w),     // M21: politika (viz SPEC § 4d)
     nat: createNat(w),     // M22: národní cíle a události (viz SPEC § 4e)
     dip: createDip(w),     // M23: diplomacie (viz SPEC § 4f)
+    log: createLog(),      // M26: deník dění (viz SPEC § 4i)
     ai: { level: [1, 2, 3].includes(aiLevel) ? aiLevel : 0, hist: hist ? 1 : 0 },   // M24: nastavení AI (viz SPEC § 4g)
   };
 }

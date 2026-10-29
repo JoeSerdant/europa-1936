@@ -31,7 +31,7 @@ export function applyInsets() {
   mc.setInsets(u.selected || u.panel ? INSETS.gameDossier : INSETS.game);
 }
 
-const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', toast: null };
+const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, toast: null };
 
 /** Nastavení AI zemí pro novou hru (obrazovka výběru země). */
 export const setAiOptions = (patch) => setUi(patch);
@@ -658,3 +658,13 @@ export const removeSave = (slot) => { deleteSave(slot); setUi({ saveMsg: '' }); 
 /** Rychlé uložení a načtení (F6 / F9). */
 export const quickSave = () => (uiStore.getState().screen === 'game' ? saveGame('quick') : false);
 export const quickLoad = () => loadGame('quick');
+
+// ============================================================ přehled zemí (M26)
+export const openOverview = () => setUi({ overview: true });
+export const closeOverview = () => setUi({ overview: false });
+/** Zavře přehled a ukáže hlavní město země `o` (označí provincii a přeletí kamerou). */
+export function selectCountryCapital(o) {
+  const cap = getWorld().owners[o].cap;
+  setUi({ overview: false });
+  if (uiStore.getState().screen === 'game') selectLabel(cap, true);
+}

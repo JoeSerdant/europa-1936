@@ -3,10 +3,11 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, playerIdx, closeSide, closeSaveDialog, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, playerIdx, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
+import { logLine, logImportant } from './logText.js';
 
 const AUTOSAVE_HOURS = 24 * 30;   // automatické uložení jednou za herní měsíc
 
@@ -27,6 +28,11 @@ export function useGameLoop(active) {
         gameStore.update(advance, hours);
         const cur = gameStore.getState();
         const after = cur.dip.cap;
+        if (cur.log !== prev.log) {
+          const me = playerIdx(cur);
+          const fresh = cur.log.items.filter((e) => e.id > prev.log.n && logImportant(e, me));
+          if (fresh.length) toast(logLine(fresh[fresh.length - 1], me).text);
+        }
         if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) writeSave('auto', cur, new Date().toLocaleString('cs-CZ'));
         if (after !== before) for (let o = 1; o < after.length; o++) if (after[o] && !before[o]) toast(`${getWorld().owners[o].name} kapitulovala.`);
       }
@@ -39,7 +45,7 @@ export function useGameLoop(active) {
 const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;
 
 /**
- * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, C = Cíle, D = Diplomacie, X = zastavit vybrané divize,
+ * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, C = Cíle, D = Diplomacie, L = Zprávy, O = Přehled zemí, X = zastavit vybrané divize,
  * F = zaměřit výběr, Esc = zrušit/zavřít (nabídka → návrhář → úprava plánu → výběr jednotek → panel), F1 nebo ? = nápověda.
  */
 export function useHotkeys() {
@@ -49,6 +55,7 @@ export function useHotkeys() {
       const ui = uiStore.getState();
       if (e.key === 'F1' || e.key === '?') { e.preventDefault(); setHelp(!ui.helpOpen); return; }
       if (ui.saveDialog) { if (e.key === 'Escape') closeSaveDialog(); return; }
+      if (ui.overview && e.key === 'Escape') { closeOverview(); return; }
       if (e.key === 'F6') { e.preventDefault(); quickSave(); return; }
       if (e.key === 'F9') { e.preventDefault(); quickLoad(); return; }
       const gs = gameStore.getState();
@@ -79,6 +86,8 @@ export function useHotkeys() {
       else if (k === 'p') togglePanel('politics');
       else if (k === 'c') togglePanel('nat');
       else if (k === 'd') togglePanel('dip');
+      else if (k === 'l') togglePanel('log');
+      else if (k === 'o') { if (ui.overview) closeOverview(); else openOverview(); }
       else if (k === 'x') stopSelected();
       else if (k === 'f') focusSelection();
     };

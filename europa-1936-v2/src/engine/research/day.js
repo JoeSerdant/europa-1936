@@ -3,6 +3,7 @@ import { getWorld } from '../world.js';
 import { TECHS, TECH_IDS } from '../../data/research/index.js';
 import { polModsOf } from '../politics/core.js';
 import { aiMult } from '../ai/core.js';
+import { logAddMany } from '../log.js';
 import { isAvailable, slotCount, speedOfDone, progressPerDay, yearOf } from './core.js';
 
 const hash = (o, id) => { let h = o * 2654435761; for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619); return (h >>> 0) % 50; };
@@ -24,6 +25,7 @@ export function researchDay(state) {
   const year = Math.floor(yearOf(state.tick));
   let own = state.tech.own, ownCopy = false;
   let lv = state.mil.lv, lvCopy = false, milChanged = false;
+  const finished = [];
   for (let o = 1; o < own.length; o++) {
     const cur = own[o];
     if (!cur) continue;
@@ -53,6 +55,7 @@ export function researchDay(state) {
         if (p < 1) { prog[id] = p; continue; }
         if (done === cur.done) done = { ...done };
         done[id] = 1;
+        finished.push({ k: 'tech', o, x: id });
         delete prog[id];
         slots[i] = 0;
         for (const e in TECHS[id].fx.lv || {}) {
@@ -73,5 +76,6 @@ export function researchDay(state) {
   }
   if (!ownCopy) return state;
   const mil = milChanged ? { ...state.mil, lv, ver: state.mil.ver + 1 } : state.mil;
-  return { ...state, tech: { ver: state.tech.ver + 1, own }, mil };
+  const out = { ...state, tech: { ver: state.tech.ver + 1, own }, mil };
+  return logAddMany(out, finished.filter((x) => x.o === player));
 }

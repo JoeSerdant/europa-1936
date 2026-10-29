@@ -3,6 +3,7 @@ import { getWorld } from '../world.js';
 import { atWar } from '../army/war.js';
 import { withCtx, settleAfterPeace } from '../army/commands.js';
 import { DIP } from './constants.js';
+import { logAdd } from '../log.js';
 
 export function capitulate(state, loser) {
   const w = getWorld();
@@ -39,5 +40,5 @@ export function capitulate(state, loser) {
     pol: { ...state.pol, own: pol },
   };
   void annexed;
-  return withCtx(next, (ctx) => settleAfterPeace(ctx, loser, loser));
+  return logAdd(withCtx(next, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser });
 }
