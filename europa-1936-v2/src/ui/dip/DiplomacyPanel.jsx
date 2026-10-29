@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { diplomacyOf, DIP, getWorld, EQUIP, EQUIP_IDS } from '../../engine/index.js';
-import { playerIdx, annexOwnPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS } from '../../engine/index.js';
+import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -55,6 +55,9 @@ function Row({ c, me }) {
             ) : (
               <button className="sbtn" disabled={!c.canJustify} onClick={() => justifyOn(c.tag)} title={c.justifyBlock || `Ospravedlnit válku: ${DIP.JUST_PP} PM, ${DIP.JUST_DAYS} dní`}>Ospravedlnit válku</button>
             )}
+            {c.mine && <span className="muted" title="Autonomie loutky">{AUTONOMY_NAMES[c.auLevel]} · autonomie {Math.round(c.au)} %</span>}
+            {c.mine && <button className="sbtn" disabled={!!c.tightBlock} onClick={() => tightenPuppet(c.tag)} title={c.tightBlock || `Utáhnout kontrolu (${DIP.AU_TIGHT_PP} PM): autonomie −${DIP.AU_TIGHT}`}>Utáhnout kontrolu</button>}
+            {c.mine && <button className="sbtn" disabled={!!c.looseBlock} onClick={() => loosenPuppet(c.tag)} title={c.looseBlock || `Uvolnit kontrolu: autonomie +${DIP.AU_LOOSE}, lepší vztah`}>Uvolnit kontrolu</button>}
             {c.mine && <button className="sbtn danger" disabled={!!c.annexBlock} onClick={() => annexOwnPuppet(c.tag)} title={c.annexBlock || 'Anektovat loutku (stojí politickou moc)'}>Anektovat loutku</button>}
             {c.garMine
               ? <button className="sbtn" onClick={() => revokeGuaranteeFor(c.tag)} title="Zrušit záruku nezávislosti">Zrušit záruku</button>

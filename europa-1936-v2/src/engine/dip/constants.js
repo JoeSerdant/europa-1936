@@ -23,6 +23,13 @@ export const DIP = {
   INVITE_MIN: 20,         // nejmenší skóre pozvání, aby pozvaný přijal
   INVITE_ENEMY: 30,       // bonus skóre za společného nepřítele
   INVITE_IDEO: 15,
+  AU_START: 30,           // autonomie nové loutky (0–100)
+  AU_GROW: 0.06,          // denní růst autonomie (loutka touží po samostatnosti)
+  AU_TIGHT: 15,           // o kolik utažení kontroly sníží autonomii
+  AU_TIGHT_PP: 20,        // cena utažení v politické moci
+  AU_LOOSE: 20,           // o kolik uvolnění zvýší autonomii (zdarma, zlepší vztah)
+  AU_LEVELS: [25, 50, 75],// hranice úrovní: kolonie < 25 ≤ loutka < 50 ≤ dominion < 75 ≤ nespokojená
+  AU_MULT: [1.6, 1, 0.5, 0.2], // násobek příspěvků pánovi podle úrovně
   SUB_MAN: 0.002,         // podíl lidské síly loutky, který denně připadne pánovi
   SUB_PP: 0.4,            // politická moc, kterou denně dostane pán za každou loutku
   ANNEX_PP: 150,          // cena anexe vlastní loutky        // bonus za shodnou ideologii

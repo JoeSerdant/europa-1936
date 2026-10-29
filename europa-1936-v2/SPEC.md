@@ -584,6 +584,10 @@ Křídla mají pole `a` (0–`AIR.ACE_MAX`, tj. 3; od `GAME_VERSION` 22). Ve vzd
 
 Velitelé (`mil.gens`) mají pátou dovednost `mn` (Manévr, od `GAME_VERSION` 24). Počáteční hodnota se odvodí z hashe jména a vlastníka (nespotřebuje náhodu, takže se ostatní velitelé nemění). Manévr dává bonus rychlosti `C.SKILL_MAN_SPEED` a obnovy organizace `C.SKILL_MAN_ORG` za úroveň (`genMods`); úroveň velitele je nyní součet pěti dovedností − 4, při postupu úrovně roste náhodně vybraná dovednost včetně manévru. UI: štítek Mn u velitele. Test: `test/leaderskills.test.js`.
 
+## 4zg. Autonomie loutek (M55)
+
+`dip.au[o]` = autonomie loutkového státu 0–100 (od `GAME_VERSION` 25; `validateState` vyžaduje pole). Nová loutka začíná na `DIP.AU_START`, autonomie denně roste o `DIP.AU_GROW` (`subjectsDay`). Úroveň určuje `autonomyLevel` podle `DIP.AU_LEVELS` (Kolonie, Loutkový stát, Dominion, Nespokojená loutka); příspěvky pánovi (lidská síla, politická moc) se násobí `DIP.AU_MULT[úroveň]` (1,6 / 1 / 0,5 / 0,2). Dosáhne-li autonomie 100, loutka se osamostatní (`dip.sub = 0`, vztah −20, záznam `free`). Pán může kontrolu utáhnout (`tightenControl`: −`AU_TIGHT` autonomie, stojí `AU_TIGHT_PP` politické moci a trochu stability loutky) nebo uvolnit (`loosenControl`: +`AU_LOOSE`, lepší vztah). AI pán utahuje loutky od autonomie 70. UI: v panelu Diplomacie u vlastní loutky úroveň, autonomie a tlačítka. Anexe loutky autonomii nuluje. Test: `test/autonomy.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -779,6 +783,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M52** | **Letečtí esa**: piloti se v bojích vyznamenají a zesilují hlídky křídla | **hotovo** |
 | **M53** | **Velitelská moc**: moc se hromadí a za ni armády dostanou dočasné bonusy, AI je používá | **hotovo** |
 | **M54** | **Dovednosti velitelů**: pátá dovednost velitelů zrychluje pochod a obnovu organizace | **hotovo** |
+| **M55** | **Autonomie loutek**: úrovně autonomie loutek určují příspěvky pánovi, nespokojená loutka se osamostatní | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
