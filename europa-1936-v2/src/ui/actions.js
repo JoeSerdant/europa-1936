@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { mapController as mc } from './map/controller.js';
@@ -762,3 +762,6 @@ export const annexOwnPuppet = (tag) => { const me = playerIdx(), t = getWorld().
 
 // ============================================================ doktríny (M34)
 export const adoptDoc = (id) => !!playerIdx() && run(adoptDoctrine, playerIdx(), id);
+
+// ============================================================ rozhodnutí (M35)
+export const useDecision = (id) => { const ok = !!playerIdx() && run(takeDecision, playerIdx(), id); if (ok) toast('Rozhodnutí provedeno.'); return ok; };

@@ -60,7 +60,7 @@ describe('začátek a příkazy', () => {
   it('čistý JSON, verze 6, každá země bez hotového cíle', () => {
     expect(GAME_VERSION).toBeGreaterThanOrEqual(6);
     expect(JSON.parse(JSON.stringify(s0.nat))).toEqual(s0.nat);
-    for (let o = 1; o < W.owners.length; o++) expect(s0.nat.own[o]).toEqual({ done: {}, cur: null, flags: {}, seen: {}, sched: [] });
+    for (let o = 1; o < W.owners.length; o++) expect(s0.nat.own[o]).toEqual({ done: {}, cur: null, flags: {}, seen: {}, sched: [], dec: {} });
     expect(s0.nat.pend).toEqual([]);
   });
   it('strom se stavy: kořeny dostupné, ostatní zamčené; neznámá země má obecný strom', () => {

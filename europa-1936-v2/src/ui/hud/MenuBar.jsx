@@ -5,6 +5,7 @@ import { togglePanel, toggleIndustry } from '../actions.js';
 // Hlavní lišta nabídek (jako v HOI4 vedle vlajky): klávesy Q W E R T Y U I jdou za sebou.
 const ITEMS = [
   { id: 'politics', name: 'Vláda', icon: 'politics', key: 'Q' },
+  { id: 'decisions', name: 'Rozhodnutí', icon: 'gavel', key: 'J' },
   { id: 'nat', name: 'Národní cíle', icon: 'flag', key: 'C' },
   { id: 'research', name: 'Výzkum', icon: 'research', key: 'W' },
   { id: 'dip', name: 'Diplomacie', icon: 'dip', key: 'E' },

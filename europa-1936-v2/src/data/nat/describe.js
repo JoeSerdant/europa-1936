@@ -22,6 +22,7 @@ export function fxText(fx) {
     case 'tech': return `Technologie: ${TECHS[fx.id].n}`;
     case 'man': return `Lidská síla +${Math.round(fx.v * 1000) / 10} % obyvatel`;
     case 'stock': return `${EQUIP[fx.eq].n} +${fx.n}`;
+    case 'xp': return `Zkušenosti (${{ land: 'armáda', air: 'letectvo', sea: 'námořnictvo' }[fx.b]}) +${fx.n}`;
     case 'flag': return null;
     case 'event': return null;
     default: return null;

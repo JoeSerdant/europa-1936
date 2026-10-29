@@ -387,3 +387,16 @@ button.st-row:hover { background: var(--ink-3); }
 .doc-level footer { font-size: 12px; }
 .doc-level .sbtn { width: 100%; justify-content: center; }
 @media (max-width: 1500px) { .doc-body { grid-template-columns: 1fr; } .doc-levels { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ------------------------------------------------------------------ rozhodnutí (M35) */
+.dec-body { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; overflow-y: auto; align-content: start; }
+.dec-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dec-card { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: rgba(15, 24, 33, 0.7); box-shadow: inset 0 0 0 1px var(--rule); }
+.dec-card header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dec-card header b { font: 600 15.5px/1.2 var(--display); color: var(--paper); }
+.dec-cost { font: 600 13px/1 var(--display); color: var(--brass-hi); white-space: nowrap; }
+.dec-card p { font-size: 12.5px; }
+.dec-card footer { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
+.dec-card.ready { box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
+.dec-card.used { opacity: 0.5; }
+@media (max-width: 1500px) { .dec-body { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

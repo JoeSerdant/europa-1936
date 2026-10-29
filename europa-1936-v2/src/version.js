@@ -1,2 +1,2 @@
 // Označení verze hry zobrazené v hlavním menu (při dokončení milníku se zvedne).
-export const VERSION_LABEL = 'Verze 0.11 · M34 Doktríny';
+export const VERSION_LABEL = 'Verze 0.12 · M35 Rozhodnutí';
