@@ -61,3 +61,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 46. Radar (§ 4zb v `SPEC.md`): účinek radaru se čte jen přes `radarOf` v `air/day.js`; nová státní budova s účinkem = položka v `BUILDINGS` + čtení `ind.st[s][klíč]` ve správném systému + test.
 47. Sdílení technologií (§ 4zc v `SPEC.md`): bonus se počítá jen přes `shareBonus`; nový zdroj rychlosti výzkumu se přičítá v `baseSpeed`/`researchDay` společně a s odhadem v `etaDays`.
 48. Letečtí esa (§ 4zd v `SPEC.md`): stupeň es čti jen přes pole `wg.a` křídla a bonus přes `AIR.ACE_BONUS` v `power` (`air/day.js`); nová křídla vznikají s `a: 0`.
+49. Velitelská moc (§ 4ze v `SPEC.md`): moc a aktivní schopnosti se mění jen přes `useAbility` a `cmdDay`; bonusy schopností čti jen v `modsOf` (`abilityMods`). Nová schopnost = řádek v `data/cmd/abilities.js` s klíči z `MOD_KEYS` + test.

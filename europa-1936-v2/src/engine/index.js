@@ -11,6 +11,7 @@ export * from './spy/index.js';
 export { weatherIn, weatherAt, climateOfProv, WEATHER } from './weather.js';
 export { applyScenario } from './scenario.js';
 export { SCENARIOS, SCENARIO_IDS } from '../data/scenarios.js';
+export { CMD, ABILITIES, ABILITY_IDS, createCmd, abilityOf, abilityMods, abilityBlock, useAbility, cmdDay, aiCommand } from './cmd/index.js';
 export { STAT, STAT_METRICS, createStat, snapshot, recordStat, statHour, seriesOf, topBy } from './stat/index.js';
 export { alertsOf, ALERT } from './alerts.js';
 export { END, standing, endDay, ackEnd, forceEnd } from './end.js';
