@@ -54,7 +54,7 @@ function GenLine({ gen }) {
   return (
     <span className="gen-line">
       <b>{RANK_NAMES[gen.gen.r]} {gen.gen.nm}</b>
-      <span className="skills">{SKILLS.map(([k, n]) => <i key={k} title={`${n} ${gen.gen[k]}`}>{k === 'pl' ? 'Pl' : k === 'lg' ? 'Lg' : k === 'a' ? 'Ú' : 'O'}{gen.gen[k]}</i>)}</span>
+      <span className="skills">{SKILLS.map(([k, n]) => <i key={k} title={`${n} ${gen.gen[k]}`}>{k === 'pl' ? 'Pl' : k === 'lg' ? 'Lg' : k === 'mn' ? 'Mn' : k === 'a' ? 'Ú' : 'O'}{gen.gen[k] || 1}</i>)}</span>
     </span>
   );
 }

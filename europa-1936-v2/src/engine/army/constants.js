@@ -75,6 +75,8 @@ export const C = {
   SKILL_PLAN_GAIN: 0.1,
   SKILL_LOG_SUP: 0.02,
   SKILL_LOG_SPEED: 0.01,
+  SKILL_MAN_SPEED: 0.015,   // manévr (M54): bonus rychlosti za úroveň dovednosti
+  SKILL_MAN_ORG: 0.02,      // manévr: bonus obnovy organizace za úroveň
   MARSHAL_SHARE: 0.5,       // podíl bonusů polního maršála, který dostanou armády skupiny
   ARMY_CAP: 24,             // limit divizí v armádě
   TPL_MAX: 40,              // nejvíc šablon jedné země

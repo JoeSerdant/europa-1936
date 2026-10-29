@@ -63,11 +63,11 @@ function dailyLeaders(ctx) {
     let g = ctx.gens[id];
     if (!g) continue;
     const lv = genLevel(g);
-    if (g.xp >= xpForLevel(lv) && lv < 4 * C.LEADER_MAX_SKILL - 3) {
+    if (g.xp >= xpForLevel(lv) && lv < 5 * C.LEADER_MAX_SKILL - 4) {
       g = editGen(ctx, id);
       g.xp -= xpForLevel(lv);
-      const keys = ['a', 'd', 'pl', 'lg'].filter((k) => g[k] < C.LEADER_MAX_SKILL);
-      if (keys.length) g[keys[Math.floor(rnd(ctx) * keys.length)]] += 1;
+      const keys = ['a', 'd', 'pl', 'lg', 'mn'].filter((k) => (g[k] || 1) < C.LEADER_MAX_SKILL);
+      if (keys.length) { const k = keys[Math.floor(rnd(ctx) * keys.length)]; g[k] = (g[k] || 1) + 1; }
     }
   }
   void genMods;
