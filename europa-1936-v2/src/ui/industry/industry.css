@@ -368,3 +368,22 @@ button.st-row:hover { background: var(--ink-3); }
 .conf-opts { display: flex; flex-direction: column; gap: 8px; }
 .conf-opts .btn { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 14px; text-align: left; }
 .conf-opts .btn span { font-size: 12.5px; font-weight: 400; opacity: 0.85; }
+
+/* ------------------------------------------------------------------ doktríny (M34) */
+.doc-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; overflow-y: auto; align-content: start; }
+.doc-branch { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.doc-branch .sec-head h3 { display: flex; align-items: center; gap: 8px; }
+.doc-track { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: rgba(15, 24, 33, 0.7); box-shadow: inset 0 0 0 1px var(--rule); }
+.doc-track.excluded { opacity: 0.4; }
+.doc-track h4 { font: 600 15px/1.2 var(--display); color: var(--paper); }
+.doc-track h4 .muted { font: 400 12.5px/1.2 var(--body); }
+.doc-levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.doc-level { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); min-width: 0; }
+.doc-level header { display: flex; flex-direction: column; line-height: 1.15; }
+.doc-level header b { font: 600 13.5px/1.2 var(--display); color: var(--paper); }
+.doc-level p { font-size: 12px; flex: 1; }
+.doc-level.done { box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
+.doc-level.locked { opacity: 0.6; }
+.doc-level footer { font-size: 12px; }
+.doc-level .sbtn { width: 100%; justify-content: center; }
+@media (max-width: 1500px) { .doc-body { grid-template-columns: 1fr; } .doc-levels { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

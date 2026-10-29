@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { mapController as mc } from './map/controller.js';
@@ -759,3 +759,6 @@ export const conferencePuppet = (id) => run(confPuppet, id);
 export const conferenceAnnex = (id) => run(confAnnex, id);
 export const conferenceSkip = (id) => run(confSkip, id);
 export const annexOwnPuppet = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(annexPuppet, me, t); };
+
+// ============================================================ doktríny (M34)
+export const adoptDoc = (id) => !!playerIdx() && run(adoptDoctrine, playerIdx(), id);

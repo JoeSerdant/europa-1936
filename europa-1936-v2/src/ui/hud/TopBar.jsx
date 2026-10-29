@@ -63,6 +63,7 @@ export function TopBar() {
     return `${x.civ} / ${x.mil} / ${x.dok}`;
   }, [tag, owner, ind, ctrl]);
   const convoys = useGame((s) => (s.player ? transportsOf(s, getWorldIdx(s)).free : 0));
+  const xp = useGame((s) => { const e = s.player ? s.doc.own[getWorld().ownerIdx[s.player]] : null; return e ? `${Math.floor(e.xp.land)} / ${Math.floor(e.xp.air)} / ${Math.floor(e.xp.sea)}` : ''; });
   const tension = useGame((s) => Math.round(worldTension(s) * 100));
   return (
     <header className="topbar">
@@ -86,6 +87,7 @@ export function TopBar() {
             <Stat icon="swords" label="Podpora války" value={`${ws} %`} opt />
             <Stat icon="general" label="Politická moc" value={fmtInt(pp)} />
             <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} opt />
+            <Stat icon="general" label="Zkušenosti: armáda / letectvo / námořnictvo" value={xp} opt="wide" />
             <Stat icon="navy" label="Volné transporty" value={fmtInt(convoys)} opt />
             <Stat icon="regions" label="Napětí ve světě" value={`${tension} %`} opt />
           </div>

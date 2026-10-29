@@ -3,7 +3,7 @@ import { getWorld } from './world.js';
 import { GAME_VERSION } from './game.js';
 
 export const SAVE_FORMAT = 1;
-const SYSTEMS = ['mil', 'ind', 'tech', 'pol', 'nat', 'dip', 'ai', 'log', 'nav', 'air'];
+const SYSTEMS = ['mil', 'ind', 'tech', 'pol', 'nat', 'dip', 'ai', 'log', 'nav', 'air', 'doc'];
 
 /** Obálka uložené hry. */
 export function packGame(state) {
@@ -25,6 +25,7 @@ export function validateState(s) {
   if (!isArr(s.mil.divs) || !isArr(s.mil.stock) || s.mil.stock.length !== w.owners.length) return 'Uložená hra je poškozená (armáda).';
   if (!isArr(s.ind.st) || s.ind.st.length !== w.states.length) return 'Uložená hra je poškozená (průmysl).';
   for (const k of ['tech', 'pol', 'nat']) if (!isArr(s[k].own) || s[k].own.length !== w.owners.length) return `Uložená hra je poškozená (${k}).`;
+  if (!isArr(s.doc.own) || s.doc.own.length !== w.owners.length) return 'Uložená hra je poškozená (doktríny).';
   if (!isArr(s.air.wings) || !isArr(s.air.pool) || s.air.pool.length !== w.owners.length) return 'Uložená hra je poškozená (letectvo).';
   if (!isArr(s.dip.fac) || s.dip.fac.length !== w.owners.length || !isArr(s.dip.sub) || !isArr(s.dip.conf)) return 'Uložená hra je poškozená (diplomacie).';
   return null;

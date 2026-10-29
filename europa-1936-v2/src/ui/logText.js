@@ -1,6 +1,7 @@
 // Texty záznamů deníku dění (M26): čistá funkce záznam → { icon, tone, text, mine, world }. `me` = index země hráče (0 = pozorovatel).
 import { getWorld } from '../engine/world.js';
 import { TECHS } from '../data/research/techs.js';
+import { DOCTRINES } from '../data/doc/doctrines.js';
 import { FOCUS_BY_ID } from '../data/nat/focuses.js';
 import { EVENT_BY_ID } from '../data/nat/events.js';
 import { BUILDINGS } from '../data/industry/buildings.js';
@@ -23,6 +24,7 @@ export function logLine(e, me = 0) {
     case 'convoy': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Nepřátelské lodě potopily ${e.x} ${e.x === 1 ? 'konvoj' : e.x < 5 ? 'konvoje' : 'konvojů'} s vaším zbožím.` };
     case 'puppet': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.x].name} se stala loutkovým státem (${w.owners[e.o].name}).` };
     case 'annex': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.o].name} anektovala ${w.owners[e.x].name}.` };
+    case 'doctrine': return { icon: 'general', tone: 'good', world: false, mine: true, text: `Přijata doktrína: ${DOCTRINES[e.x]?.n || e.x}.` };
     case 'sunk': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Transportní loď s divizí potopena na cestě do provincie ${w.provName(e.x)}.` };
     case 'event': return { icon: 'politics', tone: 'info', world: false, mine: true, text: `Událost: ${EVENT_BY_ID[e.x]?.n || e.x}.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };
