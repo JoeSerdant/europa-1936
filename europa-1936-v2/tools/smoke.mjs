@@ -1,6 +1,6 @@
 // Automatická kontrola hry v prohlížeči (Playwright): menu → výběr země → hra, klik na provincii, běh času, režimy, nabídka, výkon snímku
 // a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc)
-// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události).
+// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události) a diplomacie (ospravedlnění a vyhlášení války s bloky, panel Diplomacie).
 // Spuštění:  npm run dev  (nebo npm run build && npm run preview)  a pak  node tools/smoke.mjs [šířka výška]
 //   URL=http://localhost:4173 node tools/smoke.mjs 1366 768
 // Potřebuje balíček playwright (npm i -D playwright && npx playwright install chromium). Snímky: tools/preview/smoke-*.png.
@@ -205,11 +205,21 @@ try {
   // válka: vyhlášení přes kartu oblasti
   const pol = await provinceXY(pair[1]);
   await page.mouse.click(pol.x, pol.y);
+  // od M23: válku je třeba nejdřív ospravedlnit (politická moc + 30 dní), potom vyhlásit; zapojí se bloky
+  const justBtn = page.getByRole('button', { name: /Ospravedlnit válku/ });
+  check('karta země nabízí ospravedlnění války (bez politické moci zamčené)', (await justBtn.count()) === 1 && (await justBtn.isDisabled()));
+  await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const own = s.pol.own.slice(); own[o] = { ...own[o], pp: 200 }; gameStore.setState({ ...s, pol: { ...s.pol, own } }); });
+  await page.waitForTimeout(900);
+  await justBtn.click();
+  await page.waitForTimeout(250);
+  await E(() => { const { gameStore, engine } = window.__e1936; gameStore.setState(engine.advance(gameStore.getState(), 24 * 31)); });
+  await clearEvents();
+  await page.waitForTimeout(900);
   await page.getByRole('button', { name: 'Vyhlásit válku' }).click();
   await page.getByRole('button', { name: 'Ano, vyhlásit válku' }).click();
   await page.waitForTimeout(300);
   const wars = await E(() => window.__e1936.gameStore.getState().mil.wars.length);
-  check('vyhlášení války z karty oblasti', wars === 1, `${wars} válka`);
+  check('vyhlášení války z karty oblasti po ospravedlnění (zapojí se bloky)', wars >= 1, `${wars} válek`);
   await shot('war');
 
   // plán fronty: Linie fronty → Použít aktuální frontu → Potvrdit
@@ -380,6 +390,18 @@ try {
   await page.waitForTimeout(250);
   check('volba události dialog zavře', (await page.locator('.event-dialog').count()) === 0);
   await page.keyboard.press('c');
+  await page.waitForTimeout(150);
+
+  // diplomacie (M23): panel Diplomacie (D), seznam zemí, rozbalení řádku, blok
+  await page.keyboard.press('d');
+  await page.waitForSelector('.dip-panel', { timeout: 3000 });
+  check('klávesa D otevře panel Diplomacie se seznamem zemí', (await ui()).panel === 'dip' && (await page.locator('.dip-row').count()) >= 30);
+  check('země ve válce jsou v seznamu první a označené', (await page.locator('.dip-row.war').count()) >= 1 && (await page.locator('.dip-list li').first().getAttribute('class')).includes('war'));
+  await page.locator('.dip-head').nth(3).click();
+  await page.waitForSelector('.dip-body', { timeout: 3000 });
+  check('řádek země se rozbalí s akcemi', (await page.locator('.dip-body .sbtn').count()) >= 2);
+  await shot('diplomacy');
+  await page.keyboard.press('d');
   await page.waitForTimeout(150);
 
   // výkon vrstvy žetonů (čas příkazů v jednom snímku)

@@ -1,9 +1,9 @@
 // Háčky pro hlavní smyčku hry a klávesové zkratky.
 import { useEffect } from 'react';
-import { advance, hoursForElapsed, togglePause, changeSpeed } from '../engine/index.js';
+import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  playerIdx, closeSide, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, playerIdx, closeSide, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 
@@ -18,7 +18,12 @@ export function useGameLoop(active) {
       last = t;
       const { hours, carry: c } = hoursForElapsed(gameStore.getState(), dt, carry);
       carry = c;
-      if (hours > 0) gameStore.update(advance, hours);
+      if (hours > 0) {
+        const before = gameStore.getState().dip.cap;
+        gameStore.update(advance, hours);
+        const after = gameStore.getState().dip.cap;
+        if (after !== before) for (let o = 1; o < after.length; o++) if (after[o] && !before[o]) toast(`${getWorld().owners[o].name} kapitulovala.`);
+      }
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
@@ -28,7 +33,7 @@ export function useGameLoop(active) {
 const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;
 
 /**
- * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, C = Cíle, X = zastavit vybrané divize,
+ * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, C = Cíle, D = Diplomacie, X = zastavit vybrané divize,
  * F = zaměřit výběr, Esc = zrušit/zavřít (nabídka → návrhář → úprava plánu → výběr jednotek → panel), F1 nebo ? = nápověda.
  */
 export function useHotkeys() {
@@ -64,6 +69,7 @@ export function useHotkeys() {
       else if (k === 'r') togglePanel('research');
       else if (k === 'p') togglePanel('politics');
       else if (k === 'c') togglePanel('nat');
+      else if (k === 'd') togglePanel('dip');
       else if (k === 'x') stopSelected();
       else if (k === 'f') focusSelection();
     };

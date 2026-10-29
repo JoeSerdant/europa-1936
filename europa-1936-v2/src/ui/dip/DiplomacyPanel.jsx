@@ -1,0 +1,80 @@
+import { useMemo, useState } from 'react';
+import { useGameSlow } from '../store.js';
+import { Flag } from '../common/Flag.jsx';
+import { Icon } from '../common/Icon.jsx';
+import { diplomacyOf, DIP, getWorld } from '../../engine/index.js';
+import { playerIdx, justifyOn, declareWarOn, makePeaceWith, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { fmtNum } from '../format.js';
+
+const relCls = (r) => (r >= 25 ? 'good' : r <= -25 ? 'bad' : 'mid');
+
+function Row({ c }) {
+  const [open, setOpen] = useState(false);
+  const flags = [];
+  if (c.war) flags.push(['war', 'válka']);
+  if (c.ally) flags.push(['ally', 'spojenec']);
+  if (c.capitulated) flags.push(['cap', 'kapitulovala']);
+  if (c.just && !c.just.done) flags.push(['just', `ospravedlnění ${c.just.left} d`]);
+  if (c.just && c.just.done) flags.push(['just', 'ospravedlněno']);
+  return (
+    <li className={`dip-row ${c.war ? 'war' : ''}`}>
+      <button className="dip-head" onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${c.name}: vztah ${c.rel}`}>
+        <Flag tag={c.tag} width={22} />
+        <span className="nm">{c.name}</span>
+        <span className={`rel ${relCls(c.rel)}`}>{c.rel > 0 ? '+' : ''}{c.rel}</span>
+        {flags.slice(0, 2).map(([k, t]) => <i key={k} className={`dip-flag ${k}`}>{t}</i>)}
+      </button>
+      {open && (
+        <div className="dip-body">
+          {c.faction ? <p className="muted">Blok: {c.faction.nm} ({c.faction.mem.length})</p> : <p className="muted">Bez bloku.</p>}
+          <div className="ind-btns">
+            {c.war ? (
+              <button className="sbtn" disabled={!!c.peaceBlock} onClick={() => makePeaceWith(c.tag)} title={c.peaceBlock || 'Navrhnout bílý mír'}>Navrhnout mír</button>
+            ) : c.canDeclare ? (
+              <button className="sbtn danger" onClick={() => declareWarOn(c.tag)} title="Vyhlásit válku (zapojí se bloky)">Vyhlásit válku</button>
+            ) : (
+              <button className="sbtn" disabled={!c.canJustify} onClick={() => justifyOn(c.tag)} title={c.justifyBlock || `Ospravedlnit válku: ${DIP.JUST_PP} PM, ${DIP.JUST_DAYS} dní`}>Ospravedlnit válku</button>
+            )}
+            <button className="sbtn" disabled={!!c.inviteBlock} onClick={() => inviteBloc(c.tag)} title={c.inviteBlock || 'Pozvat do bloku'}>Pozvat do bloku</button>
+            <button className="sbtn" onClick={() => selectLabel(getWorld().owners[c.o].cap, true)} title="Ukázat hlavní město"><Icon name="target" size={14} />Ukázat</button>
+          </div>
+          {c.war ? <p className="muted">Válečné skóre: {c.score > 0 ? '+' : ''}{fmtNum(c.score * 100, 0)} %</p> : null}
+          {!c.war && !c.canDeclare && c.justifyBlock ? <p className="pol-block">{c.justifyBlock}</p> : null}
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** Záložka Diplomacie: blok hráče a seznam zemí se vztahem, ospravedlněním, vyhlášením války, mírem a pozváním do bloku. */
+export function DiplomacyPanel() {
+  const state = useGameSlow((s) => s, 700);
+  const me = playerIdx(state);
+  const [name, setName] = useState('');
+  const d = useMemo(() => (me ? diplomacyOf(state, me) : null), [state.dip, state.mil.wars, state.pol, state.ctrl, state.stateOwner, state.tick, me]);
+  if (!me) return <div className="recruit-panel"><p className="empty">Jako pozorovatel nevedete žádnou diplomacii.</p></div>;
+  const list = [...d.list].sort((a, b) => (b.war - a.war) || (b.ally - a.ally) || (b.rel - a.rel));
+  const f = d.faction;
+  return (
+    <div className="recruit-panel dip-panel">
+      <section className="rs-head" aria-label="Blok">
+        {f ? (
+          <>
+            <div className="q-top"><b>{f.nm}</b><span className="muted">{f.mem.length} {f.mem.length === 1 ? 'člen' : f.mem.length < 5 ? 'členové' : 'členů'}</span>
+              <button className="sbtn" onClick={leaveBloc} title="Opustit blok">Opustit</button></div>
+            <div className="chips">{f.mem.map((o) => <span key={o} className="chip chip-flag"><Flag tag={getWorld().owners[o].tag} width={16} />{getWorld().owners[o].name}{o === f.ldr ? <i>vedoucí</i> : null}</span>)}</div>
+          </>
+        ) : d.capitulated ? <p className="muted">Země kapitulovala.</p> : (
+          <div className="dip-found">
+            <input type="text" value={name} maxLength={30} placeholder="Název bloku" aria-label="Název bloku" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
+            <button className="sbtn primary" disabled={!d.canFound} onClick={() => foundBloc(name)} title={`Založit blok: ${DIP.FAC_PP} PM`}>Založit blok</button>
+          </div>
+        )}
+        <p className="muted pol-sum">Území držené nepřáteli: {fmtNum(d.held.share * 100, 0)} % bodů (kapitulace od {Math.round(DIP.CAP_SHARE * 100)} %).</p>
+      </section>
+      <div className="side-scroll">
+        <ul className="dip-list">{list.map((c) => <Row key={c.o} c={c} />)}</ul>
+      </div>
+    </div>
+  );
+}

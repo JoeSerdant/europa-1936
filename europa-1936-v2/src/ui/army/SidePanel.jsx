@@ -8,6 +8,7 @@ import { IndustryPanel } from '../industry/IndustryPanel.jsx';
 import { ResearchPanel } from '../research/ResearchPanel.jsx';
 import { PoliticsPanel } from '../politics/PoliticsPanel.jsx';
 import { NatPanel } from '../nat/NatPanel.jsx';
+import { DiplomacyPanel } from '../dip/DiplomacyPanel.jsx';
 
 const TABS = [
   { id: null, name: 'Oblast', icon: 'provinces' },
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'research', name: 'Výzkum', icon: 'research', key: 'R' },
   { id: 'politics', name: 'Politika', icon: 'politics', key: 'P' },
   { id: 'nat', name: 'Cíle', icon: 'flag', key: 'C' },
+  { id: 'dip', name: 'Diplomacie', icon: 'dip', key: 'D' },
 ];
 
 /**
@@ -43,7 +45,7 @@ export function SidePanel() {
         })}
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít panel" title="Zavřít (Esc)"><Icon name="close" size={18} /></button>
       </nav>
-      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : panel === 'industry' ? <IndustryPanel /> : panel === 'research' ? <ResearchPanel /> : panel === 'politics' ? <PoliticsPanel /> : panel === 'nat' ? <NatPanel /> : <DossierView />}
+      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : panel === 'industry' ? <IndustryPanel /> : panel === 'research' ? <ResearchPanel /> : panel === 'politics' ? <PoliticsPanel /> : panel === 'nat' ? <NatPanel /> : panel === 'dip' ? <DiplomacyPanel /> : <DossierView />}
     </aside>
   );
 }
