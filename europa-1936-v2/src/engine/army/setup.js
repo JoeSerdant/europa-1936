@@ -77,7 +77,10 @@ export function makeGeneral(o, rank, tier, cult, rnd, usedNames) {
   const tr = [];
   if (rnd() < 0.5) tr.push(TRAIT_IDS[Math.floor(rnd() * TRAIT_IDS.length)]);
   if (tr.length && rnd() < 0.3) { const t = TRAIT_IDS[Math.floor(rnd() * TRAIT_IDS.length)]; if (!tr.includes(t)) tr.push(t); }
-  return { o, nm, r: rank, a: sk(), d: sk(), pl: sk(), lg: sk(), tr, xp: 0 };
+  let h = o * 2654435761;   // manévr (M54) z hashe jména: nespotřebuje náhodu, takže se nemění ostatní velitelé
+  for (let i = 0; i < nm.length; i++) h = Math.imul(h ^ nm.charCodeAt(i), 16777619);
+  const mn = clamp(Math.round(base + (((h >>> 0) % 1000) / 1000 * 2 - 1) * 1.2 + (rank === 'M' ? 0.8 : 0)), 1, C.LEADER_MAX_SKILL);
+  return { o, nm, r: rank, a: sk(), d: sk(), pl: sk(), lg: sk(), mn, tr, xp: 0 };
 }
 
 /**

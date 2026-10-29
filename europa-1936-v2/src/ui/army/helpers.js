@@ -44,6 +44,6 @@ const plural3 = (n) => (n === 1 ? 'provincie' : n >= 2 && n <= 4 ? 'provincie' :
 export const atWarIdx = (state, a, b) => !!a && !!b && atWar(state, a, b);
 
 /** Dovednosti velitele jako seznam [zkratka, hodnota]. */
-export const SKILLS = [['a', 'Útok'], ['d', 'Obrana'], ['pl', 'Plánování'], ['lg', 'Logistika']];
+export const SKILLS = [['a', 'Útok'], ['d', 'Obrana'], ['pl', 'Plánování'], ['lg', 'Logistika'], ['mn', 'Manévr']];
 
 export { deriveStats, divisionView, MODE_NAMES };

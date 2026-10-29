@@ -18,7 +18,8 @@ export function genMods(g) {
   m.planCap = C.SKILL_PLAN_CAP * g.pl;
   m.planGain = C.SKILL_PLAN_GAIN * g.pl;
   m.supUse = -C.SKILL_LOG_SUP * g.lg;
-  m.speed = C.SKILL_LOG_SPEED * g.lg;
+  m.speed = C.SKILL_LOG_SPEED * g.lg + C.SKILL_MAN_SPEED * (g.mn || 1);
+  m.orgRegen = C.SKILL_MAN_ORG * (g.mn || 1);
   for (const t of g.tr) { const tm = TRAITS[t]?.mod; if (tm) for (const k in tm) m[k] += tm[k]; }
   cache.set(g, m);
   return m;
@@ -43,8 +44,8 @@ export function armyMods(gens, groups, army) {
   return m;
 }
 
-/** Úroveň velitele = součet dovedností − 3 (čtyři dovednosti po 1 = úroveň 1). */
-export const genLevel = (g) => g.a + g.d + g.pl + g.lg - 3;
+/** Úroveň velitele = součet dovedností − 3 (pět dovedností po 1 = úroveň 1). */
+export const genLevel = (g) => g.a + g.d + g.pl + g.lg + (g.mn || 1) - 4;
 
 /** Zkušenosti potřebné ke zvýšení z úrovně `lv` o jednu (lineárně: úroveň 6 = 360). */
 export const xpForLevel = (lv) => C.LEADER_XP_LEVEL * Math.max(1, lv);

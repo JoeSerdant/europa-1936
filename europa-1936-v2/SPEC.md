@@ -580,6 +580,10 @@ Křídla mají pole `a` (0–`AIR.ACE_MAX`, tj. 3; od `GAME_VERSION` 22). Ve vzd
 
 `state.cmd = { cp: [moc podle země], ab: [{ o, army, id, until }] }` (od `GAME_VERSION` 23, `validateState` vyžaduje část `cmd`). Velitelská moc začíná na `CMD.START`, denně roste o `CMD.PER_DAY` (ve válce `PER_DAY_WAR`) do `CMD.MAX` (`cmdHour` je vnější vrstva `advanceHour`). Za moc armáda použije schopnost z `data/cmd/abilities.js` (Vynucený útok, Poslední vzdor, Pevná obrana, Zrychlený pochod): `useAbility(state, o, armyId, id)` (hlídá `abilityBlock`, jedna aktivní schopnost na armádu) zapíše `ab` s časem vypršení; `army/unit.js modsOf` přičítá bonusy schopnosti k velitelským a doktrinálním (`abilityMods`). AI (`aiCommand`, denně ve válce) použije ve střetu vynucený útok (útočící armáda) nebo poslední vzdor (bránící). Cheat `cp <n>`. UI: řádek schopností v rozbalené armádě (panel Armáda) a údaj Velitelská moc v horní liště. Test: `test/cmd.test.js`.
 
+## 4zf. Dovednosti velitelů (M54)
+
+Velitelé (`mil.gens`) mají pátou dovednost `mn` (Manévr, od `GAME_VERSION` 24). Počáteční hodnota se odvodí z hashe jména a vlastníka (nespotřebuje náhodu, takže se ostatní velitelé nemění). Manévr dává bonus rychlosti `C.SKILL_MAN_SPEED` a obnovy organizace `C.SKILL_MAN_ORG` za úroveň (`genMods`); úroveň velitele je nyní součet pěti dovedností − 4, při postupu úrovně roste náhodně vybraná dovednost včetně manévru. UI: štítek Mn u velitele. Test: `test/leaderskills.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -774,6 +778,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M51** | **Sdílení technologií**: bonus rychlosti výzkumu za členy bloku, kteří techniku mají | **hotovo** |
 | **M52** | **Letečtí esa**: piloti se v bojích vyznamenají a zesilují hlídky křídla | **hotovo** |
 | **M53** | **Velitelská moc**: moc se hromadí a za ni armády dostanou dočasné bonusy, AI je používá | **hotovo** |
+| **M54** | **Dovednosti velitelů**: pátá dovednost velitelů zrychluje pochod a obnovu organizace | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
