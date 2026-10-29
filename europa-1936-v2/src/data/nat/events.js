@@ -1,12 +1,13 @@
 // Události (M22). Vlastní texty; bez skutečných osob. Podmínky a účinky viz SPEC § 4e.
 //  cond  tags, from/until (den hry), flag, noFlag, focus, war, stabBelow/Above, wsBelow/Above, law { obor: id }   mtth  střední doba do spuštění (dny)   cool  odstup opakování (dny), jinak jednorázová
 //  opts  [{ n, fx, ai }]  ai = váha volby pro země bez hráče
+import { HIST_EVENTS } from './events_hist.js';
 const E = (id, n, text, cond, opts, extra = {}) => ({ id, n, text, cond, opts, mtth: 1, cool: 0, ...extra });
 const stab = (v) => ({ t: 'stab', v });
 const ws = (v) => ({ t: 'ws', v });
 const pp = (v) => ({ t: 'pp', v });
 
-export const EVENTS = [
+const BASE_EVENTS = [
   // ---- obecné ----
   E('harvest', 'Dobrá úroda', 'Příznivé počasí přineslo bohatou sklizeň. Ceny potravin klesají a lidé jsou spokojenější.', {}, [{ n: 'Výborně.', fx: [stab(0.03), pp(20)], ai: 1 }], { mtth: 600, cool: 700 }),
   E('strike', 'Stávka v průmyslu', 'Dělníci v továrnách požadují vyšší mzdy a kratší pracovní dobu.', { stabBelow: 0.62, war: false }, [
@@ -75,4 +76,5 @@ export const EVENTS = [
     { n: 'Odmítnout.', fx: [pp(30), { t: 'flag', id: 'pol_reform' }], ai: 1 },
   ], { mtth: 30 }),
 ];
+export const EVENTS = [...BASE_EVENTS, ...HIST_EVENTS];
 export const EVENT_BY_ID = Object.fromEntries(EVENTS.map((e) => [e.id, e]));
