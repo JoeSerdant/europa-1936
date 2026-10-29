@@ -1,9 +1,10 @@
 /* ------------------------------------------------------------------ průmysl (M19) */
-.industry-panel .ind-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 4px; padding: 12px 14px 10px; flex: none; border-bottom: 1px solid var(--rule); }
+.industry-panel .ind-sum { display: flex; gap: 6px; flex: 1; justify-content: flex-end; }
+.industry-panel .ind-sum .stat-cell { min-width: 72px; }
 .stat-cell.warn b { color: var(--amber); }
-.ind-tabs { display: flex; gap: 2px; padding: 8px 12px 0; flex: none; border-bottom: 1px solid var(--rule); }
+.ind-tabs { display: flex; gap: 2px; flex: none; }
 .ind-tabs button {
-  flex: 1; min-height: 32px; border: 0; font: 600 14px/1 var(--display); letter-spacing: 0.03em; color: var(--text-3); background: var(--ink-2);
+  min-width: 110px; min-height: 36px; border: 0; font: 600 15px/1 var(--display); letter-spacing: 0.03em; color: var(--text-3); background: var(--ink-2);
   box-shadow: inset 0 0 0 1px var(--rule); cursor: pointer;
 }
 .ind-tabs button:hover { color: var(--text); background: var(--ink-3); }
@@ -185,3 +186,83 @@ li.on > .pol-opt { opacity: 1; box-shadow: inset 3px 0 0 var(--brass), inset 0 0
 .fl-pick input { min-height: 28px; padding: 0 6px; font: 500 14px/1 var(--body); color: var(--paper); background: var(--ink-0); border: 0; box-shadow: inset 0 0 0 1px var(--rule-hi); }
 .fl-pick i { font-style: normal; font-size: 12px; color: var(--text-3); }
 .nav-hint { padding: 8px 4px; font-size: 12.5px; }
+
+/* ------------------------------------------------------------------ obrazovka Průmysl (M28) */
+.prod-screen {
+  position: absolute; z-index: 8; top: var(--top-h); left: 0; right: 0; bottom: 0; display: flex; flex-direction: column;
+  background: linear-gradient(180deg, rgba(10, 17, 24, 0.97), rgba(8, 13, 19, 0.985));
+  background-image: linear-gradient(180deg, rgba(10, 17, 24, 0.97), rgba(8, 13, 19, 0.985)), repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 4px);
+  box-shadow: inset 0 1px 0 var(--rule-hi), inset 0 0 120px rgba(0, 0, 0, 0.5);
+}
+.prod-head { display: flex; align-items: center; gap: 22px; flex: none; padding: 10px 22px; background: linear-gradient(180deg, var(--ink-3), var(--ink-2)); border-bottom: 2px solid var(--brass-lo); }
+.prod-head h2 { display: flex; align-items: center; gap: 10px; font: 600 24px/1 var(--display); letter-spacing: 0.04em; color: var(--paper); text-transform: uppercase; }
+.prod-head h2 .icon { color: var(--brass); }
+.prod-head .icon-btn.close { flex: none; }
+.prod-body { flex: 1; min-height: 0; overflow: hidden; padding: 16px 22px 18px; display: flex; }
+.prod-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); gap: 20px; }
+.prod-left, .prod-right { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 6px; scrollbar-width: thin; scrollbar-color: var(--rule-hi) transparent; }
+.prod-right { padding: 0 4px 0 18px; border-left: 1px solid var(--rule); }
+.prod-screen .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+.prod-screen .sec-head h3 { font: 600 17px/1 var(--display); letter-spacing: 0.05em; text-transform: uppercase; color: var(--brass-hi); }
+
+/* řádek výrobní linky */
+.prod-line {
+  display: grid; grid-template-columns: 56px minmax(150px, 1.1fr) auto minmax(120px, 0.9fr) minmax(190px, 1.3fr); align-items: center; gap: 6px 16px; flex: none;
+  padding: 10px 14px 10px 10px; background: linear-gradient(90deg, rgba(30, 46, 60, 0.75), rgba(15, 24, 33, 0.75)); box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 var(--brass-lo);
+}
+.prod-line.lack { box-shadow: inset 0 0 0 1px #6b3b30, inset 3px 0 0 var(--red); }
+.eq-tile {
+  display: grid; place-items: center; flex: none; background: linear-gradient(145deg, color-mix(in srgb, var(--g) 38%, var(--ink-1)), var(--ink-1));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--g) 70%, black), inset 0 0 14px rgba(0, 0, 0, 0.5); clip-path: polygon(0 6px, 6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+}
+.eq-tile b { font: 700 14px/1 var(--display); letter-spacing: 0.04em; color: var(--paper); text-shadow: 0 1px 2px #000; }
+.pl-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pl-main select { width: 100%; font: 600 15px/1.2 var(--display); }
+.pl-main .tpl-cost { margin: 0; }
+.pl-fac { display: grid; grid-template-columns: auto auto auto; grid-template-rows: auto auto; align-items: center; justify-items: center; gap: 4px 4px; }
+.pl-fac b { font: 700 24px/1 var(--display); min-width: 36px; }
+.fac-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2px; max-width: 120px; justify-content: center; }
+.fac-row i { width: 7px; height: 7px; background: var(--brass); box-shadow: inset 0 0 0 1px var(--brass-lo); }
+.pl-eff { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 3px 8px; font-size: 12px; color: var(--text-3); }
+.pl-eff .bar { grid-column: 1 / -1; position: relative; height: 9px; }
+.pl-eff u { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--paper); opacity: 0.7; text-decoration: none; }
+.pl-eff b { font: 600 15px/1 var(--display); color: var(--paper); }
+.prod-line .ind-stats { grid-template-columns: repeat(4, 1fr); margin: 0; }
+
+/* výběr nové linky */
+.prod-new { display: flex; flex-direction: column; gap: 10px; }
+.pn-group { display: flex; flex-direction: column; gap: 6px; }
+.pn-group h4 { font: 600 12.5px/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--g); }
+.pn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.pn-tile { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; text-align: left; border: 0; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); font: 500 13.5px/1.2 var(--body); color: var(--text); }
+.pn-tile:hover:not(:disabled) { background: var(--ink-3); box-shadow: inset 0 0 0 1px var(--g); }
+.pn-tile:disabled { opacity: 0.4; cursor: not-allowed; }
+.pn-tile:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--brass); }
+.prod-stock { padding: 4px 0 0; }
+
+/* seznam států a stavby */
+.st-list { display: flex; flex-direction: column; gap: 2px; }
+.st-row { display: grid; grid-template-columns: minmax(130px, 2fr) minmax(110px, 1.5fr) repeat(4, 46px); align-items: center; gap: 10px; padding: 7px 12px; border: 0; text-align: left; background: rgba(22, 34, 45, 0.75); box-shadow: inset 0 0 0 1px var(--rule); font: 500 14.5px/1.2 var(--body); color: var(--text); font-variant-numeric: tabular-nums; }
+.st-row > span:not(.nm):not(.sl) { text-align: right; }
+.st-row.st-head { background: transparent; box-shadow: none; color: var(--text-3); font-size: 12px; padding-top: 2px; padding-bottom: 2px; }
+button.st-row:hover { background: var(--ink-3); }
+.st-row.on { background: var(--ink-3); box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
+.st-row.full .sl { color: var(--text-3); }
+.st-row .nm { color: var(--paper); font-weight: 600; }
+.st-row .sl { display: flex; align-items: center; gap: 8px; }
+.st-row .sl .bar { flex: 1; height: 6px; }
+.bld-btns .sbtn.bld { flex-direction: column; gap: 2px; min-height: 54px; min-width: 104px; justify-content: center; }
+.bld-btns .sbtn.bld small { color: var(--text-3); font-size: 11.5px; }
+.prod-screen .ind-new { margin: 0; }
+.prod-screen .ind-res { font-size: 14.5px; }
+.prod-screen .ind-res th, .prod-screen .ind-res td { padding: 7px 10px; }
+.prod-screen .ind-res thead th { font-size: 12.5px; }
+.prod-screen .empty { padding: 18px 4px; }
+@media (max-width: 1500px) {
+  .prod-line { grid-template-columns: 50px minmax(120px, 1fr) auto minmax(100px, 0.8fr); }
+  .prod-line .ind-stats { grid-column: 2 / -1; }
+  .prod-cols { grid-template-columns: minmax(0, 1.4fr) minmax(270px, 1fr); gap: 14px; }
+  .prod-head { gap: 14px; padding: 8px 14px; }
+  .prod-body { padding: 12px 14px; }
+}
+.st-row.st-head > span:first-child, .st-row.st-head > span:nth-child(2) { text-align: left; }

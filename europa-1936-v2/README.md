@@ -110,6 +110,8 @@ Nabídka (Esc) → **Uložit hru** / **Načíst hru**, nebo **Načíst hru** v h
 
 ### Jak na námořnictvo
 
+Okno **Průmysl** (I) je přes celou obrazovku: Výroba (linky, dlaždice výzbroje), Stavby (státy, fronta), Obchod.
+
 Panel **Námořnictvo** (M): sestav flotilu z lodí v zásobě (torpédoborce, křižníky, bitevní lodě, ponorky), pošli ji pravým tlačítkem na mořskou oblast. Lodě se vyrábějí v panelu Průmysl na lodních linkách a potřebují **loděnice**. Divizi přepravíš tak, že ji vybereš a pravým tlačítkem klikneš na pobřežní provincii za mořem; každá zabere jednu transportní loď. Flotily se na moři střetávají s nepřítelem a poškozené lodě se stahují.
 
 ### Zprávy a přehled

@@ -4,7 +4,6 @@ import { openPanel, closeSide } from '../actions.js';
 import { DossierView } from '../hud/Dossier.jsx';
 import { ArmyPanel } from './ArmyPanel.jsx';
 import { RecruitPanel } from './RecruitPanel.jsx';
-import { IndustryPanel } from '../industry/IndustryPanel.jsx';
 import { ResearchPanel } from '../research/ResearchPanel.jsx';
 import { PoliticsPanel } from '../politics/PoliticsPanel.jsx';
 import { NatPanel } from '../nat/NatPanel.jsx';
@@ -32,7 +31,7 @@ const TABS = [
 export function SidePanel() {
   const panel = useUi((s) => s.panel);
   const selected = useUi((s) => s.selected);
-  if (!panel && !selected) return null;
+  if (panel === 'industry' || (!panel && !selected)) return null;
   const tall = !!panel;
   return (
     <aside className={`panel side ${tall ? 'tall' : ''}`} aria-label="Boční panel">
@@ -49,7 +48,7 @@ export function SidePanel() {
         })}
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít panel" title="Zavřít (Esc)"><Icon name="close" size={18} /></button>
       </nav>
-      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : panel === 'industry' ? <IndustryPanel /> : panel === 'research' ? <ResearchPanel /> : panel === 'politics' ? <PoliticsPanel /> : panel === 'nat' ? <NatPanel /> : panel === 'dip' ? <DiplomacyPanel /> : panel === 'log' ? <LogPanel /> : panel === 'navy' ? <NavyPanel /> : <DossierView />}
+      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : panel === 'research' ? <ResearchPanel /> : panel === 'politics' ? <PoliticsPanel /> : panel === 'nat' ? <NatPanel /> : panel === 'dip' ? <DiplomacyPanel /> : panel === 'log' ? <LogPanel /> : panel === 'navy' ? <NavyPanel /> : <DossierView />}
     </aside>
   );
 }

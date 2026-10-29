@@ -591,6 +591,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M25** | **Uložené hry**: obálka a kontrola stavu v enginu, sloty (5 ručních, automatický, rychlý) v `localStorage`, dialog, F6 / F9, automatické měsíční uložení | **hotovo** |
 | **M26** | **Zprávy a přehled zemí**: deník dění ve stavu, panel Zprávy s filtry, oznámení důležitých událostí, okno Přehled zemí | **hotovo** |
 | **M27** | **Námořnictvo a přeprava přes moře**: loděnice, lodě, flotily, námořní boj, přeprava divizí; rozhraní: panel Námořnictvo (M), žetony flotil | **hotovo** |
+| **M28** | **Rozhraní ve stylu HOI4**: Průmysl jako celoobrazovkové okno (linky s dlaždicemi výzbroje po skupinách, seznam států a fronta staveb, obchod); další okna (armáda, výzkum, politika) navazují | **Průmysl hotovo** |
 | později | letectvo, konvoje, špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
