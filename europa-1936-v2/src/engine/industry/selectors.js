@@ -4,6 +4,7 @@ import { I } from './constants.js';
 import { EQUIP } from '../../data/army/equipment.js';
 import { BUILDINGS, EQUIP_PROD } from '../../data/industry/index.js';
 import { modsOf, isUnlocked } from '../research/core.js';
+import { polModsOf, outMult, consOf } from '../politics/core.js';
 import { tallyOwners, factoryUse, trimLines, demandOf, resFlows, lineFactor, lineRate, slotsOf, slotsUsed, categoryOf, itemCost } from './core.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
@@ -13,22 +14,22 @@ export function industryOf(state, o) {
   o = idxOf(o);
   const ind = state.ind;
   const t = tallyOwners(state)[o];
-  const use = factoryUse(t, ind.cons[o]);
+  const use = factoryUse(t, consOf(state, o));
   const lines = trimLines(ind.lines.filter((l) => l.o === o), use.milAvail);
-  const mods = modsOf(state, o), lv = state.mil.lv[o];
+  const mods = modsOf(state, o), pm = polModsOf(state, o), out = outMult(state, o), lv = state.mil.lv[o];
   const dem = demandOf(lines, lv);
-  const res = resFlows(t, dem, ind.trade, o, mods.extract);
+  const res = resFlows(t, dem, ind.trade, o, mods.extract + pm.extract);
   let imports = 0;
   for (const r in res) imports += res[r].imp;
-  const tradeCiv = imports * I.TRADE_CIV;
+  const tradeCiv = imports * I.TRADE_CIV * (1 + pm.imp);
   const used = lines.reduce((a, l) => a + l.fac, 0);
   return {
     o, civ: t.civ, mil: t.mil, occupied: t.occ,
-    cons: ind.cons[o], consFac: use.consFac, tradeCiv,
+    cons: consOf(state, o), consFac: use.consFac, tradeCiv,
     civAvail: Math.max(0, use.civAfterCons - tradeCiv), milAvail: use.milAvail, milUsed: used, milFree: Math.max(0, Math.floor(use.milAvail - used + 1e-9)),
-    points: Math.max(0, use.civAfterCons - tradeCiv) * I.IC_PER_FAC * (1 + mods.build),
+    points: Math.max(0, use.civAfterCons - tradeCiv) * I.IC_PER_FAC * (1 + mods.build + pm.build) * out,
     effCap: I.EFF_CAP + mods.effCap,
-    lines: lines.map((l) => ({ ...l, rate: lineRate(l, lv), perDay: lineRate(l, lv) * l.f, need: EQUIP_PROD[l.eq].res, cost: itemCost(l.eq, lv) })),
+    lines: lines.map((l) => ({ ...l, rate: lineRate(l, lv), perDay: lineRate(l, lv) * l.f * out, need: EQUIP_PROD[l.eq].res, cost: itemCost(l.eq, lv) })),
     res,
     build: ind.build.filter((b) => b.o === o),
     trade: ind.trade.filter((d) => d.from === o || d.to === o),

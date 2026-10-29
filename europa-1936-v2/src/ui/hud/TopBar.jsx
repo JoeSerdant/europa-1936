@@ -3,7 +3,7 @@ import { gameStore, useGame } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { COUNTRIES } from '../../data/countries.js';
-import { countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf } from '../../engine/index.js';
+import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf } from '../../engine/index.js';
 import { setHelp, setMenuOpen } from '../actions.js';
 import { fmtInt, fmtPop } from '../format.js';
 
@@ -49,6 +49,9 @@ export function TopBar() {
   const info = tag ? COUNTRIES[tag] : null;
   const divisions = useGame((s) => (s.player ? divisionCount(s, s.player) : 0));
   const manpower = useGame((s) => (s.player ? manpowerOf(s, s.player) : 0));
+  const stab = useGame((s) => (s.player ? Math.round(s.pol.own[getWorld().ownerIdx[s.player]].stab * 100) : 0));
+  const ws = useGame((s) => (s.player ? Math.round(s.pol.own[getWorld().ownerIdx[s.player]].ws * 100) : 0));
+  const pp = useGame((s) => (s.player ? Math.floor(s.pol.own[getWorld().ownerIdx[s.player]].pp) : 0));
   return (
     <header className="topbar">
       <div className="tb-country">
@@ -67,6 +70,9 @@ export function TopBar() {
             <Stat icon="victory" label="Vítězné body" value={fmtInt(stats.vp)} />
             <Stat icon="army" label="Divize" value={fmtInt(divisions)} />
             <Stat icon="recruit" label="Lidská síla" value={fmtPop(manpower / 1000)} />
+            <Stat icon="shield" label="Stabilita" value={`${stab} %`} opt />
+            <Stat icon="swords" label="Podpora války" value={`${ws} %`} opt />
+            <Stat icon="general" label="Politická moc" value={fmtInt(pp)} />
           </div>
         )}
         <button className="icon-btn" onClick={() => setHelp(true)} aria-label="Ovládání" title="Ovládání (F1)"><Icon name="help" /></button>

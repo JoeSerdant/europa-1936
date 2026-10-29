@@ -19,7 +19,7 @@ export const uiStore = createStore({
   // ---- armáda (M18) ----
   selDivs: NONE,           // vybrané divize (pole id; vyměňuje se jen při změně)
   hoverUnits: null,        // divize ve žetonu pod kurzorem (pole id), jinak null
-  panel: null,             // pravý panel: null (údaje o oblasti) | 'army' | 'recruit' | 'industry' | 'research'
+  panel: null,             // pravý panel: null (údaje o oblasti) | 'army' | 'recruit' | 'industry' | 'research' | 'politics'
   armyFocus: 0,            // armáda zvolená v panelu (její plán se ukazuje na mapě)
   open: {},                // rozbalené/sbalené uzly stromu armád: { g3: false, a7: true } (chybějící = výchozí)
   planEdit: null,          // úprava plánu: { army, kind: 'area'|'front', area, line, to, mode, tool }

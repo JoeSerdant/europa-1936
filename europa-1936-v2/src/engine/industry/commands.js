@@ -5,6 +5,7 @@ import { I } from './constants.js';
 import { BUILDINGS, EQUIP_PROD, RESOURCES } from '../../data/industry/index.js';
 import { EQUIP } from '../../data/army/equipment.js';
 import { isUnlocked } from '../research/core.js';
+import { consOf } from '../politics/core.js';
 import { tallyOwners, factoryUse, slotsOf, slotsUsed } from './core.js';
 
 const patch = (state, p) => ({ ...state, ind: { ...state.ind, ...p, ver: state.ind.ver + 1 } });
@@ -48,7 +49,7 @@ export function moveBuild(state, id, dir) {
 // ---- výroba ----
 const milFree = (state, o, exceptId = 0) => {
   const t = tallyOwners(state)[o];
-  const avail = factoryUse(t, state.ind.cons[o]).milAvail;
+  const avail = factoryUse(t, consOf(state, o)).milAvail;
   let used = 0;
   for (const l of state.ind.lines) if (l.o === o && l.id !== exceptId) used += l.fac;
   return Math.floor(avail - used + 1e-9);

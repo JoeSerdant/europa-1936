@@ -1,6 +1,7 @@
 // Denní krok výzkumu (M20): země bez hráče si doplní prázdné sloty, každý zkoumaný obor postoupí, hotové technologie se projeví (úrovně výzbroje, sloty).
 import { getWorld } from '../world.js';
 import { TECHS, TECH_IDS } from '../../data/research/index.js';
+import { polModsOf } from '../politics/core.js';
 import { isAvailable, slotCount, speedOfDone, progressPerDay, yearOf } from './core.js';
 
 const hash = (o, id) => { let h = o * 2654435761; for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619); return (h >>> 0) % 50; };
@@ -42,7 +43,7 @@ export function researchDay(state) {
     if (slots.some(Boolean)) {
       if (slots === cur.slots) slots = slots.slice();
       changed = true;
-      const speed = speedOfDone(o, cur.done);
+      const speed = speedOfDone(o, cur.done) * (1 + polModsOf(state, o).research);
       let prog = { ...cur.prog }, done = cur.done;
       for (let i = 0; i < slots.length; i++) {
         const id = slots[i];

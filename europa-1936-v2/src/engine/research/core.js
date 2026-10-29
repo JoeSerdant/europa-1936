@@ -3,6 +3,7 @@ import { getWorld } from '../world.js';
 import { COUNTRIES } from '../../data/countries.js';
 import { TECHS, TECH_IDS, RESEARCH_NATIONAL } from '../../data/research/index.js';
 import { RES } from './constants.js';
+import { polModsOf } from '../politics/core.js';
 
 export const NO_MODS = Object.freeze({ effCap: 0, build: 0, extract: 0, research: 0 });
 const modCache = new WeakMap();   // done → bonusy
@@ -46,7 +47,7 @@ export function speedOfDone(o, done) {
   const tier = COUNTRIES[tag]?.tier ?? 3;
   return RES.SPEED_BASE * (RESEARCH_NATIONAL[tag] ?? (tier === 3 ? 0.95 : 1)) * (1 + techMods(done).research);
 }
-export const baseSpeed = (state, o) => speedOfDone(o, state.tech.own[o]?.done);
+export const baseSpeed = (state, o) => speedOfDone(o, state.tech.own[o]?.done) * (1 + polModsOf(state, o).research);
 
 /** Roky předstihu technologie vůči aktuálnímu datu (0 = už je její čas). */
 export const yearsAhead = (tick, id) => Math.max(0, TECHS[id].year - yearOf(tick));

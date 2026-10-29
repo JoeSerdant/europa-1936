@@ -64,3 +64,30 @@
 .tech-st { font: 600 12.5px/1 var(--display); letter-spacing: 0.03em; color: var(--text-3); }
 .tech-st.available { color: var(--brass-hi); }
 .tech-st.active { color: var(--sel); }
+
+/* ------------------------------------------------------------------ politika (M21) */
+.politics-panel .pol-head { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 10px; flex: none; border-bottom: 1px solid var(--rule); }
+.pol-meter { display: flex; flex-direction: column; gap: 4px; }
+.pol-meter > span:first-child { display: flex; align-items: baseline; gap: 8px; }
+.pol-meter i { font-style: normal; font-size: 12.5px; color: var(--text-3); }
+.pol-meter b { font: 600 16px/1 var(--display); color: var(--paper); font-variant-numeric: tabular-nums; }
+.pol-meter em { margin-left: auto; font-style: normal; font-size: 12.5px; color: var(--text-3); }
+.pol-meter .bar { height: 7px; }
+.pol-pp { display: flex; align-items: center; gap: 8px; color: var(--brass-hi); }
+.pol-pp b { font: 600 20px/1 var(--display); color: var(--paper); font-variant-numeric: tabular-nums; }
+.pol-sum { font-size: 12.5px; }
+.pol-law, .pol-adv { margin: 0 0 10px; padding: 8px 10px; background: rgba(15, 24, 33, 0.7); box-shadow: inset 0 0 0 1px var(--rule); }
+.pol-law h3, .pol-adv h3 { font: 600 13.5px/1.2 var(--display); color: var(--text-3); letter-spacing: 0.04em; margin-bottom: 4px; }
+.pol-law ul, .pol-adv ul { display: flex; flex-direction: column; gap: 3px; }
+.pol-opt {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'n c' 'm m'; gap: 1px 8px; width: 100%; padding: 5px 9px; text-align: left; border: 0;
+  color: var(--text); background: var(--ink-3); box-shadow: inset 0 0 0 1px var(--rule); cursor: pointer;
+}
+.pol-opt b { grid-area: n; font: 600 14px/1.2 var(--display); color: var(--paper); }
+.pol-opt i { grid-area: c; font-style: normal; font-size: 12.5px; color: var(--brass-hi); font-variant-numeric: tabular-nums; }
+.pol-opt .muted { grid-area: m; font-size: 12px; }
+.pol-opt:hover:not(:disabled) { background: var(--ink-4); }
+.pol-opt:disabled { cursor: default; opacity: 0.55; }
+.pol-opt:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--brass); }
+li.on > .pol-opt { opacity: 1; box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
+.pol-block { display: block; padding: 1px 9px 2px; font-size: 12px; color: #ff9b86; }
