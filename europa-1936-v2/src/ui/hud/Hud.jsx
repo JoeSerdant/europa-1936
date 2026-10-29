@@ -11,6 +11,7 @@ import { EventDialog } from '../nat/EventDialog.jsx';
 import { OverviewDialog } from '../log/OverviewDialog.jsx';
 import { IndustryPanel } from '../industry/IndustryPanel.jsx';
 import { RecruitPanel } from '../army/RecruitPanel.jsx';
+import { ResearchPanel } from '../research/ResearchPanel.jsx';
 import { Toast } from '../common/Toast.jsx';
 import { Minimap } from '../map/Minimap.jsx';
 import { mapController as mc } from '../map/controller.js';
@@ -34,6 +35,7 @@ export function Hud() {
       <SidePanel />
       {panel === 'industry' && <IndustryPanel />}
       {panel === 'recruit' && <RecruitPanel />}
+      {panel === 'research' && <ResearchPanel />}
       <div className="top-mid" style={{ right }}><PlanBar /></div>
       <div className="bottom-mid" style={{ right }}>
         <Toast />
