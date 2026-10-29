@@ -121,6 +121,8 @@ export class MapRenderer {
       if (this.mode === 'supply') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
       else if (HATCH_MODES.has(this.mode)) this.invalidateProvinces(changed);
     }
+    const wMonth = this.mode === 'weather' ? Math.floor(game.tick / 720) : -1;   // měsíc ≈ 30 dní
+    if (this.mode === 'weather' && wMonth !== this.lastWMonth) { this.lastWMonth = wMonth; this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     const occSt = game.occ ? game.occ.st : null;
     const occChanged = occSt !== this.lastOccSt;
     this.lastOccSt = occSt;
