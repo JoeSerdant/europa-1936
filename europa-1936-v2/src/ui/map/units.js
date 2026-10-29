@@ -105,6 +105,7 @@ export function routesOf(game) {
 /** Bitvy pro mapu: { p, from: [provincie], adv } (adv = podíl útočníků na zásazích 0–1). */
 export const battlesOf = (game) => game.mil.battles.map((b) => ({ id: b.id, p: b.p, from: b.from, adv: b.adv, att: b.att.length, dep: b.dep.length }));
 
+import { buildAirMarks, drawAirBadge, MISSION_COLOR } from './air.js';
 import { buildFleetTokens, buildFleetRoutes, drawFleetToken, FLEET } from './fleets.js';
 
 export class UnitLayer {
@@ -125,6 +126,7 @@ export class UnitLayer {
     this.cluster = { cell: 0, src: null, list: [] };
     this.hits = [];                 // žetony z posledního snímku: { x0, y0, x1, y1, c }
     this.fleetSrc = null; this.fleetTokens = []; this.fleetRoutes = []; this.fleetSel = 0; this.fleetHits = [];   // M27: flotily
+    this.airSrc = null; this.airPlayer = null; this.air = { lines: [], bases: [] };   // M30: letectvo
     this.stats = { counters: 0, shown: 0, ms: 0 };
   }
 
@@ -145,6 +147,7 @@ export class UnitLayer {
       changed = true;
     }
     if (game.nav && game.nav.fleets !== this.fleetSrc) { this.fleetSrc = game.nav.fleets; this.fleetTokens = buildFleetTokens(game, this.world); this.fleetRoutes = buildFleetRoutes(game, this.world); changed = true; }
+    if (game.air && (game.air.wings !== this.airSrc || game.player !== this.airPlayer)) { this.airSrc = game.air.wings; this.airPlayer = game.player; this.air = buildAirMarks(game, this.world); changed = true; }
     if (mil.battles !== this.battlesSrc) { this.battlesSrc = mil.battles; this.battles = battlesOf(game); changed = true; }
     this.game = game;
     return changed;
@@ -225,6 +228,20 @@ export class UnitLayer {
         ctx.stroke();
       }
       ctx.setLineDash([]);
+    }
+
+    // letecké mise hráče: tenká čára z letiště do cíle, u hlídek kruh kolem cíle
+    if (this.air.lines.length) {
+      for (const l of this.air.lines) {
+        const col = MISSION_COLOR[l.m];
+        ctx.lineWidth = 1.8 * px; ctx.strokeStyle = col; ctx.globalAlpha = 0.85; ctx.setLineDash([3 * px, 6 * px]);
+        ctx.beginPath(); ctx.moveTo(l.a[0], l.a[1]); ctx.lineTo(l.b[0], l.b[1]); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2.4 * px;
+        ctx.beginPath(); ctx.arc(l.b[0], l.b[1], (l.m === 'air' ? 24 : 12) * px, 0, Math.PI * 2); ctx.stroke();
+        if (l.m !== 'air') { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(l.b[0], l.b[1], 4 * px, 0, Math.PI * 2); ctx.fill(); }
+        ctx.globalAlpha = 1;
+      }
     }
 
     // bitvy: červené šípy z výchozích provincií a značka ve sporné provincii
@@ -325,6 +342,12 @@ export class UnitLayer {
         drawFleetToken(ctx, t, sx, sy, this.looks[t.o], { s, rel: this.relation(t.o), sel: t.ids.includes(this.fleetSel), hover: false });
         this.fleetHits.push({ x0: sx - fw / 2 - 1, y0: sy - fh / 2 - 1, x1: sx + fw / 2 + 1, y1: sy + fh / 2 + 6 * s, t });
       }
+    }
+    // letiště hráče: odznaky s počtem letadel
+    for (const b of this.air.bases) {
+      if (b.x < vx0 - mx || b.x > vx1 + mx || b.y < vy0 - my || b.y > vy1 + my) continue;
+      const [sx, sy] = worldToScreen(cam, b.x, b.y);
+      drawAirBadge(ctx, b, sx, sy + 22 * s, s);
     }
     this.stats.counters = this.counters.length; this.stats.shown = shown.length; this.stats.ms = performance.now() - t0;
   }
