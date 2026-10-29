@@ -5,6 +5,8 @@ import { SPY_OPS } from '../data/spy/ops.js';
 import { DOCTRINES } from '../data/doc/doctrines.js';
 import { FOCUS_BY_ID } from '../data/nat/focuses.js';
 import { EVENT_BY_ID } from '../data/nat/events.js';
+import { PLANES } from '../data/air/planes.js';
+import { ACE_NAMES } from '../engine/air/constants.js';
 import { EQUIP } from '../data/army/index.js';
 import { BUILDINGS } from '../data/industry/buildings.js';
 
@@ -37,6 +39,7 @@ export function logLine(e, me = 0) {
     case 'lend': return { icon: 'trade', tone: 'good', world: false, mine: e.a === me || e.b === me, text: `${nm(e.a)} posílá zemi ${nm(e.b)} výzbroj: ${EQUIP[e.x]?.n || e.x} × ${e.y}.` };
     case 'gar': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} zaručuje nezávislost země ${nm(e.b)}.` };
     case 'garend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} už nezaručuje nezávislost země ${nm(e.b)}.` };
+    case 'ace': return { icon: 'air', tone: 'good', world: false, mine: true, text: `Křídlo ${PLANES[e.x]?.n || e.x}: ${ACE_NAMES[e.y] || 'eso'} se vyznamenal ve vzdušném boji.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };
   }
 }

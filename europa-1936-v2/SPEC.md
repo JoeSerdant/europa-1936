@@ -572,6 +572,10 @@ Stavba `radar` (`BUILDINGS.radar`, mimo stavební sloty, nejvýš 3 úrovně, ce
 
 Členové téhož bloku sdílejí poznatky (`research/core.js`): za každého člena bloku, který technologii už má (ne kapitulovaný, ne loutka), roste rychlost jejího výzkumu o `RES.SHARE_PER` (10 %), nejvýš o `RES.SHARE_MAX` (50 %). `sharersOf` a `shareBonus` jsou čisté dotazy, bonus se používá v `researchDay`, v `dailyProgress` a v odhadu doby (`etaDays`). Bez změny stavu. UI: v panelu Výzkum se u rozpracovaných i dostupných oborů ukazuje „sdílení bloku +n %“. Test: `test/techshare.test.js`.
 
+## 4zd. Letečtí esa (M52)
+
+Křídla mají pole `a` (0–`AIR.ACE_MAX`, tj. 3; od `GAME_VERSION` 22). Ve vzdušném boji hlídek (`airDay`, mise `air` s nepřátelskými hlídkami nad cílem) vznikne eso s denní šancí `AIR.ACE_CHANCE × e/(e+mine) / (1 + a)` (hash `rand01(tick, id křídla, 'ace')`, žádná náhoda ze stavu). Každý stupeň zvedá sílu hlídek křídla o `AIR.ACE_BONUS` (5 %); jména stupňů jsou v `ACE_NAMES` (Dobrý, Unikátní, Geniální pilot). Rozpuštěním křídla se esa ztrácejí, doplnění je zachová. Hráči se vznik ohlásí v deníku (`ace`). UI: štítek v kartě křídla. Test: `test/aces.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -764,6 +768,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M49** | **Upozornění**: zahálející sloty, továrny a politická moc jako ikony pod lištou nabídek | **hotovo** |
 | **M50** | **Radar**: nová stavba, obrana státu proti nepřátelskému letectvu, AI radary staví | **hotovo** |
 | **M51** | **Sdílení technologií**: bonus rychlosti výzkumu za členy bloku, kteří techniku mají | **hotovo** |
+| **M52** | **Letečtí esa**: piloti se v bojích vyznamenají a zesilují hlídky křídla | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

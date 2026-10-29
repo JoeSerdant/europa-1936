@@ -32,7 +32,7 @@ export function createAir(w, ind) {
       if (!def[t]) continue;
       const got = apportion(bases.map((b) => b.cap), def[t], bases.map((b) => b.cap));
       bases.forEach((b, i) => {
-        if (got[i] > 0) wings.push({ id: wings.length, o, t, n: got[i], s: b.s, m: null, to: 0, c: 0 });
+        if (got[i] > 0) wings.push({ id: wings.length, o, t, n: got[i], s: b.s, m: null, to: 0, c: 0, a: 0 });
       });
       const left = def[t] - got.reduce((a, b) => a + b, 0);
       if (left > 0) pool[o][t] += left;

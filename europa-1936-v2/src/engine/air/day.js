@@ -7,6 +7,7 @@ import { atWar } from '../army/war.js';
 import { afbOf, radarOf, levelMult } from './core.js';
 import { docMods } from '../doc/core.js';
 import { logAdd } from '../log.js';
+import { rand01 } from '../nat/core.js';
 
 const key = (o, s) => `${o}:${s}`;
 
@@ -30,7 +31,7 @@ export function airDay(state) {
   // 2) síla hlídek podle země a cílového státu
   const patrol = new Map();      // `${o}:${s}` → síla
   const dmul = { atk: 'patrol', cas: 'cas', bomb: 'bomb' };
-  const power = (wg, field) => wg.n * PLANES[wg.t][field] * levelMult(state, wg.o, wg.t) * (1 + (dmul[field] ? docMods(state, wg.o)[dmul[field]] : 0));
+  const power = (wg, field) => wg.n * PLANES[wg.t][field] * levelMult(state, wg.o, wg.t) * (1 + AIR.ACE_BONUS * (wg.a || 0)) * (1 + (dmul[field] ? docMods(state, wg.o)[dmul[field]] : 0));
   for (const wg of wings) if (wg && wg.m === 'air') patrol.set(key(wg.o, wg.to), (patrol.get(key(wg.o, wg.to)) || 0) + power(wg, 'atk'));
   const foesPatrol = (o, s) => {
     let e = 0;
@@ -43,15 +44,23 @@ export function airDay(state) {
 
   // 3) mise: ztráty, podpora pozemních bojů, bombardování
   const sup = {};
+  const aces = [];
   const bombs = new Map();       // `${e}` → { power, from, s }
   for (let id = 1; id < wings.length; id++) {
     const wg = wings[id];
     if (!wg || !wg.m) continue;
     const e = foesPatrol(wg.o, wg.to);
-    let frac = AIR.ATTRITION;
+    let frac = AIR.ATTRITION, newA = wg.a || 0;
     if (wg.m === 'air') {
       const mine = patrol.get(key(wg.o, wg.to)) || 0;
-      if (e > 0) frac += AIR.LOSS_AIR * (e / (e + mine));
+      if (e > 0) {
+        frac += AIR.LOSS_AIR * (e / (e + mine));
+        const a = wg.a || 0;   // M52: letečtí esa vznikají v bojích; šance klesá s dosaženým stupněm
+        if (a < AIR.ACE_MAX && rand01(state.tick, wg.id, 'ace') < AIR.ACE_CHANCE * (e / (e + mine)) / (1 + a)) {
+          newA = a + 1;
+          aces.push({ k: 'ace', o: wg.o, x: wg.t, y: newA });
+        }
+      }
     } else {
       const cov = cover(wg.o, wg.to, e);
       frac += AIR.LOSS_INT * (1 - cov);
@@ -68,7 +77,7 @@ export function airDay(state) {
     }
     const raw = wg.n * frac + wg.c;
     const lost = Math.min(wg.n, Math.floor(raw));
-    wings[id] = lost || raw !== wg.c ? { ...wg, n: wg.n - lost, c: raw - lost } : wg;
+    wings[id] = lost || raw !== wg.c || newA !== (wg.a || 0) ? { ...wg, n: wg.n - lost, c: raw - lost, a: newA } : wg;
     if (wings[id].n <= 0) wings[id] = null;
   }
   const supOut = {};
@@ -93,5 +102,8 @@ export function airDay(state) {
   // 5) výsledek: zrušená křídla s nulou letadel nezůstávají
   const changedSup = JSON.stringify(supOut) !== JSON.stringify(air.sup);
   const out = { ...air, wings, pool, sup: changedSup ? supOut : air.sup, ver: air.ver + 1 };
-  return { ...next, pol, mil, air: out };
+  const player = state.player ? w.ownerIdx[state.player] : 0;
+  let res = { ...next, pol, mil, air: out };
+  for (const a of aces) if (a.o === player) res = logAdd(res, a);
+  return res;
 }
