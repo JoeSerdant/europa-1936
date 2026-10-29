@@ -13,6 +13,7 @@ import { createNav } from './nav/setup.js';
 import { createAir } from './air/setup.js';
 import { createDoc } from './doc/setup.js';
 import { createOcc } from './occ/setup.js';
+import { applyScenario } from './scenario.js';
 
 export const GAME_VERSION = 17;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
@@ -22,7 +23,7 @@ export const MAX_SPEED = 5;
  * Počáteční stav scénáře „1936“.
  * @param {{player?: string|null, seed?: number, aiLevel?: 0|1|2|3 (0 = AI zemí vypnutá, výchozí v enginu; hra z rozhraní začíná na 2), hist?: boolean}} opts  player = tag země (např. 'GER'), null = pozorovatel
  */
-export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = true } = {}) {
+export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = true, scenario = '1936' } = {}) {
   const w = getWorld();
   if (player && !w.ownerIdx[player]) throw new Error(`Neznámá země: ${player}`);
   // vlastník je vlastností státu (HOI4: stát = jednotka vlastnictví), kontrola je po provinciích (okupace)
@@ -54,5 +55,5 @@ export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = tru
     air,                   // M30: letectvo (viz SPEC § 4k)
     ai: { level: [1, 2, 3].includes(aiLevel) ? aiLevel : 0, hist: hist ? 1 : 0 },   // M24: nastavení AI (viz SPEC § 4g)
   };
-  return { ...base, nav: createNav(w, base) };   // M27: námořnictvo (viz SPEC § 4j); potřebuje přístavy podle vlastnictví
+  return applyScenario({ ...base, nav: createNav(w, base) }, scenario);   // M27: námořnictvo (viz SPEC § 4j); potřebuje přístavy podle vlastnictví
 }

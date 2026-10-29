@@ -6,7 +6,7 @@ import { mapController as mc } from '../map/controller.js';
 import { COUNTRIES, IDEOLOGIES, TIER_NAMES, DIFF_NAMES } from '../../data/countries.js';
 
 const TIER_HEADS = { 1: 'Velmoci', 2: 'Regionální mocnosti', 3: 'Malé státy' };
-import { allCountries, countryStats, getWorld } from '../../engine/index.js';
+import { allCountries, countryStats, getWorld, SCENARIOS, SCENARIO_IDS } from '../../engine/index.js';
 import { goMenu, pickCountry, startGame, setAiOptions, INSETS } from '../actions.js';
 import { fmtInt, fmtPop, fmtArea } from '../format.js';
 
@@ -23,6 +23,9 @@ export function CountrySelect() {
   const pickTag = useUi((s) => s.pickTag);
   const aiLevel = useUi((s) => s.aiLevel);
   const aiHist = useUi((s) => s.aiHist);
+  const scenario = useUi((s) => s.scenario);
+  const sc = SCENARIOS[scenario] || SCENARIOS[1936];
+  const dead = !!pickTag && !!sc.dead && sc.dead.includes(pickTag);
   const owner = useGame((s) => s.stateOwner);
   const groups = useMemo(() => {
     const list = allCountries().filter((c) => COUNTRIES[c.tag]);
@@ -96,6 +99,11 @@ export function CountrySelect() {
           <p className="blurb">{info.blurb}</p>
         </div>
         <footer>
+          <div className="scn-opts" role="group" aria-label="Scénář">
+            <span className="muted">Scénář</span>
+            {SCENARIO_IDS.map((id) => <button key={id} className={`sbtn ${scenario === id ? 'primary' : ''}`} aria-pressed={scenario === id} onClick={() => setAiOptions({ scenario: id })} title={SCENARIOS[id].info}>{SCENARIOS[id].n}</button>)}
+          </div>
+          <p className="muted scn-info">{sc.info}</p>
           <div className="ai-opts" role="group" aria-label="Chování AI zemí">
             <span className="muted">AI zemí</span>
             {[[1, 'Lehká'], [2, 'Běžná'], [3, 'Těžká']].map(([n, t]) => (
@@ -103,7 +111,7 @@ export function CountrySelect() {
             ))}
             <label className="ai-hist" title="Historické sklony AI k válkám a blokům (např. napětí kolem Československa a Polska)"><input type="checkbox" checked={!!aiHist} onChange={(e) => setAiOptions({ aiHist: e.target.checked })} /> Historické plány</label>
           </div>
-          <button className="btn primary big" onClick={() => startGame(pickTag)}>Začít hru</button>
+          <button className="btn primary big" disabled={dead} title={dead ? 'Tato země ve zvoleném scénáři už neexistuje.' : undefined} onClick={() => startGame(pickTag)}>Začít hru</button>
         </footer>
       </aside>
     </>
