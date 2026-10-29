@@ -414,3 +414,7 @@ button.st-row:hover { background: var(--ink-3); }
 /* ------------------------------------------------------------------ okupace (M38) */
 .occ-bar { display: inline-block; width: 90px; height: 7px; margin-right: 8px; vertical-align: middle; }
 .occ-bar i { display: block; height: 100%; }
+
+/* ------------------------------------------------------------------ scénáře (M39) */
+.scn-opts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.scn-info { font-size: 12.5px; margin: 2px 0 6px; }

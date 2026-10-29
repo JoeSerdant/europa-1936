@@ -52,6 +52,7 @@ try {
   // AI zemí (M24): výchozí běžná obtížnost s historickými plány, volba těžké a návrat
   check('výběr země nabízí obtížnost AI (výchozí Běžná) a historické plány', (await page.getByRole('button', { name: 'Běžná' }).getAttribute('aria-pressed')) === 'true' && (await page.getByLabel('Historické plány').isChecked()));
   await page.getByRole('button', { name: 'Těžká' }).click();
+  check('výběr země nabízí dva scénáře', (await page.locator('.scn-opts .sbtn').count()) === 2);
   await page.getByRole('button', { name: 'Začít hru' }).click();
   await page.waitForSelector('.topbar');
   await page.waitForTimeout(1800);

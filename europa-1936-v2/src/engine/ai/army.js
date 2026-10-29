@@ -100,7 +100,7 @@ export function aiOffense(state, o) {
     if (a.plan && a.plan.k === 'front' && a.plan.to.length > 0) continue;
     const sf = suggestFront(state, id);
     if (!sf.to.length) continue;
-    state = setPlan(state, id, { k: 'front', line: sf.line, to: sf.to, mode: 'balanced' });
+    state = setPlan(state, id, { k: 'front', line: sf.line, to: sf.to, mode: theirs > 0 && mine / theirs >= AI.RUSH_RATIO ? 'rush' : 'balanced' });
   }
   return state;
 }
