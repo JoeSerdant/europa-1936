@@ -6,4 +6,6 @@ export const RES = {
   AHEAD_PEN: 1.5,                        // zpomalení za každý rok před historickým rokem: rychlost / (1 + AHEAD_PEN · roky)
   HOURS_PER_YEAR: 8766,
   START_YEAR: 1936,
+  SHARE_PER: 0.1,                        // sdílení technologií v bloku: bonus rychlosti za každého člena bloku, který techniku už má
+  SHARE_MAX: 0.5,                        // strop bonusu
 };

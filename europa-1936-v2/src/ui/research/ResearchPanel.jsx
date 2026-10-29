@@ -21,7 +21,7 @@ function Slot({ s }) {
     <div className="rs-slot" aria-label={`Slot ${s.slot + 1}: ${s.tech.n}`}>
       <div className="q-top">
         <b>{s.tech.n}</b>
-        <span className="muted">{s.eta < 0 ? '–' : `za ${fmtDays(s.eta)}`}{s.ahead > 0 ? ` · předstih ${fmtNum(s.ahead, 1)} r.` : ''}</span>
+        <span className="muted">{s.eta < 0 ? '–' : `za ${fmtDays(s.eta)}`}{s.ahead > 0 ? ` · předstih ${fmtNum(s.ahead, 1)} r.` : ''}{s.share > 0 ? ` · sdílení bloku +${Math.round(s.share * 100)} %` : ''}</span>
         <button className="icon-btn sm" onClick={() => stopResearch(s.slot)} aria-label={`Přerušit výzkum ${s.tech.n}`} title="Přerušit (postup se zachová)"><Icon name="close" size={14} /></button>
       </div>
       <span className="bar prog"><i style={{ width: `${(s.p * 100).toFixed(1)}%` }} /></span>
@@ -45,7 +45,7 @@ function TechCard({ t }) {
         {t.status === 'locked' ? <span className="muted">Chybí: {t.missing.map((r) => TECHS[r].n).join(', ')}</span> : null}
         {can ? (
           <>
-            <span className="muted">{t.p > 0 ? `rozpracováno ${pct(t.p)} · ` : ''}{t.ahead > 0 ? `předstih ${fmtNum(t.ahead, 1)} r. · ` : ''}asi {fmtDays(t.eta)}</span>
+            <span className="muted">{t.p > 0 ? `rozpracováno ${pct(t.p)} · ` : ''}{t.ahead > 0 ? `předstih ${fmtNum(t.ahead, 1)} r. · ` : ''}{t.share > 0 ? `sdílení +${Math.round(t.share * 100)} % · ` : ''}asi {fmtDays(t.eta)}</span>
             <button className="sbtn primary" onClick={() => researchTech(t.id)}>Zkoumat</button>
           </>
         ) : null}
