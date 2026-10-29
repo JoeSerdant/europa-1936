@@ -224,7 +224,7 @@ try {
   const pol = await provinceXY(pair[1]);
   await page.mouse.click(pol.x, pol.y);
   // od M23: válku je třeba nejdřív ospravedlnit (politická moc + 30 dní), potom vyhlásit; zapojí se bloky
-  const justBtn = page.getByRole('button', { name: /Ospravedlnit válku/ });
+  const justBtn = page.getByRole('button', { name: /Ospravedlnit: Podmanění/ });
   check('karta země nabízí ospravedlnění války (bez politické moci zamčené)', (await justBtn.count()) === 1 && (await justBtn.isDisabled()));
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const own = s.pol.own.slice(); own[o] = { ...own[o], pp: 200 }; gameStore.setState({ ...s, pol: { ...s.pol, own } }); });
   await page.waitForTimeout(900);

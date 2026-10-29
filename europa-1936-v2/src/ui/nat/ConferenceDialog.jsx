@@ -3,7 +3,7 @@ import { useGame } from '../store.js';
 import { play } from '../sound.js';
 import { getWorld } from '../../engine/index.js';
 import { Flag } from '../common/Flag.jsx';
-import { playerIdx, conferencePuppet, conferenceAnnex, conferenceSkip } from '../actions.js';
+import { playerIdx, conferencePuppet, conferenceAnnex, conferenceSkip, conferenceTake, conferenceTribute } from '../actions.js';
 import { COUNTRIES } from '../../data/countries.js';
 
 /** Mírová konference: po kapitulaci hráčova protivníka rozhodne hráč o jeho zbylých státech. */
@@ -23,8 +23,12 @@ export function ConferenceDialog() {
         <header className="conf-head"><Flag tag={loser.tag} width={44} /><div><h2>Mírová konference</h2><p className="muted">{loser.name} kapitulovala{info ? ` (${info.government})` : ''}.</p></div></header>
         <p>Okupovaná území připadla vítězům. Zbývá {rump} {rump === 1 ? 'stát' : rump < 5 ? 'státy' : 'států'} země {loser.name}. Co s nimi?</p>
         <div className="conf-opts">
-          <button className="btn primary" onClick={() => conferencePuppet(item.id)}><b>Loutkový stát</b><span>Země zůstane, bude plnit vaše války a denně vám dá část lidské síly a politické moci. Později ji můžete anektovat.</span></button>
-          <button className="btn" onClick={() => conferenceAnnex(item.id)}><b>Anektovat</b><span>Zbylé státy připadnou vám a země zanikne.</span></button>
+          {(item.g || 'conquest') === 'conquest' && <>
+            <button className="btn primary" onClick={() => conferencePuppet(item.id)}><b>Loutkový stát</b><span>Země zůstane, bude plnit vaše války a denně vám dá část lidské síly a politické moci. Později ji můžete anektovat.</span></button>
+            <button className="btn" onClick={() => conferenceAnnex(item.id)}><b>Anektovat</b><span>Zbylé státy připadnou vám a země zanikne.</span></button>
+          </>}
+          {item.g === 'border' && <button className="btn primary" onClick={() => conferenceTake(item.id)}><b>Převzít státy</b><span>Převezmete až 3 nejcennější zbylé státy, země zůstane samostatná.</span></button>}
+          {item.g === 'tribute' && <button className="btn primary" onClick={() => conferenceTribute(item.id)}><b>Válečné odškodné</b><span>Země zaplatí politickou moc a ztratí podporu války, jinak zůstane samostatná.</span></button>}
           <button className="btn" onClick={() => conferenceSkip(item.id)}><b>Nechat být</b><span>Země zůstane kapitulovaná a bez moci.</span></button>
         </div>
       </div>

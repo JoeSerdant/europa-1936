@@ -64,3 +64,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 49. Velitelská moc (§ 4ze v `SPEC.md`): moc a aktivní schopnosti se mění jen přes `useAbility` a `cmdDay`; bonusy schopností čti jen v `modsOf` (`abilityMods`). Nová schopnost = řádek v `data/cmd/abilities.js` s klíči z `MOD_KEYS` + test.
 50. Dovednosti velitelů (§ 4zf v `SPEC.md`): úroveň čti jen přes `genLevel`, bonusy přes `genMods`; nová dovednost = pole generála + řádek v `genMods`, `genLevel`, `dailyLeaders`, `SKILLS` v UI + `GAME_VERSION`.
 51. Autonomie loutek (§ 4zg v `SPEC.md`): autonomii čti přes `autonomyOf`/`autonomyLevel` a měň jen v `subjectsDay`, `tightenControl`, `loosenControl`, `makePuppet`, `annexPuppet`; nový příspěvek loutky násobit `DIP.AU_MULT`.
+52. Válečné cíle (§ 4zh v `SPEC.md`): nový cíl = položka v `data/dip/wargoals.js` (`opts`) + volba v `subjects.js` (`conf…`) a tlačítko v `ConferenceDialog` + test; cenu a dobu čti vždy z `WARGOALS`, ne z `DIP.JUST_*`.

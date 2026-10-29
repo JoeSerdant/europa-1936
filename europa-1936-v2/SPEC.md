@@ -588,6 +588,10 @@ Velitelé (`mil.gens`) mají pátou dovednost `mn` (Manévr, od `GAME_VERSION` 2
 
 `dip.au[o]` = autonomie loutkového státu 0–100 (od `GAME_VERSION` 25; `validateState` vyžaduje pole). Nová loutka začíná na `DIP.AU_START`, autonomie denně roste o `DIP.AU_GROW` (`subjectsDay`). Úroveň určuje `autonomyLevel` podle `DIP.AU_LEVELS` (Kolonie, Loutkový stát, Dominion, Nespokojená loutka); příspěvky pánovi (lidská síla, politická moc) se násobí `DIP.AU_MULT[úroveň]` (1,6 / 1 / 0,5 / 0,2). Dosáhne-li autonomie 100, loutka se osamostatní (`dip.sub = 0`, vztah −20, záznam `free`). Pán může kontrolu utáhnout (`tightenControl`: −`AU_TIGHT` autonomie, stojí `AU_TIGHT_PP` politické moci a trochu stability loutky) nebo uvolnit (`loosenControl`: +`AU_LOOSE`, lepší vztah). AI pán utahuje loutky od autonomie 70. UI: v panelu Diplomacie u vlastní loutky úroveň, autonomie a tlačítka. Anexe loutky autonomii nuluje. Test: `test/autonomy.test.js`.
 
+## 4zh. Válečné cíle (M56)
+
+Ospravedlnění války má cíl (`data/dip/wargoals.js`): Podmanění (25 PM, 30 dní; po vítězství loutka nebo anexe), Územní nároky (12 PM, 15 dní; po vítězství převzetí až 3 nejcennějších zbylých států, poražený zůstane samostatný) a Ponížení (6 PM, 8 dní; poražený zaplatí `pp_gain` politické moci, ztratí podporu války a zůstane samostatný). `justifyWar(state, a, b, cíl)` ukládá cíl do `dip.just`, `startWar` ho zapíše do `dip.goal['a>b']` (od `GAME_VERSION` 26), kapitulace předá cíl konferenci (`conf.g`) a hráčův dialog nabídne volby podle cíle (`confPuppet`/`confAnnex` jen pro Podmanění, `confTake` pro Územní nároky, `confTribute` pro Ponížení). AI i výchozí tlačítko používají Podmanění. UI: v panelu Diplomacie jedno tlačítko ospravedlnění na cíl; řádek diplomacie má seznam `goals`. Test: `test/wargoals.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -784,6 +788,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M53** | **Velitelská moc**: moc se hromadí a za ni armády dostanou dočasné bonusy, AI je používá | **hotovo** |
 | **M54** | **Dovednosti velitelů**: pátá dovednost velitelů zrychluje pochod a obnovu organizace | **hotovo** |
 | **M55** | **Autonomie loutek**: úrovně autonomie loutek určují příspěvky pánovi, nespokojená loutka se osamostatní | **hotovo** |
+| **M56** | **Válečné cíle**: tři válečné cíle s různou cenou a výsledkem mírové konference | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

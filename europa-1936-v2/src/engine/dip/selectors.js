@@ -1,6 +1,7 @@
 // Dotazy na diplomacii pro rozhraní a AI (čisté, bez změn stavu).
 import { getWorld } from '../world.js';
 import { DIP } from './constants.js';
+import { WARGOALS, WARGOAL_IDS } from '../../data/dip/wargoals.js';
 import { relOf, factionOf, sameFaction, warScore, vpHeld, hasCapitulated } from './core.js';
 import { atWar } from '../army/war.js';
 import { overlordOf, autonomyOf, autonomyLevel, autonomyBlock } from './subjects.js';
@@ -25,9 +26,10 @@ export function diplomacyOf(state, o) {
       o: t, tag: w.owners[t].tag, name: w.owners[t].name, rel: relOf(state, o, t),
       war, ally: sameFaction(state, o, t), capitulated: hasCapitulated(state, t), faction: factionOf(state, t),
       just: j ? { ready: j.ready, left: Math.max(0, Math.ceil((j.ready - state.tick) / 24)), done: justReady(state, o, t) } : null,
-      canJustify: !wb && !j && state.dip.just.filter((x) => x.a === o).length < DIP.JUST_MAX && state.pol.own[o].pp >= DIP.JUST_PP,
-      justifyBlock: wb || (j ? 'Už se ospravedlňuje.' : state.dip.just.filter((x) => x.a === o).length >= DIP.JUST_MAX ? 'Příliš mnoho ospravedlnění.' : state.pol.own[o].pp < DIP.JUST_PP ? `Chybí politická moc (${Math.ceil(DIP.JUST_PP - state.pol.own[o].pp)}).` : null),
+      canJustify: !wb && !j && state.dip.just.filter((x) => x.a === o).length < DIP.JUST_MAX && state.pol.own[o].pp >= WARGOALS.tribute.pp,
+      justifyBlock: wb || (j ? 'Už se ospravedlňuje.' : state.dip.just.filter((x) => x.a === o).length >= DIP.JUST_MAX ? 'Příliš mnoho ospravedlnění.' : state.pol.own[o].pp < WARGOALS.tribute.pp ? `Chybí politická moc (${Math.ceil(WARGOALS.tribute.pp - state.pol.own[o].pp)}).` : null),
       canDeclare: !wb && justReady(state, o, t),
+      goals: WARGOAL_IDS.map((g) => ({ id: g, n: WARGOALS[g].n, pp: WARGOALS[g].pp, days: WARGOALS[g].days, info: WARGOALS[g].info, block: wb || (j ? 'Už se ospravedlňuje.' : state.dip.just.filter((x) => x.a === o).length >= DIP.JUST_MAX ? 'Příliš mnoho ospravedlnění.' : state.pol.own[o].pp < WARGOALS[g].pp ? `Chybí politická moc (${Math.ceil(WARGOALS[g].pp - state.pol.own[o].pp)}).` : null) })),
       garMine: guarantees(state, o, t), garTheirs: guarantees(state, t, o), garBlock: guaranteeBlock(state, o, t),
       friend: lendFriend(state, o, t) && !hasCapitulated(state, t) && !war,
       peaceBlock: war ? peaceBlock(state, o, t) : 'Nejste ve válce.',

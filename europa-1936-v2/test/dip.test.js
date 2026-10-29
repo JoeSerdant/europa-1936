@@ -57,7 +57,7 @@ describe('ospravedlnění a vyhlášení války', () => {
     expect(justifyWar(s0, GER, POL)).toBe(s0);                          // chybí PM
     const a = justifyWar(pp(s0, GER, 100), GER, POL);
     expect(a.pol.own[GER].pp).toBe(100 - DIP.JUST_PP);
-    expect(a.dip.just).toEqual([{ a: GER, b: POL, ready: DIP.JUST_DAYS * 24 }]);
+    expect(a.dip.just).toEqual([{ a: GER, b: POL, g: 'conquest', ready: DIP.JUST_DAYS * 24 }]);
     expect(justifyWar(a, GER, POL)).toBe(a);                            // už běží
     const b = justifyWar(a, GER, CZE);
     expect(b.dip.just).toHaveLength(2);
