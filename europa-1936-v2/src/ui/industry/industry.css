@@ -282,3 +282,18 @@ button.st-row:hover { background: var(--ink-3); }
 .research-panel .tech-card p.muted { display: none; }
 .research-panel .tech-card:hover p.muted { display: block; }
 .research-panel .rs-head.rs-slots { display: grid; flex-direction: row; padding: 12px 22px; }
+
+/* ------------------------------------------------------------------ politika, cíle a diplomacie jako okna (M28) */
+.prod-head .pol-head { display: flex; flex-direction: row; align-items: center; gap: 24px; flex: 1; justify-content: flex-end; padding: 0; border: 0; }
+.prod-head .pol-meter { width: 190px; }
+.prod-head .pol-sum { max-width: 300px; }
+.prod-head .dip-held { flex: 1; text-align: right; }
+.law-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; align-items: start; }
+.law-grid .pol-law { margin: 0; }
+.politics-panel .pol-adv { margin: 0 0 10px; }
+.nat-panel .focus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; align-items: start; padding: 0; width: 100%; }
+.nat-panel .tech-body { align-items: stretch; }
+.dip-panel .dip-list { padding: 0; gap: 4px; }
+.dip-panel .dip-head { min-height: 40px; font-size: 15px; }
+.dip-bloc { display: flex; flex-direction: column; gap: 10px; }
+.prod-head .icon-btn.close { margin-left: auto; }

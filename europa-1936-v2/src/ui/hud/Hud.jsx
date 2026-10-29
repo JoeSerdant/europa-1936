@@ -12,6 +12,9 @@ import { OverviewDialog } from '../log/OverviewDialog.jsx';
 import { IndustryPanel } from '../industry/IndustryPanel.jsx';
 import { RecruitPanel } from '../army/RecruitPanel.jsx';
 import { ResearchPanel } from '../research/ResearchPanel.jsx';
+import { PoliticsPanel } from '../politics/PoliticsPanel.jsx';
+import { NatPanel } from '../nat/NatPanel.jsx';
+import { DiplomacyPanel } from '../dip/DiplomacyPanel.jsx';
 import { Toast } from '../common/Toast.jsx';
 import { Minimap } from '../map/Minimap.jsx';
 import { mapController as mc } from '../map/controller.js';
@@ -36,6 +39,9 @@ export function Hud() {
       {panel === 'industry' && <IndustryPanel />}
       {panel === 'recruit' && <RecruitPanel />}
       {panel === 'research' && <ResearchPanel />}
+      {panel === 'politics' && <PoliticsPanel />}
+      {panel === 'nat' && <NatPanel />}
+      {panel === 'dip' && <DiplomacyPanel />}
       <div className="top-mid" style={{ right }}><PlanBar /></div>
       <div className="bottom-mid" style={{ right }}>
         <Toast />

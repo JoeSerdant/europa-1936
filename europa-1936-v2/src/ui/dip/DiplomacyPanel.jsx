@@ -5,6 +5,7 @@ import { Icon } from '../common/Icon.jsx';
 import { diplomacyOf, DIP, getWorld } from '../../engine/index.js';
 import { playerIdx, justifyOn, declareWarOn, makePeaceWith, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
+import { Screen } from '../common/Screen.jsx';
 
 const relCls = (r) => (r >= 25 ? 'good' : r <= -25 ? 'bad' : 'mid');
 
@@ -52,29 +53,36 @@ export function DiplomacyPanel() {
   const me = playerIdx(state);
   const [name, setName] = useState('');
   const d = useMemo(() => (me ? diplomacyOf(state, me) : null), [state.dip, state.mil.wars, state.pol, state.ctrl, state.stateOwner, state.tick, me]);
-  if (!me) return <div className="recruit-panel"><p className="empty">Jako pozorovatel nevedete žádnou diplomacii.</p></div>;
+  if (!me) return <div className="prod-screen dip-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádnou diplomacii.</p></div></div>;
   const list = [...d.list].sort((a, b) => (b.war - a.war) || (b.ally - a.ally) || (b.rel - a.rel));
   const f = d.faction;
   return (
-    <div className="recruit-panel dip-panel">
-      <section className="rs-head" aria-label="Blok">
-        {f ? (
-          <>
-            <div className="q-top"><b>{f.nm}</b><span className="muted">{f.mem.length} {f.mem.length === 1 ? 'člen' : f.mem.length < 5 ? 'členové' : 'členů'}</span>
-              <button className="sbtn" onClick={leaveBloc} title="Opustit blok">Opustit</button></div>
-            <div className="chips">{f.mem.map((o) => <span key={o} className="chip chip-flag"><Flag tag={getWorld().owners[o].tag} width={16} />{getWorld().owners[o].name}{o === f.ldr ? <i>vedoucí</i> : null}</span>)}</div>
-          </>
-        ) : d.capitulated ? <p className="muted">Země kapitulovala.</p> : (
-          <div className="dip-found">
-            <input type="text" value={name} maxLength={30} placeholder="Název bloku" aria-label="Název bloku" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
-            <button className="sbtn primary" disabled={!d.canFound} onClick={() => foundBloc(name)} title={`Založit blok: ${DIP.FAC_PP} PM`}>Založit blok</button>
+    <Screen cls="dip-panel" title="Diplomacie" icon="dip" head={<p className="muted pol-sum dip-held">Území držené nepřáteli: {fmtNum(d.held.share * 100, 0)} % bodů (kapitulace od {Math.round(DIP.CAP_SHARE * 100)} %).</p>}>
+      <div className="prod-body">
+        <div className="prod-cols">
+          <div className="prod-left">
+            <div className="sec-head"><h3>Země ({list.length})</h3><span className="muted">klikněte na zemi pro akce</span></div>
+            <ul className="dip-list">{list.map((c) => <Row key={c.o} c={c} />)}</ul>
           </div>
-        )}
-        <p className="muted pol-sum">Území držené nepřáteli: {fmtNum(d.held.share * 100, 0)} % bodů (kapitulace od {Math.round(DIP.CAP_SHARE * 100)} %).</p>
-      </section>
-      <div className="side-scroll">
-        <ul className="dip-list">{list.map((c) => <Row key={c.o} c={c} />)}</ul>
+          <aside className="prod-right">
+            <div className="sec-head"><h3>Váš blok</h3></div>
+            <section aria-label="Blok" className="dip-bloc">
+              {f ? (
+                <>
+                  <div className="q-top"><b>{f.nm}</b><span className="muted">{f.mem.length} {f.mem.length === 1 ? 'člen' : f.mem.length < 5 ? 'členové' : 'členů'}</span>
+                    <button className="sbtn" onClick={leaveBloc} title="Opustit blok">Opustit</button></div>
+                  <div className="chips">{f.mem.map((o) => <span key={o} className="chip chip-flag"><Flag tag={getWorld().owners[o].tag} width={16} />{getWorld().owners[o].name}{o === f.ldr ? <i>vedoucí</i> : null}</span>)}</div>
+                </>
+              ) : d.capitulated ? <p className="muted">Země kapitulovala.</p> : (
+                <div className="dip-found">
+                  <input type="text" value={name} maxLength={30} placeholder="Název bloku" aria-label="Název bloku" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
+                  <button className="sbtn primary" disabled={!d.canFound} onClick={() => foundBloc(name)} title={`Založit blok: ${DIP.FAC_PP} PM`}>Založit blok</button>
+                </div>
+              )}
+            </section>
+          </aside>
+        </div>
       </div>
-    </div>
+    </Screen>
   );
 }
