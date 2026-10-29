@@ -6,9 +6,10 @@ import {
   BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS,
 } from '../../engine/index.js';
 import {
-  playerIdx, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel,
+  playerIdx, closeSide, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel,
 } from '../actions.js';
 import { fmtInt, fmtNum, fmtDays } from '../format.js';
+import { EQUIP_GROUPS } from '../../data/industry/groups.js';
 
 const TABS = [
   { id: 'build', name: 'Stavby' },
@@ -36,31 +37,34 @@ function Header({ sum }) {
 }
 
 // ------------------------------------------------------------------ stavby
-function NewBuild({ state, me }) {
-  const states = useMemo(() => {
-    const w = getWorld(), out = [];
-    for (let s = 1; s < w.states.length; s++) if (state.stateOwner[s] === me && state.ctrl[w.states[s].cap] === me) out.push(s);
-    return out;
-  }, [state.stateOwner, state.ctrl, me]);
-  const [pick, setPick] = useState(0);
-  const sel = states.includes(pick) ? pick : (states.find((s) => slotsUsed(state.ind, s) < slotsOf(state.ind, s)) || states[0] || 0);
-  if (!states.length) return null;
-  const info = stateIndustry(state, sel);
+function StatesList({ state, states, sel, setPick }) {
+  return (
+    <div className="st-list" role="listbox" aria-label="Státy">
+      <div className="st-row st-head"><span>Stát</span><span title="Obsazené sloty / všechny sloty">Sloty</span><span title="Civilní továrny">Civ.</span><span title="Vojenské továrny">Voj.</span><span title="Loděnice">Děl.</span><span title="Infrastruktura">Inf.</span></div>
+      {states.map((s) => {
+        const i = stateIndustry(state, s);
+        return (
+          <button key={s} role="option" aria-selected={s === sel} className={`st-row ${s === sel ? 'on' : ''} ${i.used >= i.slots ? 'full' : ''}`} onClick={() => setPick(s)}>
+            <span className="nm">{stateName(s)}</span>
+            <span className="sl"><span className="bar prog"><i style={{ width: `${i.slots ? Math.min(100, (i.used / i.slots) * 100) : 0}%` }} /></span>{i.used}/{i.slots}</span>
+            <span>{i.civ}</span><span>{i.mil}</span><span>{i.port ? i.dok : '–'}</span><span>+{i.inf}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function NewBuild({ state, sel, info }) {
+  if (!sel) return null;
   return (
     <section className="ind-new" aria-label="Nová stavba">
-      <label className="ind-field"><span>Stát</span>
-        <select value={sel} onChange={(e) => setPick(Number(e.target.value))} aria-label="Stát pro stavbu">
-          {states.map((s) => {
-            const i = stateIndustry(state, s);
-            return <option key={s} value={s}>{stateName(s)} · {i.used}/{i.slots}</option>;
-          })}
-        </select>
-      </label>
-      <p className="muted">{info.cat.n} · sloty {info.used}/{info.slots} · továrny {info.civ} civ. + {info.mil} vojen. · infrastruktura +{info.inf}</p>
-      <div className="ind-btns">
+      <div className="sec-head"><h3>{stateName(sel)}</h3><span className="muted">{info.cat.n}</span></div>
+      <p className="muted">Sloty {info.used}/{info.slots} · továrny {info.civ} civ. + {info.mil} vojen. · infrastruktura +{info.inf}</p>
+      <div className="ind-btns bld-btns">
         {BUILDING_IDS.filter((k) => k !== 'dok' || info.port).map((k) => (
-          <button key={k} className="sbtn" onClick={() => buildIn(sel, k)} title={`${BUILDINGS[k].info} Cena ${BUILDINGS[k].cost} bodů, nejdřív za ${BUILDINGS[k].days} dní.`}>
-            <Icon name="plus" size={14} />{BUILDINGS[k].n}
+          <button key={k} className="sbtn bld" onClick={() => buildIn(sel, k)} title={`${BUILDINGS[k].info} Cena ${BUILDINGS[k].cost} bodů, nejdřív za ${BUILDINGS[k].days} dní.`}>
+            <Icon name="plus" size={14} />{BUILDINGS[k].n}<small>{BUILDINGS[k].cost} b.</small>
           </button>
         ))}
         <button className="sbtn" onClick={() => selectLabel(getWorld().states[sel].cap, true)} title="Ukázat stát na mapě"><Icon name="target" size={14} />Ukázat</button>
@@ -71,89 +75,150 @@ function NewBuild({ state, me }) {
 
 function BuildTab({ state, me, sum }) {
   const list = sum.build;
+  const [pick, setPick] = useState(0);
+  const states = useMemo(() => {
+    const w = getWorld(), out = [];
+    for (let s = 1; s < w.states.length; s++) if (state.stateOwner[s] === me && state.ctrl[w.states[s].cap] === me) out.push(s);
+    return out;
+  }, [state.stateOwner, state.ctrl, me]);
+  const sel = states.includes(pick) ? pick : (states.find((s) => slotsUsed(state.ind, s) < slotsOf(state.ind, s)) || states[0] || 0);
+  const info = sel ? stateIndustry(state, sel) : null;
   return (
-    <>
-      <NewBuild state={state} me={me} />
-      <div className="sec-head"><h3>Fronta staveb{list.length ? ` (${list.length})` : ''}</h3><span className="muted">{fmtNum(sum.points, 0)} bodů za den</span></div>
-      {!list.length ? <p className="empty">Nic se nestaví. Zadejte stavbu výše nebo na kartě státu (označte vlastní provincii).</p> : (
-        <ul className="queue ind-queue">
-          {list.map((b, i) => {
-            const B = BUILDINGS[b.k];
-            const eta = projectEta(state, me, b.id);
-            return (
-              <li key={b.id}>
-                <div className="q-top">
-                  <b>{B.n}</b>
-                  <span className="muted">{stateName(b.s)} · {eta < 0 ? 'bez bodů' : `za ${fmtDays(eta)}`}</span>
-                  <button className="icon-btn sm" disabled={i === 0} onClick={() => moveProject(b.id, -Infinity)} aria-label="Na začátek fronty" title="Na začátek fronty"><Icon name="back" size={14} className="rot90" /></button>
-                  <button className="icon-btn sm" onClick={() => cancelProject(b.id)} aria-label={`Zrušit stavbu ${B.n} ve státě ${stateName(b.s)}`} title="Zrušit (body se nevracejí)"><Icon name="close" size={14} /></button>
-                </div>
-                <span className="bar prog"><i style={{ width: `${((b.prog / B.cost) * 100).toFixed(1)}%` }} /></span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </>
+    <div className="prod-cols">
+      <div className="prod-left">
+        <div className="sec-head"><h3>Státy ({states.length})</h3><span className="muted">klikněte na stát a zadejte stavbu</span></div>
+        <StatesList state={state} states={states} sel={sel} setPick={setPick} />
+      </div>
+      <aside className="prod-right">
+        <NewBuild state={state} sel={sel} info={info} />
+        <div className="sec-head"><h3>Fronta staveb{list.length ? ` (${list.length})` : ''}</h3><span className="muted">{fmtNum(sum.points, 0)} bodů za den</span></div>
+        {!list.length ? <p className="empty">Nic se nestaví. Vyberte stát vlevo a zadejte stavbu.</p> : (
+          <ul className="queue ind-queue">
+            {list.map((b, i) => {
+              const B = BUILDINGS[b.k];
+              const eta = projectEta(state, me, b.id);
+              return (
+                <li key={b.id}>
+                  <div className="q-top">
+                    <b>{B.n}</b>
+                    <span className="muted">{stateName(b.s)} · {eta < 0 ? 'bez bodů' : `za ${fmtDays(eta)}`}</span>
+                    <button className="icon-btn sm" disabled={i === 0} onClick={() => moveProject(b.id, -Infinity)} aria-label="Na začátek fronty" title="Na začátek fronty"><Icon name="back" size={14} className="rot90" /></button>
+                    <button className="icon-btn sm" onClick={() => cancelProject(b.id)} aria-label={`Zrušit stavbu ${B.n} ve státě ${stateName(b.s)}`} title="Zrušit (body se nevracejí)"><Icon name="close" size={14} /></button>
+                  </div>
+                  <span className="bar prog"><i style={{ width: `${((b.prog / B.cost) * 100).toFixed(1)}%` }} /></span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </aside>
+    </div>
   );
 }
 
 // ------------------------------------------------------------------ výroba
 const nameOf = (e) => (EQUIP[e] ? EQUIP[e].n : SHIPS[e].n);
+const abOf = (e) => (EQUIP[e] ? EQUIP[e].ab : SHIPS[e].ab);
+const groupOf = (e) => EQUIP_GROUPS.find((g) => g.items.includes(e)) || EQUIP_GROUPS[0];
+
+/** Dlaždice s zkratkou výzbroje v barvě skupiny. */
+function EqTile({ eq, size = 54 }) {
+  const g = groupOf(eq);
+  return <span className="eq-tile" style={{ '--g': g.color, width: size, height: size }} aria-hidden="true"><b>{abOf(eq)}</b></span>;
+}
+
+/** Řada čtverečků = továrny na lince (plné = přidělené, prázdné = chybí do stropu). */
+function FacRow({ n }) {
+  const cells = [];
+  for (let i = 0; i < Math.min(n, 20); i++) cells.push(<i key={i} />);
+  return <span className="fac-row" aria-hidden="true">{cells}</span>;
+}
 
 function LineCard({ line, state, eqs }) {
   const warn = line.f < 0.999;
   const need = Object.entries(line.need);
   const short = need.filter(([r]) => (state.res[r]?.f ?? 0) < 0.999).map(([r]) => RESOURCES[r].n);
+  const stock = state.stock ? (state.stock[line.eq] || 0) : 0;
   return (
-    <article className="tpl-card ind-line" aria-label={`Linka ${nameOf(line.eq)}`}>
-      <header>
+    <article className={`ind-line prod-line ${warn ? 'lack' : ''}`} aria-label={`Linka ${nameOf(line.eq)}`}>
+      <EqTile eq={line.eq} />
+      <div className="pl-main">
         <select value={line.eq} onChange={(e) => setLineEq(line.id, e.target.value)} aria-label={line.naval ? 'Druh lodi na lince' : 'Druh výzbroje na lince'} title="Změna druhu vynuluje efektivitu">
           {(line.naval ? SHIP_IDS : eqs).map((e) => <option key={e} value={e}>{nameOf(e)}</option>)}
         </select>
-        <div className="ind-fac">
-          <button className="icon-btn sm" onClick={() => setLineFac(line.id, line.fac - 1)} aria-label="Ubrat továrnu" title={line.fac === 1 ? 'Zrušit linku' : 'Ubrat továrnu'}><Icon name={line.fac === 1 ? 'trash' : 'minus'} size={14} /></button>
-          <b title={line.naval ? 'Loděnice na lince' : 'Vojenské továrny na lince'}>{line.fac}</b>
-          <button className="icon-btn sm" disabled={line.fac >= IND.LINE_MAX_FAC || (line.naval ? state.dockFree : state.milFree) < 1} onClick={() => setLineFac(line.id, line.fac + 1)} aria-label="Přidat továrnu nebo loděnici" title="Přidat (zředí efektivitu)"><Icon name="plus" size={14} /></button>
+        <div className="tpl-cost">
+          <span className="cost" title="Výrobní body na kus (vyšší úroveň výzbroje je dražší)">{fmtNum(line.cost, 1)} IC</span>
+          {need.map(([r, n]) => <span key={r} className={`cost ${(state.res[r]?.f ?? 0) < 0.999 ? 'lack' : ''}`} title={`${RESOURCES[r].n} na kus`}>{RESOURCES[r].ab} {fmtNum(n, 1)}</span>)}
         </div>
-      </header>
+      </div>
+      <div className="ind-fac pl-fac">
+        <button className="icon-btn sm" onClick={() => setLineFac(line.id, line.fac - 1)} aria-label="Ubrat továrnu" title={line.fac === 1 ? 'Zrušit linku' : 'Ubrat továrnu'}><Icon name={line.fac === 1 ? 'trash' : 'minus'} size={14} /></button>
+        <b title={line.naval ? 'Loděnice na lince' : 'Vojenské továrny na lince'}>{line.fac}</b>
+        <button className="icon-btn sm" disabled={line.fac >= IND.LINE_MAX_FAC || (line.naval ? state.dockFree : state.milFree) < 1} onClick={() => setLineFac(line.id, line.fac + 1)} aria-label="Přidat továrnu nebo loděnici" title="Přidat (zředí efektivitu)"><Icon name="plus" size={14} /></button>
+        <FacRow n={line.fac} />
+      </div>
+      <div className="pl-eff" title={`Efektivita roste ke stropu ${pct(state.effCap)}`}>
+        <span className="bar prog"><i style={{ width: `${Math.min(100, line.eff * 100).toFixed(1)}%` }} /><u style={{ left: `${Math.min(100, state.effCap * 100)}%` }} /></span>
+        <i>Efektivita</i><b>{pct(line.eff)}</b>
+      </div>
       <div className="tpl-stats ind-stats">
-        <Sum label="Efektivita" value={pct(line.eff)} title={`Roste ke stropu ${pct(state.effCap)}`} />
         <Sum label="Kusů/den" value={fmtNum(line.perDay, 1)} title="Očekávaná výroba za den včetně nedostatku surovin" cls={warn ? 'warn' : ''} />
         <Sum label="Dnes" value={fmtInt(line.out)} title="Kusů dodaných do skladu při posledním denním výpočtu" />
+        <Sum label="Ve skladu" value={line.naval ? fmtInt(state.pool ? (state.pool[line.eq] || 0) : 0) : fmtInt(stock)} title="Kusů nahromaděných ve skladu" />
         <Sum label="Surovin" value={pct(line.f)} title={warn ? `Nedostatek: ${short.join(', ')}` : 'Suroviny stačí'} cls={warn ? 'warn' : ''} />
       </div>
-      <div className="tpl-cost">
-        <span className="cost" title="Výrobní body na kus (vyšší úroveň výzbroje je dražší)">{fmtNum(line.cost, 1)} IC</span>
-        {need.map(([r, n]) => <span key={r} className={`cost ${(state.res[r]?.f ?? 0) < 0.999 ? 'lack' : ''}`} title={`${RESOURCES[r].n} na kus`}>{RESOURCES[r].ab} {fmtNum(n, 1)}</span>)}
-      </div>
     </article>
+  );
+}
+
+function NewLinePicker({ sum, eqs }) {
+  return (
+    <section className="prod-new" aria-label="Nová linka">
+      <div className="sec-head"><h3>Nová linka</h3><span className="muted">volné: {sum.milFree} továren{sum.dockFree > 0 ? `, ${sum.dockFree} loděnic` : ''}</span></div>
+      {EQUIP_GROUPS.map((g) => {
+        const items = g.items.filter((e) => (g.naval ? true : eqs.includes(e)));
+        if (!items.length) return null;
+        const free = g.naval ? sum.dockFree : sum.milFree;
+        return (
+          <div key={g.id} className="pn-group" style={{ '--g': g.color }}>
+            <h4>{g.n}</h4>
+            <div className="pn-grid">
+              {items.map((e) => (
+                <button key={e} className="pn-tile" disabled={free < 1 || sum.lines.length >= IND.LINES_MAX} onClick={() => newLine(e, 1)}
+                  title={free < 1 ? (g.naval ? 'Není volná loděnice' : 'Není volná vojenská továrna') : `Založit linku: ${nameOf(e)}`} aria-label={`Nová linka: ${nameOf(e)}`}>
+                  <EqTile eq={e} size={46} /><span>{nameOf(e)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </section>
   );
 }
 
 function ProdTab({ state, me, sum }) {
   const stock = state.mil.stock[me] || {};
   const eqs = producibleEquip(state, me);
+  const view = { ...sum, stock, pool: state.nav && state.nav.pool ? state.nav.pool[me] || {} : {} };
   return (
-    <>
-      <section className="stock ind-stock">
-        <ul className="eq">
-          {eqs.map((e) => <li key={e} title={`${EQUIP[e].n} ve skladu`}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>)}
-        </ul>
-      </section>
-      <div className="sec-head"><h3>Výrobní linky{sum.lines.length ? ` (${sum.lines.length})` : ''}</h3>
-        <span className="ind-add">
-          <select value="" onChange={(e) => { if (e.target.value) newLine(e.target.value, 1); }} aria-label="Nová linka" disabled={(sum.milFree < 1 && sum.dockFree < 1) || sum.lines.length >= IND.LINES_MAX}>
-            <option value="">+ Nová linka…</option>
-            {sum.milFree > 0 && eqs.map((e) => <option key={e} value={e}>{EQUIP[e].n}</option>)}
-            {sum.dockFree > 0 && SHIP_IDS.map((e) => <option key={e} value={e}>{SHIPS[e].n} (loděnice)</option>)}
-          </select>
-        </span>
+    <div className="prod-cols">
+      <div className="prod-left">
+        <div className="sec-head"><h3>Výrobní linky{sum.lines.length ? ` (${sum.lines.length})` : ''}</h3><span className="muted">{sum.mil - sum.milFree} z {sum.mil} vojenských továren pracuje</span></div>
+        {!sum.lines.length ? <p className="empty">Žádná výroba. Vyberte vpravo druh výzbroje a založte linku.</p> : sum.lines.map((l) => <LineCard key={l.id} line={l} state={view} eqs={eqs} />)}
+        {sum.dockFree > 0 && <p className="muted ind-note">{sum.dockFree} {sum.dockFree === 1 ? 'volná loděnice čeká' : 'volné loděnice čekají'} na lodní linku.</p>}
+        {sum.milFree > 0 && <p className="muted ind-note">{sum.milFree} {sum.milFree === 1 ? 'volná továrna čeká' : 'volné továrny čekají'} na přiřazení k lince.</p>}
       </div>
-      {!sum.lines.length ? <p className="empty">Žádná výroba. Postavte vojenské továrny a založte linku.</p> : sum.lines.map((l) => <LineCard key={l.id} line={l} state={sum} eqs={eqs} />)}
-      {sum.dockFree > 0 && <p className="muted ind-note">{sum.dockFree} {sum.dockFree === 1 ? 'volná loděnice čeká' : 'volné loděnice čekají'} na lodní linku.</p>}
-      {sum.milFree > 0 && <p className="muted ind-note">{sum.milFree} {sum.milFree === 1 ? 'volná továrna čeká' : 'volné továrny čekají'} na přiřazení k lince.</p>}
-    </>
+      <aside className="prod-right">
+        <NewLinePicker sum={sum} eqs={eqs} />
+        <section className="stock ind-stock prod-stock" aria-label="Sklad">
+          <div className="sec-head"><h3>Sklad výzbroje</h3></div>
+          <ul className="eq">
+            {eqs.map((e) => <li key={e} title={`${EQUIP[e].n} ve skladu`}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>)}
+          </ul>
+        </section>
+      </aside>
+    </div>
   );
 }
 
@@ -204,8 +269,12 @@ function TradeForm({ state, me }) {
 
 function TradeTab({ state, me, sum }) {
   return (
-    <>
-      <ResTable sum={sum} />
+    <div className="prod-cols">
+      <div className="prod-left">
+        <div className="sec-head"><h3>Suroviny</h3><span className="muted">za den</span></div>
+        <ResTable sum={sum} />
+      </div>
+      <aside className="prod-right">
       <TradeForm state={state} me={me} />
       <div className="sec-head"><h3>Smlouvy{sum.trade.length ? ` (${sum.trade.length})` : ''}</h3></div>
       {!sum.trade.length ? <p className="empty">Žádné smlouvy. Chybějící suroviny koupíte od zemí s přebytkem.</p> : (
@@ -231,24 +300,29 @@ function TradeTab({ state, me, sum }) {
           })}
         </ul>
       )}
-    </>
+      </aside>
+    </div>
   );
 }
 
-/** Záložka Průmysl: stavby (fronta, nové projekty), výroba (linky výzbroje, sklad) a obchod se surovinami. */
+/** Celoobrazovkové okno Průmysl (klávesa I): výroba (linky a dlaždice výzbroje), stavby (státy a fronta), obchod se surovinami. */
 export function IndustryPanel() {
   const state = useGameSlow((s) => s, 500);
   const tab = useUi((s) => s.indTab);
   const me = playerIdx(state);
   const sum = useMemo(() => (me ? industryOf(state, me) : null), [state.ind, state.ctrl, state.stateOwner, me]);
-  if (!me) return <div className="recruit-panel"><p className="empty">Jako pozorovatel nevedete žádný průmysl.</p></div>;
+  if (!me) return <div className="prod-screen industry-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádný průmysl.</p></div></div>;
   return (
-    <div className="recruit-panel industry-panel">
-      <Header sum={sum} />
-      <nav className="ind-tabs" role="tablist" aria-label="Průmysl">
-        {TABS.map((t) => <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} onClick={() => setIndTab(t.id)}>{t.name}</button>)}
-      </nav>
-      <div className="side-scroll">
+    <div className="prod-screen industry-panel" role="dialog" aria-label="Průmysl">
+      <header className="prod-head">
+        <h2><Icon name="industry" size={22} />Průmysl</h2>
+        <nav className="ind-tabs" role="tablist" aria-label="Průmysl">
+          {TABS.map((t) => <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} onClick={() => setIndTab(t.id)}>{t.name}</button>)}
+        </nav>
+        <Header sum={sum} />
+        <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít okno" title="Zavřít (Esc)"><Icon name="close" size={20} /></button>
+      </header>
+      <div className="prod-body">
         {tab === 'prod' ? <ProdTab state={state} me={me} sum={sum} /> : tab === 'trade' ? <TradeTab state={state} me={me} sum={sum} /> : <BuildTab state={state} me={me} sum={sum} />}
       </div>
     </div>
