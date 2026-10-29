@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useUi } from '../store.js';
-import { goMenu, setHelp, setMenuOpen } from '../actions.js';
+import { goMenu, setHelp, setMenuOpen, openSaveDialog } from '../actions.js';
 
 /** Nabídka ve hře (Esc): pokračovat, ovládání, zpět do hlavního menu. */
 export function GameMenu() {
@@ -14,10 +14,12 @@ export function GameMenu() {
         <h2>Nabídka</h2>
         <div className="stack">
           <button className="btn primary" onClick={() => setMenuOpen(false)} autoFocus>Pokračovat ve hře</button>
+          <button className="btn" onClick={() => { setMenuOpen(false); openSaveDialog('save'); }}>Uložit hru</button>
+          <button className="btn" onClick={() => { setMenuOpen(false); openSaveDialog('load'); }}>Načíst hru</button>
           <button className="btn" onClick={() => { setMenuOpen(false); setHelp(true); }}>Ovládání</button>
           {confirm ? (
             <div className="confirm">
-              <p>Rozehraná hra se neuloží. Opravdu odejít do hlavního menu?</p>
+              <p>Neuložená hra se ztratí. Opravdu odejít do hlavního menu?</p>
               <button className="btn danger" onClick={goMenu}>Odejít do menu</button>
               <button className="btn" onClick={() => setConfirm(false)}>Zůstat ve hře</button>
             </div>

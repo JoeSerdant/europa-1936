@@ -14,6 +14,7 @@ const ROWS = [
   ['Pauza', ['mezerník']],
   ['Rychlost hry', ['+', '−']],
   ['Mapový režim', ['1 – 8']],
+  ['Rychlé uložení / načtení', ['F6', 'F9']],
   ['Toto okno', ['F1', '?']],
 ];
 

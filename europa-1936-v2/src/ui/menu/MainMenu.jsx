@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { mapController as mc } from '../map/controller.js';
-import { goSelect, startGame, setHelp, INSETS } from '../actions.js';
+import { goSelect, startGame, setHelp, openSaveDialog, INSETS } from '../actions.js';
+import { VERSION_LABEL } from '../../version.js';
 
 // dva pohledy, mezi kterými se mapa v pozadí pomalu pohybuje (zbytek obrazovky zakrývá levý sloupec)
 function startDrift() {
@@ -27,10 +28,11 @@ export function MainMenu() {
         </header>
         <nav className="menu-buttons" aria-label="Hlavní menu">
           <button className="btn primary big" onClick={goSelect}>Nová hra</button>
+          <button className="btn big" onClick={() => openSaveDialog('load')}>Načíst hru</button>
           <button className="btn big" onClick={() => startGame(null)}>Prohlížet mapu</button>
           <button className="btn big" onClick={() => setHelp(true)}>Ovládání</button>
         </nav>
-        <footer>Verze 0.3 · M18 Armáda</footer>
+        <footer>{VERSION_LABEL}</footer>
       </div>
     </div>
   );

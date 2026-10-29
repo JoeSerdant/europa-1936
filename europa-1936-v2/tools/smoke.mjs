@@ -453,12 +453,34 @@ try {
   await page.waitForTimeout(150);
   check('Esc 3: zruší výběr jednotek', (await ui()).selDivs.length === 0 && (await page.locator('.selbar').count()) === 0);
 
+  // uložené hry (M25): rychlé uložení F6, dialog z nabídky, načtení z hlavního menu
+  const tickSaved = await E(() => window.__e1936.gameStore.getState().tick);
+  await page.keyboard.press('F6');
+  await page.waitForTimeout(250);
+  check('F6 uloží hru do rychlého slotu', await E(() => !!localStorage.getItem('e1936:save:quick')));
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('.dialog');
+  await page.getByRole('button', { name: 'Uložit hru' }).click();
+  await page.waitForSelector('.save-dialog');
+  await page.getByRole('button', { name: 'Uložit do slotu Slot 1' }).click();
+  await page.waitForTimeout(250);
+  check('dialog uložení: slot 1 se obsadí a ohlásí uložení', (await page.locator('.sv-msg').innerText()).includes('uložena') && (await page.locator('.sv-list li.full').count()) >= 2);
+  await shot('save');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  check('Esc zavře dialog uložených her', (await page.locator('.save-dialog').count()) === 0);
   await page.keyboard.press('Escape');
   await page.waitForSelector('.dialog');
   await page.getByRole('button', { name: 'Hlavní menu' }).click();
   await page.getByRole('button', { name: 'Odejít do menu' }).click();
   await page.waitForSelector('.menu');
   check('zpět do hlavního menu', (await page.locator('.menu').count()) === 1);
+  await page.getByRole('button', { name: 'Načíst hru' }).click();
+  await page.waitForSelector('.save-dialog');
+  await page.getByRole('button', { name: 'Načíst Rychlé uložení' }).click();
+  await page.waitForSelector('.topbar', { timeout: 5000 });
+  const tickLoaded = await E(() => window.__e1936.gameStore.getState().tick);
+  check('načtení z hlavního menu vrátí uloženou hru', tickLoaded === tickSaved && (await page.locator('.save-dialog').count()) === 0, `tick ${tickLoaded}`);
 } catch (e) {
   check('kontrola doběhla', false, e.message);
 }

@@ -3,7 +3,7 @@
 Velká strategie ve stylu **Hearts of Iron IV**, odehrávající se v lednu 1936 na mapě Evropy, Středomoří, severní Afriky a Blízkého východu.
 Nová hra od základů: vlastní kód, vlastní mapa (generovaná z veřejných geodat Natural Earth), vlastní texty a grafika.
 
-**Stav: milník M24 – AI zemí.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
+**Stav: milník M25 – Uložené hry.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
 minimapa a panel s údaji o oblasti (M17) a **pozemní armáda**: divize ze šablon (vlastní návrhář), výzbroj a lidská síla, výcvik, velitelé, armády a skupiny armád, plány (Hájit oblast, Linie fronty),
 rozkazy, zásobování, boj s šířkou fronty, terénem a organizací a počáteční rozmístění všech zemí. Války se zatím vyhlašují z karty oblasti (dočasně).
 A od M19 **průmysl**: státy se sloty podle velikosti, civilní a vojenské továrny, fronta staveb, výrobní linky výzbroje s efektivitou, suroviny (ocel, hliník, ropa, wolfram, chrom, guma), obchodní smlouvy, spotřební zboží a vylepšování infrastruktury (zlepšuje pochod i zásobování). Výroba plní sklady výzbroje, ze kterých se nabírají divize.
@@ -15,7 +15,7 @@ Rozhodnutí a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, �
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 353 testů
+npm test           # 362 testů
 npm run build      # kontrola vstupů (check-build.mjs) + produkční build do dist/
 ```
 
@@ -51,6 +51,7 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 | panel Armáda, Nábor, Průmysl, Výzkum, Politika, Cíle, Diplomacie | V, N, I, R, P, C, D |
 | vybrat jednotky | klik na žeton (Shift přidává, dvojklik = celá armáda), Shift + tažení = obdélník |
 | rozkaz | pravé tlačítko na mapě (nepřátelská provincie = útok), X = zastavit, F = zaměřit výběr |
+| rychlé uložení / načtení | F6 / F9 |
 | zavřít okno, zrušit výběr, nabídka | Esc |
 | nápověda | F1 nebo ? |
 
@@ -100,6 +101,10 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 1. Při výběru země zvol **obtížnost AI** (Lehká −10 %, Běžná, Těžká +10 % výroby, staveb a výzkumu) a zda mají mít **historické plány**.
 2. AI země staví továrny, vyrábějí zbraně, cvičí divize, zakládají armády a ve válce útočí, je-li poměr sil příznivý. Hráči nevnucují mír.
 3. S historickými plány vzniknou bloky (např. Osa) a války kolem Československa, Polska, Albánie nebo Finska v době, kdy by to odpovídalo dějinám – ale jen když jsou podmínky splněny; svět nemá napsaný průběh.
+
+### Uložené hry
+
+Nabídka (Esc) → **Uložit hru** / **Načíst hru**, nebo **Načíst hru** v hlavním menu. K dispozici je pět ručních slotů, **rychlé uložení** (F6, načtení F9) a **automatické uložení** jednou za herní měsíc. Uložené hry žijí v úložišti prohlížeče (`localStorage`) a platí jen pro stejnou verzi hry.
 
 ## Dokumentace
 

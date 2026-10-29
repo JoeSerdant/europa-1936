@@ -5,6 +5,7 @@ import { CountrySelect } from './ui/menu/CountrySelect.jsx';
 import { Hud } from './ui/hud/Hud.jsx';
 import { Tooltip } from './ui/hud/Tooltip.jsx';
 import { Help } from './ui/common/Help.jsx';
+import { SaveDialog } from './ui/saves/SaveDialog.jsx';
 import { useGameLoop, useHotkeys } from './ui/hooks.js';
 import { mapClick, contextClick, clickCounter, boxSelect, pickCountry, ownerTagAt } from './ui/actions.js';
 
@@ -28,6 +29,7 @@ export default function App() {
       {screen === 'game' && <Hud />}
       {screen !== 'menu' && <Tooltip />}
       <Help />
+      <SaveDialog />
     </div>
   );
 }

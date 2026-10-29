@@ -3,9 +3,12 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, playerIdx, closeSide, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, playerIdx, closeSide, closeSaveDialog, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
+import { writeSave } from './saves.js';
+
+const AUTOSAVE_HOURS = 24 * 30;   // automatické uložení jednou za herní měsíc
 
 /** Smyčka času: z reálného času počítá herní hodiny podle rychlosti a posouvá stav. Běží jen na obrazovce hry. */
 export function useGameLoop(active) {
@@ -19,9 +22,12 @@ export function useGameLoop(active) {
       const { hours, carry: c } = hoursForElapsed(gameStore.getState(), dt, carry);
       carry = c;
       if (hours > 0) {
-        const before = gameStore.getState().dip.cap;
+        const prev = gameStore.getState();
+        const before = prev.dip.cap;
         gameStore.update(advance, hours);
-        const after = gameStore.getState().dip.cap;
+        const cur = gameStore.getState();
+        const after = cur.dip.cap;
+        if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) writeSave('auto', cur, new Date().toLocaleString('cs-CZ'));
         if (after !== before) for (let o = 1; o < after.length; o++) if (after[o] && !before[o]) toast(`${getWorld().owners[o].name} kapitulovala.`);
       }
     };
@@ -42,6 +48,9 @@ export function useHotkeys() {
       if (isTyping(e) || e.ctrlKey || e.metaKey || e.altKey) return;
       const ui = uiStore.getState();
       if (e.key === 'F1' || e.key === '?') { e.preventDefault(); setHelp(!ui.helpOpen); return; }
+      if (ui.saveDialog) { if (e.key === 'Escape') closeSaveDialog(); return; }
+      if (e.key === 'F6') { e.preventDefault(); quickSave(); return; }
+      if (e.key === 'F9') { e.preventDefault(); quickLoad(); return; }
       const gs = gameStore.getState();
       if (ui.screen === 'game' && gs.player && gs.nat.pend.some((p) => p.o === playerIdx(gs))) return;   // čeká událost: nejdřív se rozhodne
       if (e.key === 'Escape') {
