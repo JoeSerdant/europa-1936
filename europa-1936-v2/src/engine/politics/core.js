@@ -2,6 +2,7 @@
 import { LAWS, ADVISORS, ADV_SLOT_IDS } from '../../data/politics/index.js';
 import { I } from '../industry/constants.js';
 import { POL } from './constants.js';
+import { aiMult } from '../ai/core.js';
 import { focusMods, NO_FOCUS_MODS } from '../nat/core.js';
 
 export const NO_POL = Object.freeze({ stab: 0, ws: 0, cons: 0, build: 0, prod: 0, extract: 0, imp: 0, man: 0, research: 0 });
@@ -40,7 +41,7 @@ export function polModsOf(state, o) {
 /** Násobek výstupu továren a staveb ze stability. */
 export const stabMult = (stab) => 1 + (stab - 0.5) * POL.STAB_OUT;
 /** Celkový násobek výroby a staveb země: bonus výroby × stabilita. */
-export const outMult = (state, o) => { const own = state.pol.own[o]; return own ? (1 + polModsOf(state, o).prod) * stabMult(own.stab) : 1; };
+export const outMult = (state, o) => { const own = state.pol.own[o]; return own ? (1 + polModsOf(state, o).prod) * stabMult(own.stab) * aiMult(state, o) : 1; };
 /** Násobek měsíčního přírůstku lidské síly: odvod a poradci × podpora války. */
 export const manMult = (state, o) => { const own = state.pol.own[o]; return own ? Math.max(0, 1 + polModsOf(state, o).man) * (POL.WS_MAN_BASE + POL.WS_MAN_SLOPE * own.ws) : 1; };
 /** Podíl spotřebního zboží: základ země (`ind.cons`) + zákony a poradci. */

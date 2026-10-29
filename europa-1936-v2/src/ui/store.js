@@ -13,6 +13,8 @@ export const uiStore = createStore({
   mode: 'political',       // mapový režim
   selected: 0,             // označená oblast (id provincie nebo mořské oblasti)
   hover: 0,                // oblast pod kurzorem
+  aiLevel: 2,              // obtížnost AI zemí pro novou hru: 1 lehká, 2 běžná, 3 těžká (M24)
+  aiHist: true,            // historické plány AI (války a bloky)
   pickTag: 'GER',          // země vybraná na obrazovce výběru
   helpOpen: false,         // okno s ovládáním
   menuOpen: false,         // nabídka ve hře (Esc)

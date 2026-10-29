@@ -9,15 +9,15 @@ import { createPol } from './politics/setup.js';
 import { createNat } from './nat/setup.js';
 import { createDip } from './dip/setup.js';
 
-export const GAME_VERSION = 7;
+export const GAME_VERSION = 8;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
 /**
  * Počáteční stav scénáře „1936“.
- * @param {{player?: string|null, seed?: number}} opts  player = tag země (např. 'GER'), null = pozorovatel
+ * @param {{player?: string|null, seed?: number, aiLevel?: 0|1|2|3 (0 = AI zemí vypnutá, výchozí v enginu; hra z rozhraní začíná na 2), hist?: boolean}} opts  player = tag země (např. 'GER'), null = pozorovatel
  */
-export function createGame({ player = null, seed = 1936 } = {}) {
+export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = true } = {}) {
   const w = getWorld();
   if (player && !w.ownerIdx[player]) throw new Error(`Neznámá země: ${player}`);
   // vlastník je vlastností státu (HOI4: stát = jednotka vlastnictví), kontrola je po provinciích (okupace)
@@ -41,5 +41,6 @@ export function createGame({ player = null, seed = 1936 } = {}) {
     pol: createPol(w),     // M21: politika (viz SPEC § 4d)
     nat: createNat(w),     // M22: národní cíle a události (viz SPEC § 4e)
     dip: createDip(w),     // M23: diplomacie (viz SPEC § 4f)
+    ai: { level: [1, 2, 3].includes(aiLevel) ? aiLevel : 0, hist: hist ? 1 : 0 },   // M24: nastavení AI (viz SPEC § 4g)
   };
 }

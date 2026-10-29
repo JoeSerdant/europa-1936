@@ -1,4 +1,4 @@
-// Postup herního času. Každá hodina projde systémy v pevném pořadí: čas → armáda (M18, army/system.js) → průmysl (M19, industry/system.js) → výzkum (M20, research/system.js) → politika (M21, politics/system.js) → národní cíle a události (M22, nat/system.js) → diplomacie (M23, dip/system.js); další milníky přidávají průmysl, výzkum, politiku ...
+// Postup herního času. Každá hodina projde systémy v pevném pořadí: čas → armáda (M18, army/system.js) → průmysl (M19, industry/system.js) → výzkum (M20, research/system.js) → politika (M21, politics/system.js) → národní cíle a události (M22, nat/system.js) → diplomacie (M23, dip/system.js) → AI zemí (M24, ai/system.js); další milníky přidávají průmysl, výzkum, politiku ...
 import { SPEEDS } from './game.js';
 import { armyHour } from './army/system.js';
 import { industryHour } from './industry/system.js';
@@ -6,10 +6,11 @@ import { researchHour } from './research/system.js';
 import { politicsHour } from './politics/system.js';
 import { natHour } from './nat/system.js';
 import { dipHour } from './dip/system.js';
+import { aiHour } from './ai/system.js';
 
 /** Jedna herní hodina. Čistá funkce – systémy se přidávají sem v pevném pořadí (armáda → průmysl → výzkum → politika …). */
 export function advanceHour(state) {
-  return dipHour(natHour(politicsHour(researchHour(industryHour(armyHour({ ...state, tick: state.tick + 1 }))))));
+  return aiHour(dipHour(natHour(politicsHour(researchHour(industryHour(armyHour({ ...state, tick: state.tick + 1 })))))));
 }
 
 /** n herních hodin najednou (n ≥ 0 celé číslo). Neplatný vstup nebo n = 0 vrací tentýž stav. */

@@ -32,6 +32,9 @@ export function applyInsets() {
 
 const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', toast: null };
 
+/** Nastavení AI zemí pro novou hru (obrazovka výběru země). */
+export const setAiOptions = (patch) => setUi(patch);
+
 export function goMenu() {
   gameStore.setState(createGame());
   setUi({ screen: 'menu', helpOpen: false, ...FRESH_UI });
@@ -49,7 +52,8 @@ export function pickCountry(tag, fly = true) {
 
 /** Začne novou hru za zemi `tag` (null = pozorovatel). */
 export function startGame(tag) {
-  gameStore.setState(createGame({ player: tag }));
+  const u = uiStore.getState();
+  gameStore.setState(createGame({ player: tag, aiLevel: u.aiLevel, hist: !!u.aiHist }));
   setUi({ screen: 'game', ...FRESH_UI });
   mc.setInsets(INSETS.game);
   if (tag) mc.flyToCountry(tag, 1100, 0.45, 1.8); else mc.viewEurope(900);

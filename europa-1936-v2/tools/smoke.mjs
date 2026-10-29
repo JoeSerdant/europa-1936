@@ -1,6 +1,6 @@
 // Automatická kontrola hry v prohlížeči (Playwright): menu → výběr země → hra, klik na provincii, běh času, režimy, nabídka, výkon snímku
 // a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc)
-// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události) a diplomacie (ospravedlnění a vyhlášení války s bloky, panel Diplomacie).
+// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události) a diplomacie (ospravedlnění a vyhlášení války s bloky, panel Diplomacie) a AI zemí (volba obtížnosti při startu).
 // Spuštění:  npm run dev  (nebo npm run build && npm run preview)  a pak  node tools/smoke.mjs [šířka výška]
 //   URL=http://localhost:4173 node tools/smoke.mjs 1366 768
 // Potřebuje balíček playwright (npm i -D playwright && npx playwright install chromium). Snímky: tools/preview/smoke-*.png.
@@ -49,10 +49,14 @@ try {
   check('karta země ukazuje vůdce', (await page.locator('.country-card').innerText()).includes('Adolf Hitler'));
   await shot('select');
 
+  // AI zemí (M24): výchozí běžná obtížnost s historickými plány, volba těžké a návrat
+  check('výběr země nabízí obtížnost AI (výchozí Běžná) a historické plány', (await page.getByRole('button', { name: 'Běžná' }).getAttribute('aria-pressed')) === 'true' && (await page.getByLabel('Historické plány').isChecked()));
+  await page.getByRole('button', { name: 'Těžká' }).click();
   await page.getByRole('button', { name: 'Začít hru' }).click();
   await page.waitForSelector('.topbar');
   await page.waitForTimeout(1800);
   const top = await page.locator('.topbar').innerText();
+  check('hra začíná s AI zemí na těžké obtížnosti', (await page.evaluate(() => window.__e1936.gameStore.getState().ai)).level === 3);
   check('horní lišta: země a datum', top.includes('Německo') && top.includes('1. ledna 1936'));
   await shot('game');
 
@@ -282,15 +286,25 @@ try {
   const tplAfter = await page.locator('.tpl-card').count();
   check('návrhář šablon: nová šablona se uloží a objeví v seznamu', (await page.locator('.designer').count()) === 0 && tplAfter === tplBefore + 1, `${tplBefore} → ${tplAfter}`);
 
+  // válka je splněna: bílý mír s protivníky (AI zemí by jinak za dlouhé skoky v čase hráče porazily), pak dlouhé skoky v čase
+  const peace = await E(() => {
+    const { gameStore, engine } = window.__e1936;
+    const GER = engine.getWorld().ownerIdx.GER;
+    let s = gameStore.getState();
+    for (const [a, b] of s.mil.wars.slice()) { const e = a === GER ? b : b === GER ? a : 0; if (e) s = engine.proposePeace(s, GER, e); }
+    gameStore.setState(s);
+    return s.mil.wars.filter(([a, b]) => a === GER || b === GER).length;
+  });
+  check('bílý mír s protivníky po zkoušce války', peace === 0, `zbývá válek hráče: ${peace}`);
   // průmysl (M19): panel Průmysl (I), stavba, linky výroby, obchod, režim mapy 8, tři dny hry
   await page.keyboard.press('i');
   await page.waitForSelector('.industry-panel', { timeout: 3000 });
   const sum = await page.locator('.ind-sum').innerText();
   check('klávesa I otevře panel Průmysl se souhrnem továren', (await ui()).panel === 'industry' && /Civilní/.test(sum) && /Vojenské/.test(sum), sum.replace(/\s+/g, ' '));
-  const b0 = await E(() => window.__e1936.gameStore.getState().ind.build.length);
+  const b0 = await E(() => { const g = window.__e1936.gameStore.getState(); return g.ind.build.filter((b) => b.o === window.__e1936.engine.getWorld().ownerIdx.GER).length; });
   await page.locator('.ind-new').getByRole('button', { name: 'Civilní továrna' }).click();
   await page.waitForSelector('.ind-queue li', { timeout: 3000 });
-  const b1 = await E(() => window.__e1936.gameStore.getState().ind.build.length);
+  const b1 = await E(() => { const g = window.__e1936.gameStore.getState(); return g.ind.build.filter((b) => b.o === window.__e1936.engine.getWorld().ownerIdx.GER).length; });
   check('stavba: „Civilní továrna“ přidá projekt do fronty', b1 === b0 + 1 && (await page.locator('.ind-queue li').count()) === b1, `fronta ${b0} → ${b1}`);
   await shot('industry-build');
   await page.getByRole('tab', { name: 'Výroba' }).click();
@@ -396,11 +410,14 @@ try {
   await page.keyboard.press('d');
   await page.waitForSelector('.dip-panel', { timeout: 3000 });
   check('klávesa D otevře panel Diplomacie se seznamem zemí', (await ui()).panel === 'dip' && (await page.locator('.dip-row').count()) >= 30);
+  await E(() => { const { gameStore, engine } = window.__e1936; gameStore.setState(engine.declareWar(gameStore.getState(), 'GER', 'SWE')); });
+  await page.waitForTimeout(900);
   check('země ve válce jsou v seznamu první a označené', (await page.locator('.dip-row.war').count()) >= 1 && (await page.locator('.dip-list li').first().getAttribute('class')).includes('war'));
   await page.locator('.dip-head').nth(3).click();
   await page.waitForSelector('.dip-body', { timeout: 3000 });
   check('řádek země se rozbalí s akcemi', (await page.locator('.dip-body .sbtn').count()) >= 2);
   await shot('diplomacy');
+  await E(() => { const { gameStore, engine } = window.__e1936; const w = engine.getWorld(); gameStore.setState(engine.proposePeace(gameStore.getState(), w.ownerIdx.GER, w.ownerIdx.SWE)); });
   await page.keyboard.press('d');
   await page.waitForTimeout(150);
 
