@@ -500,6 +500,11 @@ try {
   await page.keyboard.press('d');
   await page.waitForTimeout(150);
 
+  // upozornění (M49): na začátku hry je aspoň jedno (volný výzkumný slot) a klik otevře příslušné okno
+  check('pod lištou nabídek jsou upozornění', (await page.locator('.alerts .alert').count()) >= 1);
+  await page.locator('.alerts .alert').first().click();
+  check('klik na upozornění otevře okno a skryje upozornění', (await E(() => window.__e1936.uiStore.getState().panel)) != null && (await page.locator('.alerts').count()) === 0);
+  await page.keyboard.press('Escape');
   // zprávy a přehled zemí (M26): panel Zprávy (L), okno Přehled zemí (O)
   await page.keyboard.press('l');
   await page.waitForSelector('.log-panel', { timeout: 3000 });
