@@ -592,6 +592,10 @@ Velitelé (`mil.gens`) mají pátou dovednost `mn` (Manévr, od `GAME_VERSION` 2
 
 Ospravedlnění války má cíl (`data/dip/wargoals.js`): Podmanění (25 PM, 30 dní; po vítězství loutka nebo anexe), Územní nároky (12 PM, 15 dní; po vítězství převzetí až 3 nejcennějších zbylých států, poražený zůstane samostatný) a Ponížení (6 PM, 8 dní; poražený zaplatí `pp_gain` politické moci, ztratí podporu války a zůstane samostatný). `justifyWar(state, a, b, cíl)` ukládá cíl do `dip.just`, `startWar` ho zapíše do `dip.goal['a>b']` (od `GAME_VERSION` 26), kapitulace předá cíl konferenci (`conf.g`) a hráčův dialog nabídne volby podle cíle (`confPuppet`/`confAnnex` jen pro Podmanění, `confTake` pro Územní nároky, `confTribute` pro Ponížení). AI i výchozí tlačítko používají Podmanění. UI: v panelu Diplomacie jedno tlačítko ospravedlnění na cíl; řádek diplomacie má seznam `goals`. Test: `test/wargoals.test.js`.
 
+## 4zi. Národní cíle všech zemí (M57)
+
+Každá z 35 zemí má vlastní strom národních cílů (`data/nat/focuses_more.js`; obecný strom `DEFAULT` zůstává jen jako záloha pro neznámé tagy). Stromy menších zemí (6–9 cílů) jsou postavené na jejich situaci: neutralita a obrana hranic (BEL, HOL, SWI, SWE, FIN), pobaltské země, Balkán a revizionismus (HUN, BUL, ROM, YUG, GRE, ALB), Turecko a průlivy, ropa a koncese (IRQ, PER, SAU, OMA, EGY), kolonie (POR). Velmoci (GER, FRA, ENG, ITA, SOV, POL, CZE, SPR) dostaly další větve (letectvo, námořnictvo, zpravodajství, věda). Poloha cíle v mřížce se dopočítá z hloubky stromu pomocníkem `tree()`; id cíle začíná tagem země malými písmeny. Žádná nová mechanika ani změna stavu. Test: `test/nat.test.js` (blok „národní cíle pro všechny země“).
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -789,6 +793,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M54** | **Dovednosti velitelů**: pátá dovednost velitelů zrychluje pochod a obnovu organizace | **hotovo** |
 | **M55** | **Autonomie loutek**: úrovně autonomie loutek určují příspěvky pánovi, nespokojená loutka se osamostatní | **hotovo** |
 | **M56** | **Válečné cíle**: tři válečné cíle s různou cenou a výsledkem mírové konference | **hotovo** |
+| **M57** | **Národní cíle všech zemí**: vlastní stromy cílů pro všech 35 zemí, rozšíření velmocí o letectvo, námořnictvo a zpravodajství | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
