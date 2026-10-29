@@ -8,4 +8,5 @@ export { nextRandom, randomInt, seedToState } from './rng.js';
 export * from './time.js';
 export * from './army/index.js';
 export * from './industry/index.js';
+export * from './research/index.js';
 export { BATTALIONS, SUPPORT, ALL_UNITS, GRID, TERRAIN_RULES, RIVER, EQUIP, EQUIP_IDS, TRAITS, TPL_KINDS } from '../data/army/index.js';

@@ -2,7 +2,8 @@
 export const I = {
   IC_PER_FAC: 5,            // výrobní / stavební body továrny za den
   EFF_START: 0.1,           // efektivita nové linky (a po změně druhu výzbroje)
-  EFF_CAP: 0.5,             // strop efektivity (M20: výzkum ho zvedá)
+  EFF_CAP: 0.5,             // strop efektivity (výzkum ho zvedá o `mod.effCap`)
+  LV_COST: 0.2,             // příplatek k ceně kusu výzbroje za každou úroveň nad první (M20)
   EFF_GROW: 0.035,          // denní přírůstek: podíl vzdálenosti ke stropu
   EFF_INIT: 0.4,            // efektivita linek na začátku hry
   LINE_MAX_FAC: 20,         // nejvíc továren na jedné lince

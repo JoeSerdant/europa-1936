@@ -28,6 +28,8 @@ export const EQUIP_PROD = {
   auta:    { cost: 1.5, res: { ocel: 0.6, guma: 0.3, ropa: 0.3 } },
   vozy:    { cost: 6,   res: { ocel: 2, guma: 0.4, chrom: 0.1, ropa: 0.4 } },
   ltanky:  { cost: 8,   res: { ocel: 3, guma: 0.5, chrom: 0.3, hlinik: 0.3, ropa: 0.5 } },
+  mtanky:  { cost: 14,  res: { ocel: 5, guma: 0.6, chrom: 0.5, hlinik: 0.3, ropa: 0.8 } },
+  htanky:  { cost: 22,  res: { ocel: 8, guma: 0.8, chrom: 1, hlinik: 0.5, ropa: 1.2, wolfram: 0.3 } },
   podpora: { cost: 1.5, res: { ocel: 0.5, hlinik: 0.2 } },
 };
 

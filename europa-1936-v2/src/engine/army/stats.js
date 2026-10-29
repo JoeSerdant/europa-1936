@@ -6,7 +6,8 @@
 import { BATTALIONS, SUPPORT, EQUIP_LEVEL_MULT, GRID } from '../../data/army/index.js';
 
 const TERR_KEYS = [0, 1, 2, 3, 4, 5, 6, 'r'];
-const cache = new WeakMap();
+const cache = new WeakMap();      // šablona → statistiky při úrovni 1
+const lvCache = new WeakMap();    // objekt úrovní výzbroje → (šablona → statistiky)
 
 const levelMult = (lvl, kind) => (lvl && lvl[kind] > 1 ? EQUIP_LEVEL_MULT[Math.min(lvl[kind], EQUIP_LEVEL_MULT.length) - 1] : 1);
 
@@ -19,7 +20,15 @@ export function templateUnits(tpl) {
 }
 
 export function deriveStats(tpl, lvl = null) {
+  if (lvl && !Object.keys(lvl).length) lvl = null;
+  let perTpl = null;
   if (!lvl) { const hit = cache.get(tpl); if (hit) return hit; }
+  else {
+    perTpl = lvCache.get(lvl);
+    if (!perTpl) { perTpl = new WeakMap(); lvCache.set(lvl, perTpl); }
+    const hit = perTpl.get(tpl);
+    if (hit) return hit;
+  }
   const { line, sup } = templateUnits(tpl);
   const all = line.concat(sup);
   const s = {
@@ -66,11 +75,11 @@ export function deriveStats(tpl, lvl = null) {
     }
     if (lineMen && (atk || def || mov)) s.terr[key] = { atk: atk / lineMen, def: def / lineMen, mov: mov / lineMen };
   }
-  if (!lvl) cache.set(tpl, s);
+  if (!lvl) cache.set(tpl, s); else perTpl.set(tpl, s);
   return s;
 }
 
-/** Zkontroluje šablonu: vrací null, když je v pořádku, jinak český popis chyby. `unlocked(typ)` rozhoduje o odemčení (zatím jen bez zámku „M20“). */
+/** Zkontroluje šablonu: vrací null, když je v pořádku, jinak český popis chyby. `unlocked(typ)` rozhoduje o odemčení (výchozí: bez zámku). */
 export function validateTemplate(tpl, unlocked = (def) => !def.unlock) {
   if (!tpl || !Array.isArray(tpl.reg) || !Array.isArray(tpl.sup)) return 'Neplatná šablona.';
   if (tpl.reg.length < 1 || tpl.reg.length > GRID.cols) return `Šablona má mít 1 až ${GRID.cols} pluků.`;

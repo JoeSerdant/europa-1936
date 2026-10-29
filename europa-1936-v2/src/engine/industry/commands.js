@@ -4,6 +4,7 @@ import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { BUILDINGS, EQUIP_PROD, RESOURCES } from '../../data/industry/index.js';
 import { EQUIP } from '../../data/army/equipment.js';
+import { isUnlocked } from '../research/core.js';
 import { tallyOwners, factoryUse, slotsOf, slotsUsed } from './core.js';
 
 const patch = (state, p) => ({ ...state, ind: { ...state.ind, ...p, ver: state.ind.ver + 1 } });
@@ -56,7 +57,7 @@ const milFree = (state, o, exceptId = 0) => {
 /** Nová linka `eq` s `fac` továrnami (1 až volné továrny, nejvýš LINE_MAX_FAC). */
 export function addLine(state, o, eq, fac = 1) {
   const w = getWorld(), ind = state.ind;
-  if (!isInt(o) || o < 1 || o >= w.owners.length || !EQUIP_PROD[eq] || EQUIP[eq].unlock) return state;
+  if (!isInt(o) || o < 1 || o >= w.owners.length || !EQUIP_PROD[eq] || !isUnlocked(state, o, EQUIP[eq].unlock)) return state;
   if (!isInt(fac) || fac < 1 || fac > I.LINE_MAX_FAC || fac > milFree(state, o)) return state;
   if (ind.lines.filter((l) => l.o === o).length >= I.LINES_MAX) return state;
   const id = ind.jn + 1;
@@ -76,7 +77,7 @@ export function setLineFactories(state, id, fac) {
 /** Přepne linku na jiný druh výzbroje: efektivita i rozpracovaná výroba se ztratí. */
 export function setLineEquip(state, id, eq) {
   const ind = state.ind, l = ind.lines.find((x) => x.id === id);
-  if (!l || !EQUIP_PROD[eq] || EQUIP[eq].unlock || eq === l.eq) return state;
+  if (!l || !EQUIP_PROD[eq] || !isUnlocked(state, l.o, EQUIP[eq].unlock) || eq === l.eq) return state;
   return patch(state, { lines: ind.lines.map((x) => (x.id === id ? { ...x, eq, eff: I.EFF_START, acc: 0, out: 0 } : x)) });
 }
 

@@ -7,7 +7,7 @@
 //  rec   průzkum (podpora)     eng   zakopávání (podpora)      need   výzbroj na jeden prapor
 //  terr  { kód terénu | 'r' (řeka): { atk, def, mov } } – úpravy útoku, obrany a rychlosti v terénu
 //  kind  druh výzbroje, kterou prapor „používá“ pro úroveň výzbroje (viz EQUIP_LEVEL_MULT)
-//  unlock  null = k dispozici od začátku, jinak označení výzkumu (M20)
+//  unlock  null = k dispozici od začátku, jinak id technologie, která jednotku odemyká (data/research/techs.js)
 //  sym   značka pro žeton na mapě
 
 export const BATTALIONS = {
@@ -49,27 +49,27 @@ export const BATTALIONS = {
     unlock: null,
     info: 'Ničí měkké cíle a prorazí slabou obranu. Málo sil, v lesích a městech zranitelný.',
   },
-  // ---- čeká na výzkum (M20) ----
+  // ---- odemyká výzkum (M20) ----
   mech: {
     n: 'Mechanizovaný prapor', ab: 'MEC', sym: 'mot', w: 2, hp: 26, org: 50, men: 1000, days: 100, spd: 8, sup: 0.14,
     soft: 5, hard: 3.5, pierce: 8, def: 20, brk: 5, armor: 8, hardness: 0.2,
     need: { pusky: 90, vozy: 40 }, kind: 'vozy',
     terr: { 1: { atk: -0.2 }, 3: { atk: -0.05 }, 4: { atk: -0.1 }, 6: { atk: -0.2, def: -0.05 }, r: { atk: -0.2, mov: -0.2 } },
-    unlock: 'M20', info: 'Pěchota v obrněných transportérech.',
+    unlock: 'mech', info: 'Pěchota v obrněných transportérech.',
   },
   mtank: {
     n: 'Střední tankový prapor', ab: 'STK', sym: 'arm', w: 2, hp: 10, org: 35, men: 500, days: 120, spd: 8, sup: 0.18,
     soft: 15, hard: 13, pierce: 26, def: 5, brk: 30, armor: 26, hardness: 0.6,
     need: { mtanky: 40, podpora: 8 }, kind: 'mtanky',
     terr: { 1: { atk: -0.3, mov: -0.4 }, 2: { atk: -0.1 }, 3: { atk: -0.2 }, 4: { atk: -0.1, mov: -0.1 }, 6: { atk: -0.4, def: -0.1 }, r: { atk: -0.2, mov: -0.2 } },
-    unlock: 'M20', info: 'Páteř tankových divizí.',
+    unlock: 'mtank', info: 'Páteř tankových divizí.',
   },
   htank: {
     n: 'Těžký tankový prapor', ab: 'TTK', sym: 'arm', w: 2, hp: 12, org: 30, men: 550, days: 140, spd: 6, sup: 0.26,
     soft: 18, hard: 18, pierce: 40, def: 8, brk: 28, armor: 42, hardness: 0.7,
     need: { htanky: 30, podpora: 10 }, kind: 'htanky',
     terr: { 1: { atk: -0.4, mov: -0.4 }, 2: { atk: -0.2 }, 3: { atk: -0.3 }, 4: { atk: -0.4, mov: -0.2 }, 6: { atk: -0.5, def: -0.2 }, r: { atk: -0.4, mov: -0.4 } },
-    unlock: 'M20', info: 'Pomalý a žíznivý, ale téměř nezranitelný.',
+    unlock: 'htank', info: 'Pomalý a žíznivý, ale téměř nezranitelný.',
   },
 };
 
@@ -102,17 +102,17 @@ export const SUPPORT = {
   spoj: {
     n: 'Spojovací rota', ab: 'SPO', sym: 'sig', w: 0, hp: 1, org: 0, men: 180, days: 100, spd: 99, sup: 0.03,
     soft: 0, hard: 0, pierce: 0, def: 2, brk: 0, armor: 0, hardness: 0, eng: 0, rec: 0.5, plan: 0.05,
-    need: { podpora: 10 }, kind: 'pusky', terr: {}, unlock: 'M20', info: 'Rychlejší plánování útoků armády.',
+    need: { podpora: 10 }, kind: 'pusky', terr: {}, unlock: 'spoj', info: 'Rychlejší plánování útoků armády.',
   },
   log: {
     n: 'Logistická rota', ab: 'LOG', sym: 'log', w: 0, hp: 1, org: 0, men: 220, days: 100, spd: 99, sup: 0.03,
     soft: 0, hard: 0, pierce: 0, def: 1, brk: 0, armor: 0, hardness: 0, eng: 0, rec: 0, supSave: 0.06,
-    need: { auta: 12, podpora: 8 }, kind: 'auta', terr: {}, unlock: 'M20', info: 'Divize spotřebuje méně zásob.',
+    need: { auta: 12, podpora: 8 }, kind: 'auta', terr: {}, unlock: 'log', info: 'Divize spotřebuje méně zásob.',
   },
   nem: {
     n: 'Polní nemocnice', ab: 'NEM', sym: 'med', w: 0, hp: 1, org: 0, men: 240, days: 100, spd: 99, sup: 0.03,
     soft: 0, hard: 0, pierce: 0, def: 1, brk: 0, armor: 0, hardness: 0, eng: 0, rec: 0, healing: 0.25,
-    need: { podpora: 12 }, kind: 'pusky', terr: {}, unlock: 'M20', info: 'Rychlejší doplňování síly po bojích.',
+    need: { podpora: 12 }, kind: 'pusky', terr: {}, unlock: 'nem', info: 'Rychlejší doplňování síly po bojích.',
   },
 };
 

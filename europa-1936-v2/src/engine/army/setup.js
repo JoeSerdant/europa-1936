@@ -16,6 +16,7 @@ export const emptyMil = (nOwners) => ({
   stock: Array.from({ length: nOwners }, () => null),
   man: new Array(nOwners).fill(0),
   cas: new Array(nOwners).fill(0),
+  lv: new Array(nOwners).fill(null),   // úrovně výzbroje zemí (M20): { výzbroj: úroveň }, chybí = 1
 });
 
 /** Výběr k položek bez opakování s váhami (metoda exponenciálních klíčů – deterministická pro daný generátor). */

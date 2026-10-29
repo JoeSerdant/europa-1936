@@ -55,14 +55,17 @@ export function factoryUse(t, cons) {
   return { consFac, civAfterCons: Math.max(0, t.civ - consFac), milAvail: Math.max(0, t.mil - Math.max(0, consFac - t.civ)) };
 }
 
+/** Výrobní body na kus podle úrovně výzbroje země (`lv` = mil.lv[o], M20). */
+export const itemCost = (eq, lv) => EQUIP_PROD[eq].cost * (1 + I.LV_COST * (((lv && lv[eq]) || 1) - 1));
+
 /** Kusy za den, které linka vyrobí při své efektivitě (bez vlivu nedostatku surovin). */
-export const lineRate = (l) => (l.fac * I.IC_PER_FAC * l.eff) / EQUIP_PROD[l.eq].cost;
+export const lineRate = (l, lv = null) => (l.fac * I.IC_PER_FAC * l.eff) / itemCost(l.eq, lv);
 
 /** Nominální poptávka po surovinách (za den) pro linky země. */
-export function demandOf(lines) {
+export function demandOf(lines, lv = null) {
   const dem = {};
   for (const l of lines) {
-    const rate = lineRate(l), req = EQUIP_PROD[l.eq].res;
+    const rate = lineRate(l, lv), req = EQUIP_PROD[l.eq].res;
     for (const r in req) dem[r] = (dem[r] || 0) + rate * req[r];
   }
   return dem;
@@ -84,10 +87,10 @@ export function trimLines(lines, milAvail) {
 }
 
 /** Toky surovin země: těžba, dovoz a vývoz podle skutečně dodaných množství `got`, poptávka a poměr pokrytí `f` (0–1). */
-export function resFlows(t, dem, trade, o) {
+export function resFlows(t, dem, trade, o, extract = 0) {
   const res = {};
   const get = (r) => res[r] || (res[r] = { ext: 0, imp: 0, exp: 0, dem: 0, f: 1 });
-  for (const r in t.res) get(r).ext = t.res[r];
+  for (const r in t.res) get(r).ext = t.res[r] * (1 + extract);
   for (const d of trade) {
     if (d.to === o && d.got > 0) get(d.res).imp += d.got;
     if (d.from === o && d.got > 0) get(d.res).exp += d.got;

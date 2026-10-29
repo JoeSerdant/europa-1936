@@ -1,8 +1,10 @@
 // Dotazy na průmysl pro rozhraní a AI (čisté, bez změn stavu).
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
+import { EQUIP } from '../../data/army/equipment.js';
 import { BUILDINGS, EQUIP_PROD } from '../../data/industry/index.js';
-import { tallyOwners, factoryUse, trimLines, demandOf, resFlows, lineFactor, lineRate, slotsOf, slotsUsed, categoryOf } from './core.js';
+import { modsOf, isUnlocked } from '../research/core.js';
+import { tallyOwners, factoryUse, trimLines, demandOf, resFlows, lineFactor, lineRate, slotsOf, slotsUsed, categoryOf, itemCost } from './core.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
 
@@ -13,8 +15,9 @@ export function industryOf(state, o) {
   const t = tallyOwners(state)[o];
   const use = factoryUse(t, ind.cons[o]);
   const lines = trimLines(ind.lines.filter((l) => l.o === o), use.milAvail);
-  const dem = demandOf(lines);
-  const res = resFlows(t, dem, ind.trade, o);
+  const mods = modsOf(state, o), lv = state.mil.lv[o];
+  const dem = demandOf(lines, lv);
+  const res = resFlows(t, dem, ind.trade, o, mods.extract);
   let imports = 0;
   for (const r in res) imports += res[r].imp;
   const tradeCiv = imports * I.TRADE_CIV;
@@ -23,8 +26,9 @@ export function industryOf(state, o) {
     o, civ: t.civ, mil: t.mil, occupied: t.occ,
     cons: ind.cons[o], consFac: use.consFac, tradeCiv,
     civAvail: Math.max(0, use.civAfterCons - tradeCiv), milAvail: use.milAvail, milUsed: used, milFree: Math.max(0, Math.floor(use.milAvail - used + 1e-9)),
-    points: Math.max(0, use.civAfterCons - tradeCiv) * I.IC_PER_FAC,
-    lines: lines.map((l) => ({ ...l, rate: lineRate(l), perDay: lineRate(l) * l.f, need: EQUIP_PROD[l.eq].res })),
+    points: Math.max(0, use.civAfterCons - tradeCiv) * I.IC_PER_FAC * (1 + mods.build),
+    effCap: I.EFF_CAP + mods.effCap,
+    lines: lines.map((l) => ({ ...l, rate: lineRate(l, lv), perDay: lineRate(l, lv) * l.f, need: EQUIP_PROD[l.eq].res, cost: itemCost(l.eq, lv) })),
     res,
     build: ind.build.filter((b) => b.o === o),
     trade: ind.trade.filter((d) => d.from === o || d.to === o),
@@ -48,6 +52,9 @@ export function stateIndustry(state, s) {
 export const projectInfo = (kind) => ({ ...BUILDINGS[kind], perDay: BUILDINGS[kind].cost / BUILDINGS[kind].days });
 
 /** Dny do dokončení fronty projektů země při současném přísunu (odhad pro rozhraní; −1 = nikdy). */
+/** Výzbroj, kterou země může vyrábět (odemčená výzkumem). */
+export const producibleEquip = (state, o) => Object.keys(EQUIP_PROD).filter((e) => isUnlocked(state, o, EQUIP[e].unlock));
+
 export function projectEta(state, o, buildId) {
   const sum = industryOf(state, o);
   let pool = sum.points, days = 0;

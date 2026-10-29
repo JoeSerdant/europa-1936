@@ -114,8 +114,9 @@ export function divisionView(state, id) {
   const tpl = mil.tpl[d.tpl];
   if (!tpl) return null;
   const hit = viewCache.get(d);
-  if (hit && hit.tpl === tpl) return hit.view;
-  const st = deriveStats(tpl);
+  const lv = mil.lv ? mil.lv[tpl.o] : null;
+  if (hit && hit.tpl === tpl && hit.lv === lv) return hit.view;
+  const st = deriveStats(tpl, lv);
   const lvl = xpLevel(d.xp);
   const view = {
     id, o: d.o, p: d.p, name: nameOf(tpl, d.nr), tplId: d.tpl, tplName: tpl.nm, army: d.army, cls: st.cls,
@@ -127,7 +128,7 @@ export function divisionView(state, id) {
     battle: d.b, retreat: d.rt, hold: d.hold, path: d.path,
     status: divisionStatus(d),
   };
-  viewCache.set(d, { tpl, view });
+  viewCache.set(d, { tpl, lv, view });
   return view;
 }
 
@@ -136,10 +137,11 @@ const tplViewCache = new WeakMap();
 export function templateView(state, tplId) {
   const tpl = tplId > 0 && tplId < state.mil.tpl.length ? state.mil.tpl[tplId] : null;
   if (!tpl) return null;
+  const lv = state.mil.lv ? state.mil.lv[tpl.o] : null;
   let v = tplViewCache.get(tpl);
-  if (!v) {
-    const st = deriveStats(tpl);
-    v = { id: tplId, tpl, stats: st, men: st.men, need: st.need, days: st.days };
+  if (!v || v.lv !== lv) {
+    const st = deriveStats(tpl, lv);
+    v = { id: tplId, tpl, lv, stats: st, men: st.men, need: st.need, days: st.days };
     tplViewCache.set(tpl, v);
   }
   return v;

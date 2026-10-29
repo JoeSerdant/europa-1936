@@ -4,8 +4,9 @@ import { getWorld } from './world.js';
 import { seedToState } from './rng.js';
 import { createMil } from './army/setup.js';
 import { createInd } from './industry/setup.js';
+import { createTech } from './research/setup.js';
 
-export const GAME_VERSION = 3;
+export const GAME_VERSION = 4;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -33,5 +34,6 @@ export function createGame({ player = null, seed = 1936 } = {}) {
     ownerVer: 0,          // zvyšuje se při změně vlastnictví/kontroly – pro mezipaměti (mapa, souhrny)
     mil,
     ind,
+    tech: createTech(w),   // M20: výzkum (viz SPEC § 4c)
   };
 }

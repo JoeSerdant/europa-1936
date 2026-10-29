@@ -1,5 +1,6 @@
 // Příkazy armády: čisté funkce (state, …) → nový stav; při neplatném vstupu vrací tentýž objekt.
 // Příkazy nekontrolují, komu divize patří vůči hráči – to dělá rozhraní (ui/actions.js); engine je neutrální, aby jím šla řídit i AI.
+import { isUnlocked } from '../research/core.js';
 import { getWorld } from '../world.js';
 import { C } from './constants.js';
 import { openCtx, closeCtx, editDiv, relocate, removeDiv, removeBattle, addMan, editStock } from './ctx.js';
@@ -83,7 +84,7 @@ export function makePeace(state, aTag, bTag) {
 }
 
 // ============================================================ šablony
-const unlockedFor = () => (def) => !def.unlock;   // M20: podle výzkumu země
+const unlockedFor = (state, o) => (def) => isUnlocked(state, o, def.unlock);   // M20: podle výzkumu země
 
 function cleanTemplate(o, tpl, short) {
   const t = { o, nm: cleanName(tpl.nm), reg: tpl.reg.map((c) => c.slice()), sup: tpl.sup.slice() };
@@ -99,7 +100,7 @@ export const templatesOf = (mil, o) => {
 
 export function createTemplate(state, tag, tpl) {
   const o = ownerIdx(tag);
-  if (!o || validateTemplate(tpl, unlockedFor(o))) return state;
+  if (!o || validateTemplate(tpl, unlockedFor(state, o))) return state;
   if (templatesOf(state.mil, o).length >= C.TPL_MAX) return state;
   return { ...state, mil: bump(state.mil, { tpl: [...state.mil.tpl, cleanTemplate(o, tpl)] }) };
 }
@@ -108,7 +109,7 @@ export function createTemplate(state, tag, tpl) {
 export function editTemplate(state, tplId, tpl) {
   const mil = state.mil;
   const old = tplOf(mil, tplId);
-  if (!old || validateTemplate(tpl, unlockedFor(old.o))) return state;
+  if (!old || validateTemplate(tpl, unlockedFor(state, old.o))) return state;
   const next = cleanTemplate(old.o, tpl, cleanName(tpl.nm) === old.nm ? old.short : undefined);
   const tpls = mil.tpl.slice();
   tpls[tplId] = next;

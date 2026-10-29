@@ -108,12 +108,12 @@ druhá města ≥ 60 tis. přidávají polovinu, hlavní město +10. Železnice:
 
 ## 4. Engine
 
-**Herní stav** (`createGame`, `GAME_VERSION = 3`, čistý JSON):
+**Herní stav** (`createGame`, `GAME_VERSION = 4`, čistý JSON):
 
 ```
-{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind }
+{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind, tech }
 ```
-`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b).
+`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b), `tech` = výzkum (§ 4c).
 Čas: 1 tick = 1 herní hodina, start 1. 1. 1936 00:00; rychlosti 1–5 = `[12, 24, 48, 96, 240]` herních hodin za sekundu (`SPEEDS[0]` = pauza).
 Hra začíná pozastavená. `hoursForElapsed(state, ms, carry)` přenáší zlomky hodin.
 
@@ -258,7 +258,7 @@ Hospodářství podle vzoru HOI4: **státy mají kategorii a stavební sloty**, 
 Čísla jsou naše: data v `src/data/industry/*` (budovy, kategorie, ceny výzbroje a suroviny na kus, počáteční průmysl zemí, obchodní smlouvy na startu), vyvážení vzorců v `src/engine/industry/constants.js` (`IND`).
 Vše se počítá **jednou denně** (o půlnoci, `industryHour` v `advanceHour` hned po armádě). Příkazy nehlídají, komu věc patří vůči hráči – to dělá `ui/actions.js`. Námořní doprava a konvoje zatím nejsou: obchod se surovinami je abstraktní (viz „Zjednodušení“).
 
-### Tvar stavu (`state.ind`, `GAME_VERSION = 3`)
+### Tvar stavu (`state.ind`, od `GAME_VERSION = 3`)
 ```
 ind: {
   ver,                          // zvyšuje se při změně struktury (stavba dokončena/zrušena, linky, smlouvy) – klíč mezipamětí UI
@@ -296,6 +296,35 @@ Selektory (`selectors.js`): `industryOf(state, o)` (továrny, spotřební zbož�
 
 ### Zjednodušení proti vzoru
 Žádné konvoje ani námořní doprava (obchod je abstraktní a bez trasy), žádná energie ani zásoby surovin, výzbroj bez úrovní a zastaralosti (M20), žádné stavby pevností ani protiletadlové obrany, přístavy a letiště (letectvo a loďstvo později), žádné poškození budov bombardováním, žádná výměna výzbroje mezi zeměmi. Spotřební zboží se mění až zákony (M21).
+
+## 4c. Výzkum (M20)
+
+Technologie podle vzoru HOI4: **sloty výzkumu**, technologie s předpoklady a **historickým rokem** (výzkum předem je pomalejší), **úrovně výzbroje**, odemykání jednotek a bonusy průmyslu.
+Strom (`src/data/research/techs.js`, ≈ 40 technologií v pěti oborech: Pěchota, Dělostřelectvo, Tanky a motorizace, Podpora a logistika, Průmysl) i čísla jsou naše; vyvážení vzorců je v `src/engine/research/constants.js` (`RES`).
+Počítá se **jednou denně** (`researchHour` v `advanceHour` hned za průmyslem). Příkazy nehlídají, komu věc patří vůči hráči – to dělá `ui/actions.js`.
+
+### Tvar stavu (`state.tech`, `GAME_VERSION = 4`)
+```
+tech: {
+  ver,                                   // zvyšuje se při zadání, zrušení a dokončení výzkumu (klíč mezipamětí UI)
+  own: [null, { done: {id: 1}, slots: [id | 0, …], prog: {id: 0–1} }…]   // podle indexu země; slots = právě zkoumané (0 = prázdný slot), prog = rozpracovaný podíl (zůstává při přepnutí slotu)
+}
+mil.lv: [null, { výzbroj: úroveň 2–4 }…]  // úrovně výzbroje země (chybí = 1); mění je jen dokončený výzkum, čtou je statistiky divizí a výroba
+```
+`done` a `lv[o]` se při změně nahrazují novým objektem (mezipaměti statistik a bonusů se klíčují podle objektu).
+
+### Pravidla
+- **Sloty:** základ podle velikosti země (`SLOTS_TIER`: velmoc 3, regionální mocnost 3, malý stát 2) + technologie *Výzkumná pracoviště* (nejvýš `SLOTS_MAX` = 5).
+- **Rychlost:** `speed = SPEED_BASE × národní násobek × (1 + bonusy výzkumu) × předstih`; předstih = `1 / (1 + AHEAD_PEN × roky_před_historickým_rokem)`. Denně přibude `speed / days` podílu technologie.
+- **Dostupnost:** všechny předpoklady dokončeny, technologie nehotová a není ve dvou slotech.
+- **Dokončení:** `fx.lv` zvedne úroveň výzbroje (`mil.lv`, násobí útok, obranu, průraz a pancíř podle `EQUIP_LEVEL_MULT`; výroba kusu je dražší o `LV_COST` za úroveň); technologie s `id` rovným klíči `unlock` v datech jednotek odemkne prapor, podpůrnou rotu nebo výzbroj; `fx.mod` dává bonusy (`effCap` strop efektivity linek, `build` body stavby, `extract` těžba, `research` rychlost); `fx.slot` přidá slot.
+- **Země bez hráče** (a pozorovatel) si sloty plní samy: ze dostupných technologií s rokem ≤ aktuální rok vyberou deterministicky podle roku, délky a hashe země (AI přijde v M24).
+
+### Příkazy a selektory (`engine/research/`)
+`startResearch(state, o, slot, id)` (obsazený slot se přepíše, rozpracované zůstane), `cancelResearch(state, o, slot)`; `researchOf(state, o)` (sloty s postupem, rychlostí a odhadem, úrovně výzbroje, bonusy), `techList(state, o)` (všechny technologie se stavem `done | active | available | locked`, předstihem a odhadem dnů), `isUnlocked(state, o, klíč)`, `techMods(done)`, `isAvailable`.
+
+### Zjednodušení proti vzoru
+Žádné doktríny, štáby, výzkumné bonusy za nápady a vůdce, sdílení a ukradení technologií, přenos zkušeností z vyzkoušení; úroveň výzbroje se projeví ve všech divizích země okamžitě (bez postupné modernizace skladů). Počet technologií a jejich bonusy jsou záměrně menší.
 
 ## 5. Rozhraní
 
