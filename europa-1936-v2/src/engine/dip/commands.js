@@ -18,6 +18,8 @@ export function warBlock(state, a, b) {
   if (hasCapitulated(state, a)) return 'Kapitulovaná země nemůže vést válku.';
   if (atWar(state.mil, a, b)) return 'Už jste ve válce.';
   if (sameFaction(state, a, b)) return 'Země je ve stejném bloku.';
+  if (state.dip.sub && (state.dip.sub[a] === b || state.dip.sub[b] === a)) return 'Pán a jeho loutkový stát spolu nebojují.';
+  if (state.dip.sub && state.dip.sub[a]) return 'Loutkový stát nevede vlastní války.';
   return null;
 }
 

@@ -20,7 +20,7 @@ export function aiDay(state) {
     state = aiNavy(state, o);
     state = aiAir(state, o);
     if (weekly) state = aiOffense(state, o);
-    state = aiDiplomacy(state, o);
+    if (!state.dip.sub[o]) state = aiDiplomacy(state, o);   // loutky nevedou vlastní diplomacii (M33)
   }
   return state;
 }

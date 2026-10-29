@@ -573,6 +573,24 @@ try {
   await page.getByRole('button', { name: 'Načíst Rychlé uložení' }).click();
   await page.waitForSelector('.topbar', { timeout: 5000 });
   const tickLoaded = await E(() => window.__e1936.gameStore.getState().tick);
+  const conf0 = await E(() => {
+    const { gameStore, engine } = window.__e1936;
+    const W2 = engine.getWorld();
+    const GER2 = W2.ownerIdx.GER, POL2 = W2.ownerIdx.POL;
+    let s = gameStore.getState();
+    if (!engine.atWar(s, 'GER', 'POL')) s = engine.declareWar(s, 'GER', 'POL');
+    const ctrl = s.ctrl.slice();
+    let k = 0;
+    for (let st = 1; st < W2.states.length; st++) if (s.stateOwner[st] === POL2 && k++ > 0) for (const p of W2.states[st].v) ctrl[p] = GER2;
+    gameStore.setState(engine.capitulate({ ...s, ctrl, ownerVer: s.ownerVer + 1 }, POL2));
+    return gameStore.getState().dip.conf.length;
+  });
+  await page.waitForSelector('.conference', { timeout: 3000 });
+  check('po kapitulaci protivníka se otevře mírová konference', conf0 === 1 && (await page.locator('.conference .btn').count()) === 3);
+  await shot('conference');
+  await page.getByRole('button', { name: /Loutkový stát/ }).click();
+  await page.waitForTimeout(300);
+  check('volba „Loutkový stát“ udělá z Polska loutku hráče', (await E(() => { const s = window.__e1936.gameStore.getState(), W2 = window.__e1936.engine.getWorld(); return s.dip.sub[W2.ownerIdx.POL] === W2.ownerIdx.GER && s.dip.conf.length === 0; })) && (await page.locator('.conference').count()) === 0);
   check('načtení z hlavního menu vrátí uloženou hru', tickLoaded === tickSaved && (await page.locator('.save-dialog').count()) === 0, `tick ${tickLoaded}`);
 } catch (e) {
   check('kontrola doběhla', false, e.message);

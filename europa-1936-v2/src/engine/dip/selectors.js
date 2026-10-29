@@ -3,6 +3,7 @@ import { getWorld } from '../world.js';
 import { DIP } from './constants.js';
 import { relOf, factionOf, sameFaction, warScore, vpHeld, hasCapitulated } from './core.js';
 import { atWar } from '../army/war.js';
+import { overlordOf } from './subjects.js';
 import { warBlock, justReady, peaceBlock, inviteBlock } from './commands.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
@@ -28,6 +29,8 @@ export function diplomacyOf(state, o) {
       peaceBlock: war ? peaceBlock(state, o, t) : 'Nejste ve válce.',
       inviteBlock: fac ? inviteBlock(state, o, t) : 'Nejste v žádném bloku.',
       score: war ? warScore(state, o, t) : 0,
+      overlord: overlordOf(state, t), mine: overlordOf(state, t) === o,
+      annexBlock: overlordOf(state, t) !== o ? 'Není to vaše loutka.' : state.pol.own[o].pp < DIP.ANNEX_PP ? `Chybí politická moc (${Math.ceil(DIP.ANNEX_PP - state.pol.own[o].pp)}).` : null,
     });
   }
   return { o, faction: fac, canFound: !fac && !hasCapitulated(state, o) && state.pol.own[o].pp >= DIP.FAC_PP, capitulated: hasCapitulated(state, o), held: vpHeld(state, o), list };

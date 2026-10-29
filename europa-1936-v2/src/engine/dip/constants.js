@@ -15,5 +15,8 @@ export const DIP = {
   FAC_MAX_MEM: 12,        // největší blok
   INVITE_MIN: 20,         // nejmenší skóre pozvání, aby pozvaný přijal
   INVITE_ENEMY: 30,       // bonus skóre za společného nepřítele
-  INVITE_IDEO: 15,        // bonus za shodnou ideologii
+  INVITE_IDEO: 15,
+  SUB_MAN: 0.002,         // podíl lidské síly loutky, který denně připadne pánovi
+  SUB_PP: 0.4,            // politická moc, kterou denně dostane pán za každou loutku
+  ANNEX_PP: 150,          // cena anexe vlastní loutky        // bonus za shodnou ideologii
 };

@@ -88,7 +88,7 @@ describe('diplomacie AI', () => {
     const ctrl = w.ctrl.slice();
     for (let p = 1; p <= W.L; p++) if (w.stateOwner[W.provState[p]] === ITA && W.vp[p] >= 2) ctrl[p] = FRA;
     const lost = day({ ...w, ctrl }, 1);
-    expect(atWar(lost, 'ITA', 'FRA') || lost.dip.cap[ITA] === 1).toBe(true);   // vítěz mír odmítl (nebo ITA kapitulovala)
+    expect(atWar(lost, 'ITA', 'FRA') || lost.dip.cap[ITA] === 1 || lost.dip.sub[ITA] === FRA).toBe(true);   // vítěz mír odmítl (nebo ITA kapitulovala)
   });
   it('vleklá válka bez výsledku skončí bílým mírem', () => {
     const s = createGame({ player: 'SWE', aiLevel: 2, hist: false });

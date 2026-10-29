@@ -144,7 +144,7 @@ describe('kapitulace a anexe', () => {
     expect(hasCapitulated(day(weak, 1), GER)).toBe(false);
   });
   it('kapitulace opustí blok a odstraní válku jen kapitulujícímu; spojenci válčí dál', () => {
-    let w = startWar(ready({ ...s0, player: 'FRA' }, FRA, GER), FRA, GER);
+    let w = startWar(ready({ ...s0, player: 'GER' }, FRA, GER), FRA, GER);   // vítěz GER je hráč: o zbytku Polska rozhodne konference
     w = takeAll(w, POL, GER, 0.9);
     const a = day(w, 1);
     expect(hasCapitulated(a, POL)).toBe(true);

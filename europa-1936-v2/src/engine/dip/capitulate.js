@@ -4,6 +4,7 @@ import { atWar } from '../army/war.js';
 import { withCtx, settleAfterPeace } from '../army/commands.js';
 import { DIP } from './constants.js';
 import { logAdd } from '../log.js';
+import { conference } from './subjects.js';
 
 export function capitulate(state, loser) {
   const w = getWorld();
@@ -11,6 +12,7 @@ export function capitulate(state, loser) {
   const stateOwner = state.stateOwner.slice();
   const ctrl = state.ctrl.slice();
   let annexed = 0;
+  const by = {};
   for (let s = 1; s < w.states.length; s++) {
     if (stateOwner[s] !== loser) continue;
     const c = ctrl[w.states[s].cap];
@@ -18,6 +20,7 @@ export function capitulate(state, loser) {
     stateOwner[s] = c;
     for (const p of w.states[s].v) ctrl[p] = c;
     annexed++;
+    by[c] = (by[c] || 0) + 1;
   }
   const wars = state.mil.wars.filter(([a, b]) => a !== loser && b !== loser);
   const cap = state.dip.cap.slice();
@@ -40,5 +43,5 @@ export function capitulate(state, loser) {
     pol: { ...state.pol, own: pol },
   };
   void annexed;
-  return logAdd(withCtx(next, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser });
+  return conference(logAdd(withCtx(next, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser }), loser, by);
 }

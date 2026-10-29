@@ -8,6 +8,7 @@ import { SelectionBar } from '../army/SelectionBar.jsx';
 import { PlanBar } from '../army/PlanBar.jsx';
 import { TemplateDesigner } from '../army/TemplateDesigner.jsx';
 import { EventDialog } from '../nat/EventDialog.jsx';
+import { ConferenceDialog } from '../nat/ConferenceDialog.jsx';
 import { OverviewDialog } from '../log/OverviewDialog.jsx';
 import { IndustryPanel } from '../industry/IndustryPanel.jsx';
 import { RecruitPanel } from '../army/RecruitPanel.jsx';
@@ -59,6 +60,7 @@ export function Hud() {
       <GameMenu />
       <TemplateDesigner />
       <EventDialog />
+      <ConferenceDialog />
       <OverviewDialog />
     </>
   );
