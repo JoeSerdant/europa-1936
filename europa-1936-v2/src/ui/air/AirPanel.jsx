@@ -1,3 +1,4 @@
+import { ACE_NAMES } from '../../engine/air/constants.js';
 import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
@@ -30,7 +31,7 @@ function Wing({ wg, state }) {
     <article className="air-wing" aria-label={`Křídlo ${P.n}`}>
       <Tile t={wg.t} />
       <div className="aw-main">
-        <b>{P.n}</b>
+        <b>{P.n}</b>{wg.a > 0 ? <i className="aw-ace" title="Bonus síly hlídek">{ACE_NAMES[wg.a]}</i> : null}
         <span className="muted">základna {stateName(wg.s)} · dolet {P.range} km</span>
       </div>
       <div className="aw-n" title="Počet letadel"><b>{fmtInt(wg.n)}</b><i>letadel</i></div>

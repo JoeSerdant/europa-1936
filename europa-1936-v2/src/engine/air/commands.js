@@ -30,7 +30,7 @@ export function formWing(state, o, t, n, s) {
   const id = air.wings.length;
   const pool = air.pool.slice();
   pool[o] = { ...pool[o], [t]: pool[o][t] - n };
-  return patch(state, { wings: [...air.wings, { id, o, t, n, s, m: null, to: 0, c: 0 }], pool, wn: id });
+  return patch(state, { wings: [...air.wings, { id, o, t, n, s, m: null, to: 0, c: 0, a: 0 }], pool, wn: id });
 }
 
 /** Rozpustí křídlo: letadla se vrátí do rezervy země. */

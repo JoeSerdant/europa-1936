@@ -60,3 +60,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 45. Upozornění (§ 4za v `SPEC.md`): nové upozornění = další pravidlo v `alertsOf` (čistý dotaz, žádný stav) + ikona v `ui/hud/Alerts.jsx` + případ v `test/alerts.test.js`.
 46. Radar (§ 4zb v `SPEC.md`): účinek radaru se čte jen přes `radarOf` v `air/day.js`; nová státní budova s účinkem = položka v `BUILDINGS` + čtení `ind.st[s][klíč]` ve správném systému + test.
 47. Sdílení technologií (§ 4zc v `SPEC.md`): bonus se počítá jen přes `shareBonus`; nový zdroj rychlosti výzkumu se přičítá v `baseSpeed`/`researchDay` společně a s odhadem v `etaDays`.
+48. Letečtí esa (§ 4zd v `SPEC.md`): stupeň es čti jen přes pole `wg.a` křídla a bonus přes `AIR.ACE_BONUS` v `power` (`air/day.js`); nová křídla vznikají s `a: 0`.
