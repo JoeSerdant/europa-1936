@@ -1,6 +1,7 @@
 // Texty záznamů deníku dění (M26): čistá funkce záznam → { icon, tone, text, mine, world }. `me` = index země hráče (0 = pozorovatel).
 import { getWorld } from '../engine/world.js';
 import { TECHS } from '../data/research/techs.js';
+import { SPY_OPS } from '../data/spy/ops.js';
 import { DOCTRINES } from '../data/doc/doctrines.js';
 import { FOCUS_BY_ID } from '../data/nat/focuses.js';
 import { EVENT_BY_ID } from '../data/nat/events.js';
@@ -26,6 +27,10 @@ export function logLine(e, me = 0) {
     case 'annex': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.o].name} anektovala ${w.owners[e.x].name}.` };
     case 'doctrine': return { icon: 'general', tone: 'good', world: false, mine: true, text: `Přijata doktrína: ${DOCTRINES[e.x]?.n || e.x}.` };
     case 'rebel': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `Povstání ve státě ${w.states[e.s]?.n || ''}: ${w.owners[e.o].name} vyhnala okupační správu (${w.owners[e.x].name}).` };
+    case 'spy': {
+      const op = SPY_OPS[e.y], t = w.owners[e.x].name, me = w.owners[e.o].name;
+      return { icon: 'target', tone: e.z === 1 ? 'good' : 'bad', world: false, mine: true, text: `${me}: operace „${op.n}“ proti zemi ${t} ${e.z === 1 ? 'uspěla' : e.z === 2 ? 'selhala a agent byl odhalen' : 'selhala'}.` };
+    }
     case 'sunk': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Transportní loď s divizí potopena na cestě do provincie ${w.provName(e.x)}.` };
     case 'event': return { icon: 'politics', tone: 'info', world: false, mine: true, text: `Událost: ${EVENT_BY_ID[e.x]?.n || e.x}.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };

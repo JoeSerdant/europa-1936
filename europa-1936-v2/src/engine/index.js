@@ -7,6 +7,7 @@ export * from './nav/index.js';
 export * from './air/index.js';
 export * from './doc/index.js';
 export * from './occ/index.js';
+export * from './spy/index.js';
 export { applyScenario } from './scenario.js';
 export { SCENARIOS, SCENARIO_IDS } from '../data/scenarios.js';
 export { END, standing, endDay, ackEnd, forceEnd } from './end.js';
