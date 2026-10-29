@@ -552,6 +552,10 @@ Datový balík `data/nat/events_hist.js` (`HIST_EVENTS`, připojený k `EVENTS`)
 
 Bez nového stavu a bez nového příkazu: krok `a`→`b` mezi dvěma provinciemi, které obě ovládá země divize, a se železničním spojem úrovně `L` (1–5) trvá `1 / (1 + RAIL_SPEED × L)` běžné doby (`RAIL_SPEED` 0,8, tedy úroveň 5 = 5× rychleji) a organizace ubývá jen `RAIL_ORG` (25 %) běžné ztráty. Platí pro každý rozkaz `orderMove`, i pro AI. `findPath` počítá s kratším krokem (cesta vede po železnici, kde se vyplatí) a `pathHours(from, path, ctrl, o)` dává odhad doby pro danou zemi. Pomocné funkce `railLevel(w,a,b)` a `stepHoursFor(w,ctrl,o,a,b,kind)` v `army/paths.js`. V nepřátelském a cizím území se pochoduje jako dřív. Test: `test/rail.test.js`.
 
+## 4y. Půjčka a pronájem (M47)
+
+`engine/dip/lend.js`: `lendLease(state, from, to, eq, n)` přesune `n` kusů druhu výzbroje ze skladu země `from` do skladu `to`. Smí se jen mezi členy téhož bloku a mezi pánem a loutkou, ne s kapitulovanou zemí ani ve válce, najednou nejvýš `DIP.LEND_MAX` (25 %) skladu; zásilka zvedne vztah o `DIP.LEND_REL`. Do stavu se nic nepřidává, jen záznam `{k:'lend', a, b, x:druh, y:počet}` v deníku. `lendBlock` vrací český důvod odmítnutí. AI (`aiLend`, denně) v míru posílá přátelům ve válce výzbroj, kterou sama má aspoň `DIP.LEND_AI_MIN` kusů a oni mají méně než čtvrtinu jejího zásoby. UI: v panelu Diplomacie u přítele výběr druhu a tlačítko „Poslat n“. Test: `test/lend.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -739,6 +743,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M44** | **Historické události**: 23 příběhových událostí velmocí a obecných (datový balík) | **hotovo** |
 | **M45** | **Statistiky a grafy**: měsíční snímky zemí, záložka Grafy v Přehledu zemí | **hotovo** |
 | **M46** | **Železniční pohyb**: rychlejší a méně vyčerpávající přesuny po železnici ve vlastním území | **hotovo** |
+| **M47** | **Půjčka a pronájem**: posílání výzbroje spojencům a loutkám, AI to dělá také | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

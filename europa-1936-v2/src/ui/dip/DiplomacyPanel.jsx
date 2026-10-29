@@ -2,14 +2,29 @@ import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { diplomacyOf, DIP, getWorld } from '../../engine/index.js';
-import { playerIdx, annexOwnPuppet, justifyOn, declareWarOn, makePeaceWith, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { diplomacyOf, DIP, getWorld, EQUIP, EQUIP_IDS } from '../../engine/index.js';
+import { playerIdx, annexOwnPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
+/** Půjčka a pronájem: výběr druhu výzbroje a odeslání čtvrtiny skladu příteli. */
+function Lend({ c, me }) {
+  const stock = useGameSlow((s) => s.mil.stock[me], 900);
+  const [eq, setEq] = useState('pusky');
+  const n = Math.floor((stock?.[eq] || 0) * DIP.LEND_MAX);
+  return (
+    <div className="ind-btns dip-lend">
+      <select value={eq} onChange={(e) => setEq(e.target.value)} aria-label="Druh výzbroje">
+        {EQUIP_IDS.map((id) => <option key={id} value={id}>{EQUIP[id].n} ({stock?.[id] || 0})</option>)}
+      </select>
+      <button className="sbtn" disabled={n < 1} onClick={() => lendTo(c.tag, eq)} title={`Poslat ${Math.round(DIP.LEND_MAX * 100)} % skladu spojenci`}>Poslat {n}</button>
+    </div>
+  );
+}
+
 const relCls = (r) => (r >= 25 ? 'good' : r <= -25 ? 'bad' : 'mid');
 
-function Row({ c }) {
+function Row({ c, me }) {
   const [open, setOpen] = useState(false);
   const flags = [];
   if (c.war) flags.push(['war', 'válka']);
@@ -42,6 +57,7 @@ function Row({ c }) {
             <button className="sbtn" disabled={!!c.inviteBlock} onClick={() => inviteBloc(c.tag)} title={c.inviteBlock || 'Pozvat do bloku'}>Pozvat do bloku</button>
             <button className="sbtn" onClick={() => selectLabel(getWorld().owners[c.o].cap, true)} title="Ukázat hlavní město"><Icon name="target" size={14} />Ukázat</button>
           </div>
+          {c.friend ? <Lend c={c} me={me} /> : null}
           {c.war ? <p className="muted">Válečné skóre: {c.score > 0 ? '+' : ''}{fmtNum(c.score * 100, 0)} %</p> : null}
           {!c.war && !c.canDeclare && c.justifyBlock ? <p className="pol-block">{c.justifyBlock}</p> : null}
         </div>
@@ -65,7 +81,7 @@ export function DiplomacyPanel() {
         <div className="prod-cols">
           <div className="prod-left">
             <div className="sec-head"><h3>Země ({list.length})</h3><span className="muted">klikněte na zemi pro akce</span></div>
-            <ul className="dip-list">{list.map((c) => <Row key={c.o} c={c} />)}</ul>
+            <ul className="dip-list">{list.map((c) => <Row key={c.o} c={c} me={me} />)}</ul>
           </div>
           <aside className="prod-right">
             <div className="sec-head"><h3>Váš blok</h3></div>

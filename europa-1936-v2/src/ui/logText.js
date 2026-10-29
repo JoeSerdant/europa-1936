@@ -5,6 +5,7 @@ import { SPY_OPS } from '../data/spy/ops.js';
 import { DOCTRINES } from '../data/doc/doctrines.js';
 import { FOCUS_BY_ID } from '../data/nat/focuses.js';
 import { EVENT_BY_ID } from '../data/nat/events.js';
+import { EQUIP } from '../data/army/index.js';
 import { BUILDINGS } from '../data/industry/buildings.js';
 
 const nm = (o) => getWorld().owners[o]?.name || '?';
@@ -33,6 +34,7 @@ export function logLine(e, me = 0) {
     }
     case 'sunk': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Transportní loď s divizí potopena na cestě do provincie ${w.provName(e.x)}.` };
     case 'event': return { icon: 'politics', tone: 'info', world: false, mine: true, text: `Událost: ${EVENT_BY_ID[e.x]?.n || e.x}.` };
+    case 'lend': return { icon: 'trade', tone: 'good', world: false, mine: e.a === me || e.b === me, text: `${nm(e.a)} posílá zemi ${nm(e.b)} výzbroj: ${EQUIP[e.x]?.n || e.x} × ${e.y}.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };
   }
 }
