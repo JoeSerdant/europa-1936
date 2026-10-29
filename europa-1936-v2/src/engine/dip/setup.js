@@ -11,5 +11,5 @@ export function createDip(w) {
     facs.push({ nm: f.nm, ldr: w.ownerIdx[f.ldr], mem });
     for (const o of mem) fac[o] = facs.length - 1;
   }
-  return { ver: 0, rel: {}, fac, facs, just: [], cap: new Array(n).fill(0), since: {} };
+  return { ver: 0, rel: {}, fac, facs, just: [], cap: new Array(n).fill(0), since: {}, sub: new Array(n).fill(0), conf: [] };
 }

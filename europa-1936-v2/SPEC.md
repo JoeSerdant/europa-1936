@@ -461,6 +461,16 @@ Rozšíření § 4b a § 4j (`GAME_VERSION` 12, nové pole `nav.cv`: přenos zlo
 - **AI**: staví transporty podle potřeby konvojů, nečinné flotily posílá na nepřátelské obchodní trasy a kryje vlastní ohrožené.
 - **Rozhraní**: Obchod ukazuje u smlouvy „po moři / po souši“, počet konvojů a riziko; Logistika počet konvojů.
 
+## 4m. Loutkové státy a mírová konference (M33)
+
+Rozšíření § 4f (`GAME_VERSION` 13): `dip.sub[o]` = pán loutkového státu `o` (0 = nikdo), `dip.conf` = čekající konference `[{ id, loser, victor }]`. Kód: `src/engine/dip/subjects.js`, čísla v `DIP` (`SUB_MAN`, `SUB_PP`, `ANNEX_PP`).
+
+- **Konference** (`conference`, volá ji `capitulate`): okupované státy připadnou okupantům jako dřív; hlavní vítěz (ten, kdo z poraženého vzal nejvíc států) rozhodne o zbytku. Hráč-vítěz dostane položku do `dip.conf` (dialog: loutkový stát / anektovat / nechat být – `confPuppet`, `confAnnex`, `confSkip`), AI rozhodne hned (velká nebo významná země = loutka, jinak anexe).
+- **Loutka** (`makePuppet`): kapitulovaná země znovu ožije (`cap = 0`, stabilita aspoň 0,35) a má pána. Pán a loutka spolu nebojují, loutka nevede vlastní války ani diplomacii (`warBlock`, AI přeskočí `aiDiplomacy`).
+- **Denní krok** (`subjectsDay` na začátku `dipDay`): loutka vede války pána (chybějící se vyhlásí, zaniklé skončí), pán denně dostane `SUB_MAN` lidské síly loutky a `SUB_PP` politické moci za loutku.
+- **Anexe loutky** (`annexPuppet`): za `ANNEX_PP` politické moci; státy se převedou, jednotky loutky zaniknou, země zanikne.
+- **Rozhraní:** dialog Mírová konference, v Diplomacii štítek „vaše loutka“ / „loutka“ a tlačítko Anektovat loutku; záznamy `puppet`, `annex` v Zprávách.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -592,13 +602,14 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `nav-ui` (9): akce hráče (výběr flotily, rozkazy, sestavení, rozpuštění, přeprava z rozhraní), žetony a trasy flotil;
   - `air` (11): počáteční letectvo, příkazy (rezerva, kapacita, mise, dolet, válka), denní krok (podpora boje, krytí hlídkami, bombardování, ztráta letiště), výroba a letiště, výzkum, AI;
   - `convoy` (6): trasy po souši a po moři, potřeba konvojů, nedostatek lodí, riziko a krytí, nájezdy, determinismus;
+  - `puppet` (8): konference (hráč a AI), loutka, anexe zbytku i loutky, války pána a příspěvky, uložení;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **84 kontrol** (od M32 letecké mise na mapě; od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **86 kontrol** (od M33 mírová konference po kapitulaci; od M32 letecké mise na mapě; od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -623,6 +634,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M30** | **Letectvo**: letiště a křídla, letouny z výroby, mise (hlídky, podpora boje, bombardování), AI, okno Letectvo (A) | **hotovo** |
 | **M31** | **Konvoje a obchodní válka**: námořní obchod potřebuje transportní lodě, nájezdy a eskorta, AI | **hotovo** |
 | **M32** | **Letectvo na mapě**: čáry misí, kruhy hlídek, odznaky letišť | **hotovo** |
+| **M33** | **Loutkové státy a mírová konference**: rozhodnutí o zbytku poraženého, loutky vedou války pána a platí příspěvky, anexe | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

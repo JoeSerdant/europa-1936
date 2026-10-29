@@ -12,7 +12,7 @@ import { createLog } from './log.js';
 import { createNav } from './nav/setup.js';
 import { createAir } from './air/setup.js';
 
-export const GAME_VERSION = 12;
+export const GAME_VERSION = 13;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 

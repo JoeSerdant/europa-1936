@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { mapController as mc } from './map/controller.js';
@@ -753,3 +753,9 @@ export const disbandAirWing = (id) => !!myWing(id) && run(disbandWing, id);
 export const reinforceAirWing = (id, n) => !!myWing(id) && run(reinforceWing, id, n);
 export const rebaseAirWing = (id, st) => !!myWing(id) && run(rebaseWing, id, st);
 export const setAirMission = (id, m, to) => !!myWing(id) && run(setMission, id, m, to);
+
+// ============================================================ loutky a mírová konference (M33)
+export const conferencePuppet = (id) => run(confPuppet, id);
+export const conferenceAnnex = (id) => run(confAnnex, id);
+export const conferenceSkip = (id) => run(confSkip, id);
+export const annexOwnPuppet = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(annexPuppet, me, t); };

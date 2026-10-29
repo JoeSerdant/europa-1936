@@ -3,7 +3,7 @@ import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { diplomacyOf, DIP, getWorld } from '../../engine/index.js';
-import { playerIdx, justifyOn, declareWarOn, makePeaceWith, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { playerIdx, annexOwnPuppet, justifyOn, declareWarOn, makePeaceWith, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -14,6 +14,8 @@ function Row({ c }) {
   const flags = [];
   if (c.war) flags.push(['war', 'válka']);
   if (c.ally) flags.push(['ally', 'spojenec']);
+  if (c.mine) flags.push(['ally', 'vaše loutka']);
+  else if (c.overlord) flags.push(['cap', 'loutka']);
   if (c.capitulated) flags.push(['cap', 'kapitulovala']);
   if (c.just && !c.just.done) flags.push(['just', `ospravedlnění ${c.just.left} d`]);
   if (c.just && c.just.done) flags.push(['just', 'ospravedlněno']);
@@ -36,6 +38,7 @@ function Row({ c }) {
             ) : (
               <button className="sbtn" disabled={!c.canJustify} onClick={() => justifyOn(c.tag)} title={c.justifyBlock || `Ospravedlnit válku: ${DIP.JUST_PP} PM, ${DIP.JUST_DAYS} dní`}>Ospravedlnit válku</button>
             )}
+            {c.mine && <button className="sbtn danger" disabled={!!c.annexBlock} onClick={() => annexOwnPuppet(c.tag)} title={c.annexBlock || 'Anektovat loutku (stojí politickou moc)'}>Anektovat loutku</button>}
             <button className="sbtn" disabled={!!c.inviteBlock} onClick={() => inviteBloc(c.tag)} title={c.inviteBlock || 'Pozvat do bloku'}>Pozvat do bloku</button>
             <button className="sbtn" onClick={() => selectLabel(getWorld().owners[c.o].cap, true)} title="Ukázat hlavní město"><Icon name="target" size={14} />Ukázat</button>
           </div>

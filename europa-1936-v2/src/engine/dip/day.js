@@ -4,9 +4,11 @@ import { hasWar } from '../army/war.js';
 import { DIP } from './constants.js';
 import { vpHeld } from './core.js';
 import { capitulate } from './capitulate.js';
+import { subjectsDay } from './subjects.js';
 
 export function dipDay(state) {
   const w = getWorld();
+  state = subjectsDay(state);
   // kapitulace
   for (let o = 1; o < w.owners.length; o++) {
     if (state.dip.cap[o] || !hasWar(state.mil, o)) continue;
