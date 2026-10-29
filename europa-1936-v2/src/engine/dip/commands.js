@@ -5,6 +5,7 @@ import { COUNTRIES } from '../../data/countries.js';
 import { declareWar, makePeace, cleanName } from '../army/commands.js';
 import { atWar, enemiesOf } from '../army/war.js';
 import { DIP } from './constants.js';
+import { logAdd } from '../log.js';
 import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey } from './core.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
@@ -50,7 +51,7 @@ export function startWar(state, a, b) {
   let rel = s.dip.rel;
   rel = setRel(rel, a, b, DIP.REL_WAR);
   for (const y of defenders) if (y !== b) rel = setRel(rel, a, y, DIP.REL_WAR_ALLY);
-  return patch(s, { rel, since, just: s.dip.just.filter((j) => !(j.a === a && j.b === b)) });
+  return logAdd(patch(s, { rel, since, just: s.dip.just.filter((j) => !(j.a === a && j.b === b)) }), { k: 'war', a, b });
 }
 
 /** Zdůvodnění, proč druhá strana bílý mír odmítne (český text), nebo null. */
@@ -67,7 +68,7 @@ export function proposePeace(state, a, b) {
   if (s === state) return state;
   const since = { ...s.dip.since };
   delete since[pairKey(a, b)];
-  return patch(s, { since });
+  return logAdd(patch(s, { since }), { k: 'peace', a, b });
 }
 
 // ---- bloky ----
@@ -108,7 +109,7 @@ export function createFaction(state, o, nm) {
   fac[o] = facs.length - 1;
   const pol = state.pol.own.slice();
   pol[o] = { ...p, pp: p.pp - DIP.FAC_PP };
-  return { ...patch(state, { facs, fac }), pol: { ...state.pol, own: pol } };
+  return logAdd({ ...patch(state, { facs, fac }), pol: { ...state.pol, own: pol } }, { k: 'faction', o, x: name });
 }
 
 /** Pozve zemi do bloku vedoucího `o`; pozvaný přijme podle skóre pozvání. */
@@ -119,7 +120,7 @@ export function inviteToFaction(state, o, target) {
   facs[id] = { ...facs[id], mem: [...facs[id].mem, target] };
   const fac = state.dip.fac.slice();
   fac[target] = id;
-  return patch(state, { facs, fac });
+  return logAdd(patch(state, { facs, fac }), { k: 'join', o: target, x: facs[id].nm });
 }
 
 /** Opustí blok; vedoucí předá vedení dalšímu členu, poslední člen blok zruší. */

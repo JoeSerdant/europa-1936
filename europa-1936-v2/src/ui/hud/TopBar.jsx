@@ -4,7 +4,7 @@ import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { COUNTRIES } from '../../data/countries.js';
 import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf } from '../../engine/index.js';
-import { setHelp, setMenuOpen } from '../actions.js';
+import { setHelp, setMenuOpen, openOverview } from '../actions.js';
 import { fmtInt, fmtPop } from '../format.js';
 
 /** Datum, hodiny a ovládání času. Samostatná komponenta: s během času se překresluje jen ona. */
@@ -75,6 +75,7 @@ export function TopBar() {
             <Stat icon="general" label="Politická moc" value={fmtInt(pp)} />
           </div>
         )}
+        <button className="icon-btn" onClick={openOverview} aria-label="Přehled zemí" title="Přehled zemí (O)"><Icon name="population" /></button>
         <button className="icon-btn" onClick={() => setHelp(true)} aria-label="Ovládání" title="Ovládání (F1)"><Icon name="help" /></button>
         <button className="icon-btn" onClick={() => setMenuOpen(true)} aria-label="Nabídka" title="Nabídka (Esc)"><Icon name="menu" /></button>
       </div>

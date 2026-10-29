@@ -21,6 +21,7 @@ const ICONS = {
   research: 'M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3M8 15h8',
   politics: 'M4 20h16M6 20V10M10 20V10M14 20V10M18 20V10M3 10l9-6 9 6z',
   dip: 'M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6zM8 12.5l2.7 2.7L16.5 9',
+  log: 'M5 4h14v16H5zM8.5 9h7M8.5 12.5h7M8.5 16h4',
   chevron: 'M8 10l4 4 4-4',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',

@@ -2,6 +2,7 @@
 import { getWorld } from '../world.js';
 import { EVENTS, EVENT_BY_ID } from '../../data/nat/index.js';
 import { NAT } from './constants.js';
+import { logAdd } from '../log.js';
 import { focusStatus, focusTreeOf, eventReady, rand01 } from './core.js';
 import { applyFx } from './effects.js';
 
@@ -27,6 +28,7 @@ export function fireEvent(state, o, id, player) {
   state = setOwn(state, o, { ...own, seen: { ...own.seen, [id]: state.tick } });
   if (o === player) {
     if (state.nat.pend.length >= NAT.PEND_MAX) return bump(state);
+    state = logAdd(state, { k: 'event', o, x: id });
     return { ...state, paused: true, nat: { ...state.nat, ver: state.nat.ver + 1, pend: [...state.nat.pend, { o, id, at: state.tick }] } };
   }
   return bump(applyFx(state, o, ev.opts[aiOption(ev)].fx));
@@ -65,6 +67,7 @@ export function natDay(state) {
       if (p >= f.days) {
         state = bump(setOwn(state, o, { ...own, cur: null, done: { ...own.done, [f.id]: 1 } }));
         state = applyFx(state, o, f.fx);
+        if (o === player) state = logAdd(state, { k: 'focus', o, x: f.id });
       } else state = setOwn(state, o, { ...own, cur: { id: f.id, p } });
     }
   }
