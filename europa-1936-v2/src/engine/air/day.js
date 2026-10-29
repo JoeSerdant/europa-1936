@@ -4,7 +4,7 @@ import { getWorld } from '../world.js';
 import { AIR } from './constants.js';
 import { PLANES } from '../../data/air/planes.js';
 import { atWar } from '../army/war.js';
-import { afbOf, levelMult } from './core.js';
+import { afbOf, radarOf, levelMult } from './core.js';
 import { docMods } from '../doc/core.js';
 import { logAdd } from '../log.js';
 
@@ -35,6 +35,8 @@ export function airDay(state) {
   const foesPatrol = (o, s) => {
     let e = 0;
     for (const [k, v] of patrol) { const [p, z] = k.split(':').map(Number); if (z === s && p !== o && atWar(state.mil, o, p)) e += v; }
+    const t = state.stateOwner[s];   // M50: radar státu nad kterým nepřítel operuje
+    if (t && t !== o && atWar(state.mil, o, t)) e += radarOf(state.ind, s) * AIR.RADAR_K;
     return e;
   };
   const cover = (o, s, e) => ((patrol.get(key(o, s)) || 0) + AIR.COVER_K) / ((patrol.get(key(o, s)) || 0) + e + AIR.COVER_K);

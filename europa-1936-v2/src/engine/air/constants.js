@@ -6,6 +6,7 @@ export const AIR = {
   LV_MULT: 0.12,          // příplatek k síle za každou úroveň techniky nad první
   CAS_COEF: 0.0009,       // bonus k útoku divizí na jednotku efektivní síly podpory
   CAS_MAX: 0.3,           // strop bonusu podpory
+  RADAR_K: 30,            // radar: tolik síly hlídek navíc za úroveň radaru ve státě, nad kterým nepřítel operuje
   COVER_K: 8,             // „setrvačnost“ krytí: bez hlídek na obou stranách je krytí úplné
   LOSS_AIR: 0.07,         // denní ztráty hlídek při vyrovnaném boji
   LOSS_INT: 0.05,         // denní ztráty letadel na misích, když je nikdo nekryje

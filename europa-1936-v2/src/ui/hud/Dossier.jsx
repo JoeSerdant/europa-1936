@@ -72,6 +72,7 @@ function StateIndustry({ s }) {
         <Row label="Kategorie">{info.cat.n} · sloty {info.used}/{info.slots}</Row>
         <Row label="Továrny">{info.civ} civilních · {info.mil} vojenských{info.dok > 0 ? ` · ${info.dok} loděnic` : ''}</Row>
         {info.inf > 0 && <Row label="Infrastruktura">+{info.inf}</Row>}
+        {info.radar > 0 && <Row label="Radar">úroveň {info.radar}</Row>}
         {res.length > 0 && <Row label="Těžba">{res.map(([r, n]) => `${RESOURCES[r].n} ${fmtNum(n, 1)}`).join(' · ')}</Row>}
         {info.queued.length > 0 && <Row label="Rozestavěno">{info.queued.length}</Row>}
       </dl>
