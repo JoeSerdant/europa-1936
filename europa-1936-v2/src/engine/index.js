@@ -6,6 +6,7 @@ export { countryTable, worldTension } from './overview.js';
 export * from './nav/index.js';
 export * from './air/index.js';
 export * from './doc/index.js';
+export * from './occ/index.js';
 export { END, standing, endDay, ackEnd, forceEnd } from './end.js';
 export * from './commands.js';
 export * from './tick.js';

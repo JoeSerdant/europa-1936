@@ -1,6 +1,7 @@
 // Společné pomůcky průmyslu (M19): sloty států, souhrn továren a těžby po zemích, využití továren, toky surovin. Čisté funkce nad `state.ind`.
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
+import { OCC } from '../occ/constants.js';
 import { STATE_CATEGORIES, PROD, BUILDINGS, isShip } from '../../data/industry/index.js';
 
 /** Kategorie státu podle obyvatel (tis.). */
@@ -29,7 +30,8 @@ const tallyCache = new WeakMap();   // ind.st → { ctrl, so, tally }
 export function tallyOwners(state) {
   const { ind, ctrl, stateOwner: so } = state;
   const hit = tallyCache.get(ind.st);
-  if (hit && hit.ctrl === ctrl && hit.so === so) return hit.tally;
+  const occSt = state.occ ? state.occ.st : null;
+  if (hit && hit.ctrl === ctrl && hit.so === so && hit.occ === occSt) return hit.tally;
   const w = getWorld();
   const tally = Array.from({ length: w.owners.length }, () => ({ civ: 0, mil: 0, dok: 0, res: {}, occ: 0 }));
   for (let s = 1; s < w.states.length; s++) {
@@ -41,10 +43,12 @@ export function tallyOwners(state) {
       for (const r in e.res) tally[o].res[r] = (tally[o].res[r] || 0) + e.res[r];
     } else {
       tally[o].occ++;
-      for (const r in e.res) tally[c].res[r] = (tally[c].res[r] || 0) + e.res[r];
+      const comp = state.occ && state.occ.st[s] ? state.occ.st[s].c : 0;
+      const f = OCC.RES_BASE + (1 - OCC.RES_BASE) * comp;   // M38: okupant dostane těžbu podle poddajnosti
+      for (const r in e.res) tally[c].res[r] = (tally[c].res[r] || 0) + e.res[r] * f;
     }
   }
-  tallyCache.set(ind.st, { ctrl, so, tally });
+  tallyCache.set(ind.st, { ctrl, so, occ: occSt, tally });
   return tally;
 }
 

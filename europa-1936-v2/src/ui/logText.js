@@ -25,6 +25,7 @@ export function logLine(e, me = 0) {
     case 'puppet': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.x].name} se stala loutkovým státem (${w.owners[e.o].name}).` };
     case 'annex': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.o].name} anektovala ${w.owners[e.x].name}.` };
     case 'doctrine': return { icon: 'general', tone: 'good', world: false, mine: true, text: `Přijata doktrína: ${DOCTRINES[e.x]?.n || e.x}.` };
+    case 'rebel': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `Povstání ve státě ${w.states[e.s]?.n || ''}: ${w.owners[e.o].name} vyhnala okupační správu (${w.owners[e.x].name}).` };
     case 'sunk': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Transportní loď s divizí potopena na cestě do provincie ${w.provName(e.x)}.` };
     case 'event': return { icon: 'politics', tone: 'info', world: false, mine: true, text: `Událost: ${EVENT_BY_ID[e.x]?.n || e.x}.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };

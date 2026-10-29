@@ -80,7 +80,7 @@ export function useHotkeys() {
       if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') { e.preventDefault(); gameStore.update(changeSpeed, 1); return; }
       if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') { e.preventDefault(); gameStore.update(changeSpeed, -1); return; }
       if (ui.designer || ui.menuOpen) return;
-      if (/^[1-8]$/.test(e.key)) { const m = MODES[Number(e.key) - 1]; if (m) setMode(m.id); return; }
+      if (/^[0-9]$/.test(e.key)) { const m = MODES[(Number(e.key) + 9) % 10]; if (m) setMode(m.id); return; }
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
       if (k === 'v') togglePanel('army');
       else if (k === 'n') togglePanel('recruit');

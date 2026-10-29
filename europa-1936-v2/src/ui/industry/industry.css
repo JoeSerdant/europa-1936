@@ -410,3 +410,7 @@ button.st-row:hover { background: var(--ink-3); }
 .end-stats > div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dotted var(--rule); padding: 3px 0; }
 .end-stats dt { color: var(--text-3); }
 .end-stats dd { font: 600 16px/1.2 var(--display); color: var(--paper); font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------------ okupace (M38) */
+.occ-bar { display: inline-block; width: 90px; height: 7px; margin-right: 8px; vertical-align: middle; }
+.occ-bar i { display: block; height: 100%; }

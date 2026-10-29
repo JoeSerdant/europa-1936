@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { getWorld, fleetsInSea, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
+import { getWorld, fleetsInSea, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
 import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, justifyOn, selectFleet } from '../actions.js';
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
@@ -82,6 +82,23 @@ function StateIndustry({ s }) {
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+/** Okupace státu: odboj, poddajnost a garnizona (jen když je stát okupovaný). */
+function StateOccupation({ s }) {
+  const state = useGameSlow((g) => g, 800);
+  const o = occupationOf(state, s);
+  if (!o) return null;
+  return (
+    <section className="state-occ">
+      <h3>Okupace</h3>
+      <dl className="kv">
+        <Row label="Odboj"><span className="bar hp occ-bar"><i style={{ width: `${o.r * 100}%`, background: '#d44430' }} /></span> {Math.round(o.r * 100)} %</Row>
+        <Row label="Poddajnost"><span className="bar org occ-bar"><i style={{ width: `${o.c * 100}%`, background: '#62b05c' }} /></span> {Math.round(o.c * 100)} %</Row>
+        <Row label="Garnizona">{o.n} z {o.need} divizí</Row>
+      </dl>
     </section>
   );
 }
@@ -184,6 +201,7 @@ function LandDossier({ p, owner, ctrl }) {
           <h3>Stát {st.n}</h3>
           <p>{st.v.length} {plural(st.v.length, 'provincie', 'provincie', 'provincií')} · {fmtPop(st.p)} · {fmtArea(st.a)}</p>
         </section>
+        <StateOccupation s={o.s} />
         <StateIndustry s={o.s} />
       </div>
     </>
