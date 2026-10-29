@@ -516,6 +516,11 @@ try {
   await page.waitForSelector('.overview-dialog', { timeout: 3000 });
   check('klávesa O otevře Přehled zemí s řádkem hráče', (await page.locator('.ov-table tbody tr').count()) >= 30 && (await page.locator('.ov-table tr.me').count()) === 1);
   await shot('overview');
+  await page.locator('.ov-tabs .tab', { hasText: 'Grafy' }).click();
+  await page.waitForSelector('.ov-charts', { timeout: 3000 });
+  check('záložka Grafy v Přehledu ukáže přepínač ukazatelů a legendu', (await page.locator('.ov-metrics button').count()) === 4 && (await page.locator('.ov-legend li').count()) >= 6);
+  await shot('overview-charts');
+  await page.locator('.ov-tabs .tab', { hasText: 'Pořadí' }).click();
   await page.keyboard.press('Escape');
   await page.waitForTimeout(150);
   check('Esc zavře Přehled zemí', (await page.locator('.overview-dialog').count()) === 0);
