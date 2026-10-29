@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createGame, getWorld, advance, advanceHour, startFocus, cancelFocus, chooseEvent, focusTree, natOf, pendingEvents, applyFx, focusMods, fxText, fxLinesOf, modLines,
-  FOCUS_TREES, FOCUS_BY_ID, EVENTS, EVENT_BY_ID, polModsOf, industryOf, slotsOf, slotsUsed, researchOf, startResearch, NAT, TECHS, LAWS, ADVISORS, EQUIP, GAME_VERSION,
+  FOCUS_TREES, FOCUS_BY_ID, treeOf, EVENTS, EVENT_BY_ID, polModsOf, industryOf, slotsOf, slotsUsed, researchOf, startResearch, NAT, TECHS, LAWS, ADVISORS, EQUIP, GAME_VERSION,
 } from '../src/engine/index.js';
 
 const W = getWorld();
@@ -10,7 +10,7 @@ const idx = (t) => W.ownerIdx[t];
 const GER = idx('GER'), FRA = idx('FRA'), SOV = idx('SOV'), CZE = idx('CZE'), POL = idx('POL'), SWE = idx('SWE');
 const day = (s, n = 1) => advance(s, 24 * n);
 const give = (s, o, ids) => { const own = s.nat.own.slice(); const done = { ...own[o].done }; ids.forEach((i) => { done[i] = 1; }); own[o] = { ...own[o], done }; return { ...s, nat: { ...s.nat, own } }; };
-const FX_TYPES = new Set(['pp', 'stab', 'ws', 'law', 'adv', 'factory', 'infra', 'boost', 'boostslot', 'tech', 'man', 'stock', 'flag', 'event']);
+const FX_TYPES = new Set(['pp', 'stab', 'ws', 'law', 'adv', 'factory', 'infra', 'boost', 'boostslot', 'tech', 'man', 'stock', 'flag', 'event', 'xp']);
 
 describe('data', () => {
   it('stromy: unikátní id, existující předpoklady a vylučující cíle, jedinečné polohy, platné účinky', () => {
@@ -67,7 +67,8 @@ describe('začátek a příkazy', () => {
     const t = focusTree(s0, 'GER');
     expect(t.find((f) => f.id === 'ger_plan').status).toBe('available');
     expect(t.find((f) => f.id === 'ger_rearm').status).toBe('locked');
-    expect(focusTree(s0, 'SWE').map((f) => f.id)).toEqual(FOCUS_TREES.DEFAULT.map((f) => f.id));
+    expect(treeOf('ZZZ')).toBe(FOCUS_TREES.DEFAULT);
+    expect(focusTree(s0, 'SWE').map((f) => f.id)).toEqual(FOCUS_TREES.SWE.map((f) => f.id));
     expect(natOf(s0, 'GER').total).toBe(FOCUS_TREES.GER.length);
   });
   it('zahájení a zrušení; neplatný vstup vrací tentýž stav', () => {
@@ -205,7 +206,7 @@ describe('AI země', () => {
     const s = createGame({ player: 'GER' });
     const a = day(s, 1);
     expect(a.nat.own[FRA].cur.id).toBe('fra_front');
-    expect(a.nat.own[SWE].cur.id).toBe('def_ind');
+    expect(a.nat.own[SWE].cur.id).toBe('swe_ore');
     expect(a.nat.own[GER].cur).toBeNull();
     const b = day(a, 120);
     expect(Object.keys(b.nat.own[FRA].done).length).toBeGreaterThanOrEqual(2);
@@ -246,5 +247,25 @@ describe('historické události (M44)', () => {
       for (const p of s.nat.pend) { if (p.o === W.ownerIdx.GER) { seen.add(p.id); s = chooseEvent(s, W.ownerIdx.GER, p.id, 0); } }
     }
     expect([...seen].some((id) => id.startsWith('ger_'))).toBe(true);
+  });
+});
+
+describe('národní cíle pro všechny země (M57)', () => {
+  it('každá země má vlastní strom aspoň o šesti cílech s kořenem a rozumnou délkou', () => {
+    for (let o = 1; o < W.owners.length; o++) {
+      const tag = W.owners[o].tag, t = FOCUS_TREES[tag];
+      expect(t, tag).toBeTruthy();
+      expect(t.length, tag).toBeGreaterThanOrEqual(6);
+      expect(t.some((f) => f.req.length === 0 && !f.any.length), tag).toBe(true);
+      for (const f of t) expect(f.id.startsWith(tag.toLowerCase() + '_'), f.id).toBe(true);
+    }
+    expect(Object.values(FOCUS_BY_ID).length).toBeGreaterThan(230);
+  });
+  it('AI každé země po roce splní aspoň několik cílů a stav zůstane platný', () => {
+    const s = advance(createGame({ player: 'GER', aiLevel: 2 }), 24 * 365);
+    for (let o = 1; o < W.owners.length; o++) {
+      if (o === GER || s.dip.cap[o]) continue;
+      expect(Object.keys(s.nat.own[o].done).length, W.owners[o].tag).toBeGreaterThanOrEqual(2);
+    }
   });
 });

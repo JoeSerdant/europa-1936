@@ -2,6 +2,7 @@
 //  days  dny plnění     req  všechny předpoklady   any  aspoň jeden   excl  vylučující cíle   ai  priorita AI (nižší dřív)
 //  fx    okamžité účinky (viz SPEC § 4e)   mod   trvalé bonusy
 const F = (id, n, x, y, days, req, fx, extra = {}) => ({ id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', ...extra });
+import { MORE_TREES, EXTRA } from './focuses_more.js';
 const civ = (n = 1) => ({ t: 'factory', k: 'civ', n });
 const mil = (n = 1) => ({ t: 'factory', k: 'mil', n });
 
@@ -16,7 +17,7 @@ const DEFAULT = [
   F('def_def', 'Příprava obrany', 3, 2, 35, ['def_army'], [{ t: 'ws', v: 0.08 }, { t: 'law', cat: 'con', id: 'ext' }], { ai: 8, info: 'Zavede rozšířený odvod.' }),
 ];
 
-export const FOCUS_TREES = {
+const BASE_TREES = {
   DEFAULT,
   GER: [
     F('ger_plan', 'Čtyřletý plán', 2, 0, 45, [], [civ(), mil()], { ai: 1, mod: { prod: 0.03 }, info: 'Řízené hospodářství: továrny a trvale vyšší výroba.' }),
@@ -83,6 +84,9 @@ export const FOCUS_TREES = {
     F('spr_arm', 'Zbrojní dílny', 3, 2, 45, ['spr_army'], [mil()], { ai: 5 }),
   ],
 };
+
+export const FOCUS_TREES = { ...BASE_TREES, ...MORE_TREES };
+for (const tag in EXTRA) FOCUS_TREES[tag] = [...BASE_TREES[tag], ...EXTRA[tag]];
 
 /** Vyhledání cíle podle id (unikátní napříč stromy). */
 export const FOCUS_BY_ID = {};
