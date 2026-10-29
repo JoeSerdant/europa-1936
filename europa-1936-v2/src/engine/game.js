@@ -14,8 +14,9 @@ import { createAir } from './air/setup.js';
 import { createDoc } from './doc/setup.js';
 import { createOcc } from './occ/setup.js';
 import { applyScenario } from './scenario.js';
+import { createSpy } from './spy/setup.js';
 
-export const GAME_VERSION = 17;
+export const GAME_VERSION = 18;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -49,6 +50,7 @@ export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = tru
     nat: createNat(w),     // M22: národní cíle a události (viz SPEC § 4e)
     dip: createDip(w),     // M23: diplomacie (viz SPEC § 4f)
     log: createLog(),      // M26: deník dění (viz SPEC § 4i)
+    spy: createSpy(w),     // M41: zpravodajství (viz SPEC § 4s)
     occ: createOcc(),      // M38: okupace (viz SPEC § 4q)
     end: null,             // M36: konec hry (viz SPEC § 4p)
     doc: createDoc(w),     // M34: doktríny (viz SPEC § 4n)

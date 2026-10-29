@@ -14,6 +14,7 @@ const ITEMS = [
   { id: 'prod', name: 'Výroba', icon: 'industry', key: 'Y', ind: 'prod' },
   { id: 'recruit', name: 'Nábor a rozmístění', icon: 'recruit', key: 'U' },
   { id: 'logistics', name: 'Logistika', icon: 'supply', key: 'I' },
+  { id: 'spy', name: 'Zpravodajská agentura', icon: 'eye', key: 'G' },
   { id: 'doctrine', name: 'Důstojnický sbor (doktríny)', icon: 'general', key: 'K' },
   { id: 'air', name: 'Letectvo', icon: 'air', key: 'A' },
   { id: 'army', name: 'Armáda', icon: 'army', key: 'V' },

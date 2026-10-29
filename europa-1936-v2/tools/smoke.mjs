@@ -349,11 +349,18 @@ try {
   await page.waitForTimeout(150);
 
   // hlavní lišta nabídek a Logistika (M29)
-  check('lišta nabídek má 15 tlačítek', (await page.locator('.menubar button').count()) === 15);
+  check('lišta nabídek má 16 tlačítek', (await page.locator('.menubar button').count()) === 16);
   await page.keyboard.press('i');
   await page.waitForSelector('.logistics-panel', { timeout: 3000 });
   check('klávesa I otevře Logistiku s tabulkou výzbroje a surovin', (await ui()).panel === 'logistics' && (await page.locator('.lg-table tbody tr').count()) >= 4 && (await page.locator('.lg-res li').count()) === 6);
   await shot('logistics');
+  await page.keyboard.press('g');
+  await page.waitForSelector('.spy-panel .ind-new', { timeout: 3000 });
+  await page.getByRole('button', { name: 'Zahájit operaci' }).click();
+  await page.waitForTimeout(1000);
+  check('klávesa G otevře zpravodajství a operace se zahájí', (await ui()).panel === 'spy' && (await page.locator('.spy-op').count()) === 1);
+  await shot('spy');
+  await page.keyboard.press('g');
   await page.keyboard.press('j');
   await page.waitForSelector('.decisions-panel .dec-card', { timeout: 3000 });
   const ppBefore = await E(() => window.__e1936.gameStore.getState().pol.own[window.__e1936.engine.getWorld().ownerIdx.GER].pp);

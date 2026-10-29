@@ -3,7 +3,7 @@ import { getWorld } from './world.js';
 import { GAME_VERSION } from './game.js';
 
 export const SAVE_FORMAT = 1;
-const SYSTEMS = ['mil', 'ind', 'tech', 'pol', 'nat', 'dip', 'ai', 'log', 'nav', 'air', 'doc', 'occ'];
+const SYSTEMS = ['mil', 'ind', 'tech', 'pol', 'nat', 'dip', 'ai', 'log', 'nav', 'air', 'doc', 'occ', 'spy'];
 
 /** Obálka uložené hry. */
 export function packGame(state) {

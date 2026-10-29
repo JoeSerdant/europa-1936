@@ -9,6 +9,7 @@ import { aiNavy } from './navy.js';
 import { aiAir } from './air.js';
 import { aiDoctrine } from './doc.js';
 import { aiDecisions } from './decisions.js';
+import { aiSpy } from './spy.js';
 
 export function aiDay(state) {
   const w = getWorld();
@@ -18,6 +19,7 @@ export function aiDay(state) {
   for (let o = 1; o < w.owners.length; o++) {
     if (o === player || state.dip.cap[o]) continue;
     state = aiDecisions(state, o);
+    state = aiSpy(state, o);
     state = aiIndustry(state, o);
     state = aiArmy(state, o, scan);
     state = aiNavy(state, o);

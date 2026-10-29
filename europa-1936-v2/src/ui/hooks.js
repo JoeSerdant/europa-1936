@@ -95,6 +95,7 @@ export function useHotkeys() {
       else if (k === 'a') togglePanel('air');
       else if (k === 'k') togglePanel('doctrine');
       else if (k === 'j') togglePanel('decisions');
+      else if (k === 'g') togglePanel('spy');
       else if (k === 'c') togglePanel('nat');
       else if (k === 'l') togglePanel('log');
       else if (k === 'm') togglePanel('navy');
