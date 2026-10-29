@@ -1,9 +1,9 @@
 import { memo, useMemo, useRef, useState } from 'react';
 import { uiStore, useUi, useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { armyTree, divisionView, generalsOf, TRAITS, PLAN_MODES, MODE_NAMES } from '../../engine/index.js';
+import { abilityOf, ABILITIES, ABILITY_IDS, armyTree, divisionView, generalsOf, TRAITS, PLAN_MODES, MODE_NAMES } from '../../engine/index.js';
 import {
-  playerIdx, selectArmy, selectGroup, toggleDivision, setOpen, focusProvince, newArmy, newGroup, renameArmyTo, renameGroupTo, disbandArmyById,
+  playerIdx, armyAbility, selectArmy, selectGroup, toggleDivision, setOpen, focusProvince, newArmy, newGroup, renameArmyTo, renameGroupTo, disbandArmyById,
   disbandGroupById, moveDivisionsToArmy, moveArmiesToGroup, setCommander, startPlanEdit, clearArmyPlan, setArmyPlanMode, ownSelected,
 } from '../actions.js';
 import { summarize, planText, pct, provName, RANK_NAMES, SKILLS } from './helpers.js';
@@ -131,6 +131,19 @@ const MODE_HINTS = {
   rush: 'Útočí hned, jakmile má divize aspoň 35 % organizace.',
 };
 
+/** Schopnosti armády za velitelskou moc: aktivní schopnost s časem, nebo tlačítka pro použití. */
+function AbilityRow({ id, state }) {
+  const act = abilityOf(state, id);
+  const cp = state.player ? state.cmd.cp[playerIdx(state)] : 0;
+  return (
+    <div className="detail-actions abil">
+      {act ? <span className="muted">Aktivní: {ABILITIES[act.id].n} (ještě {Math.max(1, Math.ceil((act.until - state.tick) / 24))} d)</span>
+        : ABILITY_IDS.map((k) => <button key={k} className="sbtn" disabled={cp < ABILITIES[k].cost} onClick={stop(() => armyAbility(id, k))} title={`${ABILITIES[k].info} Cena ${ABILITIES[k].cost}, trvá ${ABILITIES[k].days} d.`}>{ABILITIES[k].n}</button>)}
+      <span className="muted" title="Velitelská moc">VM {Math.floor(cp)}</span>
+    </div>
+  );
+}
+
 function ArmyNode({ node, army, state, selSet, open, focus, gens }) {
   const id = node.id;
   const sum = useMemo(() => summarize(state, node.divs), [state.mil.divs, node.divs]);
@@ -154,6 +167,7 @@ function ArmyNode({ node, army, state, selSet, open, focus, gens }) {
         <div className="detail">
           <CommanderRow kind="army" id={id} cmd={army.cmd} gens={gens} />
           <PlanBlock id={id} army={army} />
+          <AbilityRow id={id} state={state} />
           <div className="detail-actions"><button className="sbtn danger" onClick={stop(() => disbandArmyById(id))}><Icon name="trash" size={14} />Rozpustit armádu</button><span className="muted">divize zůstanou bez armády</span></div>
           {node.divs.map((d) => <DivRow key={d} id={d} view={divisionView(state, d)} sel={selSet.has(d)} />)}
           {node.divs.length === 0 && <p className="empty">Armáda nemá žádné divize. Vyberte divize na mapě a v dolní liště je přidejte, nebo je sem přetáhněte.</p>}

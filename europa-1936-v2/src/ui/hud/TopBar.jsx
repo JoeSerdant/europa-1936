@@ -53,6 +53,7 @@ export function TopBar() {
   const manpower = useGame((s) => (s.player ? manpowerOf(s, s.player) : 0));
   const stab = useGame((s) => (s.player ? Math.round(s.pol.own[getWorld().ownerIdx[s.player]].stab * 100) : 0));
   const ws = useGame((s) => (s.player ? Math.round(s.pol.own[getWorld().ownerIdx[s.player]].ws * 100) : 0));
+  const cp = useGame((s) => (s.player ? Math.floor(s.cmd.cp[getWorld().ownerIdx[s.player]]) : 0));
   const pp = useGame((s) => (s.player ? Math.floor(s.pol.own[getWorld().ownerIdx[s.player]].pp) : 0));
   const ind = useGame((s) => s.ind);
   const ctrl = useGame((s) => s.ctrl);
@@ -86,6 +87,7 @@ export function TopBar() {
             <Stat icon="shield" label="Stabilita" value={`${stab} %`} opt />
             <Stat icon="swords" label="Podpora války" value={`${ws} %`} opt />
             <Stat icon="general" label="Politická moc" value={fmtInt(pp)} />
+            <Stat icon="army" label="Velitelská moc" value={fmtInt(cp)} opt />
             <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} opt />
             <Stat icon="general" label="Zkušenosti: armáda / letectvo / námořnictvo" value={xp} opt="wide" />
             <Stat icon="navy" label="Volné transporty" value={fmtInt(convoys)} opt />

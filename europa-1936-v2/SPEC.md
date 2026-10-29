@@ -576,6 +576,10 @@ Stavba `radar` (`BUILDINGS.radar`, mimo stavební sloty, nejvýš 3 úrovně, ce
 
 Křídla mají pole `a` (0–`AIR.ACE_MAX`, tj. 3; od `GAME_VERSION` 22). Ve vzdušném boji hlídek (`airDay`, mise `air` s nepřátelskými hlídkami nad cílem) vznikne eso s denní šancí `AIR.ACE_CHANCE × e/(e+mine) / (1 + a)` (hash `rand01(tick, id křídla, 'ace')`, žádná náhoda ze stavu). Každý stupeň zvedá sílu hlídek křídla o `AIR.ACE_BONUS` (5 %); jména stupňů jsou v `ACE_NAMES` (Dobrý, Unikátní, Geniální pilot). Rozpuštěním křídla se esa ztrácejí, doplnění je zachová. Hráči se vznik ohlásí v deníku (`ace`). UI: štítek v kartě křídla. Test: `test/aces.test.js`.
 
+## 4ze. Velitelská moc (M53)
+
+`state.cmd = { cp: [moc podle země], ab: [{ o, army, id, until }] }` (od `GAME_VERSION` 23, `validateState` vyžaduje část `cmd`). Velitelská moc začíná na `CMD.START`, denně roste o `CMD.PER_DAY` (ve válce `PER_DAY_WAR`) do `CMD.MAX` (`cmdHour` je vnější vrstva `advanceHour`). Za moc armáda použije schopnost z `data/cmd/abilities.js` (Vynucený útok, Poslední vzdor, Pevná obrana, Zrychlený pochod): `useAbility(state, o, armyId, id)` (hlídá `abilityBlock`, jedna aktivní schopnost na armádu) zapíše `ab` s časem vypršení; `army/unit.js modsOf` přičítá bonusy schopnosti k velitelským a doktrinálním (`abilityMods`). AI (`aiCommand`, denně ve válce) použije ve střetu vynucený útok (útočící armáda) nebo poslední vzdor (bránící). Cheat `cp <n>`. UI: řádek schopností v rozbalené armádě (panel Armáda) a údaj Velitelská moc v horní liště. Test: `test/cmd.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -769,6 +773,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M50** | **Radar**: nová stavba, obrana státu proti nepřátelskému letectvu, AI radary staví | **hotovo** |
 | **M51** | **Sdílení technologií**: bonus rychlosti výzkumu za členy bloku, kteří techniku mají | **hotovo** |
 | **M52** | **Letečtí esa**: piloti se v bojích vyznamenají a zesilují hlídky křídla | **hotovo** |
+| **M53** | **Velitelská moc**: moc se hromadí a za ni armády dostanou dočasné bonusy, AI je používá | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

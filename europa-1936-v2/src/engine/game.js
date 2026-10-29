@@ -15,9 +15,10 @@ import { createDoc } from './doc/setup.js';
 import { createOcc } from './occ/setup.js';
 import { applyScenario } from './scenario.js';
 import { createSpy } from './spy/setup.js';
+import { createCmd } from './cmd/index.js';
 import { createStat, recordStat } from './stat/index.js';
 
-export const GAME_VERSION = 22;
+export const GAME_VERSION = 23;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -53,6 +54,7 @@ export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = tru
     log: createLog(),      // M26: deník dění (viz SPEC § 4i)
     spy: createSpy(w),     // M41: zpravodajství (viz SPEC § 4s)
     occ: createOcc(),      // M38: okupace (viz SPEC § 4q)
+    cmd: createCmd(w),     // M53: velitelská moc a schopnosti (viz SPEC § 4ze)
     stat: createStat(),    // M45: statistiky (viz SPEC § 4w)
     end: null,             // M36: konec hry (viz SPEC § 4p)
     doc: createDoc(w),     // M34: doktríny (viz SPEC § 4n)

@@ -1,5 +1,6 @@
 // Konzole s cheaty (jako v HOI4): `runCheat(state, text)` → `{ state, msg }`. Čistá funkce; neznámý nebo neplatný příkaz vrací tentýž stav a hlášku.
 // Cheaty nemění tvar stavu, jen hodnoty, a používají stejné příkazy jako hráč tam, kde existují.
+import { CMD } from './cmd/constants.js';
 import { getWorld } from './world.js';
 import { TECHS, TECH_IDS } from '../data/research/index.js';
 import { grantTech } from './research/commands.js';
@@ -13,6 +14,7 @@ import { forceEnd } from './end.js';
 
 export const CHEAT_HELP = [
   'pp <n> – přidá politickou moc',
+  'cp <n> – přidá velitelskou moc',
   'manpower <n> – přidá lidskou sílu',
   'stab <0–100>, ws <0–100> – nastaví stabilitu / podporu války',
   'research all | <id> – dokončí všechny / jednu technologii',
@@ -84,6 +86,12 @@ export function runCheat(state, text) {
       if (err || !PLANES[a] || n === null) return same(state, err || `Použití: plane <${Object.keys(PLANES).join('|')}> <počet>`);
       const pool = state.air.pool.slice(); pool[me] = { ...pool[me], [a]: Math.max(0, (pool[me][a] || 0) + n) };
       return { state: { ...state, air: { ...state.air, pool, ver: state.air.ver + 1 } }, msg: `${PLANES[a].n} ${n >= 0 ? '+' : ''}${n}.` };
+    }
+    case 'cp': {
+      const err = needMe(), n = num(a);
+      if (err || n === null) return same(state, err || 'Použití: cp <číslo>');
+      const cp = state.cmd.cp.slice(); cp[me] = Math.max(0, Math.min(CMD.MAX, cp[me] + n));
+      return { state: { ...state, cmd: { ...state.cmd, cp } }, msg: `Velitelská moc ${n >= 0 ? '+' : ''}${n}.` };
     }
     case 'xp': {
       const err = needMe(), n = num(b);

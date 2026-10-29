@@ -1,5 +1,6 @@
 // Společné pomocné funkce pro divize v pracovním kontextu hodiny.
 import { deriveStats } from './stats.js';
+import { abilityMods } from '../cmd/index.js';
 import { armyMods, ZERO_MODS, MOD_KEYS } from './leaders.js';
 import { docMods } from '../doc/core.js';
 
@@ -14,6 +15,14 @@ export const lackOf = (d) => (d.sg > 0 ? 0 : 1 - d.sup);
 /** Bonusy velitele armády divize (v kontextu hodiny podle upravených polí). */
 const mergeCache = new WeakMap();   // bonusy velitele → Map(doktrinální bonusy → součet)
 export function modsOf(ctx, d) {
+  const base = baseMods(ctx, d);
+  const ab = ctx.state.cmd && d.army ? abilityMods(ctx.state, d.army) : null;   // M53: schopnost armády
+  if (!ab) return base;
+  const r = { ...base };
+  for (const k in ab) r[k] = (r[k] || 0) + ab[k];
+  return r;
+}
+function baseMods(ctx, d) {
   const lead = d.army ? armyMods(ctx.gens, ctx.mil.groups, ctx.armies[d.army]) : ZERO_MODS;
   const doc = ctx.state.doc ? docMods(ctx.state, d.o) : null;
   if (!doc || !doc.land) return lead;

@@ -11,6 +11,7 @@ import { aiDoctrine } from './doc.js';
 import { aiDecisions } from './decisions.js';
 import { aiSpy } from './spy.js';
 import { aiForts } from './forts.js';
+import { aiCommand } from '../cmd/index.js';
 import { aiLend } from '../dip/lend.js';
 
 export function aiDay(state) {
@@ -29,6 +30,7 @@ export function aiDay(state) {
     state = aiAir(state, o);
     state = aiDoctrine(state, o);
     state = aiLend(state, o);
+    state = aiCommand(state, o);
     if (weekly) state = aiOffense(state, o);
     if (!state.dip.sub[o]) state = aiDiplomacy(state, o);   // loutky nevedou vlastní diplomacii (M33)
   }
