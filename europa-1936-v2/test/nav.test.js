@@ -237,7 +237,7 @@ describe('přeprava a vylodění', () => {
     expect(a.nav.sail).toHaveLength(1);
     expect(a.nav.sail[0]).toMatchObject({ id, o: ENG, to: dest, from: port });
     expect(a.nav.sail[0].arrive).toBeGreaterThan(a.tick + NAV.LOAD_H);
-    expect(transportsOf(a, ENG)).toEqual({ total: 1, used: 1, free: 0 });
+    expect(transportsOf(a, ENG)).toMatchObject({ total: 1, used: 1, free: 0 });
     expect(navyOf(a, ENG).sail).toHaveLength(1);
     const [a2, id2] = addDivision(a, 'ENG', 'pesi', port);
     expect(sailBlock(a2, [id2], dest)).toMatch(/Chybí transportní/);

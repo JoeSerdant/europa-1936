@@ -5,6 +5,7 @@ import { atWar } from '../army/war.js';
 import { sameFaction } from '../dip/core.js';
 import { logAddMany } from '../log.js';
 import { NAV } from './constants.js';
+import { tradeRoute, routeRisk, needOf } from './convoy.js';
 import { seaGraph, seaKm, powerOf, fleetSpeed, seaRoute, homeSeas, seaBlocked } from './core.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
@@ -159,7 +160,45 @@ function sinkings(state) {
   return logAddMany(out, lost.filter((s) => s.o === player).map((s) => ({ k: 'sunk', o: s.o, x: s.to })));
 }
 
+/** Denně: nepřátelské lodě na obchodních trasách potopí část konvojů dovozce (zlomek se přenáší v `nav.cv`). */
+function raids(state) {
+  const w = getWorld();
+  const exp = new Map();
+  for (const d of state.ind.trade) {
+    if (atWar(state.mil, d.from, d.to)) continue;
+    const r = tradeRoute(state, d.from, d.to);
+    if (!r.sea || !r.ok) continue;
+    const risk = routeRisk(state, r, d.from, d.to);
+    if (risk > 0) exp.set(d.to, (exp.get(d.to) || 0) + needOf(r, d.amt) * risk);
+  }
+  if (!exp.size) return state;
+  const cv = state.nav.cv.slice();
+  const pool = state.nav.pool.slice();
+  let fleets = state.nav.fleets.slice();
+  const player = state.player ? w.ownerIdx[state.player] : 0;
+  const logs = [];
+  for (const [o, e] of [...exp].sort((a, b) => a[0] - b[0])) {
+    cv[o] += e;
+    const lost = Math.floor(cv[o]);
+    if (lost < 1) continue;
+    cv[o] -= lost;
+    let n = 0;
+    for (let k = 0; k < lost; k++) {
+      if (pool[o].tr > 0) { pool[o] = { ...pool[o], tr: pool[o].tr - 1 }; n++; continue; }
+      const i = fleets.findIndex((f) => f && f.o === o && f.ships.tr > 0);
+      if (i < 1) break;
+      const ships = { ...fleets[i].ships, tr: fleets[i].ships.tr - 1 };
+      if (!ships.tr) delete ships.tr;
+      fleets[i] = powerOf(ships).n ? { ...fleets[i], ships } : null;
+      n++;
+    }
+    if (n) { if (o === player) logs.push({ k: 'convoy', o, x: n }); }
+  }
+  const out = { ...state, nav: { ...state.nav, cv, pool, fleets, ver: state.nav.ver + 1 } };
+  return logAddMany(out, logs);
+}
+
 export function navDay(state) {
-  return sinkings(combat(state));
+  return raids(sinkings(combat(state)));
 }
 void SHIPS; void seaGraph;

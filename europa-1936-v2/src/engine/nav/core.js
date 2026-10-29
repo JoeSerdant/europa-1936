@@ -118,8 +118,8 @@ export function seaBlocked(state, o, label) {
   return enemy;
 }
 
-/** Počet transportních lodí země (rezerva + flotily) a volná kapacita (minus divize na moři). */
-export function transportsOf(state, o) {
+/** Počet transportních lodí země (rezerva + flotily) a volná kapacita jen bez konvojů; rozhraní používá `transportsOf` z convoy.js. */
+export function transportsBare(state, o) {
   let n = (state.nav.pool[o] && state.nav.pool[o].tr) || 0;
   for (const f of state.nav.fleets) if (f && f.o === o) n += f.ships.tr || 0;
   const used = state.nav.sail.reduce((a, s) => a + (s.o === o ? 1 : 0), 0);

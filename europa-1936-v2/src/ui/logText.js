@@ -20,6 +20,7 @@ export function logLine(e, me = 0) {
     case 'built': return { icon: 'industry', tone: 'good', world: false, mine: true, text: `Stavba dokončena: ${BUILDINGS[e.x]?.n || e.x}${e.s && w.states[e.s] ? ` (${w.states[e.s].n})` : ''}.` };
     case 'landing': return { icon: 'army', tone: e.a ? 'good' : 'info', world: false, mine: true, text: e.a ? `Vylodění dokončeno: ${w.provName(e.x)}.` : `Vylodění se nezdařilo, divize se vrátila: ${w.provName(e.x)}.` };
     case 'bombed': return { icon: 'air', tone: 'bad', world: false, mine: true, text: `Letecký útok na ${w.states[e.s]?.n || 'váš stát'}: klesla podpora války a část zásob byla zničena.` };
+    case 'convoy': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Nepřátelské lodě potopily ${e.x} ${e.x === 1 ? 'konvoj' : e.x < 5 ? 'konvoje' : 'konvojů'} s vaším zbožím.` };
     case 'sunk': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Transportní loď s divizí potopena na cestě do provincie ${w.provName(e.x)}.` };
     case 'event': return { icon: 'politics', tone: 'info', world: false, mine: true, text: `Událost: ${EVENT_BY_ID[e.x]?.n || e.x}.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };

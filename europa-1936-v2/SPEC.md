@@ -450,6 +450,17 @@ log: { n, items: [{ id, t, k, o, a, b, x }…] }   // n čítač id; items nejst
 Systémy zapisují přes `logAdd(state, entry)` / `logAddMany` (`engine/log.js`); války, mír, kapitulace a bloky se zapisují vždy, technologie, cíle, stavby a události jen u země hráče (u pozorovatele nic).
 **Rozhraní:** záložka *Zprávy* (`L`) – seznam od nejnovějších s ikonou, datem a textem (`ui/logText.js`, čistá funkce), filtr *Vše / Moje / Světové*; důležité nové záznamy se ohlásí oznámením (válka se zemí hráče, kapitulace, dokončený výzkum a cíl). Okno *Přehled zemí* (`O`): pořadí podle vítězných bodů, divize, továrny, stabilita, stav (válka, kapitulace, blok); klik na řádek ukáže hlavní město. Selektor `countryTable(state)`.
 
+## 4l. Konvoje a obchodní válka (M31)
+
+Rozšíření § 4b a § 4j (`GAME_VERSION` 12, nové pole `nav.cv`: přenos zlomku potopených konvojů). Kód: `src/engine/nav/convoy.js`, čísla v `NAV` (`CONVOY_AMT`, `CONVOY_KM`, `RAID_COEF`, `RAID_MAX`, `ESCORT_K`).
+
+- **Trasa** (`tradeRoute`): smlouva mezi zeměmi, jejichž hlavní města leží na téže souvislé pevnině, jede po souši (bez konvojů). Jinak jede po moři mezi domovskými přístavy (`seaRoute`); chybí-li přístav nebo cesta na mapě, počítá se tranzit mimo mapu (po souši).
+- **Konvoje** (`convoysOf`): smlouva po moři potřebuje `ceil(množství / CONVOY_AMT) + floor(km / CONVOY_KM)` transportních lodí dovozce. Lodě zaneprázdněné přepravou divizí se odečítají; nedostatek zmenšuje dodávky poměrem `dostupné / potřeba`. `transportsOf` vrací i `convoys` a `need` (volné lodě pro přepravu divizí klesají o konvoje).
+- **Riziko** (`routeRisk`): v každé oblasti trasy ruší nepřátelské lodě (země ve válce s dovozcem nebo vývozcem) dodávky úměrně své palebné síle; vlastní a spojenecké válečné lodě v téže oblasti riziko snižují. Dodávka dne = `got × poměr konvojů × (1 − riziko)` (v `industryDay`).
+- **Nájezdy** (`navDay`): každý den se podle rizika potopí část konvojů dovozce (zlomek se přenáší v `nav.cv`), hráč dostane záznam `convoy`.
+- **AI**: staví transporty podle potřeby konvojů, nečinné flotily posílá na nepřátelské obchodní trasy a kryje vlastní ohrožené.
+- **Rozhraní**: Obchod ukazuje u smlouvy „po moři / po souši“, počet konvojů a riziko; Logistika počet konvojů.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -579,6 +590,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `nav` (19): flotily (sestavení, rozpuštění, pohyb po mořích, blokády), loděnice a lodní linky, přeprava divizí (nalodění, plavba, vylodění), námořní boj a potopení, AI loďstvo;
   - `nav-ui` (9): akce hráče (výběr flotily, rozkazy, sestavení, rozpuštění, přeprava z rozhraní), žetony a trasy flotil;
   - `air` (11): počáteční letectvo, příkazy (rezerva, kapacita, mise, dolet, válka), denní krok (podpora boje, krytí hlídkami, bombardování, ztráta letiště), výroba a letiště, výzkum, AI;
+  - `convoy` (6): trasy po souši a po moři, potřeba konvojů, nedostatek lodí, riziko a krytí, nájezdy, determinismus;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
@@ -608,6 +620,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M28** | **Rozhraní ve stylu HOI4**: okna Průmysl (I), Nábor (N), Výzkum (R, strom po sloupcích), Politika (P), Cíle (C) a Diplomacie (D) jsou přes celou obrazovku (`common/Screen.jsx`, třída `prod-screen`; seznam `FULL` v `SidePanel.jsx`); návrhář divizí je velké okno; zbývá Armáda, Zprávy a Námořnictvo | **hotovo část** |
 | **M29** | **Hlavní lišta nabídek a konzole**: lišta oken s klávesami Q W E R T Y U I (Vláda, Výzkum, Diplomacie, Obchod, Stavby, Výroba, Nábor, Logistika) + C V M L, okno Logistika, horní lišta s továrnami, transporty a napětím ve světě (`worldTension`), konzole cheatů (`~`, `engine/cheats.js`: `runCheat`) | **hotovo** |
 | **M30** | **Letectvo**: letiště a křídla, letouny z výroby, mise (hlídky, podpora boje, bombardování), AI, okno Letectvo (A) | **hotovo** |
-| později | konvoje, špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
+| **M31** | **Konvoje a obchodní válka**: námořní obchod potřebuje transportní lodě, nájezdy a eskorta, AI | **hotovo** |
+| později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
