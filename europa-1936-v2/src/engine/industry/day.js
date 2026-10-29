@@ -3,6 +3,7 @@ import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { BUILDINGS } from '../../data/industry/index.js';
 import { modsOf } from '../research/core.js';
+import { polModsOf, outMult, consOf } from '../politics/core.js';
 import { tallyOwners, factoryUse, trimLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
 
 const warKey = (a, b) => (a < b ? a * 1000 + b : b * 1000 + a);
@@ -18,7 +19,7 @@ export function industryDay(state) {
   for (const l of ind.lines) linesBy[l.o].push(l);
   const use = new Array(nO), dem = new Array(nO);
   for (let o = 1; o < nO; o++) {
-    use[o] = factoryUse(tally[o], ind.cons[o]);
+    use[o] = factoryUse(tally[o], consOf(state, o));
     linesBy[o] = trimLines(linesBy[o], use[o].milAvail);
     dem[o] = demandOf(linesBy[o], state.mil.lv[o]);
   }
@@ -28,7 +29,7 @@ export function industryDay(state) {
   const trade = ind.trade.map((d) => {
     let got = 0;
     if (!wars.has(warKey(d.from, d.to))) {
-      const have = (tally[d.from].res[d.res] || 0) * (1 + modsOf(state, d.from).extract) - (dem[d.from][d.res] || 0) - (sold[d.from][d.res] || 0);
+      const have = (tally[d.from].res[d.res] || 0) * (1 + modsOf(state, d.from).extract + polModsOf(state, d.from).extract) - (dem[d.from][d.res] || 0) - (sold[d.from][d.res] || 0);
       got = Math.max(0, Math.min(d.amt, have));
       got = Math.round(got * 1000) / 1000;
       sold[d.from][d.res] = (sold[d.from][d.res] || 0) + got;
@@ -47,11 +48,12 @@ export function industryDay(state) {
 
   for (let o = 1; o < nO; o++) {
     const mods = modsOf(state, o), lvo = state.mil.lv[o];
-    const res = resFlows(tally[o], dem[o], trade, o, mods.extract);
+    const pm = polModsOf(state, o), out = outMult(state, o);
+    const res = resFlows(tally[o], dem[o], trade, o, mods.extract + pm.extract);
     const cap = I.EFF_CAP + mods.effCap;
     for (const l of linesBy[o]) {
       const f = lineFactor(l, res);
-      let acc = l.acc + lineRate(l, lvo) * f;
+      let acc = l.acc + lineRate(l, lvo) * f * out;
       const whole = Math.floor(acc);
       acc -= whole;
       if (whole > 0) {
@@ -63,7 +65,7 @@ export function industryDay(state) {
     // stavby: civilní továrny po odečtení spotřebního zboží a dovozu
     let imports = 0;
     for (const r in res) imports += res[r].imp;
-    let pool = Math.max(0, use[o].civAfterCons - imports * I.TRADE_CIV) * I.IC_PER_FAC * (1 + mods.build);
+    let pool = Math.max(0, use[o].civAfterCons - imports * I.TRADE_CIV * (1 + pm.imp)) * I.IC_PER_FAC * (1 + mods.build + pm.build) * out;
     for (const b of buildBy[o]) {
       if (state.stateOwner[b.s] !== o || state.ctrl[w.states[b.s].cap] !== o) { dropped.add(b.id); continue; }
       const B = BUILDINGS[b.k];

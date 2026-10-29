@@ -28,7 +28,7 @@ export function useGameLoop(active) {
 const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;
 
 /**
- * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, X = zastavit vybrané divize,
+ * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, X = zastavit vybrané divize,
  * F = zaměřit výběr, Esc = zrušit/zavřít (nabídka → návrhář → úprava plánu → výběr jednotek → panel), F1 nebo ? = nápověda.
  */
 export function useHotkeys() {
@@ -60,6 +60,7 @@ export function useHotkeys() {
       else if (k === 'n') togglePanel('recruit');
       else if (k === 'i') togglePanel('industry');
       else if (k === 'r') togglePanel('research');
+      else if (k === 'p') togglePanel('politics');
       else if (k === 'x') stopSelected();
       else if (k === 'f') focusSelection();
     };

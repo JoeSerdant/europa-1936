@@ -6,6 +6,7 @@ import {
   createArmy, renameArmy, disbandArmy, assignDivisions, createGroup, renameGroup, disbandGroup, assignArmies, assignCommander,
   setPlan, clearPlan, setPlanMode, suggestFront,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
+  setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
@@ -542,3 +543,25 @@ export function researchTech(id, slot = -1) {
   return true;
 }
 export const stopResearch = (slot) => { const me = playerIdx(); return !!me && run(cancelResearch, me, slot); };
+
+// ============================================================ politika (M21)
+/** Změní zákon hráče (stojí politickou moc); při neúspěchu napíše důvod. */
+export function changeLaw(cat, id) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me) return false;
+  const why = lawBlock(s.pol.own[me], cat, id);
+  if (why) { toast(why); return false; }
+  const ok = run(setLaw, me, cat, id);
+  if (ok) toast(`Zákon „${LAWS[cat][id].n}“ je v platnosti.`);
+  return ok;
+}
+/** Najme poradce do slotu hráče; při nedostatku politické moci napíše důvod. */
+export function hireAdv(slot, id) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me || !ADVISORS[id]) return false;
+  if (s.pol.own[me].pp < ADVISORS[id].pp) { toast(`Chybí politická moc (${Math.ceil(ADVISORS[id].pp - s.pol.own[me].pp)}).`); return false; }
+  const ok = run(hireAdvisor, me, slot, id);
+  if (ok) toast(`${ADVISORS[id].n} nastoupil do služby.`);
+  return ok;
+}
+export const dismissAdv = (slot) => { const me = playerIdx(); return !!me && run(fireAdvisor, me, slot); };

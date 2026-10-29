@@ -1,6 +1,6 @@
 // Automatická kontrola hry v prohlížeči (Playwright): menu → výběr země → hra, klik na provincii, běh času, režimy, nabídka, výkon snímku
 // a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc)
-// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní).
+// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta).
 // Spuštění:  npm run dev  (nebo npm run build && npm run preview)  a pak  node tools/smoke.mjs [šířka výška]
 //   URL=http://localhost:4173 node tools/smoke.mjs 1366 768
 // Potřebuje balíček playwright (npm i -D playwright && npx playwright install chromium). Snímky: tools/preview/smoke-*.png.
@@ -337,6 +337,23 @@ try {
   await page.waitForTimeout(700);
   check('hotové technologie jsou v seznamu označené', (await page.locator('.tech-card.done').count()) >= 1);
   await page.keyboard.press('r');
+  await page.waitForTimeout(150);
+
+  // politika (M21): panel Politika (P), zákony, poradci, horní lišta
+  const topPol = await page.locator('.topbar').innerText();
+  check('horní lišta ukazuje stabilitu, podporu války a politickou moc', /Stabilita/.test(await page.locator('.stat[title="Stabilita"]').getAttribute('title')) && (await page.locator('.stat[title="Politická moc"]').count()) === 1, topPol.replace(/\s+/g, ' ').slice(-80));
+  await page.keyboard.press('p');
+  await page.waitForSelector('.politics-panel', { timeout: 3000 });
+  check('klávesa P otevře panel Politika se zákony a poradci', (await ui()).panel === 'politics' && (await page.locator('.pol-law').count()) === 3 && (await page.locator('.pol-adv').count()) === 4);
+  await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const own = s.pol.own.slice(); own[o] = { ...own[o], pp: 400, ws: 0.9 }; gameStore.setState({ ...s, pol: { ...s.pol, own } }); });
+  await page.waitForTimeout(900);
+  await page.locator('.pol-law').first().getByRole('button', { name: /Raná mobilizace/ }).click();
+  await page.locator('.pol-adv').nth(3).getByRole('button', { name: /Akademik/ }).click();
+  await page.waitForTimeout(250);
+  const pol1 = await E(() => { const { gameStore, engine } = window.__e1936; const e = gameStore.getState().pol.own[engine.getWorld().ownerIdx.GER]; return { eco: e.laws.eco, sci: e.adv.sci, pp: e.pp }; });
+  check('zákon a poradce se zadají a zaplatí politickou mocí', pol1.eco === 'early' && pol1.sci === 'akademik' && pol1.pp < 400, `${pol1.eco}, ${pol1.sci}, zbývá ${pol1.pp}`);
+  await shot('politics');
+  await page.keyboard.press('p');
   await page.waitForTimeout(150);
 
   // výkon vrstvy žetonů (čas příkazů v jednom snímku)

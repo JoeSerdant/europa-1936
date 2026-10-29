@@ -5,8 +5,9 @@ import { seedToState } from './rng.js';
 import { createMil } from './army/setup.js';
 import { createInd } from './industry/setup.js';
 import { createTech } from './research/setup.js';
+import { createPol } from './politics/setup.js';
 
-export const GAME_VERSION = 4;
+export const GAME_VERSION = 5;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -35,5 +36,6 @@ export function createGame({ player = null, seed = 1936 } = {}) {
     mil,
     ind,
     tech: createTech(w),   // M20: výzkum (viz SPEC § 4c)
+    pol: createPol(w),     // M21: politika (viz SPEC § 4d)
   };
 }

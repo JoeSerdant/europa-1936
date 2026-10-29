@@ -19,6 +19,7 @@ const ICONS = {
   supply: 'M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 19.2a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2zM17 19.2a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2z',
   industry: 'M3 20V11l5 3v-3l5 3V5h3.5v15zM3 20h18M7 17h1M11 17h1M15 17h1',
   research: 'M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3M8 15h8',
+  politics: 'M4 20h16M6 20V10M10 20V10M14 20V10M18 20V10M3 10l9-6 9 6z',
   chevron: 'M8 10l4 4 4-4',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
