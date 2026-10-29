@@ -35,6 +35,8 @@ export function logLine(e, me = 0) {
     case 'sunk': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Transportní loď s divizí potopena na cestě do provincie ${w.provName(e.x)}.` };
     case 'event': return { icon: 'politics', tone: 'info', world: false, mine: true, text: `Událost: ${EVENT_BY_ID[e.x]?.n || e.x}.` };
     case 'lend': return { icon: 'trade', tone: 'good', world: false, mine: e.a === me || e.b === me, text: `${nm(e.a)} posílá zemi ${nm(e.b)} výzbroj: ${EQUIP[e.x]?.n || e.x} × ${e.y}.` };
+    case 'gar': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} zaručuje nezávislost země ${nm(e.b)}.` };
+    case 'garend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} už nezaručuje nezávislost země ${nm(e.b)}.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };
   }
 }

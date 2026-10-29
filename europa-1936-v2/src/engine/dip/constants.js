@@ -1,5 +1,9 @@
 // Vyvážení diplomacie (M23): všechna čísla na jednom místě. Čas ve dnech.
 export const DIP = {
+  GAR_PP: 10,             // záruka nezávislosti: cena v politické moci
+  GAR_MAX: 4,             // nejvíc záruk najednou na zemi
+  GAR_REL: 10,            // zlepšení vztahu se zaručenou zemí (zrušení o totéž zhorší)
+  GAR_STAB: 0.35,         // pod touto stabilitou se zaručitel do války nepřipojí a záruka zaniká
   LEND_MAX: 0.25,         // půjčka a pronájem: nejvíc podíl skladu najednou
   LEND_REL: 3,            // zlepšení vztahu za jednu zásilku
   LEND_AI_MIN: 300,       // AI posílá jen druhy výzbroje, kterých má aspoň tolik kusů

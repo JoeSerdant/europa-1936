@@ -556,6 +556,10 @@ Bez nového stavu a bez nového příkazu: krok `a`→`b` mezi dvěma provinciem
 
 `engine/dip/lend.js`: `lendLease(state, from, to, eq, n)` přesune `n` kusů druhu výzbroje ze skladu země `from` do skladu `to`. Smí se jen mezi členy téhož bloku a mezi pánem a loutkou, ne s kapitulovanou zemí ani ve válce, najednou nejvýš `DIP.LEND_MAX` (25 %) skladu; zásilka zvedne vztah o `DIP.LEND_REL`. Do stavu se nic nepřidává, jen záznam `{k:'lend', a, b, x:druh, y:počet}` v deníku. `lendBlock` vrací český důvod odmítnutí. AI (`aiLend`, denně) v míru posílá přátelům ve válce výzbroj, kterou sama má aspoň `DIP.LEND_AI_MIN` kusů a oni mají méně než čtvrtinu jejího zásoby. UI: v panelu Diplomacie u přítele výběr druhu a tlačítko „Poslat n“. Test: `test/lend.test.js`.
 
+## 4z. Záruky nezávislosti (M48)
+
+`state.dip.gar = [{ g, t }]` (zaručitel, zaručená země; od `GAME_VERSION` 21, `validateState` vyžaduje pole). `engine/dip/guarantee.js`: `guarantee` (cena `DIP.GAR_PP` politické moci, nejvýš `DIP.GAR_MAX` záruk na zaručitele, vztah + `DIP.GAR_REL`), `revokeGuarantee` (zdarma, vztah klesne), `guaranteeBlock` (český důvod odmítnutí: stejný blok, loutky, kapitulace, válka, chybí moc). Při `startWar(a, b)` se zaručitelé obránce `b` přidají do války na jeho straně i se svými bloky (`joiningGuarantors`), pokud nejsou v táboře útočníka, nekapitulovali, nejsou loutky a mají stabilitu aspoň `DIP.GAR_STAB`; ostatním záruka zaniká (`breakGuarantees`, vztah klesne). AI zaručuje podle `HIST_GUARANTEES` (`data/ai/plans.js`, jaro 1939: ENG a FRA → POL, ROM, GRE; ENG → TUR). UI: v panelu Diplomacie tlačítko „Zaručit nezávislost“ / „Zrušit záruku“ a štítek „vaše záruka“ / „zaručuje vás“; deník ukazuje `gar` a `garend`. Test: `test/guarantee.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -744,6 +748,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M45** | **Statistiky a grafy**: měsíční snímky zemí, záložka Grafy v Přehledu zemí | **hotovo** |
 | **M46** | **Železniční pohyb**: rychlejší a méně vyčerpávající přesuny po železnici ve vlastním území | **hotovo** |
 | **M47** | **Půjčka a pronájem**: posílání výzbroje spojencům a loutkám, AI to dělá také | **hotovo** |
+| **M48** | **Záruky nezávislosti**: zaručitel se přidá do války za napadenou zemi, historické záruky AI na jaře 1939 | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

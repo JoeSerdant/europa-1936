@@ -1,9 +1,10 @@
 // AI: diplomacie (M24). Používá stejné příkazy jako hráč: proposePeace, justifyWar, startWar.
 import { getWorld } from '../world.js';
-import { HIST_WARS, HIST_FACTIONS } from '../../data/ai/plans.js';
+import { HIST_WARS, HIST_FACTIONS, HIST_GUARANTEES } from '../../data/ai/plans.js';
 import { hasWar, enemiesOf } from '../army/war.js';
 import { divisionCount } from '../army/selectors.js';
 import { justifyWar, startWar, proposePeace, justReady, warBlock, createFaction, inviteToFaction } from '../dip/commands.js';
+import { guarantee } from '../dip/guarantee.js';
 import { campOf, hasCapitulated, warScore, pairKey } from '../dip/core.js';
 import { AI } from './constants.js';
 import { playerOf } from './core.js';
@@ -29,6 +30,14 @@ export function aiDiplomacy(state, o) {
       if (!state.dip.fac[o]) { state = createFaction(state, o, f.nm); continue; }
       if (state.dip.facs[state.dip.fac[o]].ldr !== o) continue;
       for (const t of f.invite) { const to = w.ownerIdx[t]; if (to && !state.dip.fac[to]) state = inviteToFaction(state, o, to); }
+    }
+  }
+  // historické záruky nezávislosti
+  if (state.ai && state.ai.hist) {
+    for (const g of HIST_GUARANTEES) {
+      if (g.tag !== tag || state.tick / 24 < g.from) continue;
+      const t = w.ownerIdx[g.target];
+      if (t) state = guarantee(state, o, t);   // pokud už platí nebo nejde, příkaz nic neudělá
     }
   }
   // historické válečné plány

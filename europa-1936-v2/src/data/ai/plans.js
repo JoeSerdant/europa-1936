@@ -17,3 +17,14 @@ export const HIST_FACTIONS = [
   { tag: 'GER', nm: 'Osa Berlín–Řím', invite: ['ITA', 'HUN', 'BUL'], from: 270 },
   { tag: 'ENG', nm: 'Britská spolupráce', invite: ['POR', 'GRE', 'EGY', 'IRQ'], from: 200 },
 ];
+
+/** Historické záruky nezávislosti (M48): země `tag` ve dni `from` zaručí nezávislost země `target` (platí, jen když to hra dovolí). */
+export const HIST_GUARANTEES = [
+  { tag: 'ENG', target: 'POL', from: 1180 },
+  { tag: 'FRA', target: 'POL', from: 1185 },
+  { tag: 'ENG', target: 'GRE', from: 1200 },
+  { tag: 'FRA', target: 'GRE', from: 1205 },
+  { tag: 'ENG', target: 'ROM', from: 1195 },
+  { tag: 'FRA', target: 'ROM', from: 1195 },
+  { tag: 'ENG', target: 'TUR', from: 1250 },
+];

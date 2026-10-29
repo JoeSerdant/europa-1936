@@ -17,7 +17,7 @@ import { applyScenario } from './scenario.js';
 import { createSpy } from './spy/setup.js';
 import { createStat, recordStat } from './stat/index.js';
 
-export const GAME_VERSION = 20;
+export const GAME_VERSION = 21;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
