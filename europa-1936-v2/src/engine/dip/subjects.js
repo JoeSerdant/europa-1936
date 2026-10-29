@@ -6,6 +6,7 @@ import { atWar, enemiesOf } from '../army/war.js';
 import { withCtx, settleAfterPeace, declareWar, makePeace } from '../army/commands.js';
 import { COUNTRIES } from '../../data/countries.js';
 import { logAdd } from '../log.js';
+import { WARGOALS } from '../../data/dip/wargoals.js';
 import { setRel } from './core.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
@@ -111,7 +112,7 @@ export function conference(state, loser, by) {
   const w = getWorld(), player = state.player ? w.ownerIdx[state.player] : 0;
   if (victor === player) {
     const id = state.dip.conf.reduce((a, c) => Math.max(a, c.id), 0) + 1;
-    return patch(state, { conf: [...state.dip.conf, { id, loser, victor }] });
+    return patch(state, { conf: [...state.dip.conf, { id, loser, victor, g: state.dip.goal[`${victor}>${loser}`] || 'conquest' }] });
   }
   const tier = COUNTRIES[tagOf(loser)]?.tier ?? 3;
   return statesOf(state, loser).length >= 3 || tier <= 2 ? makePuppet(state, victor, loser) : annexRump(state, victor, loser);
@@ -122,14 +123,42 @@ const without = (state, id) => state.dip.conf.filter((c) => c.id !== id);
 export function confPuppet(state, id) {
   const c = confOf(state, id);
   if (!c) return state;
+  if (c.g && c.g !== 'conquest') return state;
   const n = makePuppet(state, c.victor, c.loser);
   return patch(n, { conf: without(n, id) });
 }
 export function confAnnex(state, id) {
   const c = confOf(state, id);
   if (!c) return state;
+  if (c.g && c.g !== 'conquest') return state;
   const n = annexRump(state, c.victor, c.loser);
   return patch(n, { conf: without(n, id) });
+}
+/** Územní nároky: vítěz převezme nejcennější zbylé státy poraženého, ten zůstane samostatný. */
+export function confTake(state, id) {
+  const c = confOf(state, id);
+  if (!c || c.g !== 'border') return state;
+  const w = getWorld();
+  const left = statesOf(state, c.loser).sort((a, b) => w.states[b].v.reduce((x, p) => x + w.vp[p], 0) - w.states[a].v.reduce((x, p) => x + w.vp[p], 0) || a - b);
+  if (left.length < 2) return confAnnex(state, id);
+  const take = new Set(left.slice(0, Math.min(WARGOALS.border.take, left.length - 1)));
+  const stateOwner = state.stateOwner.slice(), ctrl = state.ctrl.slice();
+  for (const s of take) { stateOwner[s] = c.victor; for (const p of w.states[s].v) if (ctrl[p] === c.loser) ctrl[p] = c.victor; }
+  const cap = state.dip.cap.slice(); cap[c.loser] = 0;
+  let n = withCtx({ ...state, stateOwner, ctrl, ownerVer: state.ownerVer + 1, mil: { ...state.mil, ver: state.mil.ver + 1 } }, (ctx) => settleAfterPeace(ctx, c.loser, c.victor));
+  const pol = n.pol.own.slice(); pol[c.loser] = { ...pol[c.loser], stab: Math.max(pol[c.loser].stab, 0.3) };
+  n = { ...patch(n, { cap, conf: without(n, id) }), pol: { ...n.pol, own: pol } };
+  return logAdd(n, { k: 'take', o: c.victor, x: c.loser, y: take.size });
+}
+/** Ponížení: poražený zůstane samostatný, zaplatí politickou moc a ztratí podporu války. */
+export function confTribute(state, id) {
+  const c = confOf(state, id);
+  if (!c || c.g !== 'tribute') return state;
+  const cap = state.dip.cap.slice(); cap[c.loser] = 0;
+  const pol = state.pol.own.slice();
+  pol[c.victor] = { ...pol[c.victor], pp: pol[c.victor].pp + WARGOALS.tribute.pp_gain };
+  pol[c.loser] = { ...pol[c.loser], ws: Math.max(0, pol[c.loser].ws - 0.2), stab: Math.max(pol[c.loser].stab, 0.3) };
+  return logAdd({ ...patch(state, { cap, conf: without(state, id) }), pol: { ...state.pol, own: pol } }, { k: 'tribute', o: c.victor, x: c.loser });
 }
 export function confSkip(state, id) {
   return confOf(state, id) ? patch(state, { conf: without(state, id) }) : state;

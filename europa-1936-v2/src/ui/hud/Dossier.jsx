@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { getWorld, fleetsInSea, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
+import { getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
 import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, buildFortHere, justifyOn, selectFleet } from '../actions.js';
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
@@ -157,7 +157,7 @@ function WarSection({ idx, name }) {
       ) : c.ally || c.capitulated ? null : c.just ? (
         <p className="muted">Ospravedlňuje se: zbývá {c.just.left} d.</p>
       ) : (
-        <button className="sbtn" disabled={!c.canJustify} title={c.justifyBlock || undefined} onClick={() => justifyOn(tag)}>Ospravedlnit válku ({DIP.JUST_PP} PM)</button>
+        <div className="ind-btns">{c.goals.map((g) => <button key={g.id} className="sbtn" disabled={!!g.block} title={g.block || `${g.info} ${g.days} dní.`} onClick={() => justifyOn(tag, g.id)}>Ospravedlnit: {g.n} ({g.pp} PM)</button>)}</div>
       )}
       {c.war && armed && <p className="muted">Okupované provincie se vrátí původním držitelům a cizí jednotky odejdou domů.</p>}
       {c.war && c.peaceBlock && !armed && <p className="pol-block">{c.peaceBlock}</p>}

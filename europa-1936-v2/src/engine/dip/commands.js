@@ -5,6 +5,7 @@ import { COUNTRIES } from '../../data/countries.js';
 import { declareWar, makePeace, cleanName } from '../army/commands.js';
 import { atWar, enemiesOf } from '../army/war.js';
 import { DIP } from './constants.js';
+import { WARGOALS } from '../../data/dip/wargoals.js';
 import { logAdd } from '../log.js';
 import { joiningGuarantors, breakGuarantees } from './guarantee.js';
 import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey } from './core.js';
@@ -25,15 +26,16 @@ export function warBlock(state, a, b) {
 }
 
 /** Ospravedlní válku `a` proti `b`: stojí politickou moc a trvá `JUST_DAYS` dní. */
-export function justifyWar(state, a, b) {
-  if (warBlock(state, a, b)) return state;
+export function justifyWar(state, a, b, goal = 'conquest') {
+  const G = WARGOALS[goal];
+  if (!G || warBlock(state, a, b)) return state;
   if (state.dip.just.some((j) => j.a === a && j.b === b)) return state;
   if (state.dip.just.filter((j) => j.a === a).length >= DIP.JUST_MAX) return state;
   const p = state.pol.own[a];
-  if (p.pp < DIP.JUST_PP) return state;
+  if (p.pp < G.pp) return state;
   const pol = state.pol.own.slice();
-  pol[a] = { ...p, pp: p.pp - DIP.JUST_PP };
-  return { ...patch(state, { just: [...state.dip.just, { a, b, ready: state.tick + DIP.JUST_DAYS * 24 }] }), pol: { ...state.pol, own: pol } };
+  pol[a] = { ...p, pp: p.pp - G.pp };
+  return { ...patch(state, { just: [...state.dip.just, { a, b, g: goal, ready: state.tick + G.days * 24 }] }), pol: { ...state.pol, own: pol } };
 }
 
 /** Má `a` hotové ospravedlnění proti `b`? */
@@ -56,7 +58,8 @@ export function startWar(state, a, b) {
   let rel = s.dip.rel;
   rel = setRel(rel, a, b, DIP.REL_WAR);
   for (const y of defenders) if (y !== b) rel = setRel(rel, a, y, DIP.REL_WAR_ALLY);
-  return logAdd(patch(s, { rel, since, just: s.dip.just.filter((j) => !(j.a === a && j.b === b)) }), { k: 'war', a, b });
+  const jg = (state.dip.just.find((j) => j.a === a && j.b === b) || {}).g || 'conquest';
+  return logAdd(patch(s, { rel, since, goal: { ...s.dip.goal, [`${a}>${b}`]: jg }, just: s.dip.just.filter((j) => !(j.a === a && j.b === b)) }), { k: 'war', a, b });
 }
 
 /** Zdůvodnění, proč druhá strana bílý mír odmítne (český text), nebo null. */

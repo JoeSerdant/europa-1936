@@ -53,7 +53,7 @@ function Row({ c, me }) {
             ) : c.canDeclare ? (
               <button className="sbtn danger" onClick={() => declareWarOn(c.tag)} title="Vyhlásit válku (zapojí se bloky)">Vyhlásit válku</button>
             ) : (
-              <button className="sbtn" disabled={!c.canJustify} onClick={() => justifyOn(c.tag)} title={c.justifyBlock || `Ospravedlnit válku: ${DIP.JUST_PP} PM, ${DIP.JUST_DAYS} dní`}>Ospravedlnit válku</button>
+              c.goals.map((g) => <button key={g.id} className="sbtn" disabled={!!g.block} onClick={() => justifyOn(c.tag, g.id)} title={g.block || `${g.info} ${g.pp} PM, ${g.days} dní.`}>Ospravedlnit: {g.n}</button>)
             )}
             {c.mine && <span className="muted" title="Autonomie loutky">{AUTONOMY_NAMES[c.auLevel]} · autonomie {Math.round(c.au)} %</span>}
             {c.mine && <button className="sbtn" disabled={!!c.tightBlock} onClick={() => tightenPuppet(c.tag)} title={c.tightBlock || `Utáhnout kontrolu (${DIP.AU_TIGHT_PP} PM): autonomie −${DIP.AU_TIGHT}`}>Utáhnout kontrolu</button>}
