@@ -1,6 +1,9 @@
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { politicsOf } from '../../engine/index.js';
+import { politicsOf, focusTree } from '../../engine/index.js';
+import { COUNTRIES, IDEOLOGIES } from '../../data/countries.js';
+import { IDEO_ORDER, ideologySupport } from '../../data/politics/ideology.js';
+import { Flag } from '../common/Flag.jsx';
 import { playerIdx, changeLaw, hireAdv, dismissAdv } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
@@ -60,12 +63,52 @@ function Advisor({ a }) {
   );
 }
 
+
+/** Karta státu vlevo: portrét vůdce (vlastní silueta), vláda, podpora ideologií a „národní duchové“ (platné zákony, poradci, splněné cíle). */
+function LeaderCard({ tag, p, spirits }) {
+  const info = COUNTRIES[tag];
+  const sup = ideologySupport(info.ideology, p.stab);
+  return (
+    <aside className="leader-card" aria-label="Vůdce a vláda">
+      <div className="lc-portrait" aria-hidden="true">
+        <svg viewBox="0 0 120 140" width="100%" height="100%" role="img">
+          <defs><linearGradient id="lcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2b4258" /><stop offset="1" stopColor="#0f1821" /></linearGradient></defs>
+          <rect width="120" height="140" fill="url(#lcg)" />
+          <circle cx="60" cy="52" r="23" fill="#0b121a" opacity="0.85" />
+          <path d="M14 140c2-34 20-50 46-50s44 16 46 50z" fill="#0b121a" opacity="0.85" />
+        </svg>
+        <span className="lc-flag"><Flag tag={tag} width={34} /></span>
+      </div>
+      <h3>{info.leader}</h3>
+      <p className="muted">{info.government}</p>
+      <ul className="lc-ideo" aria-label="Podpora ideologií (odhad)">
+        {IDEO_ORDER.map((k) => (
+          <li key={k} className={k === info.ideology ? 'main' : ''} title={`${IDEOLOGIES[k].name}: ${pct(sup[k])}`}>
+            <i style={{ background: IDEOLOGIES[k].color }} /><span>{IDEOLOGIES[k].name}</span><b>{pct(sup[k])}</b>
+            <span className="bar"><i style={{ width: `${sup[k] * 100}%`, background: IDEOLOGIES[k].color }} /></span>
+          </li>
+        ))}
+      </ul>
+      <h4>Národní duch</h4>
+      <ul className="lc-spirits">
+        {spirits.map((x) => <li key={x.k} className={x.kind} title={x.hint}>{x.n}</li>)}
+        {!spirits.length && <li className="muted">Zatím žádný</li>}
+      </ul>
+    </aside>
+  );
+}
+
 /** Záložka Politika: stabilita, podpora války, politická moc (PM), zákony a poradci. */
 export function PoliticsPanel() {
   const state = useGameSlow((s) => s, 600);
   const me = playerIdx(state);
   if (!me) return <div className="prod-screen politics-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádnou politiku.</p></div></div>;
   const p = politicsOf(state, me);
+  const spirits = [
+    ...p.laws.map((c) => { const o = c.options.find((x) => x.active); return { k: `l${c.cat}`, n: o.n, kind: 'law', hint: `${c.n}: ${o.info}` }; }),
+    ...p.advisors.filter((a) => a.current).map((a) => ({ k: `a${a.slot}`, n: a.current.n, kind: 'adv', hint: `${a.n}: ${a.current.info}` })),
+    ...focusTree(state, me).filter((f) => f.status === 'done').map((f) => ({ k: `f${f.id}`, n: f.n, kind: 'focus', hint: f.info || 'Splněný národní cíl' })),
+  ];
   return (
     <Screen cls="politics-panel" title="Politika" icon="politics" head={(
       <section className="pol-head" aria-label="Souhrn politiky">
@@ -76,7 +119,8 @@ export function PoliticsPanel() {
       </section>
     )}>
       <div className="prod-body">
-        <div className="prod-cols">
+        <div className="prod-cols pol-cols">
+          <LeaderCard tag={state.player} p={p} spirits={spirits} />
           <div className="prod-left">
             <div className="sec-head"><h3>Zákony</h3></div>
             <div className="law-grid">{p.laws.map((c) => <Law key={c.cat} cat={c} />)}</div>
