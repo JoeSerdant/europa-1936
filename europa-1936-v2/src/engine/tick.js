@@ -11,10 +11,11 @@ import { navHour } from './nav/system.js';
 import { airHour } from './air/system.js';
 import { docHour } from './doc/system.js';
 import { endHour } from './end.js';
+import { occHour } from './occ/system.js';
 
 /** Jedna herní hodina. Čistá funkce – systémy se přidávají sem v pevném pořadí (armáda → průmysl → výzkum → politika …). */
 export function advanceHour(state) {
-  return endHour(aiHour(dipHour(natHour(politicsHour(researchHour(docHour(industryHour(airHour(navHour(armyHour({ ...state, tick: state.tick + 1 })))))))))));
+  return endHour(aiHour(dipHour(natHour(politicsHour(researchHour(docHour(industryHour(airHour(navHour(occHour(armyHour({ ...state, tick: state.tick + 1 }))))))))))));
 }
 
 /** n herních hodin najednou (n ≥ 0 celé číslo). Neplatný vstup nebo n = 0 vrací tentýž stav. */

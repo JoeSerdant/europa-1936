@@ -98,7 +98,7 @@ try {
     if (key === '2') await shot('terrain');
   }
   await page.locator('.mm-trigger').click();
-  check('seznam mapových režimů dole má 8 položek s klávesami', (await page.locator('.mm-list li').count()) === 8 && (await page.locator('.mm-list kbd').first().innerText()) === '1');
+  check('seznam mapových režimů dole má 10 položek s klávesami', (await page.locator('.mm-list li').count()) === 10 && (await page.locator('.mm-list kbd').first().innerText()) === '1');
   await shot('mapmodes');
   await page.locator('.mm-list button', { hasText: 'Státy' }).click();
   check('výběr ze seznamu přepne režim a seznam se zavře', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Státy' && (await page.locator('.mm-list').count()) === 0);

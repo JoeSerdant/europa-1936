@@ -18,6 +18,8 @@ export const MODES = [
   { id: 'victory', name: 'Vítězné body', hint: 'Města a jejich hodnota' },
   { id: 'supply', name: 'Zásobování', hint: 'Kolik zásob dorazí do vašich provincií' },
   { id: 'industry', name: 'Průmysl', hint: 'Továrny ve státech' },
+  { id: 'resistance', name: 'Odboj', hint: 'Odboj v okupovaných státech' },
+  { id: 'compliance', name: 'Poddajnost', hint: 'Poddajnost okupovaných států' },
 ];
 
 export const CLIMATE_COLORS = {
@@ -108,6 +110,13 @@ export function fillColors(world, game, mode, focus = 0) {
         const e = game && game.ind ? game.ind.st[world.provState[p]] : null;
         const n = e ? e.civ + e.mil + (e.dok || 0) : 0;
         c = n ? ramp(0.12 + n / 16) : mix(ownerRgb[o], [40, 44, 48], 0.62);
+        break;
+      }
+      case 'resistance': case 'compliance': {
+        const e = game && game.occ ? game.occ.st[world.provState[p]] : null;
+        if (!e) { c = mix(ownerRgb[o], [40, 44, 48], 0.62); break; }
+        const v = mode === 'resistance' ? e.r : 1 - e.c;     // červená = vysoký odboj / nízká poddajnost
+        c = mix([98, 176, 92], [214, 68, 48], clamp01(v));
         break;
       }
       case 'supply': {

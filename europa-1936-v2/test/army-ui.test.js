@@ -564,9 +564,11 @@ describe('selektory armády pro rozhraní', () => {
 // ------------------------------------------------------------------------------------------------------------------------------
 describe('mapový režim Zásobování', () => {
   it('je sedmý v seznamu režimů (klávesa 7), za ním Průmysl (klávesa 8)', () => {
-    expect(MODES.length).toBe(8);
+    expect(MODES.length).toBe(10);
     expect(MODES[6].id).toBe('supply');
     expect(MODES[7].id).toBe('industry');
+    expect(MODES[8].id).toBe('resistance');
+    expect(MODES[9].id).toBe('compliance');
   });
 
   it('supplyColor: bez toku tmavě červená, s rostoucím tokem přes žlutou do zelené; nad 3 se nemění', () => {

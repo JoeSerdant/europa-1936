@@ -498,6 +498,14 @@ Nové pole `state.end = null | { kind: 'win'|'lose'|'time', tick, ack, share, ra
 - `standing(state)` vrací `{ vp, share, rank, total }` (pořadí podle bodů pod kontrolou). `ackEnd` dovolí pokračovat (konec se už nevyhodnocuje), `forceEnd` vynutí konec (cheat `end`, testy).
 - **Rozhraní:** dialog Konec hry se shrnutím (datum, podíl světa, pořadí, body, skóre), klávesy jsou do potvrzení zablokované.
 
+## 4q. Okupace: odboj a poddajnost (M38)
+
+Nové pole `state.occ = { ver, st: { [stát]: { r, c, g } } }` (`GAME_VERSION` 17), jen pro okupované státy (vlastník ≠ držitel hlavní provincie). Kód `src/engine/occ/`, čísla `OCC`.
+
+- **Denní krok** (`occDay`, po armádě): poddajnost `c` roste (rychleji s garnizonou), odboj `r` se blíží cíli `(R_BASE·(1−c) + exil)·(1 − R_GARRISON·garnizona)`; „exil“ platí, když původní země ještě bojuje. Garnizona = divize okupanta ve státě / potřebná (`obyvatelé / POP_PER_DIV`).
+- **Důsledky:** nad `R_DMG_FROM` ztrácí garnizona organizaci; těžba okupovaného státu jde okupantovi jen z podílu `RES_BASE + (1−RES_BASE)·c` (`tallyOwners`); při odboji ≥ `R_REBEL` a slabé garnizoně (< `G_REBEL`) se stát vzbouří a provincie se vrátí původnímu vlastníkovi (záznam `rebel`).
+- **Rozhraní:** mapové režimy Odboj a Poddajnost (klávesy 9 a 0), karta státu s odbojem, poddajností a garnizonou.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -634,6 +642,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `decisions` (5): data, použití a obnova, podmínky, zkušenosti a jednorázovost, AI a uložení;
   - `end` (6): postavení, podmínky konce, porážka a loutka, potvrzení, uložení;
   - `sound` (2): zvuky bez Web Audio, s falešným Web Audio a vypnutí, pamatování volby;
+  - `occupation` (5): vznik a vývoj okupace, garnizona, těžba podle poddajnosti, povstání, uložení;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
@@ -670,6 +679,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M35** | **Rozhodnutí**: akce za politickou moc s podmínkami a obnovou, národní rozhodnutí, AI, okno Rozhodnutí | **hotovo** |
 | **M36** | **Konec hry**: vítězství, porážka, konec času s hodnocením, dialog | **hotovo** |
 | **M37** | **Kurzory a zvuky**: vlastní kurzory (šipka, ruka, otevřená a sevřená dlaň, zaměřovač) kreslené v SVG, syntetizované zvuky rozhraní (Web Audio) s přepínačem v nabídce | **hotovo** |
+| **M38** | **Okupace**: odboj a poddajnost okupovaných států, garnizona, povstání, mapové režimy Odboj a Poddajnost | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

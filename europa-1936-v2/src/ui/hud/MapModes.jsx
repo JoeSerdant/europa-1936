@@ -26,7 +26,7 @@ export function MapModes() {
           {MODES.map((m, i) => (
             <li key={m.id}>
               <button role="option" aria-selected={m.id === mode} className={m.id === mode ? 'on' : ''} title={m.hint} onClick={() => { setMode(m.id); setOpen(false); }}>
-                <kbd>{i + 1}</kbd><span>{m.name}</span><Icon name={m.id} size={18} />
+                <kbd>{(i + 1) % 10}</kbd><span>{m.name}</span><Icon name={m.id} size={18} />
               </button>
             </li>
           ))}
@@ -74,6 +74,13 @@ export function Legend() {
       <>
         <div className="ramp"><div style={{ background: RAMP_CSS }} /><span>bez továren</span><span>průmyslové jádro</span></div>
         <p className="legend-note">Barva ukazuje počet továren (civilních i vojenských) ve státě. Stavět lze v panelu Průmysl (I) nebo na kartě státu.</p>
+      </>
+    );
+  } else if (mode === 'resistance' || mode === 'compliance') {
+    body = (
+      <>
+        <div className="ramp"><div style={{ background: 'linear-gradient(90deg, rgb(98,176,92), rgb(214,68,48))' }} /><span>{mode === 'resistance' ? 'klid' : 'poddajné'}</span><span>{mode === 'resistance' ? 'vysoký odboj' : 'vzdorující'}</span></div>
+        <p className="legend-note">Jen okupované státy. Garnizona (divize v okupovaném státě) odboj snižuje a poddajnost zrychluje.</p>
       </>
     );
   } else if (mode === 'states') {

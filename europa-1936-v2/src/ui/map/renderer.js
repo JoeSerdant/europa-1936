@@ -121,6 +121,10 @@ export class MapRenderer {
       if (this.mode === 'supply') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
       else if (HATCH_MODES.has(this.mode)) this.invalidateProvinces(changed);
     }
+    const occSt = game.occ ? game.occ.st : null;
+    const occChanged = occSt !== this.lastOccSt;
+    this.lastOccSt = occSt;
+    if (!ownerChanged && occChanged && (this.mode === 'resistance' || this.mode === 'compliance')) { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     if (!ownerChanged && indChanged && this.mode === 'industry') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     this.units.player = game.player ? this.world.ownerIdx[game.player] : 0;
     if (this.showUnits) this.units.setGame(game);
