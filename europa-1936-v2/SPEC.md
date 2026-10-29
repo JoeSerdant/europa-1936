@@ -592,6 +592,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M26** | **Zprávy a přehled zemí**: deník dění ve stavu, panel Zprávy s filtry, oznámení důležitých událostí, okno Přehled zemí | **hotovo** |
 | **M27** | **Námořnictvo a přeprava přes moře**: loděnice, lodě, flotily, námořní boj, přeprava divizí; rozhraní: panel Námořnictvo (M), žetony flotil | **hotovo** |
 | **M28** | **Rozhraní ve stylu HOI4**: okna Průmysl (I), Nábor (N), Výzkum (R, strom po sloupcích), Politika (P), Cíle (C) a Diplomacie (D) jsou přes celou obrazovku (`common/Screen.jsx`, třída `prod-screen`; seznam `FULL` v `SidePanel.jsx`); návrhář divizí je velké okno; zbývá Armáda, Zprávy a Námořnictvo | **hotovo část** |
+| **M29** | **Hlavní lišta nabídek a konzole**: lišta oken s klávesami Q W E R T Y U I (Vláda, Výzkum, Diplomacie, Obchod, Stavby, Výroba, Nábor, Logistika) + C V M L, okno Logistika, horní lišta s továrnami, transporty a napětím ve světě (`worldTension`), konzole cheatů (`~`, `engine/cheats.js`: `runCheat`) | **hotovo** |
 | později | letectvo, konvoje, špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

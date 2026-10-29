@@ -185,8 +185,8 @@ export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox,
       if (dx || dy) mc.pan(dx, dy);
     };
     raf = requestAnimationFrame(loop);
-    const KEYS = { ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down' };
-    const ZOOM_IN = new Set(['e', 'PageUp']), ZOOM_OUT = new Set(['q', 'PageDown']);
+    const KEYS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
+    const ZOOM_IN = new Set(['PageUp']), ZOOM_OUT = new Set(['PageDown']);
     const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName);
     const onKeyDown = (e) => {
       if (isTyping(e) || e.ctrlKey || e.metaKey || e.altKey) return;

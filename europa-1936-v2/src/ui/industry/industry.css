@@ -297,3 +297,23 @@ button.st-row:hover { background: var(--ink-3); }
 .dip-panel .dip-head { min-height: 40px; font-size: 15px; }
 .dip-bloc { display: flex; flex-direction: column; gap: 10px; }
 .prod-head .icon-btn.close { margin-left: auto; }
+.prod-screen { top: calc(var(--top-h) + 46px); }
+
+/* ------------------------------------------------------------------ Logistika (M29) */
+.lg-use { display: flex; align-items: center; gap: 26px; margin-left: 24px; }
+.lg-use > span { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-3); }
+.lg-use .bar { width: 120px; height: 8px; }
+.lg-use b { font: 600 16px/1 var(--display); color: var(--paper); }
+.lg-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.lg-table th, .lg-table td { padding: 6px 12px; text-align: right; border-bottom: 1px solid var(--rule); font-weight: 500; font-size: 14.5px; }
+.lg-table thead th { color: var(--text-3); font-size: 12.5px; text-align: right; }
+.lg-table thead th:nth-child(2), .lg-table tbody th { text-align: left; color: var(--paper); font-weight: 600; }
+.lg-table td:first-child { width: 52px; padding: 4px 0 4px 6px; }
+.lg-table td .bar { display: block; width: 120px; height: 7px; margin-left: auto; }
+.lg-table td.have { font: 600 16px/1 var(--display); color: var(--paper); }
+.lg-table tr.bad th, .lg-table tr.bad td { color: #ffb86a; }
+.lg-res { display: flex; flex-direction: column; gap: 3px; }
+.lg-res li { display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; background: rgba(22, 34, 45, 0.75); box-shadow: inset 0 0 0 1px var(--rule); }
+.lg-res .ab { font: 600 12px/1 var(--display); color: var(--text-3); letter-spacing: 0.06em; }
+.lg-res b { font: 700 17px/1 var(--display); color: var(--green); }
+.lg-res li.bad b { color: var(--red); }

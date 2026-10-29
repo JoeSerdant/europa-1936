@@ -32,6 +32,7 @@ export const uiStore = createStore({
   saveDialog: null,        // dialog uložených her: null | 'save' | 'load' (M25)
   saveMsg: '',             // zpráva v dialogu uložených her
   indTab: 'build',         // záložka panelu Průmysl: 'build' | 'prod' | 'trade' (M19)
+  console: false,          // konzole s cheaty (M29)
   toast: null,             // krátké oznámení: { id, text }
 });
 

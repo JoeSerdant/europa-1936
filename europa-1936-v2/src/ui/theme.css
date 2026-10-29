@@ -162,7 +162,7 @@ kbd {
 .tb-name b { font: 600 20px/1.1 var(--display); letter-spacing: 0.02em; color: var(--paper); }
 .tb-name span { font-size: 13.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.tb-time { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 18px; }
+.tb-time { margin-left: 28px; display: flex; align-items: center; gap: 18px; }
 .tb-date { display: flex; align-items: baseline; gap: 10px; min-width: 200px; justify-content: flex-end; }
 .tb-date b { font: 500 21px/1 var(--display); letter-spacing: 0.02em; color: var(--paper); font-variant-numeric: tabular-nums; }
 .tb-date span { font-size: 15px; color: var(--text-3); font-variant-numeric: tabular-nums; }
@@ -184,14 +184,15 @@ kbd {
 .bars button.on { background: var(--brass); box-shadow: none; }
 .bars button.dim { background: var(--brass-lo); box-shadow: none; }
 
-.tb-right { display: flex; align-items: center; gap: 6px; }
-.stats { display: flex; gap: 22px; margin-right: 14px; }
+.tb-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.stats { display: flex; gap: 18px; margin-right: 12px; }
 .stat { display: flex; align-items: center; gap: 8px; color: var(--text-3); }
 .stat span { display: flex; flex-direction: column; line-height: 1.05; }
 .stat i { font-size: 12px; color: var(--text-3); }
 .stat b { font: 600 17px/1.15 var(--display); color: var(--text); font-variant-numeric: tabular-nums; }
 /* na užších oknech se méně důležité údaje schovají, aby se střední blok s časem nepřekrýval s pravým */
 @media (max-width: 1799px) { .stat.opt { display: none; } }
+@media (max-width: 2199px) { .stat.wide { display: none; } }
 
 /* ------------------------------------------------------------------ mapové režimy */
 .rail { position: absolute; left: 14px; top: calc(var(--top-h) + 18px); display: flex; flex-direction: column; gap: 6px; z-index: 4; }
@@ -333,3 +334,20 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ------------------------------------------------------------------ hlavní lišta nabídek (M29) */
+.menubar { position: absolute; left: 0; top: var(--top-h); z-index: 9; height: 46px; display: flex; align-items: stretch; gap: 2px; padding: 5px 14px 0 14px; background: linear-gradient(180deg, rgba(15, 24, 33, 0.97), rgba(10, 17, 24, 0.9)); border-bottom: 1px solid var(--rule-hi); border-right: 1px solid var(--rule-hi); }
+.menubar button { position: relative; width: 42px; display: grid; place-items: center; border: 0; background: transparent; color: var(--text-2); box-shadow: inset 0 0 0 1px transparent; }
+.menubar button:hover { color: var(--brass-hi); background: var(--ink-3); }
+.menubar button.on { color: var(--brass-hi); background: var(--ink-3); box-shadow: inset 0 -2px 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
+.menubar button:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--brass); }
+.menubar kbd { position: absolute; right: 3px; bottom: 1px; font: 600 9.5px/1 var(--display); color: var(--text-3); background: none; box-shadow: none; padding: 0; }
+.rail { top: calc(var(--top-h) + 64px); }
+
+/* ------------------------------------------------------------------ konzole (M29) */
+.console { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; height: min(300px, 40vh); display: flex; flex-direction: column; background: rgba(6, 10, 15, 0.94); border-top: 2px solid var(--brass-lo); }
+.con-out { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px; font: 500 14px/1.45 ui-monospace, Menlo, Consolas, monospace; user-select: text; scrollbar-width: thin; scrollbar-color: var(--rule-hi) transparent; }
+.con-out p { margin: 0; white-space: pre-wrap; color: var(--text-2); }
+.con-out p.cmd { color: var(--brass-hi); }
+.con-in { flex: none; border: 0; border-top: 1px solid var(--rule); padding: 10px 16px; background: var(--ink-0); color: var(--paper); font: 500 15px/1.2 ui-monospace, Menlo, Consolas, monospace; }
+.con-in:focus { outline: none; box-shadow: inset 0 0 0 2px var(--brass-lo); }

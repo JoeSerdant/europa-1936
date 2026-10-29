@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
@@ -56,6 +56,8 @@ export function useHotkeys() {
       if (e.key === 'F1' || e.key === '?') { e.preventDefault(); setHelp(!ui.helpOpen); return; }
       if (ui.saveDialog) { if (e.key === 'Escape') closeSaveDialog(); return; }
       if (ui.overview && e.key === 'Escape') { closeOverview(); return; }
+      if (e.key === 'F2' || e.key === '`' || e.key === '~' || e.code === 'Backquote') { e.preventDefault(); if (uiStore.getState().screen === 'game') toggleConsole(); return; }
+      if (ui.console && e.key === 'Escape') { closeConsole(); return; }
       if (e.key === 'F6') { e.preventDefault(); quickSave(); return; }
       if (e.key === 'F9') { e.preventDefault(); quickLoad(); return; }
       const gs = gameStore.getState();
@@ -82,11 +84,15 @@ export function useHotkeys() {
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
       if (k === 'v') togglePanel('army');
       else if (k === 'n') togglePanel('recruit');
-      else if (k === 'i') togglePanel('industry');
-      else if (k === 'r') togglePanel('research');
-      else if (k === 'p') togglePanel('politics');
+      else if (k === 'q' || k === 'p') togglePanel('politics');
+      else if (k === 'w') togglePanel('research');
+      else if (k === 'e' || k === 'd') togglePanel('dip');
+      else if (k === 'r') toggleIndustry('trade');
+      else if (k === 't') toggleIndustry('build');
+      else if (k === 'y') toggleIndustry('prod');
+      else if (k === 'u') togglePanel('recruit');
+      else if (k === 'i') togglePanel('logistics');
       else if (k === 'c') togglePanel('nat');
-      else if (k === 'd') togglePanel('dip');
       else if (k === 'l') togglePanel('log');
       else if (k === 'm') togglePanel('navy');
       else if (k === 'o') { if (ui.overview) closeOverview(); else openOverview(); }

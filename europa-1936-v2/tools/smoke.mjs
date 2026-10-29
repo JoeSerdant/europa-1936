@@ -297,7 +297,7 @@ try {
   });
   check('bílý mír s protivníky po zkoušce války', peace === 0, `zbývá válek hráče: ${peace}`);
   // průmysl (M19): panel Průmysl (I), stavba, linky výroby, obchod, režim mapy 8, tři dny hry
-  await page.keyboard.press('i');
+  await page.keyboard.press('t');
   await page.waitForSelector('.industry-panel', { timeout: 3000 });
   const sum = await page.locator('.ind-sum').innerText();
   check('klávesa I otevře panel Průmysl se souhrnem továren', (await ui()).panel === 'industry' && /Civilní/.test(sum) && /Vojenské/.test(sum), sum.replace(/\s+/g, ' '));
@@ -337,11 +337,34 @@ try {
   });
   check('tři herní dny: stavba postoupila, linky vyrábějí a jejich efektivita roste', ind3.prog > 0 && ind3.made > 0 && ind3.eff, `body staveb ${Math.round(ind3.prog)}, kusů za poslední den ${ind3.made}`);
   await clearEvents();
-  await page.keyboard.press('i');
+  await page.keyboard.press('t');
   await page.waitForTimeout(150);
 
+  // hlavní lišta nabídek a Logistika (M29)
+  check('lišta nabídek má 12 tlačítek', (await page.locator('.menubar button').count()) === 12);
+  await page.keyboard.press('i');
+  await page.waitForSelector('.logistics-panel', { timeout: 3000 });
+  check('klávesa I otevře Logistiku s tabulkou výzbroje a surovin', (await ui()).panel === 'logistics' && (await page.locator('.lg-table tbody tr').count()) >= 4 && (await page.locator('.lg-res li').count()) === 6);
+  await shot('logistics');
+  await page.locator('.menubar button[aria-label="Výroba"]').click();
+  await page.waitForSelector('.ind-line', { timeout: 3000 });
+  check('tlačítko Výroba v liště otevře okno Průmysl na záložce Výroba', (await ui()).panel === 'industry' && (await page.locator('.industry-panel .ind-tabs button.on').innerText()) === 'Výroba');
+  await page.keyboard.press('y');
+  await page.waitForTimeout(150);
+  const pp0 = await E(() => Math.floor(window.__e1936.gameStore.getState().pol.own[window.__e1936.engine.getWorld().ownerIdx.GER].pp));
+  await page.keyboard.press('`');
+  await page.waitForSelector('.console .con-in', { timeout: 3000 });
+  await page.locator('.con-in').fill('pp 500');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(150);
+  const pp1 = await E(() => Math.floor(window.__e1936.gameStore.getState().pol.own[window.__e1936.engine.getWorld().ownerIdx.GER].pp));
+  check('konzole: příkaz „pp 500“ přidá politickou moc', pp1 === pp0 + 500 && /Politická moc/.test(await page.locator('.con-out').innerText()), `${pp0} → ${pp1}`);
+  await shot('console');
+  await page.keyboard.press('Escape');
+  check('Esc zavře konzoli', (await page.locator('.console').count()) === 0);
+
   // výzkum (M20): panel Výzkum (R), zadání technologie, obory, běh času
-  await page.keyboard.press('r');
+  await page.keyboard.press('w');
   await page.waitForSelector('.research-panel', { timeout: 3000 });
   check('klávesa R otevře panel Výzkum se sloty', (await ui()).panel === 'research' && (await page.locator('.rs-slot').count()) === 3 && (await page.locator('.tech-card').count()) >= 30);
   await page.locator('.tech-card.available').first().getByRole('button', { name: 'Zkoumat' }).click();
@@ -365,7 +388,7 @@ try {
   await clearEvents();
   await page.waitForTimeout(700);
   check('hotové technologie jsou v seznamu označené', (await page.locator('.tech-card.done').count()) >= 1);
-  await page.keyboard.press('r');
+  await page.keyboard.press('w');
   await page.waitForTimeout(150);
 
   // politika (M21): panel Politika (P), zákony, poradci, horní lišta
