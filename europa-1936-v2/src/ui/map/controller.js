@@ -97,7 +97,7 @@ export class MapController {
     this.renderer.setGame(game);
     // běžný postup času nic nemění na vzhledu mapy – překreslujeme jen při změně vlastníků, kontroly, jednotek nebo bitev
     if (!prev || prev.stateOwner !== game.stateOwner || prev.ctrl !== game.ctrl) this.dirty = true;
-    else if (this.renderer.showUnits && (prev.mil.divs !== game.mil.divs || prev.mil.battles !== game.mil.battles || prev.mil.wars !== game.mil.wars || prev.nav.fleets !== game.nav.fleets)) this.dirty = true;
+    else if (this.renderer.showUnits && (prev.mil.divs !== game.mil.divs || prev.mil.battles !== game.mil.battles || prev.mil.wars !== game.mil.wars || prev.nav.fleets !== game.nav.fleets || prev.air.wings !== game.air.wings)) this.dirty = true;
   }
 
   // ---------------------------------------------------------------- jednotky (armáda)

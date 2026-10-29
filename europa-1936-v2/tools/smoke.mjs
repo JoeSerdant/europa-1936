@@ -361,6 +361,10 @@ try {
   check('mise „Podpora boje“ se zadá křídlu (cíl se nabídne)', (await E(() => window.__e1936.gameStore.getState().air.wings.some((w) => w && w.m === 'cas' && w.o === window.__e1936.engine.getWorld().ownerIdx.GER))) && (await wingBit.getByLabel('Cílový stát').count()) === 1);
   await shot('air');
   await page.locator('.air-panel .icon-btn.close').click();
+  await page.waitForTimeout(300);
+  const airMap = await E(() => { const u = window.__e1936.map.renderer.units; return { lines: u.air.lines.length, bases: u.air.bases.length }; });
+  check('mapa ukazuje letecké mise a letiště hráče', airMap.lines >= 1 && airMap.bases >= 1, JSON.stringify(airMap));
+  await shot('air-map');
   await page.locator('.menubar button[aria-label="Výroba"]').click();
   await page.waitForSelector('.ind-line', { timeout: 3000 });
   check('tlačítko Výroba v liště otevře okno Průmysl na záložce Výroba', (await ui()).panel === 'industry' && (await page.locator('.industry-panel .ind-tabs button.on').innerText()) === 'Výroba');
