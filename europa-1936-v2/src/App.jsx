@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useUi } from './ui/store.js';
+import { play } from './ui/sound.js';
 import { MapView } from './ui/map/MapView.jsx';
 import { MainMenu } from './ui/menu/MainMenu.jsx';
 import { CountrySelect } from './ui/menu/CountrySelect.jsx';
@@ -14,6 +16,15 @@ export default function App() {
   const screen = useUi((s) => s.screen);
   useGameLoop(screen === 'game');
   useHotkeys();
+  useEffect(() => {
+    // zvuk kliknutí na tlačítka a záložky (delegace; zvuk se spustí až po první akci uživatele)
+    const down = (e) => {
+      const b = e.target.closest && e.target.closest('button:not(:disabled), [role="tab"]');
+      if (b) play(b.closest('.menubar, .side-tabs, .ind-tabs') ? 'tab' : 'click');
+    };
+    document.addEventListener('pointerdown', down);
+    return () => document.removeEventListener('pointerdown', down);
+  }, []);
 
   const inGame = screen === 'game';
   const onPick = (l, mods) => {

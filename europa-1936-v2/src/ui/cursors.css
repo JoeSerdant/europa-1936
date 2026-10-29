@@ -1,0 +1,16 @@
+/* Vlastní kurzory (M37): nakreslené SVG, žádné cizí soubory. Základ je zlatě lemovaná šipka; ruka na tlačítkách, otevřená a sevřená dlaň na mapě. */
+:root {
+  --cur-arrow: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M3 2l15 9.5-6.6 1.4 3.9 7.2-2.8 1.5-3.9-7.2L4 18.5z' fill='%23efe8d4' stroke='%230a1118' stroke-width='1.5' stroke-linejoin='round'/><path d='M3 2l15 9.5-6.6 1.4' fill='none' stroke='%23d6b55c' stroke-width='1.2'/></svg>") 3 2, default;
+  --cur-hand: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'><path d='M9 3.2c1.2 0 2 .9 2 2V11l1.6-.3c1.1-.2 2 .5 2.2 1.6l.3-.1c1-.3 2 .3 2.3 1.2l.2.1c1-.2 1.9.5 2.1 1.5l.5 3.3c.3 2-.9 4-2.8 4.7l-3.4 1.2c-1.4.5-3 .1-4-1l-4.3-5c-.7-.8-.6-2 .2-2.7.7-.6 1.7-.6 2.4-.1L7 15.3V5.2c0-1.1.9-2 2-2z' fill='%23efe8d4' stroke='%230a1118' stroke-width='1.4' stroke-linejoin='round'/></svg>") 9 3, pointer;
+  --cur-grab: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='11' fill='rgba(10,17,24,0.72)' stroke='%23d6b55c' stroke-width='1.6'/><path d='M14 5v18M5 14h18' stroke='%23efe8d4' stroke-width='1.6' stroke-linecap='round'/><path d='M14 3l-3 3h6zM14 25l-3-3h6zM3 14l3-3v6zM25 14l-3-3v6z' fill='%23efe8d4'/></svg>") 14 14, grab;
+  --cur-grabbing: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='9' fill='rgba(214,181,92,0.28)' stroke='%23d6b55c' stroke-width='2'/><path d='M14 7v14M7 14h14' stroke='%23efe8d4' stroke-width='1.6' stroke-linecap='round'/></svg>") 14 14, grabbing;
+  --cur-cross: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'><circle cx='13' cy='13' r='7' fill='none' stroke='%23d6b55c' stroke-width='1.6'/><path d='M13 2v7M13 17v7M2 13h7M17 13h7' stroke='%23efe8d4' stroke-width='1.6' stroke-linecap='round'/></svg>") 13 13, crosshair;
+}
+html, body { cursor: var(--cur-arrow); }
+button, [role='tab'], [role='option'], select, label, summary, a, .row.head, .rail-item > button { cursor: var(--cur-hand); }
+button:disabled, button[aria-disabled='true'] { cursor: var(--cur-arrow); }
+input[type='text'], input[type='number'], textarea { cursor: text; }
+.map-host[style*='cursor: grab'] { cursor: var(--cur-grab) !important; }
+.map-host[style*='cursor: pointer'] { cursor: var(--cur-hand) !important; }
+.map-host.dragging { cursor: var(--cur-grabbing) !important; }
+.minimap { cursor: var(--cur-cross); }

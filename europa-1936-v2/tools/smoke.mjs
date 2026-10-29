@@ -586,6 +586,7 @@ try {
   check('Esc zavře dialog uložených her', (await page.locator('.save-dialog').count()) === 0);
   await page.keyboard.press('Escape');
   await page.waitForSelector('.dialog');
+  check('nabídka má přepínač zvuku a stránka vlastní kurzory', (await page.getByRole('button', { name: /Zvuk:/ }).count()) === 1 && /url\(/.test(await page.evaluate(() => getComputedStyle(document.body).cursor)));
   await page.getByRole('button', { name: 'Hlavní menu' }).click();
   await page.getByRole('button', { name: 'Odejít do menu' }).click();
   await page.waitForSelector('.menu');

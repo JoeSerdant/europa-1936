@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useGame } from '../store.js';
+import { play } from '../sound.js';
 import { getWorld } from '../../engine/index.js';
 import { Flag } from '../common/Flag.jsx';
 import { playerIdx, conferencePuppet, conferenceAnnex, conferenceSkip } from '../actions.js';
@@ -7,6 +9,8 @@ import { COUNTRIES } from '../../data/countries.js';
 /** Mírová konference: po kapitulaci hráčova protivníka rozhodne hráč o jeho zbylých státech. */
 export function ConferenceDialog() {
   const item = useGame((s) => s.dip.conf.find((c) => c.victor === playerIdx(s)) || null);
+  const cid = item ? item.id : 0;
+  useEffect(() => { if (cid) play('alert'); }, [cid]);
   const states = useGame((s) => (s.dip.conf.length && s.player ? s.stateOwner : null));
   if (!item) return null;
   const w = getWorld();
