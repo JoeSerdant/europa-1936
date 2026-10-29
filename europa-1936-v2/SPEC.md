@@ -108,12 +108,12 @@ druhá města ≥ 60 tis. přidávají polovinu, hlavní město +10. Železnice:
 
 ## 4. Engine
 
-**Herní stav** (`createGame`, `GAME_VERSION = 5`, čistý JSON):
+**Herní stav** (`createGame`, `GAME_VERSION = 6`, čistý JSON):
 
 ```
-{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind, tech, pol }
+{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind, tech, pol, nat }
 ```
-`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b), `tech` = výzkum (§ 4c), `pol` = politika (§ 4d).
+`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b), `tech` = výzkum (§ 4c), `pol` = politika (§ 4d), `nat` = národní cíle a události (§ 4e).
 Čas: 1 tick = 1 herní hodina, start 1. 1. 1936 00:00; rychlosti 1–5 = `[12, 24, 48, 96, 240]` herních hodin za sekundu (`SPEEDS[0]` = pauza).
 Hra začíná pozastavená. `hoursForElapsed(state, ms, carry)` přenáší zlomky hodin.
 
@@ -352,6 +352,34 @@ pol: {
 ### Zjednodušení proti vzoru
 Žádná ideologie ve stranách a puče (M22 události a focusy), žádné světové napětí (podmínky zákonů jsou podpora války a stabilita), žádné vlastní politické strany ani volby, poradci bez ideologických omezení.
 
+## 4e. Národní cíle a události (M22)
+
+**Národní cíle** (focusy) a **události** podle vzoru HOI4: každá země má strom cílů (vlastní pro velmoci a vybrané země, jinak obecný), jeden cíl se plní desítky dní a dá okamžité účinky a trvalé bonusy; **události** s volbami se spouštějí podmínkami a náhodou (deterministickou), hráči se zobrazí dialog a hra se pozastaví.
+Data (`src/data/nat/*`: stromy cílů, události, popisy účinků) i texty jsou naše; čísla vyvážení v `src/engine/nat/constants.js` (`NAT`). Počítá se **jednou denně** (`natHour` v `advanceHour` za politikou). Příkazy nehlídají, komu věc patří vůči hráči – to dělá `ui/actions.js`.
+
+### Tvar stavu (`state.nat`, `GAME_VERSION = 6`)
+```
+nat: {
+  ver,                                    // zvyšuje se při změně cíle, události, příznaků (klíč mezipamětí UI)
+  own: [null, { done: {id: 1}, cur: { id, p } | null, flags: {id: 1}, seen: {událost: tick}, sched: [{id, at}…] }…]
+  // done hotové cíle, cur právě plněný (p = uplynulé dny), flags příznaky, seen kdy se událost naposledy spustila, sched naplánované události (at = tick)
+  pend: [{ o, id, at }…]                  // události čekající na volbu hráče (vždy jen země hráče)
+}
+```
+### Cíle
+Cíl má `id`, název, dny plnění (`days`), předpoklady `req` (všechny) a `any` (aspoň jeden), vylučující cíle `excl`, polohu v mřížce (`x`, `y`), okamžité účinky `fx` a trvalé bonusy `mod` (stejné klíče jako zákony: `stab, ws, cons, build, prod, extract, imp, man, research`). Plnit jde jeden cíl; přerušení zahodí postup. Trvalé bonusy se sčítají s bonusy zákonů a poradců (`polModsOf`).
+**Účinky** (`fx`): `pp` politická moc, `stab` / `ws` přičtení (0–1), `law {cat, id}` změna zákona zdarma, `adv {slot, id}` poradce zdarma, `factory {k, n}` továrny do státu s volným slotem (hlavní stát první), `infra {n}`, `boost {id, v}` postup výzkumu, `boostslot {v}` postup právě zkoumané technologie, `tech {id}` hotová technologie, `man {v}` lidská síla jako podíl obyvatel, `stock {eq, n}` výzbroj do skladu, `flag {id}` příznak, `event {id, days}` naplánovaná událost.
+**Země bez hráče** si cíle volí samy (nejnižší `ai`, pak poloha) a události řeší volbou s nejvyšší `ai` váhou.
+
+### Události
+Událost: `id`, název a text, podmínky `cond` (`tags`, `from`/`until` den hry, `flag`, `noFlag`, `focus`, `war`, `stabBelow/Above`, `wsBelow/Above`, `law {cat: id}`), `mtth` (střední doba do spuštění ve dnech; deterministické „náhodné“ číslo z hashe dne, země a události – nespotřebovává `state.rng`), `cool` (nejmenší odstup opakování ve dnech, jinak jednorázová) a volby `opts` s účinky. Hráči se událost zařadí do `pend`, hra se pozastaví; volba se provede příkazem `chooseEvent`.
+
+### Příkazy a selektory
+`startFocus(state, o, id)`, `cancelFocus(state, o)`, `chooseEvent(state, o, id, volba)`; `focusTree(state, o)` (cíle se stavem `done | active | available | locked | excluded`), `natOf(state, o)`, `pendingEvents(state, o)`, `focusMods(done)`, `fxText(fx)`.
+
+### Zjednodušení proti vzoru
+Žádné války a územní nároky z cílů, žádné ideologické změny vlády a občanské války (cíle a události jen upravují hodnoty a zákony), stromy jsou menší (6–8 cílů), události bez řetězců přes více zemí a bez obrázků.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -378,7 +406,7 @@ Zrnění a ztmavení okrajů mapy je **CSS překryv** (`.map-host::after`), ne k
   Čistá data (`buildCounters`, `clusterCounters`, `routesOf`, `battlesOf`) jdou testovat bez plátna.
 - **Na mapě dál:** šipky pohybu (vlastní zeleně, vybrané zlatě, útoky červeně), značky bitev s poměrem sil, náhled trasy pod kurzorem při vybraných jednotkách, plán armády (modře držená oblast nebo linie, červeně cíle útoku se šipkami z linie).
 - **Výběr a rozkazy:** klik na žeton vybere divize, Shift přidává a odebírá, dvojklik vybere celou armádu, Shift + tažení vybere obdélníkem; pravé tlačítko = rozkaz (nepřátelská provincie = útok); `X` zastaví, `F` zaměří výběr. Cizí žeton jde vybrat jen k prohlídce.
-- **Boční panel** (`SidePanel`, vpravo, `INSETS.gameDossier` r = 394) se záložkami *Oblast* (karta provincie, země a válek, od M19 i **Průmysl státu** se stavbou), *Armáda* (`V`), *Nábor* (`N`) a *Průmysl* (`I`) a *Výzkum* (`R`) a *Politika* (`P`; neaktivní záložky ukazují jen ikonu); je vidět, jen když je zvolená záložka nebo označená oblast.
+- **Boční panel** (`SidePanel`, vpravo, `INSETS.gameDossier` r = 394) se záložkami *Oblast* (karta provincie, země a válek, od M19 i **Průmysl státu** se stavbou), *Armáda* (`V`), *Nábor* (`N`) a *Průmysl* (`I`) a *Výzkum* (`R`) a *Politika* (`P`) a *Cíle* (`C`; neaktivní záložky ukazují jen ikonu); je vidět, jen když je zvolená záložka nebo označená oblast.
 - **Panel Armáda:** strom skupin armád → armád → divizí (šipkou se sbalí; dvojklik přejmenuje; přetažením se přesouvají divize do armád a armády do skupin), souhrny síly a organizace, velitel (výběr z velitelů země s dovednostmi a rysy), plán (*Hájit oblast*, *Linie fronty*, režim útoku, *Zrušit plán*), rozpuštění.
 - **Lišta úpravy plánu** (`PlanBar`, nahoře uprostřed): nástroje Linie / Cíle útoku, *Použít aktuální frontu* (`suggestFront`), Vymazat, režim útoku, Potvrdit / Zrušit; klik na mapě provincii přidá nebo odebere, Shift + klik celý stát.
 - **Dolní lišta výběru** (`SelectionBar`): síla, organizace, statistiky divize (u více divizí souhrn), armáda a velitel; Nová armáda, Do armády, Zastavit, Zaměřit, Rozpustit (s potvrzením).
@@ -386,13 +414,14 @@ Zrnění a ztmavení okrajů mapy je **CSS překryv** (`.map-host::after`), ne k
 - **Panel Průmysl** (`ui/industry/IndustryPanel.jsx`, M19): souhrn (civilní, vojenské, spotřební zboží, body stavby, volné továrny) a záložky *Stavby* (volba státu a druhu stavby, fronta s odhadem dokončení, přeřazení a zrušení), *Výroba* (sklad, linky s výběrem výzbroje, počtem továren, efektivitou, výrobou za den a pokrytím surovin, nová linka) a *Obchod* (tabulka šesti surovin, formulář nové smlouvy s přebytkem partnera, seznam smluv s dodaným množstvím). Akce (`buildIn`, `newLine`, `newTrade` …) kontrolují vlastnictví hráče a při neúspěchu napíšou důvod.
 - **Panel Výzkum** (`ui/research/ResearchPanel.jsx`, M20): souhrn (rychlost, počet hotových, úrovně výzbroje), sloty se zkoumanou technologií, postupem a odhadem dnů (přerušení zachová postup), filtr oborů a karty technologií (rok, délka, účinky a odemykané jednotky, stav Hotovo / Zkoumá se / K dispozici / Zamčeno s chybějícími předpoklady, předstih a odhad). Návrhář šablon, panel Nábor a panel Průmysl respektují odemčené jednotky a výzbroj hráče a statistiky počítají s jeho úrovněmi výzbroje.
 - **Panel Politika** (`ui/politics/PoliticsPanel.jsx`, M21): stabilita a podpora války s cílem a směrem, politická moc a příjem, souhrn dopadů (výroba, lidská síla, spotřební zboží), zákony po oborech (každý krok s cenou, účinky a důvodem zamčení) a čtyři sloty poradců. Horní lišta ukazuje stabilitu, podporu války a politickou moc.
+- **Panel Cíle** (`ui/nat/NatPanel.jsx`, M22): plněný cíl s postupem a přerušením, strom cílů země jako seznam podle řad (účinky, trvalé bonusy, vylučující cíle, chybějící předpoklady, tlačítko Zahájit). **Dialog události** (`EventDialog`): při čekající události hráče se hra pozastaví, dialog se nedá zavřít a klávesy se ignorují, dokud hráč nezvolí.
 - Panely, tooltip a seznamy se při běhu času nepřekreslují každou herní hodinu: používají `useGameSlow(selektor, ms)` (nejvýš jedno překreslení za `ms`).
 
 **Pravidla UI:** selektory `useGame`/`useUi` vracejí stabilní hodnoty (primitiva nebo existující objekty); stav obrazovek je v `uiStore`, ne ve hře; plátno se překresluje jen při změně;
 změny stavu, UI a kamery dělají společně funkce v `actions.js`.
 
 **Klávesy:** tažení / WASD / šipky = posun; kolečko, Q/E, PageUp/PageDown = přiblížení; Home = celá mapa; mezerník = pauza; + − = rychlost; 1–8 = mapové režimy;
-V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, X = zastavit vybrané divize, F = zaměřit výběr; F1 nebo ? = ovládání.
+V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, C = Cíle, X = zastavit vybrané divize, F = zaměřit výběr; F1 nebo ? = ovládání.
 Esc zavírá postupně: nápověda → herní nabídka → návrhář šablon → úprava plánu → výběr jednotek → boční panel / označená oblast → (nic nezbývá) herní nabídka.
 
 **Vzhled:** „mapový stůl“ – inkoustové plochy (`--ink-0…3`), mosazné linky (`--brass`), krémový papír (`--paper`) pro nadpisy; písma Jost (nadpisy) a Barlow Semi Condensed (text),
@@ -407,7 +436,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 
 ## 7. Ověření
 
-- `npm test` – **290 testů v 17 souborech**: svět (struktura, sousednosti, geometrie, regiony, slavná města), stav a příkazy, kamera/geometrie/barvy/popisky, dlaždice a vykreslovač (s falešným plátnem), akce rozhraní, formátování,
+- `npm test` – **312 testů v 19 souborech**: svět (struktura, sousednosti, geometrie, regiony, slavná města), stav a příkazy, kamera/geometrie/barvy/popisky, dlaždice a vykreslovač (s falešným plátnem), akce rozhraní, formátování,
   `check-build.mjs` (oprava cest `src\main.jsx` a `src%2Fmain.jsx`, ochrana proti cestám mimo kořen a přepsání, chybějící soubor, velikost písmen, odkazy z `index.html`, čitelná zpráva) a **armáda** (`army-*.test.js`, pomůcky v `armyKit.js`):
   - `army-setup` (15): počáteční rozmístění všech zemí (platné odkazy, žádný velitel dvakrát, odpovídá `NATIONAL`, divize ve stavu zásobování, deterministické, čistý JSON), statistiky divize, kontrola šablon;
   - `army-commands` (30): šablony, nábor a zrušení výcviku, rozpuštění, rozkazy (doba pochodu), armády, skupiny, velitelé, plány (Linie fronty, Opatrně, Hájit oblast, ruční rozkaz, obranná AI), čistota příkazů;
@@ -420,13 +449,15 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `research-ui` (6): akce hráče (sloty, hlášky, pozorovatel), návrhář s odemčenými prapory, herní smyčka;
   - `politics` (16): data zákonů a poradců, počáteční hodnoty, denní krok (moc, přiblížení k cíli, válka, okupace), zákony (cena, podmínky, dopady na spotřební zboží, výrobu, lidskou sílu, dovoz), poradci, AI-lite, čistota a determinismus;
   - `politics-ui` (3): akce hráče (zákony, poradci, hlášky, pozorovatel);
+  - `nat` (18): data stromů a událostí (odkazy, cykly, vylučování, účinky), příkazy cílů, plnění a trvalé bonusy, každý druh účinku, události hráče (fronta, pozastavení, volba) i AI, AI výběr cílů, čistota a determinismus;
+  - `nat-ui` (4): akce hráče (výběr, přepnutí, přerušení cíle, rozhodnutí události);
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **48 kontrol** (od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **53 kontrol** (od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -440,7 +471,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M19** | **Průmysl**: kategorie států a sloty, civilní/vojenské továrny, fronta staveb, výrobní linky, suroviny a obchod, spotřební zboží, infrastruktura; rozhraní: panel Průmysl, karta státu, mapový režim 8. Konvoje a námořní doprava zatím ne (obchod je abstraktní) | **hotovo** |
 | **M20** | **Výzkum**: 39 technologií v pěti oborech, sloty, předstih před historickým rokem, úrovně výzbroje, odemykání jednotek a výzbroje, bonusy průmyslu a výzkumu, výzkum AI zemí; rozhraní: panel Výzkum | **hotovo** |
 | **M21** | **Politika**: stabilita, podpora války, politická moc, zákony (ekonomika, odvod, obchod), poradci, dopady na průmysl, výzkum a lidskou sílu; rozhraní: panel Politika, horní lišta. Ideologie a strany přijdou s M22 | **hotovo** |
-| M22 | **Focusy a události**: stromy národních cílů, události, rozhodnutí, politické cesty | |
+| **M22** | **Národní cíle a události**: stromy cílů (vlastní pro velmoci a vybrané země), okamžité účinky a trvalé bonusy, vylučující cíle, události s volbami a naplánovanými následky, AI zemí; rozhraní: panel Cíle, dialog události. Rozhodnutí a politické cesty (změna vlády) později | **hotovo** |
 | M23 | **Diplomacie**: vztahy, války, spojenectví a bloky, kapitulace, okupace a odboj | |
 | M24 | **AI** zemí (stejné příkazy jako hráč), obtížnosti | |
 | později | letectvo, loďstvo a konvoje, špionáž, vyvolání zákonů, uložené hry | |

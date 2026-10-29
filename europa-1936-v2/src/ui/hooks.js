@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  closeSide, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  playerIdx, closeSide, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 
@@ -28,7 +28,7 @@ export function useGameLoop(active) {
 const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;
 
 /**
- * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, X = zastavit vybrané divize,
+ * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, C = Cíle, X = zastavit vybrané divize,
  * F = zaměřit výběr, Esc = zrušit/zavřít (nabídka → návrhář → úprava plánu → výběr jednotek → panel), F1 nebo ? = nápověda.
  */
 export function useHotkeys() {
@@ -37,6 +37,8 @@ export function useHotkeys() {
       if (isTyping(e) || e.ctrlKey || e.metaKey || e.altKey) return;
       const ui = uiStore.getState();
       if (e.key === 'F1' || e.key === '?') { e.preventDefault(); setHelp(!ui.helpOpen); return; }
+      const gs = gameStore.getState();
+      if (ui.screen === 'game' && gs.player && gs.nat.pend.some((p) => p.o === playerIdx(gs))) return;   // čeká událost: nejdřív se rozhodne
       if (e.key === 'Escape') {
         if (ui.helpOpen) setHelp(false);
         else if (ui.screen === 'game') {
@@ -61,6 +63,7 @@ export function useHotkeys() {
       else if (k === 'i') togglePanel('industry');
       else if (k === 'r') togglePanel('research');
       else if (k === 'p') togglePanel('politics');
+      else if (k === 'c') togglePanel('nat');
       else if (k === 'x') stopSelected();
       else if (k === 'f') focusSelection();
     };
