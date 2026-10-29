@@ -27,6 +27,8 @@ export const uiStore = createStore({
   planEdit: null,          // úprava plánu: { army, kind: 'area'|'front', area, line, to, mode, tool }
   designer: null,          // otevřený návrhář šablon: { tplId, draft: { nm, reg, sup } }
   techCat: 'all',          // obor v panelu Výzkum: 'all' | id oboru (M20)
+  saveDialog: null,        // dialog uložených her: null | 'save' | 'load' (M25)
+  saveMsg: '',             // zpráva v dialogu uložených her
   indTab: 'build',         // záložka panelu Průmysl: 'build' | 'prod' | 'trade' (M19)
   toast: null,             // krátké oznámení: { id, text }
 });

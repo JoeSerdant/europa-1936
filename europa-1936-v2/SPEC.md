@@ -431,6 +431,12 @@ Nastavuje se při založení hry (`createGame({ aiLevel, hist })`; hra z rozhran
 ### Záměrná zjednodušení
 AI nenavrhuje šablony, nezakládá bloky, nevolí mezi několika národními cíli podle situace, neobchoduje a neřídí přesuny jednotek mimo plány; námořní a letecká válka neexistují. Historické plány jsou jen sklon k válce, ne scénář: když se podmínky nesplní, válka nevznikne.
 
+## 4h. Uložené hry (M25)
+
+Hra je jeden serializovatelný JSON, takže uložení je jeho zabalení a načtení jeho kontrola. **Engine** (`src/engine/save.js`) umí `packGame(state)` (obálka `{ fmt: 1, v: GAME_VERSION, tick, player, state }`) a `unpackGame(obj)`, který obálku i stav **zkontroluje** (formát, verze, tvar polí podle světa, přítomnost všech systémů) a vrátí `{ state }` nebo `{ error }` s českým popisem; starší verze stavu se nemigrují (hra je ve vývoji) a hlásí se jako nekompatibilní. Čas uložení patří rozhraní (engine nezná `Date.now`).
+**Rozhraní** (`ui/saves.js`): sloty v `localStorage` (`e1936:save:<slot>` s obálkou, `e1936:meta:<slot>` s popisem pro seznam), sloty `1`–`5` ručně, `auto` (automatické uložení první den každého herního měsíce) a `quick` (klávesa F6 uloží, F9 načte). Všechny přístupy jsou v `try/catch` (soukromé okno, plné úložiště) a chyby se hlásí oznámením; stav ≈ 150–200 kB.
+Dialog ukládání a načítání (`SaveDialog`) je v nabídce hry (Uložit / Načíst) a v hlavním menu (Načíst). Načtení vyčistí výběr jednotek a panely, přesune kameru na zemi hráče a zachová pozastavení uložené hry.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -468,6 +474,7 @@ Zrnění a ztmavení okrajů mapy je **CSS překryv** (`.map-host::after`), ne k
 - **Panel Cíle** (`ui/nat/NatPanel.jsx`, M22): plněný cíl s postupem a přerušením, strom cílů země jako seznam podle řad (účinky, trvalé bonusy, vylučující cíle, chybějící předpoklady, tlačítko Zahájit). **Dialog události** (`EventDialog`): při čekající události hráče se hra pozastaví, dialog se nedá zavřít a klávesy se ignorují, dokud hráč nezvolí.
 - **Panel Diplomacie** (`ui/dip/DiplomacyPanel.jsx`, M23): blok hráče (členové, opuštění, založení s názvem), podíl území drženého nepřáteli a seznam zemí seřazený podle války, spojenectví a vztahu; řádek se rozbalí s akcemi (ospravedlnit / vyhlásit válku, navrhnout mír, pozvat do bloku) a důvody zamčení. Karta oblasti nabízí totéž pro vlastníka provincie. Po kapitulaci se zobrazí oznámení.
 - **Obrazovka výběru země** (M24): u tlačítka *Začít hru* volba obtížnosti AI zemí (Lehká / Běžná / Těžká) a přepínač *Historické plány*; hodnoty jsou v `uiStore` (`aiLevel`, `aiHist`) a `startGame` je předá `createGame`.
+- **Uložené hry** (M25): `SaveDialog` (Uložit / Načíst, sloty, smazání, zpráva o výsledku) je v nabídce hry a v hlavním menu; klávesy F6 / F9 = rychlé uložení a načtení; automatické uložení jednou za herní měsíc. Hlavní menu zobrazuje `VERSION_LABEL` (`src/version.js`).
 - Panely, tooltip a seznamy se při běhu času nepřekreslují každou herní hodinu: používají `useGameSlow(selektor, ms)` (nejvýš jedno překreslení za `ms`).
 
 **Pravidla UI:** selektory `useGame`/`useUi` vracejí stabilní hodnoty (primitiva nebo existující objekty); stav obrazovek je v `uiStore`, ne ve hře; plátno se překresluje jen při změně;
@@ -489,7 +496,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 
 ## 7. Ověření
 
-- `npm test` – **353 testů v 22 souborech**: svět (struktura, sousednosti, geometrie, regiony, slavná města), stav a příkazy, kamera/geometrie/barvy/popisky, dlaždice a vykreslovač (s falešným plátnem), akce rozhraní, formátování,
+- `npm test` – **362 testů v 23 souborech**: svět (struktura, sousednosti, geometrie, regiony, slavná města), stav a příkazy, kamera/geometrie/barvy/popisky, dlaždice a vykreslovač (s falešným plátnem), akce rozhraní, formátování,
   `check-build.mjs` (oprava cest `src\main.jsx` a `src%2Fmain.jsx`, ochrana proti cestám mimo kořen a přepsání, chybějící soubor, velikost písmen, odkazy z `index.html`, čitelná zpráva) a **armáda** (`army-*.test.js`, pomůcky v `armyKit.js`):
   - `army-setup` (15): počáteční rozmístění všech zemí (platné odkazy, žádný velitel dvakrát, odpovídá `NATIONAL`, divize ve stavu zásobování, deterministické, čistý JSON), statistiky divize, kontrola šablon;
   - `army-commands` (30): šablony, nábor a zrušení výcviku, rozpuštění, rozkazy (doba pochodu), armády, skupiny, velitelé, plány (Linie fronty, Opatrně, Hájit oblast, ruční rozkaz, obranná AI), čistota příkazů;
@@ -507,13 +514,14 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `dip` (20): data bloků a vztahů, vztahy a bloky, ospravedlnění (cena, čas, platnost, omezení), vyhlášení s voláním do zbraně, bílý mír a válečné skóre, kapitulace a anexe (vlastnictví, jednotky, blok, spojenci dál válčí), bloky (založení, pozvání, odchod), přehled, zapomínání, čistota;
   - `dip-ui` (4): akce hráče (ospravedlnění, vyhlášení, mír, bloky, hlášky, pozorovatel);
   - `ai` (17): nastavení a vypnutá AI (výchozí v enginu), průmysl AI (fronta, linky, růst po roce), armáda AI (cílový počet, výcvik, armády, útočné plány), diplomacie AI (mír při vyčerpání a při vleklé válce, hráči mír nevnucuje, historické války a bloky), obtížnost, čistota, determinismus a nespotřebovávání `state.rng`;
+  - `save` (9): obálka a kontrola stavu (verze, tvar, chybové hlášky), shodné pokračování po načtení, sloty v úložišti (falešný `localStorage`: uložení, výpis, smazání, plné / zakázané / vadné úložiště), akce rozhraní (uložení, načtení, rychlé sloty, chybové stavy);
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **60 kontrol** (od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **64 kontrol** (od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -530,6 +538,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M22** | **Národní cíle a události**: stromy cílů (vlastní pro velmoci a vybrané země), okamžité účinky a trvalé bonusy, vylučující cíle, události s volbami a naplánovanými následky, AI zemí; rozhraní: panel Cíle, dialog události. Rozhodnutí a politické cesty (změna vlády) později | **hotovo** |
 | **M23** | **Diplomacie**: vztahy, bloky s voláním do zbraně, ospravedlnění a vyhlášení války, bílý mír a válečné skóre, kapitulace s anexí; rozhraní: panel Diplomacie, karta oblasti. Loutkové státy, mírová konference a odboj později | **hotovo** |
 | **M24** | **AI** zemí (stejné příkazy jako hráč): průmysl, výcvik a armády, útočné plány, mír, historické bloky a války, 3 obtížnosti; rozhraní: volba při startu | **hotovo** |
-| později | letectvo, loďstvo a konvoje, špionáž, vyvolání zákonů, uložené hry | |
+| **M25** | **Uložené hry**: obálka a kontrola stavu v enginu, sloty (5 ručních, automatický, rychlý) v `localStorage`, dialog, F6 / F9, automatické měsíční uložení | **hotovo** |
+| později | letectvo, loďstvo a konvoje, špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

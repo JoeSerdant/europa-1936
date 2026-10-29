@@ -14,6 +14,7 @@ import {
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { mapController as mc } from './map/controller.js';
+import { writeSave, readSave, deleteSave, slotName } from './saves.js';
 
 /** Plochy zakryté panely na jednotlivých obrazovkách (CSS pixely) – kamera středí pohledy do zbytku. */
 export const INSETS = {
@@ -30,7 +31,7 @@ export function applyInsets() {
   mc.setInsets(u.selected || u.panel ? INSETS.gameDossier : INSETS.game);
 }
 
-const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', toast: null };
+const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', toast: null };
 
 /** Nastavení AI zemí pro novou hru (obrazovka výběru země). */
 export const setAiOptions = (patch) => setUi(patch);
@@ -626,3 +627,34 @@ export function decideEvent(id, choice) {
   const me = playerIdx();
   return !!me && run(chooseEvent, me, id, choice);
 }
+
+// ============================================================ uložené hry (M25)
+export const openSaveDialog = (mode) => setUi({ saveDialog: mode, saveMsg: '' });
+export const closeSaveDialog = () => setUi({ saveDialog: null, saveMsg: '' });
+
+/** Uloží hru do slotu; při chybě ohlásí důvod. */
+export function saveGame(slot) {
+  const s = gameStore.getState();
+  const err = writeSave(slot, s, new Date().toLocaleString('cs-CZ'));
+  if (err) { setUi({ saveMsg: err }); toast(err); return false; }
+  setUi({ saveMsg: `Hra uložena: ${slotName(slot)}.` });
+  toast(`Hra uložena: ${slotName(slot)}.`);
+  return true;
+}
+
+/** Načte hru ze slotu a přepne do hry; při chybě ohlásí důvod a nic nezmění. */
+export function loadGame(slot) {
+  const res = readSave(slot);
+  if (res.error) { setUi({ saveMsg: res.error }); toast(res.error); return false; }
+  gameStore.setState(res.state);
+  setUi({ screen: 'game', helpOpen: false, ...FRESH_UI });
+  mc.setInsets(INSETS.game);
+  if (res.state.player) mc.flyToCountry(res.state.player, 900, 0.45, 1.8); else mc.viewEurope(700);
+  toast(`Hra načtena: ${slotName(slot)}.`);
+  return true;
+}
+export const removeSave = (slot) => { deleteSave(slot); setUi({ saveMsg: '' }); };
+
+/** Rychlé uložení a načtení (F6 / F9). */
+export const quickSave = () => (uiStore.getState().screen === 'game' ? saveGame('quick') : false);
+export const quickLoad = () => loadGame('quick');
