@@ -3,7 +3,6 @@ import { Icon } from '../common/Icon.jsx';
 import { openPanel, closeSide } from '../actions.js';
 import { DossierView } from '../hud/Dossier.jsx';
 import { ArmyPanel } from './ArmyPanel.jsx';
-import { RecruitPanel } from './RecruitPanel.jsx';
 import { ResearchPanel } from '../research/ResearchPanel.jsx';
 import { PoliticsPanel } from '../politics/PoliticsPanel.jsx';
 import { NatPanel } from '../nat/NatPanel.jsx';
@@ -11,6 +10,7 @@ import { DiplomacyPanel } from '../dip/DiplomacyPanel.jsx';
 import { LogPanel } from '../log/LogPanel.jsx';
 import { NavyPanel } from '../navy/NavyPanel.jsx';
 
+export const FULL = ['industry', 'recruit'];   // okna přes celou obrazovku (vykresluje je Hud)
 const TABS = [
   { id: null, name: 'Oblast', icon: 'provinces' },
   { id: 'army', name: 'Armáda', icon: 'army', key: 'V' },
@@ -31,7 +31,7 @@ const TABS = [
 export function SidePanel() {
   const panel = useUi((s) => s.panel);
   const selected = useUi((s) => s.selected);
-  if (panel === 'industry' || (!panel && !selected)) return null;
+  if (FULL.includes(panel) || (!panel && !selected)) return null;
   const tall = !!panel;
   return (
     <aside className={`panel side ${tall ? 'tall' : ''}`} aria-label="Boční panel">
@@ -48,7 +48,7 @@ export function SidePanel() {
         })}
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít panel" title="Zavřít (Esc)"><Icon name="close" size={18} /></button>
       </nav>
-      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : panel === 'research' ? <ResearchPanel /> : panel === 'politics' ? <PoliticsPanel /> : panel === 'nat' ? <NatPanel /> : panel === 'dip' ? <DiplomacyPanel /> : panel === 'log' ? <LogPanel /> : panel === 'navy' ? <NavyPanel /> : <DossierView />}
+      {panel === 'army' ? <ArmyPanel /> : panel === 'research' ? <ResearchPanel /> : panel === 'politics' ? <PoliticsPanel /> : panel === 'nat' ? <NatPanel /> : panel === 'dip' ? <DiplomacyPanel /> : panel === 'log' ? <LogPanel /> : panel === 'navy' ? <NavyPanel /> : <DossierView />}
     </aside>
   );
 }

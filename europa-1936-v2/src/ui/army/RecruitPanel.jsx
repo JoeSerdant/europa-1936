@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { isUnlocked, templatesOf, templateView, queueOf, EQUIP, EQUIP_IDS, ARMY, getWorld } from '../../engine/index.js';
-import { playerIdx, recruitSite, recruitDivisions, cancelTraining, openDesigner, removeTemplate } from '../actions.js';
+import { playerIdx, closeSide, hideFull, recruitSite, recruitDivisions, cancelTraining, openDesigner, removeTemplate } from '../actions.js';
 import { fmtInt, fmtNum, fmtDays } from '../format.js';
 import { ClsIcon } from './parts.jsx';
 import { provName, CLS_NAMES } from './helpers.js';
@@ -98,7 +98,7 @@ export function RecruitPanel() {
   const selected = useUi((s) => s.selected);
   const me = playerIdx(state);
   const ids = useMemo(() => (me ? templatesOf(state.mil, me) : []), [state.mil.tpl, me]);
-  if (!me) return <div className="recruit-panel"><p className="empty">Jako pozorovatel nenabíráte žádné divize.</p></div>;
+  if (!me) return <div className="prod-screen recruit-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nenabíráte žádné divize.</p></div></div>;
   const man = state.mil.man[me] || 0;
   const stock = state.mil.stock[me] || {};
   const room = ARMY.QUEUE_MAX - state.mil.queue.length;
@@ -107,21 +107,35 @@ export function RecruitPanel() {
   const used = (id) => state.mil.divs.some((d) => d && d.tpl === id) || state.mil.queue.some((q) => q.tpl === id);
   const queued = queueOf(state, me).length;
   return (
-    <div className="recruit-panel">
-      <section className="stock">
-        <div className="man"><Icon name="population" size={20} /><span><i>Lidská síla</i><b>{fmtInt(man)}</b></span></div>
-        <ul className="eq">
-          {EQUIP_IDS.filter((e) => isUnlocked(state, me, EQUIP[e].unlock)).map((e) => (
-            <li key={e} title={EQUIP[e].n}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>
-          ))}
-        </ul>
-        <p className="site">Nové divize se objeví v provincii <b>{provName(site)}</b>{site === cap ? ' (hlavní město)' : ''}. Jiné místo zvolíte klikem na vlastní provincii na mapě.</p>
-      </section>
-      <div className="side-scroll">
-        <div className="sec-head"><h3>Šablony divizí</h3><button className="sbtn" onClick={() => openDesigner(0)}><Icon name="plus" size={14} />Nová šablona</button></div>
-        {ids.map((id) => <TemplateCard key={id} view={templateView(state, id)} man={man} stock={stock} room={room} used={used(id)} />)}
-        <div className="sec-head"><h3>Ve výcviku{queued ? ` (${queued})` : ''}</h3></div>
-        <Queue state={state} me={me} />
+    <div className="prod-screen recruit-panel" role="dialog" aria-label="Nábor a rozmístění">
+      <header className="prod-head">
+        <h2><Icon name="recruit" size={22} />Nábor a rozmístění</h2>
+        <div className="man"><Icon name="population" size={22} /><span><i>Lidská síla</i><b>{fmtInt(man)}</b></span></div>
+        <p className="site">Nové divize se objeví v provincii <b>{provName(site)}</b>{site === cap ? ' (hlavní město)' : ''}. </p>
+        <button className="sbtn" onClick={hideFull} title="Okno se schová; označte vlastní provincii a znovu otevřete Nábor (N)"><Icon name="target" size={14} />Zvolit místo na mapě</button>
+        <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít okno" title="Zavřít (Esc)"><Icon name="close" size={20} /></button>
+      </header>
+      <div className="prod-body">
+        <div className="prod-cols">
+          <div className="prod-left">
+            <div className="sec-head"><h3>Šablony divizí ({ids.length})</h3><button className="sbtn" onClick={() => openDesigner(0)}><Icon name="plus" size={14} />Nová šablona</button></div>
+            <div className="tpl-grid">
+              {ids.map((id) => <TemplateCard key={id} view={templateView(state, id)} man={man} stock={stock} room={room} used={used(id)} />)}
+            </div>
+          </div>
+          <aside className="prod-right">
+            <section className="stock">
+              <div className="sec-head"><h3>Sklad výzbroje</h3></div>
+              <ul className="eq">
+                {EQUIP_IDS.filter((e) => isUnlocked(state, me, EQUIP[e].unlock)).map((e) => (
+                  <li key={e} title={EQUIP[e].n}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>
+                ))}
+              </ul>
+            </section>
+            <div className="sec-head"><h3>Ve výcviku{queued ? ` (${queued})` : ''}</h3></div>
+            <Queue state={state} me={me} />
+          </aside>
+        </div>
       </div>
     </div>
   );

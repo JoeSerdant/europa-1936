@@ -3,13 +3,14 @@ import { useGame, useUi } from '../store.js';
 import { TopBar } from './TopBar.jsx';
 import { MapModes, Legend } from './MapModes.jsx';
 import { GameMenu } from './GameMenu.jsx';
-import { SidePanel } from '../army/SidePanel.jsx';
+import { SidePanel, FULL } from '../army/SidePanel.jsx';
 import { SelectionBar } from '../army/SelectionBar.jsx';
 import { PlanBar } from '../army/PlanBar.jsx';
 import { TemplateDesigner } from '../army/TemplateDesigner.jsx';
 import { EventDialog } from '../nat/EventDialog.jsx';
 import { OverviewDialog } from '../log/OverviewDialog.jsx';
 import { IndustryPanel } from '../industry/IndustryPanel.jsx';
+import { RecruitPanel } from '../army/RecruitPanel.jsx';
 import { Toast } from '../common/Toast.jsx';
 import { Minimap } from '../map/Minimap.jsx';
 import { mapController as mc } from '../map/controller.js';
@@ -18,8 +19,8 @@ import { INSETS } from '../actions.js';
 /** Rozhraní během hry: horní lišta, režimy, vysvětlivky, minimapa, boční panel, lišty výběru a plánu, nabídka. */
 export function Hud() {
   const fresh = useGame((s) => s.paused && s.tick === 0);
-  const side = useUi((s) => !!((s.panel && s.panel !== 'industry') || s.selected));
-  const prod = useUi((s) => s.panel === 'industry');
+  const side = useUi((s) => !!((s.panel && !FULL.includes(s.panel)) || s.selected));
+  const panel = useUi((s) => s.panel);
   useEffect(() => { mc.setInsets(INSETS.game); }, []);
   const right = side ? 394 : 14;               // střední lišty se středí mezi levým sloupcem a pravým panelem
   return (
@@ -31,7 +32,8 @@ export function Hud() {
         <div className="panel mini"><Minimap /></div>
       </div>
       <SidePanel />
-      {prod && <IndustryPanel />}
+      {panel === 'industry' && <IndustryPanel />}
+      {panel === 'recruit' && <RecruitPanel />}
       <div className="top-mid" style={{ right }}><PlanBar /></div>
       <div className="bottom-mid" style={{ right }}>
         <Toast />
