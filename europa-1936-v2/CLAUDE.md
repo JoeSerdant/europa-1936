@@ -54,3 +54,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 39. Počasí (§ 4u v `SPEC.md`): počasí je čistá funkce data a provincie (`weatherAt`), žádný stav; nový účinek počasí = čtení `weatherAt` v příslušném systému + test v `test/weather.test.js`. Cache je podle (měsíc, podnebí).
 40. Příběhové události (§ 4v v `SPEC.md`): přidávají se jen jako data do `data/nat/events_hist.js` ve tvaru `E(...)`; příběhová událost se hlídá příznakem `noFlag`, vlastní texty, bez skutečných osob.
 41. Statistiky (§ 4w v `SPEC.md`): `state.stat` plní jen `statHour` (snímek každých 30 dní, limit `STAT.MAX`); nová metrika = položka v `STAT_METRICS` + `snapshot` + `createStat` + zvednout `GAME_VERSION`.
+42. Železniční pohyb (§ 4x v `SPEC.md`): rychlost po železnici se počítá jen v `stepHoursFor` (hledání cest) a v `movementStep` (skutečný pohyb) se stejným vzorcem; změna vzorce = změnit obě místa a `test/rail.test.js`.

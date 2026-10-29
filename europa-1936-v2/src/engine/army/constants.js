@@ -8,6 +8,8 @@ export const C = {
   DIST_MIN: 0.35,           // meze násobku vzdálenosti (malé provincie kolem velkých měst, obří provincie na poušti)
   DIST_MAX: 2.2,
   INFRA_SPEED: 0.05,        // zpomalení za každý stupeň infrastruktury pod 5 v cílové provincii
+  RAIL_SPEED: 0.8,          // přesun po železnici ve vlastním území: čas kroku se dělí 1 + RAIL_SPEED × úroveň spoje (1–5)
+  RAIL_ORG: 0.25,           // podíl běžné ztráty organizace za hodinu při jízdě po železnici
   ORG_MOVE_COST: 0.2,       // ztráta organizace za hodinu pohybu (body)
   ORG_SPEED_LOW: 0.3,       // pod tímto podílem organizace se pohyb zpomaluje
   ORG_SPEED_ZERO: -0.8,     // změna rychlosti při nulové organizaci
