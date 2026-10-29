@@ -317,3 +317,24 @@ button.st-row:hover { background: var(--ink-3); }
 .lg-res .ab { font: 600 12px/1 var(--display); color: var(--text-3); letter-spacing: 0.06em; }
 .lg-res b { font: 700 17px/1 var(--display); color: var(--green); }
 .lg-res li.bad b { color: var(--red); }
+
+/* ------------------------------------------------------------------ obrazovka Vláda: karta vůdce (M29) */
+.pol-cols { grid-template-columns: 300px minmax(0, 1.4fr) minmax(300px, 1fr); }
+.leader-card { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding: 0 16px 0 0; border-right: 1px solid var(--rule); min-height: 0; }
+.lc-portrait { position: relative; aspect-ratio: 6 / 7; max-height: 300px; width: 100%; box-shadow: inset 0 0 0 1px var(--rule-hi); background: var(--ink-1); overflow: hidden; }
+.lc-portrait svg { display: block; }
+.lc-flag { position: absolute; left: 8px; bottom: 8px; box-shadow: 0 0 0 1px var(--rule-hi); }
+.leader-card h3 { font: 600 21px/1.1 var(--display); color: var(--paper); }
+.leader-card h4 { margin-top: 6px; font: 600 12.5px/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--brass-hi); }
+.lc-ideo { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.lc-ideo li { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 4px 8px; font-size: 13.5px; color: var(--text-2); }
+.lc-ideo li.main { color: var(--paper); font-weight: 600; }
+.lc-ideo li > i { width: 10px; height: 10px; }
+.lc-ideo .bar { grid-column: 1 / -1; height: 4px; background: var(--ink-0); }
+.lc-ideo .bar i { display: block; height: 100%; }
+.lc-spirits { display: flex; flex-wrap: wrap; gap: 5px; }
+.lc-spirits li { padding: 4px 9px; font-size: 12.5px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule-hi); border-radius: 12px; }
+.lc-spirits li.law { color: var(--brass-hi); }
+.lc-spirits li.adv { color: var(--blue); }
+.lc-spirits li.focus { color: var(--green); }
+@media (max-width: 1500px) { .pol-cols { grid-template-columns: 240px minmax(0, 1.3fr) minmax(260px, 1fr); } }
