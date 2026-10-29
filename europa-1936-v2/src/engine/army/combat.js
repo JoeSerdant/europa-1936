@@ -50,6 +50,8 @@ function profile(ctx, id, role, info) {
     if (info.dirs > 1) f += C.MULTIDIR_DEF * (1 - 1 / info.dirs);
   }
   const side = att ? info.attSide : info.depSide;
+  const asup = ctx.state.air && ctx.state.air.sup;   // M30: podpora z letadel (klíč `vlastník:stát`)
+  if (asup) a += asup[`${d.o}:${getWorld().provState[d.p]}`] || 0;
   a -= side.stack + side.over;
   f -= side.over * 0.5;
   a += side.recon;

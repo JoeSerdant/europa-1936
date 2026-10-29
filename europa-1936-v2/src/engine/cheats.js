@@ -7,6 +7,7 @@ import { declareWar, makePeace } from './army/commands.js';
 import { capitulate } from './dip/capitulate.js';
 import { BUILDINGS } from '../data/industry/index.js';
 import { EQUIP } from '../data/army/equipment.js';
+import { PLANES } from '../data/air/planes.js';
 
 export const CHEAT_HELP = [
   'pp <n> – přidá politickou moc',
@@ -15,6 +16,7 @@ export const CHEAT_HELP = [
   'research all | <id> – dokončí všechny / jednu technologii',
   'ic – okamžitě dokončí všechny vaše stavby',
   'equip <id> <n> – přidá výzbroj do skladu (např. equip pusky 1000)',
+  'plane <sti|bit|tac|str> <n> – přidá letadla do rezervy',
   'tag <TAG> – přepne na jinou zemi (např. tag FRA)',
   'war <TAG> | peace <TAG> – válka / mír s danou zemí',
   'annex <TAG> – země kapitulace (okupanti dostanou její území)',
@@ -72,6 +74,12 @@ export function runCheat(state, text) {
       if (err || !EQUIP[a] || n === null) return same(state, err || `Použití: equip <${Object.keys(EQUIP).join('|')}> <počet>`);
       const stock = state.mil.stock.slice(); stock[me] = { ...(stock[me] || {}), [a]: Math.max(0, ((stock[me] || {})[a] || 0) + n) };
       return { state: { ...state, mil: { ...state.mil, stock } }, msg: `${EQUIP[a].n} ${n >= 0 ? '+' : ''}${n}.` };
+    }
+    case 'plane': {
+      const err = needMe(), n = num(b);
+      if (err || !PLANES[a] || n === null) return same(state, err || `Použití: plane <${Object.keys(PLANES).join('|')}> <počet>`);
+      const pool = state.air.pool.slice(); pool[me] = { ...pool[me], [a]: Math.max(0, (pool[me][a] || 0) + n) };
+      return { state: { ...state, air: { ...state.air, pool, ver: state.air.ver + 1 } }, msg: `${PLANES[a].n} ${n >= 0 ? '+' : ''}${n}.` };
     }
     case 'tag': {
       const t = tagOf(a);

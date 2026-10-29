@@ -347,11 +347,20 @@ try {
   await page.waitForTimeout(150);
 
   // hlavní lišta nabídek a Logistika (M29)
-  check('lišta nabídek má 12 tlačítek', (await page.locator('.menubar button').count()) === 12);
+  check('lišta nabídek má 13 tlačítek', (await page.locator('.menubar button').count()) === 13);
   await page.keyboard.press('i');
   await page.waitForSelector('.logistics-panel', { timeout: 3000 });
   check('klávesa I otevře Logistiku s tabulkou výzbroje a surovin', (await ui()).panel === 'logistics' && (await page.locator('.lg-table tbody tr').count()) >= 4 && (await page.locator('.lg-res li').count()) === 6);
   await shot('logistics');
+  await page.keyboard.press('a');
+  await page.waitForSelector('.air-panel .air-wing', { timeout: 3000 });
+  check('klávesa A otevře Letectvo s křídly a letišti', (await ui()).panel === 'air' && (await page.locator('.air-wing').count()) >= 3 && (await page.locator('.air-bases li').count()) >= 1);
+  const wingBit = page.locator('.air-wing', { hasText: 'Bitevní letoun' }).first();
+  await wingBit.getByLabel('Mise').selectOption('cas');
+  await page.waitForTimeout(1000);
+  check('mise „Podpora boje“ se zadá křídlu (cíl se nabídne)', (await E(() => window.__e1936.gameStore.getState().air.wings.some((w) => w && w.m === 'cas' && w.o === window.__e1936.engine.getWorld().ownerIdx.GER))) && (await wingBit.getByLabel('Cílový stát').count()) === 1);
+  await shot('air');
+  await page.locator('.air-panel .icon-btn.close').click();
   await page.locator('.menubar button[aria-label="Výroba"]').click();
   await page.waitForSelector('.ind-line', { timeout: 3000 });
   check('tlačítko Výroba v liště otevře okno Průmysl na záložce Výroba', (await ui()).panel === 'industry' && (await page.locator('.industry-panel .ind-tabs button.on').innerText()) === 'Výroba');

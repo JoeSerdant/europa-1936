@@ -8,6 +8,7 @@ export const BUILDINGS = {
   civ: { n: 'Civilní továrna', ab: 'CIV', cost: 800, days: 45, slot: true, info: 'Dodává body stavby. Část se vždy spotřebuje na spotřební zboží a na dovoz surovin.' },
   mil: { n: 'Vojenská továrna', ab: 'VOJ', cost: 700, days: 45, slot: true, info: 'Vyrábí výzbroj na výrobních linkách.' },
   dok: { n: 'Námořní loděnice', ab: 'LOD', cost: 900, days: 60, slot: true, port: true, info: 'Staví lodě na lodních linkách. Jen ve státě s přístavem.' },
+  afb: { n: 'Letiště', ab: 'LET', cost: 450, days: 30, slot: false, max: 5, info: 'Zvyšuje kapacitu letecké základny státu (60 letadel na úroveň). Letadla potřebují letiště.' },
   inf: { n: 'Infrastruktura', ab: 'INF', cost: 500, days: 30, slot: false, max: 3, info: 'Zlepšuje silnice a železnici státu: rychlejší pochod, lepší zásobování, další stavební slot.' },
 };
 export const BUILDING_IDS = Object.keys(BUILDINGS);

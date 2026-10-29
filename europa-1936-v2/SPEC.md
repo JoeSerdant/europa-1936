@@ -450,6 +450,19 @@ log: { n, items: [{ id, t, k, o, a, b, x }…] }   // n čítač id; items nejst
 Systémy zapisují přes `logAdd(state, entry)` / `logAddMany` (`engine/log.js`); války, mír, kapitulace a bloky se zapisují vždy, technologie, cíle, stavby a události jen u země hráče (u pozorovatele nic).
 **Rozhraní:** záložka *Zprávy* (`L`) – seznam od nejnovějších s ikonou, datem a textem (`ui/logText.js`, čistá funkce), filtr *Vše / Moje / Světové*; důležité nové záznamy se ohlásí oznámením (válka se zemí hráče, kapitulace, dokončený výzkum a cíl). Okno *Přehled zemí* (`O`): pořadí podle vítězných bodů, divize, továrny, stabilita, stav (válka, kapitulace, blok); klik na řádek ukáže hlavní město. Selektor `countryTable(state)`.
 
+## 4k. Letectvo (M30)
+
+Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
+
+- **Typy:** stíhač (`sti`, hlídky), bitevní letoun (`bit`, podpora boje), taktický bombardér (`tac`, podpora i bombardování), strategický bombardér (`str`, odemyká technologie `strbomb`). Každý má dolet v km, sílu ve vzdušném boji (`atk`), podporu (`cas`) a bombardování (`bomb`).
+- **Letiště:** úroveň `ind.st[s].afb` (0–5, stavba `afb` bez slotu, `build(state, s, 'afb')`); kapacita státu = úroveň × `AIR.PER_LEVEL` letadel.
+- **Křídla:** `wings[id] = { id, o, t, n, s (základna), m: null|'air'|'cas'|'bomb', to (cílový stát), c (přenos zlomku ztrát) }`; `wings[0] = null`, zrušené křídlo je `null`. Rezerva `pool[o][typ]` dostává letadla z výroby (linky letounů používají vojenské továrny, `industryDay`).
+- **Příkazy:** `formWing, disbandWing, reinforceWing, rebaseWing, setMission` (`air/commands.js`), `missionBlock` vrací český důvod odmítnutí (role, dolet, válka).
+- **Denní krok `airDay`** (o půlnoci po armádě a námořnictvu): křídla na ztraceném letišti zaniknou (část letadel do rezervy) → hlídky (`air`) určí krytí států → mise ztrácejí letadla podle krytí → podpora (`cas`) se uloží do `air.sup["vlastník:stát"]` (strop `CAS_MAX`) a bojový profil divize v `army/combat.js` ji přičte k útoku → bombardování (`bomb`) snižuje cíli podporu války, stabilitu a sklady výzbroje (hráč dostane záznam `bombed`). Bez náhody (zlomky ztrát se přenášejí v `c`).
+- **Technologie:** obor Letectvo (`sti2…`, `bit2…`, `tac2…`, `strbomb`, `str2`) zvedá úrovně `mil.lv` letounů (síla × `1 + LV_MULT·(úroveň−1)`).
+- **AI** (`ai/air.js`): staví letiště, dává letecké linky z podílu továren (`AI.AIR_SHARE`), sestavuje křídla a zadává mise (hlídky nad frontou, podpora boje, bombardování).
+- **Rozhraní:** okno Letectvo (klávesa `A`, `ui/air/AirPanel.jsx`): křídla s volbou mise a cíle, nové křídlo, rezerva, letiště; letecké linky v okně Výroba; Logistika ukazuje letadla; cheat `plane <typ> <n>`.
+
 ## 4j. Námořnictvo a přeprava přes moře (M27)
 
 Námořnictvo podle vzoru HOI4 ve zjednodušené podobě: **loděnice**, **lodě** vyráběné na linkách, **flotily** na mořských oblastech, **námořní boj** a **přeprava divizí** přes moře včetně vylodění. Bez toho by Britské ostrovy, Skandinávie a Středomoří byly pro armády nedosažitelné. Data (`src/data/navy/*`: lodě, ceny a suroviny, počáteční loďstva zemí) a čísla (`src/engine/nav/constants.js`, `NAV`) jsou naše. Pohyb flotil a přeprava se počítají **každou hodinu** (`navHour` za armádou), boj, potopení a výroba **denně**. Příkazy nehlídají, komu věc patří vůči hráči – to dělá `ui/actions.js`.
@@ -565,13 +578,14 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `log` (9): deník (id, čas, kruhová paměť, verze a kontrola uložené hry), zápisy ze systémů (válka, mír, bloky, kapitulace vždy; technologie, cíle, stavby, události jen hráči), texty záznamů, přehled zemí;
   - `nav` (19): flotily (sestavení, rozpuštění, pohyb po mořích, blokády), loděnice a lodní linky, přeprava divizí (nalodění, plavba, vylodění), námořní boj a potopení, AI loďstvo;
   - `nav-ui` (9): akce hráče (výběr flotily, rozkazy, sestavení, rozpuštění, přeprava z rozhraní), žetony a trasy flotil;
+  - `air` (11): počáteční letectvo, příkazy (rezerva, kapacita, mise, dolet, válka), denní krok (podpora boje, krytí hlídkami, bombardování, ztráta letiště), výroba a letiště, výzkum, AI;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **74 kontrol** (od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **83 kontrol** (od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -593,6 +607,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M27** | **Námořnictvo a přeprava přes moře**: loděnice, lodě, flotily, námořní boj, přeprava divizí; rozhraní: panel Námořnictvo (M), žetony flotil | **hotovo** |
 | **M28** | **Rozhraní ve stylu HOI4**: okna Průmysl (I), Nábor (N), Výzkum (R, strom po sloupcích), Politika (P), Cíle (C) a Diplomacie (D) jsou přes celou obrazovku (`common/Screen.jsx`, třída `prod-screen`; seznam `FULL` v `SidePanel.jsx`); návrhář divizí je velké okno; zbývá Armáda, Zprávy a Námořnictvo | **hotovo část** |
 | **M29** | **Hlavní lišta nabídek a konzole**: lišta oken s klávesami Q W E R T Y U I (Vláda, Výzkum, Diplomacie, Obchod, Stavby, Výroba, Nábor, Logistika) + C V M L, okno Logistika, horní lišta s továrnami, transporty a napětím ve světě (`worldTension`), konzole cheatů (`~`, `engine/cheats.js`: `runCheat`) | **hotovo** |
-| později | letectvo, konvoje, špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
+| **M30** | **Letectvo**: letiště a křídla, letouny z výroby, mise (hlídky, podpora boje, bombardování), AI, okno Letectvo (A) | **hotovo** |
+| později | konvoje, špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
