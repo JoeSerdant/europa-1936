@@ -18,7 +18,7 @@ export function countryTable(state) {
     const p = state.pol.own[o];
     const f = factionOf(state, o);
     rows.push({
-      o, tag, name: w.owners[o].name, vp: st.vp, pop: st.pop, divs: divisionCount(state, o), civ: tally[o].civ, mil: tally[o].mil,
+      o, tag, name: w.owners[o].name, vp: st.vp, pop: st.pop, divs: divisionCount(state, o), civ: tally[o].civ, mil: tally[o].mil, dok: tally[o].dok,
       stab: p.stab, ws: p.ws, war: hasWar(state.mil, o), cap: !!state.dip.cap[o], faction: f ? f.nm : null, player: state.player === tag,
     });
   }

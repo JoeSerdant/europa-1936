@@ -2,7 +2,7 @@
 // Příkazy nehlídají, komu věci patří vůči hráči – to dělá `ui/actions.js` (engine je neutrální pro AI).
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
-import { BUILDINGS, EQUIP_PROD, RESOURCES } from '../../data/industry/index.js';
+import { BUILDINGS, PROD, isShip, RESOURCES } from '../../data/industry/index.js';
 import { EQUIP } from '../../data/army/equipment.js';
 import { isUnlocked } from '../research/core.js';
 import { consOf } from '../politics/core.js';
@@ -18,6 +18,7 @@ export function build(state, s, kind) {
   if (!validState(w, s) || !BUILDINGS[kind]) return state;
   const o = state.stateOwner[s];
   if (!o || state.ctrl[w.states[s].cap] !== o) return state;
+  if (BUILDINGS[kind].port && !w.states[s].v.some((p) => w.portLevel[p] > 0)) return state;
   if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return state;
   if (BUILDINGS[kind].slot) { if (slotsUsed(ind, s) >= slotsOf(ind, s)) return state; }
   else if ((ind.inf[s] || 0) + ind.build.filter((b) => b.s === s && b.k === kind).length >= I.INF_MAX) return state;
@@ -47,19 +48,21 @@ export function moveBuild(state, id, dir) {
 }
 
 // ---- výroba ----
-const milFree = (state, o, exceptId = 0) => {
+/** Volné továrny (výzbroj) nebo loděnice (`naval`) země: dostupné minus přiřazené linkám téže skupiny. */
+const freeFor = (state, o, naval, exceptId = 0) => {
   const t = tallyOwners(state)[o];
-  const avail = factoryUse(t, consOf(state, o)).milAvail;
+  const avail = naval ? t.dok : factoryUse(t, consOf(state, o)).milAvail;
   let used = 0;
-  for (const l of state.ind.lines) if (l.o === o && l.id !== exceptId) used += l.fac;
+  for (const l of state.ind.lines) if (l.o === o && l.id !== exceptId && isShip(l.eq) === naval) used += l.fac;
   return Math.floor(avail - used + 1e-9);
 };
+const milFree = (state, o, exceptId = 0) => freeFor(state, o, false, exceptId);
 
 /** Nová linka `eq` s `fac` továrnami (1 až volné továrny, nejvýš LINE_MAX_FAC). */
 export function addLine(state, o, eq, fac = 1) {
   const w = getWorld(), ind = state.ind;
-  if (!isInt(o) || o < 1 || o >= w.owners.length || !EQUIP_PROD[eq] || !isUnlocked(state, o, EQUIP[eq].unlock)) return state;
-  if (!isInt(fac) || fac < 1 || fac > I.LINE_MAX_FAC || fac > milFree(state, o)) return state;
+  if (!isInt(o) || o < 1 || o >= w.owners.length || !PROD[eq] || (!isShip(eq) && !isUnlocked(state, o, EQUIP[eq].unlock))) return state;
+  if (!isInt(fac) || fac < 1 || fac > I.LINE_MAX_FAC || fac > freeFor(state, o, isShip(eq))) return state;
   if (ind.lines.filter((l) => l.o === o).length >= I.LINES_MAX) return state;
   const id = ind.jn + 1;
   return patch(state, { jn: id, lines: [...ind.lines, { id, o, eq, fac, eff: I.EFF_START, acc: 0, f: 1, out: 0 }] });
@@ -70,7 +73,7 @@ export function setLineFactories(state, id, fac) {
   const ind = state.ind, l = ind.lines.find((x) => x.id === id);
   if (!l || !isInt(fac) || fac < 0 || fac > I.LINE_MAX_FAC || fac === l.fac) return state;
   if (fac === 0) return patch(state, { lines: ind.lines.filter((x) => x.id !== id) });
-  if (fac > l.fac && fac - l.fac > milFree(state, l.o)) return state;
+  if (fac > l.fac && fac - l.fac > freeFor(state, l.o, isShip(l.eq))) return state;
   const eff = fac > l.fac ? l.eff * (l.fac / fac) : l.eff;
   return patch(state, { lines: ind.lines.map((x) => (x.id === id ? { ...x, fac, eff } : x)) });
 }
@@ -78,7 +81,7 @@ export function setLineFactories(state, id, fac) {
 /** Přepne linku na jiný druh výzbroje: efektivita i rozpracovaná výroba se ztratí. */
 export function setLineEquip(state, id, eq) {
   const ind = state.ind, l = ind.lines.find((x) => x.id === id);
-  if (!l || !EQUIP_PROD[eq] || !isUnlocked(state, l.o, EQUIP[eq].unlock) || eq === l.eq) return state;
+  if (!l || !PROD[eq] || eq === l.eq || isShip(eq) !== isShip(l.eq) || (!isShip(eq) && !isUnlocked(state, l.o, EQUIP[eq].unlock))) return state;
   return patch(state, { lines: ind.lines.map((x) => (x.id === id ? { ...x, eq, eff: I.EFF_START, acc: 0, out: 0 } : x)) });
 }
 

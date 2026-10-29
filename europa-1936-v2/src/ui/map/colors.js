@@ -106,7 +106,7 @@ export function fillColors(world, game, mode, focus = 0) {
       }
       case 'industry': {
         const e = game && game.ind ? game.ind.st[world.provState[p]] : null;
-        const n = e ? e.civ + e.mil : 0;
+        const n = e ? e.civ + e.mil + (e.dok || 0) : 0;
         c = n ? ramp(0.12 + n / 16) : mix(ownerRgb[o], [40, 44, 48], 0.62);
         break;
       }

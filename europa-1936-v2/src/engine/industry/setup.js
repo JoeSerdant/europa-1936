@@ -3,6 +3,7 @@ import { nextRandom } from '../rng.js';
 import { COUNTRIES } from '../../data/countries.js';
 import { EQUIP } from '../../data/army/equipment.js';
 import { IND_NATIONAL, TRADE_SEED, DEFAULT_SPLIT, RESOURCES } from '../../data/industry/index.js';
+import { NAVY_NATIONAL } from '../../data/navy/ships.js';
 import { I } from './constants.js';
 import { categoryOf } from './core.js';
 
@@ -25,7 +26,7 @@ export function apportion(weights, n, cap) {
 export function createInd(w, rng) {
   const ind = {
     ver: 0, jn: 0,
-    st: Array.from({ length: w.states.length }, (_, s) => (s ? { civ: 0, mil: 0, res: {} } : null)),
+    st: Array.from({ length: w.states.length }, (_, s) => (s ? { civ: 0, mil: 0, dok: 0, res: {} } : null)),
     inf: new Array(w.states.length).fill(0),
     cons: new Array(w.owners.length).fill(0),
     build: [], lines: [], trade: [],
@@ -54,6 +55,19 @@ export function createInd(w, rng) {
     list.forEach((s, i) => { ind.st[s].civ = civ[i]; ind.st[s].mil = mil[i]; });
     // domácí ocel aspoň na základní zbrojní výrobu (menší země těží i z drobných dolů, které v číslech nejsou)
     const natRes = { ...nat.res, ocel: Math.max(nat.res.ocel || 0, Math.round(nat.mil * 9) / 10) };
+    // loděnice: ve státech s přístavem podle úrovně přístavu a volných slotů
+    const nav = NAVY_NATIONAL[tag];
+    if (nav && nav.docks > 0) {
+      const portOf = (st) => w.states[st].v.reduce((a, p) => Math.max(a, w.portLevel[p] || 0), 0);
+      const cand = list.map((st, i) => ({ st, i })).filter((x) => portOf(x.st) > 0).sort((a, b) => portOf(b.st) - portOf(a.st) || b.st - a.st);
+      let left = nav.docks;
+      for (const x of cand) {
+        const free = slots[x.i] - ind.st[x.st].civ - ind.st[x.st].mil - ind.st[x.st].dok;
+        const put = Math.min(left, free);
+        if (put > 0) { ind.st[x.st].dok += put; left -= put; }
+        if (!left) break;
+      }
+    }
     // těžba: ve třech státech podle váhy (jádra nebo rozloha), podíly 50 / 30 / 20 %
     for (const r in natRes) {
       const geoW = list.map((s) => (RESOURCES[r].geo === 'pop' ? w.states[s].p : Math.sqrt(w.states[s].a)) * (0.5 + rnd()));

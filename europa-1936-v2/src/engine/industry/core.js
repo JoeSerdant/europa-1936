@@ -1,7 +1,7 @@
 // Společné pomůcky průmyslu (M19): sloty států, souhrn továren a těžby po zemích, využití továren, toky surovin. Čisté funkce nad `state.ind`.
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
-import { STATE_CATEGORIES, EQUIP_PROD, BUILDINGS } from '../../data/industry/index.js';
+import { STATE_CATEGORIES, PROD, BUILDINGS, isShip } from '../../data/industry/index.js';
 
 /** Kategorie státu podle obyvatel (tis.). */
 export function categoryOf(pop) {
@@ -15,7 +15,7 @@ export const slotsOf = (ind, s) => categoryOf(getWorld().states[s].p).slots + (i
 /** Počet obsazených slotů státu včetně rozestavěných továren. */
 export function slotsUsed(ind, s) {
   const e = ind.st[s];
-  let n = e.civ + e.mil;
+  let n = e.civ + e.mil + (e.dok || 0);
   for (const b of ind.build) if (b.s === s && BUILDINGS[b.k].slot) n++;
   return n;
 }
@@ -31,13 +31,13 @@ export function tallyOwners(state) {
   const hit = tallyCache.get(ind.st);
   if (hit && hit.ctrl === ctrl && hit.so === so) return hit.tally;
   const w = getWorld();
-  const tally = Array.from({ length: w.owners.length }, () => ({ civ: 0, mil: 0, res: {}, occ: 0 }));
+  const tally = Array.from({ length: w.owners.length }, () => ({ civ: 0, mil: 0, dok: 0, res: {}, occ: 0 }));
   for (let s = 1; s < w.states.length; s++) {
     const e = ind.st[s], o = so[s];
     if (!e || !o) continue;
     const c = ctrl[w.states[s].cap];
     if (c === o || !c) {
-      tally[o].civ += e.civ; tally[o].mil += e.mil;
+      tally[o].civ += e.civ; tally[o].mil += e.mil; tally[o].dok += e.dok || 0;
       for (const r in e.res) tally[o].res[r] = (tally[o].res[r] || 0) + e.res[r];
     } else {
       tally[o].occ++;
@@ -56,7 +56,7 @@ export function factoryUse(t, cons) {
 }
 
 /** Výrobní body na kus podle úrovně výzbroje země (`lv` = mil.lv[o], M20). */
-export const itemCost = (eq, lv) => EQUIP_PROD[eq].cost * (1 + I.LV_COST * (((lv && lv[eq]) || 1) - 1));
+export const itemCost = (eq, lv) => PROD[eq].cost * (1 + I.LV_COST * (((lv && lv[eq]) || 1) - 1));
 
 /** Kusy za den, které linka vyrobí při své efektivitě (bez vlivu nedostatku surovin). */
 export const lineRate = (l, lv = null) => (l.fac * I.IC_PER_FAC * l.eff) / itemCost(l.eq, lv);
@@ -65,10 +65,18 @@ export const lineRate = (l, lv = null) => (l.fac * I.IC_PER_FAC * l.eff) / itemC
 export function demandOf(lines, lv = null) {
   const dem = {};
   for (const l of lines) {
-    const rate = lineRate(l, lv), req = EQUIP_PROD[l.eq].res;
+    const rate = lineRate(l, lv), req = PROD[l.eq].res;
     for (const r in req) dem[r] = (dem[r] || 0) + rate * req[r];
   }
   return dem;
+}
+
+/** Linky země zkrácené zvlášť pro výzbroj (vojenské továrny) a lodě (loděnice); pořadí linek zůstává. */
+export function trimAllLines(lines, milAvail, dockAvail) {
+  const land = trimLines(lines.filter((l) => !isShip(l.eq)), milAvail), sea = trimLines(lines.filter((l) => isShip(l.eq)), dockAvail);
+  if (land.length + sea.length === lines.length && land.every((l, i) => l === lines.filter((x) => !isShip(x.eq))[i]) && sea.every((l, i) => l === lines.filter((x) => isShip(x.eq))[i])) return lines;
+  const keep = new Map([...land, ...sea].map((l) => [l.id, l]));
+  return lines.filter((l) => keep.has(l.id)).map((l) => keep.get(l.id));
 }
 
 /** Linky země seřazené podle id, zkrácené na dostupné továrny (od posledních). Vrací nové objekty jen u změněných. */
@@ -106,6 +114,6 @@ export function resFlows(t, dem, trade, o, extract = 0) {
 /** Poměr výkonu linky podle nejhorší potřebné suroviny (nejméně `RES_FLOOR`). */
 export function lineFactor(l, res) {
   let f = 1;
-  for (const r in EQUIP_PROD[l.eq].res) f = Math.min(f, res[r] ? res[r].f : 0);
+  for (const r in PROD[l.eq].res) f = Math.min(f, res[r] ? res[r].f : 0);
   return Math.max(I.RES_FLOOR, f);
 }

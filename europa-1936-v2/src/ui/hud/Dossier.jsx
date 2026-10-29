@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { getWorld, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
-import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, justifyOn } from '../actions.js';
+import { getWorld, fleetsInSea, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
+import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, justifyOn, selectFleet } from '../actions.js';
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
 const KIND_NOTE = ['', 'přes řeku', 'průliv'];
@@ -70,14 +70,14 @@ function StateIndustry({ s }) {
       <h3>Průmysl státu</h3>
       <dl className="kv">
         <Row label="Kategorie">{info.cat.n} · sloty {info.used}/{info.slots}</Row>
-        <Row label="Továrny">{info.civ} civilních · {info.mil} vojenských</Row>
+        <Row label="Továrny">{info.civ} civilních · {info.mil} vojenských{info.dok > 0 ? ` · ${info.dok} loděnic` : ''}</Row>
         {info.inf > 0 && <Row label="Infrastruktura">+{info.inf}</Row>}
         {res.length > 0 && <Row label="Těžba">{res.map(([r, n]) => `${RESOURCES[r].n} ${fmtNum(n, 1)}`).join(' · ')}</Row>}
         {info.queued.length > 0 && <Row label="Rozestavěno">{info.queued.length}</Row>}
       </dl>
       {mine && (
         <div className="ind-btns">
-          {BUILDING_IDS.map((k) => (
+          {BUILDING_IDS.filter((k) => k !== 'dok' || info.port).map((k) => (
             <button key={k} className="sbtn" onClick={() => buildIn(s, k)} title={BUILDINGS[k].info}><Icon name="plus" size={14} />{BUILDINGS[k].n}</button>
           ))}
         </div>
@@ -190,6 +190,27 @@ function LandDossier({ p, owner, ctrl }) {
   );
 }
 
+/** Flotily v mořské oblasti, po zemích; klik na vlastní vybere flotilu (M27). */
+function SeaFleets({ l }) {
+  const state = useGameSlow((g) => g, 500);
+  const me = playerIdx(state);
+  const list = fleetsInSea(state, l);
+  if (!list.length) return null;
+  const w = getWorld();
+  return (
+    <section>
+      <h3>Flotily v oblasti</h3>
+      <div className="chips">
+        {list.map((f) => (
+          <button key={f.id} className="chip chip-flag" onClick={() => f.o === me && selectFleet(f.id)} title={f.o === me ? 'Vybrat flotilu' : 'Cizí flotila'}>
+            <Flag tag={w.owners[f.o].tag} width={18} />{f.nm}<i>{f.n} lodí</i>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function SeaDossier({ l }) {
   const w = getWorld();
   const s = w.sea[l - w.L];
@@ -211,6 +232,7 @@ function SeaDossier({ l }) {
           <Row label="Plocha">{fmtArea(s.a)}</Row>
           <Row label="Pobřežních provincií">{fmtInt(near.length)}</Row>
         </dl>
+        <SeaFleets l={l} />
         {seas.length > 0 && <section><h3>Sousední moře</h3><Chips items={seas.slice(0, 14)} /></section>}
         {near.length > 0 && <section><h3>Pobřeží</h3><Chips items={near.slice(0, 18)} /></section>}
       </div>

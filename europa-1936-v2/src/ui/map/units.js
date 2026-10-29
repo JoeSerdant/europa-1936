@@ -105,6 +105,8 @@ export function routesOf(game) {
 /** Bitvy pro mapu: { p, from: [provincie], adv } (adv = podíl útočníků na zásazích 0–1). */
 export const battlesOf = (game) => game.mil.battles.map((b) => ({ id: b.id, p: b.p, from: b.from, adv: b.adv, att: b.att.length, dep: b.dep.length }));
 
+import { buildFleetTokens, buildFleetRoutes, drawFleetToken, FLEET } from './fleets.js';
+
 export class UnitLayer {
   constructor(world) {
     this.world = world;
@@ -122,6 +124,7 @@ export class UnitLayer {
     this.player = 0;
     this.cluster = { cell: 0, src: null, list: [] };
     this.hits = [];                 // žetony z posledního snímku: { x0, y0, x1, y1, c }
+    this.fleetSrc = null; this.fleetTokens = []; this.fleetRoutes = []; this.fleetSel = 0; this.fleetHits = [];   // M27: flotily
     this.stats = { counters: 0, shown: 0, ms: 0 };
   }
 
@@ -129,7 +132,7 @@ export class UnitLayer {
   setGame(game) {
     if (!game) {
       const had = this.counters.length > 0;
-      this.divs = null; this.counters = []; this.routes = []; this.battles = []; this.hits = [];
+      this.divs = null; this.counters = []; this.routes = []; this.battles = []; this.hits = []; this.fleetSrc = null; this.fleetTokens = []; this.fleetRoutes = []; this.fleetHits = [];
       return had;
     }
     const mil = game.mil;
@@ -141,12 +144,14 @@ export class UnitLayer {
       this.cluster.src = null;
       changed = true;
     }
+    if (game.nav && game.nav.fleets !== this.fleetSrc) { this.fleetSrc = game.nav.fleets; this.fleetTokens = buildFleetTokens(game, this.world); this.fleetRoutes = buildFleetRoutes(game, this.world); changed = true; }
     if (mil.battles !== this.battlesSrc) { this.battlesSrc = mil.battles; this.battles = battlesOf(game); changed = true; }
     this.game = game;
     return changed;
   }
 
   setSelection(ids) { this.selected = new Set(ids); }
+  setFleetSel(id) { this.fleetSel = id; }
 
   relation(o) {
     if (!this.player) return 'other';
@@ -209,6 +214,18 @@ export class UnitLayer {
     strokeRoutes(lines.own, 2.2, '#8fdc72', 0.9, 9);
     strokeRoutes(lines.atk, 2.8, '#ff6a47', 0.95, 10);
     strokeRoutes(lines.sel, 3.2, '#ffd25a', 1, 11);
+    // cesty flotil po moři (čárkovaně, vybraná zlatě)
+    if (this.fleetRoutes.length) {
+      ctx.setLineDash([8 * px, 6 * px]);
+      for (const r of this.fleetRoutes) {
+        const mine = r.ids.includes(this.fleetSel);
+        ctx.lineWidth = (mine ? 3 : 2) * px; ctx.strokeStyle = mine ? '#ffd25a' : this.relation(r.o) === 'own' ? '#7fd0ff' : 'rgba(190,200,210,0.6)';
+        ctx.beginPath(); ctx.moveTo(r.nodes[0][0], r.nodes[0][1]);
+        for (let i = 1; i < r.nodes.length; i++) ctx.lineTo(r.nodes[i][0], r.nodes[i][1]);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
 
     // bitvy: červené šípy z výchozích provincií a značka ve sporné provincii
     for (const b of this.battles) {
@@ -298,6 +315,17 @@ export class UnitLayer {
       drawCounter(ctx, c, sx, sy, this.looks[c.o], { s, rel: this.relation(c.o), sel: sc === 0 ? 0 : sc >= c.n ? 2 : 1, hover: this.isHover(c) });
       this.hits.push({ x0: sx - w / 2 - 1, y0: sy - COUNTER.H * s / 2 - 1, x1: sx + w / 2 + 1, y1: sy - COUNTER.H * s / 2 + total, c });
     }
+    // flotily: žetony ve středech mořských oblastí
+    this.fleetHits.length = 0;
+    if (this.fleetTokens.length) {
+      const fw = FLEET.W * s, fh = FLEET.H * s;
+      for (const t of this.fleetTokens) {
+        if (t.x < vx0 - mx || t.x > vx1 + mx || t.y < vy0 - my || t.y > vy1 + my) continue;
+        const [sx, sy] = worldToScreen(cam, t.x, t.y);
+        drawFleetToken(ctx, t, sx, sy, this.looks[t.o], { s, rel: this.relation(t.o), sel: t.ids.includes(this.fleetSel), hover: false });
+        this.fleetHits.push({ x0: sx - fw / 2 - 1, y0: sy - fh / 2 - 1, x1: sx + fw / 2 + 1, y1: sy + fh / 2 + 6 * s, t });
+      }
+    }
     this.stats.counters = this.counters.length; this.stats.shown = shown.length; this.stats.ms = performance.now() - t0;
   }
 
@@ -327,6 +355,15 @@ export class UnitLayer {
     ctx.fillStyle = '#4c9ae0'; ctx.fillRect(-bw / 2, r + 3, bw, bh);
     ctx.fillStyle = '#ff6a47'; ctx.fillRect(-bw / 2, r + 3, bw * clamp(b.adv, 0, 1), bh);
     ctx.restore();
+  }
+
+  /** Žeton flotily pod bodem obrazovky, nebo null. */
+  pickFleet(sx, sy) {
+    for (let i = this.fleetHits.length - 1; i >= 0; i--) {
+      const h = this.fleetHits[i];
+      if (sx >= h.x0 && sx <= h.x1 && sy >= h.y0 && sy <= h.y1) return h.t;
+    }
+    return null;
   }
 
   /** Žeton pod bodem obrazovky (nejvýše položený), nebo null. */

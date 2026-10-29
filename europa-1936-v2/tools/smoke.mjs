@@ -1,6 +1,6 @@
 // Automatická kontrola hry v prohlížeči (Playwright): menu → výběr země → hra, klik na provincii, běh času, režimy, nabídka, výkon snímku
 // a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc)
-// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události) a diplomacie (ospravedlnění a vyhlášení války s bloky, panel Diplomacie) a AI zemí (volba obtížnosti při startu) a zprávy a přehled zemí (panel Zprávy, okno Přehled).
+// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události) a diplomacie (ospravedlnění a vyhlášení války s bloky, panel Diplomacie) a AI zemí (volba obtížnosti při startu) a zprávy a přehled zemí (panel Zprávy, okno Přehled) a námořnictvo (panel Námořnictvo, žetony flotil, sestavení flotily).
 // Spuštění:  npm run dev  (nebo npm run build && npm run preview)  a pak  node tools/smoke.mjs [šířka výška]
 //   URL=http://localhost:4173 node tools/smoke.mjs 1366 768
 // Potřebuje balíček playwright (npm i -D playwright && npx playwright install chromium). Snímky: tools/preview/smoke-*.png.
@@ -117,7 +117,7 @@ try {
   const E = (fn, arg) => page.evaluate(fn, arg);
   // události hráče (M22) pozastaví hru a blokují klávesy: po každém skoku v čase je vyřídíme první volbou
   const clearEvents = async () => { for (let i = 0; i < 6 && (await page.locator('.event-dialog').count()); i++) { await page.locator('.event-dialog .ev-opt').first().click(); await page.waitForTimeout(150); } };
-  const ui = () => E(() => { const u = window.__e1936.uiStore.getState(); return { panel: u.panel, selDivs: u.selDivs, planEdit: !!u.planEdit, designer: !!u.designer, armyFocus: u.armyFocus, selected: u.selected }; });
+  const ui = () => E(() => { const u = window.__e1936.uiStore.getState(); return { panel: u.panel, selDivs: u.selDivs, planEdit: !!u.planEdit, designer: !!u.designer, armyFocus: u.armyFocus, selected: u.selected, fleetSel: u.fleetSel }; });
   /** Souřadnice stránky bodu uvnitř provincie `p` nejblíž těžišti, ověřeno přes pick a mimo žetony (ty by klik zachytily). */
   const provinceXY = (p) => E((p) => {
     const m = window.__e1936.map, g = window.__e1936.engine.geo(m.world);
@@ -314,7 +314,7 @@ try {
   await page.locator('.ind-line').first().getByRole('button', { name: 'Ubrat továrnu' }).click();
   await page.waitForTimeout(250);
   const fac1 = await E(() => window.__e1936.gameStore.getState().ind.lines.filter((l) => l.o === window.__e1936.engine.getWorld().ownerIdx.GER).reduce((a, l) => a + l.fac, 0));
-  check('výroba: linky jsou vidět a ubrání továrny je uvolní', nLines >= 3 && fac1 === fac0 - 1 && (await page.locator('.ind-note').count()) === 1, `${nLines} linek, továren ${fac0} → ${fac1}`);
+  check('výroba: linky jsou vidět a ubrání továrny je uvolní', nLines >= 3 && fac1 === fac0 - 1 && (await page.locator('.ind-note').count()) >= 1, `${nLines} linek, továren ${fac0} → ${fac1}`);
   await shot('industry-prod');
   await page.getByRole('tab', { name: 'Obchod' }).click();
   await page.waitForSelector('.ind-res', { timeout: 3000 });
@@ -445,6 +445,31 @@ try {
   await page.waitForTimeout(400);
   check('klik na zemi v přehledu zavře okno a označí hlavní město', (await page.locator('.overview-dialog').count()) === 0 && (await E(() => window.__e1936.uiStore.getState().selected)) > 0);
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+
+  // námořnictvo (M27): panel Námořnictvo (M), žetony flotil na mapě, sestavení flotily
+  const fleetTokens = await E(() => { const r = window.__e1936.map.renderer; return r.units.fleetTokens.length; });
+  check('na mapě jsou žetony flotil', fleetTokens >= 10, `${fleetTokens} žetonů`);
+  await page.keyboard.press('m');
+  await page.waitForSelector('.navy-panel', { timeout: 3000 });
+  check('klávesa M otevře panel Námořnictvo s hlavní flotilou', (await ui()).panel === 'navy' && (await page.locator('.fleet-card').count()) >= 1 && /Transporty/.test(await page.locator('.navy-panel .rs-sum').innerText()));
+  await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const pool = s.nav.pool.slice(); pool[o] = { ...pool[o], dd: 4 }; gameStore.setState({ ...s, nav: { ...s.nav, pool } }); });
+  await page.waitForSelector('.fl-form', { timeout: 3000 });
+  const nFleets0 = await page.locator('.fleet-card').count();
+  await page.getByLabel('Počet: Torpédoborec').fill('3');
+  await page.getByRole('button', { name: /Sestavit flotilu/ }).click();
+  await page.waitForFunction(() => window.__e1936.uiStore.getState().fleetSel > 0, null, { timeout: 3000 });
+  await page.waitForTimeout(700);
+  check('sestavení flotily z rezervy přidá flotilu a vybere ji', (await page.locator('.fleet-card').count()) === nFleets0 + 1 && (await ui()).fleetSel > 0);
+  await E(() => { const { map, engine, gameStore } = window.__e1936; const s = gameStore.getState(); const f = s.nav.fleets[window.__e1936.uiStore.getState().fleetSel]; const c = map.world.sea[f.p - map.world.L].c; map.flyTo({ x: c[0], y: c[1], zoom: 2.2 }, 0); });
+  await page.waitForTimeout(700);
+  await shot('navy');
+  const fleetMs = await E(() => { const m = window.__e1936.map, r = m.renderer; const t = []; for (let i = 0; i < 30; i++) { r.draw(m.cam, m.dpr); t.push(r.stats.unitsMs); } t.sort((a, b) => a - b); return t[15]; });
+  check('vrstva jednotek s flotilami: čas kreslení', fleetMs <= 12, `${fleetMs.toFixed(1)} ms`);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  check('Esc zruší výběr flotily', (await ui()).fleetSel === 0);
+  await page.keyboard.press('m');
   await page.waitForTimeout(150);
 
   // výkon vrstvy žetonů (čas příkazů v jednom snímku)

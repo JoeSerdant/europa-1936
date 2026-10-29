@@ -97,7 +97,7 @@ export class MapController {
     this.renderer.setGame(game);
     // běžný postup času nic nemění na vzhledu mapy – překreslujeme jen při změně vlastníků, kontroly, jednotek nebo bitev
     if (!prev || prev.stateOwner !== game.stateOwner || prev.ctrl !== game.ctrl) this.dirty = true;
-    else if (this.renderer.showUnits && (prev.mil.divs !== game.mil.divs || prev.mil.battles !== game.mil.battles || prev.mil.wars !== game.mil.wars)) this.dirty = true;
+    else if (this.renderer.showUnits && (prev.mil.divs !== game.mil.divs || prev.mil.battles !== game.mil.battles || prev.mil.wars !== game.mil.wars || prev.nav.fleets !== game.nav.fleets)) this.dirty = true;
   }
 
   // ---------------------------------------------------------------- jednotky (armáda)
@@ -125,6 +125,12 @@ export class MapController {
     if (!this.renderer) return;
     this.renderer.route = route; this.dirty = true;
   }
+  setFleetSel(id) {
+    if (!this.renderer) return;
+    this.renderer.units.setFleetSel(id); this.dirty = true;
+  }
+  /** Žeton flotily pod bodem obrazovky nebo null. */
+  pickFleet(sx, sy) { return this.renderer && this.renderer.showUnits ? this.renderer.units.pickFleet(sx, sy) : null; }
   /** Žeton pod bodem obrazovky (po posledním snímku) nebo null. */
   pickCounter(sx, sy) { return this.renderer && this.renderer.showUnits ? this.renderer.units.pick(sx, sy) : null; }
   /** Divize ze žetonů v obdélníku obrazovky. */

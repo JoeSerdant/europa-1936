@@ -3,7 +3,7 @@ import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import {
   getWorld, industryOf, stateIndustry, projectEta, allCountries, countryName, slotsUsed, slotsOf, atWar,
-  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND,
+  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS,
 } from '../../engine/index.js';
 import {
   playerIdx, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel,
@@ -29,6 +29,7 @@ function Header({ sum }) {
       <Sum label="Vojenské" value={sum.mil} title="Vojenské továrny celkem" />
       <Sum label="Spotř. zboží" value={pct(sum.cons)} title={`Spotřební zboží ubírá ${fmtNum(sum.consFac, 1)} továren (nejdřív civilních)`} />
       <Sum label="Body stavby" value={fmtNum(sum.points, 0)} title="Body stavby za den (civilní továrny po odečtení spotřebního zboží a dovozu)" />
+      {sum.dok > 0 && <Sum label="Loděnice" value={sum.dok} title={`Námořní loděnice (volné: ${sum.dockFree})`} />}
       <Sum label="Volné" value={sum.milFree} title="Volné vojenské továrny: nejsou přiřazené žádné lince" cls={sum.milFree > 0 ? 'warn' : ''} />
     </section>
   );
@@ -57,7 +58,7 @@ function NewBuild({ state, me }) {
       </label>
       <p className="muted">{info.cat.n} · sloty {info.used}/{info.slots} · továrny {info.civ} civ. + {info.mil} vojen. · infrastruktura +{info.inf}</p>
       <div className="ind-btns">
-        {BUILDING_IDS.map((k) => (
+        {BUILDING_IDS.filter((k) => k !== 'dok' || info.port).map((k) => (
           <button key={k} className="sbtn" onClick={() => buildIn(sel, k)} title={`${BUILDINGS[k].info} Cena ${BUILDINGS[k].cost} bodů, nejdřív za ${BUILDINGS[k].days} dní.`}>
             <Icon name="plus" size={14} />{BUILDINGS[k].n}
           </button>
@@ -98,20 +99,22 @@ function BuildTab({ state, me, sum }) {
 }
 
 // ------------------------------------------------------------------ výroba
+const nameOf = (e) => (EQUIP[e] ? EQUIP[e].n : SHIPS[e].n);
+
 function LineCard({ line, state, eqs }) {
   const warn = line.f < 0.999;
   const need = Object.entries(line.need);
   const short = need.filter(([r]) => (state.res[r]?.f ?? 0) < 0.999).map(([r]) => RESOURCES[r].n);
   return (
-    <article className="tpl-card ind-line" aria-label={`Linka ${EQUIP[line.eq].n}`}>
+    <article className="tpl-card ind-line" aria-label={`Linka ${nameOf(line.eq)}`}>
       <header>
-        <select value={line.eq} onChange={(e) => setLineEq(line.id, e.target.value)} aria-label="Druh výzbroje na lince" title="Změna druhu výzbroje vynuluje efektivitu">
-          {eqs.map((e) => <option key={e} value={e}>{EQUIP[e].n}</option>)}
+        <select value={line.eq} onChange={(e) => setLineEq(line.id, e.target.value)} aria-label={line.naval ? 'Druh lodi na lince' : 'Druh výzbroje na lince'} title="Změna druhu vynuluje efektivitu">
+          {(line.naval ? SHIP_IDS : eqs).map((e) => <option key={e} value={e}>{nameOf(e)}</option>)}
         </select>
         <div className="ind-fac">
           <button className="icon-btn sm" onClick={() => setLineFac(line.id, line.fac - 1)} aria-label="Ubrat továrnu" title={line.fac === 1 ? 'Zrušit linku' : 'Ubrat továrnu'}><Icon name={line.fac === 1 ? 'trash' : 'minus'} size={14} /></button>
-          <b title="Vojenské továrny na lince">{line.fac}</b>
-          <button className="icon-btn sm" disabled={line.fac >= IND.LINE_MAX_FAC || state.milFree < 1} onClick={() => setLineFac(line.id, line.fac + 1)} aria-label="Přidat továrnu" title="Přidat továrnu (zředí efektivitu)"><Icon name="plus" size={14} /></button>
+          <b title={line.naval ? 'Loděnice na lince' : 'Vojenské továrny na lince'}>{line.fac}</b>
+          <button className="icon-btn sm" disabled={line.fac >= IND.LINE_MAX_FAC || (line.naval ? state.dockFree : state.milFree) < 1} onClick={() => setLineFac(line.id, line.fac + 1)} aria-label="Přidat továrnu nebo loděnici" title="Přidat (zředí efektivitu)"><Icon name="plus" size={14} /></button>
         </div>
       </header>
       <div className="tpl-stats ind-stats">
@@ -140,13 +143,15 @@ function ProdTab({ state, me, sum }) {
       </section>
       <div className="sec-head"><h3>Výrobní linky{sum.lines.length ? ` (${sum.lines.length})` : ''}</h3>
         <span className="ind-add">
-          <select value="" onChange={(e) => { if (e.target.value) newLine(e.target.value, 1); }} aria-label="Nová linka" disabled={sum.milFree < 1 || sum.lines.length >= IND.LINES_MAX}>
+          <select value="" onChange={(e) => { if (e.target.value) newLine(e.target.value, 1); }} aria-label="Nová linka" disabled={(sum.milFree < 1 && sum.dockFree < 1) || sum.lines.length >= IND.LINES_MAX}>
             <option value="">+ Nová linka…</option>
-            {eqs.map((e) => <option key={e} value={e}>{EQUIP[e].n}</option>)}
+            {sum.milFree > 0 && eqs.map((e) => <option key={e} value={e}>{EQUIP[e].n}</option>)}
+            {sum.dockFree > 0 && SHIP_IDS.map((e) => <option key={e} value={e}>{SHIPS[e].n} (loděnice)</option>)}
           </select>
         </span>
       </div>
       {!sum.lines.length ? <p className="empty">Žádná výroba. Postavte vojenské továrny a založte linku.</p> : sum.lines.map((l) => <LineCard key={l.id} line={l} state={sum} eqs={eqs} />)}
+      {sum.dockFree > 0 && <p className="muted ind-note">{sum.dockFree} {sum.dockFree === 1 ? 'volná loděnice čeká' : 'volné loděnice čekají'} na lodní linku.</p>}
       {sum.milFree > 0 && <p className="muted ind-note">{sum.milFree} {sum.milFree === 1 ? 'volná továrna čeká' : 'volné továrny čekají'} na přiřazení k lince.</p>}
     </>
   );

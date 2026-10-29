@@ -9,8 +9,9 @@ import { createPol } from './politics/setup.js';
 import { createNat } from './nat/setup.js';
 import { createDip } from './dip/setup.js';
 import { createLog } from './log.js';
+import { createNav } from './nav/setup.js';
 
-export const GAME_VERSION = 9;
+export const GAME_VERSION = 10;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -26,7 +27,7 @@ export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = tru
   const ctrl = Array.from(w.provOwner0);
   const { mil, rng } = createMil(w, seedToState(seed));   // M18: armády, šablony, velitelé, sklady (viz SPEC § 4a)
   const { ind } = createInd(w, seedToState(seed ^ 0x19a1));      // M19 (vlastní proud náhody, aby se nezměnil průběh armády): továrny, těžba, linky, obchod (viz SPEC § 4b)
-  return {
+  const base = {
     v: GAME_VERSION,
     tick: 0,
     rng,
@@ -45,4 +46,5 @@ export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = tru
     log: createLog(),      // M26: deník dění (viz SPEC § 4i)
     ai: { level: [1, 2, 3].includes(aiLevel) ? aiLevel : 0, hist: hist ? 1 : 0 },   // M24: nastavení AI (viz SPEC § 4g)
   };
+  return { ...base, nav: createNav(w, base) };   // M27: námořnictvo (viz SPEC § 4j); potřebuje přístavy podle vlastnictví
 }

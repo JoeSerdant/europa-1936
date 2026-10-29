@@ -108,12 +108,12 @@ druhá města ≥ 60 tis. přidávají polovinu, hlavní město +10. Železnice:
 
 ## 4. Engine
 
-**Herní stav** (`createGame`, `GAME_VERSION = 9`, čistý JSON):
+**Herní stav** (`createGame`, `GAME_VERSION = 10`, čistý JSON):
 
 ```
-{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind, tech, pol, nat, dip, ai, log }
+{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind, tech, pol, nat, dip, ai, log, nav }
 ```
-`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b), `tech` = výzkum (§ 4c), `pol` = politika (§ 4d), `nat` = národní cíle a události (§ 4e), `dip` = diplomacie (§ 4f), `ai` = nastavení AI (§ 4g), `log` = deník dění (§ 4i).
+`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b), `tech` = výzkum (§ 4c), `pol` = politika (§ 4d), `nat` = národní cíle a události (§ 4e), `dip` = diplomacie (§ 4f), `ai` = nastavení AI (§ 4g), `log` = deník dění (§ 4i), `nav` = námořnictvo (§ 4j).
 Čas: 1 tick = 1 herní hodina, start 1. 1. 1936 00:00; rychlosti 1–5 = `[12, 24, 48, 96, 240]` herních hodin za sekundu (`SPEEDS[0]` = pauza).
 Hra začíná pozastavená. `hoursForElapsed(state, ms, carry)` přenáší zlomky hodin.
 
@@ -133,7 +133,7 @@ forLandNeighbors(p, cb), forSeaNeighbors(l, cb), forCoast(p, cb)`.
 
 Pozemní válka podle vzoru HOI4: **divize ze šablon**, výzbroj a lidská síla ve skladech, velitelé, armády a skupiny armád, plány a rozkazy, zásobování, boj s šířkou fronty, terénem a organizací.
 Všechna čísla (statistiky praporů, terén, vzorce) jsou **naše**: data v `src/data/army/*`, vyvážení vzorců na jednom místě v `src/engine/army/constants.js` (`ARMY`); ze vzoru je převzat jen princip.
-Letectvo, loďstvo a přepravu přes moře zatím nemáme: průlivy jsou pro pozemní jednotky neprůchodné, vzdušná a námořní podpora v boji chybí.
+Letectvo zatím nemáme a vzdušná podpora v boji chybí; přes moře se divize dostanou lodní přepravou (§ 4j), pěšky jsou průlivy neprůchodné.
 Příkazy enginu nekontrolují, komu divize patří vůči hráči – to dělá rozhraní (`ui/actions.js`); engine je neutrální, aby jím šla řídit i AI (M24).
 
 ### Pojmy
@@ -450,6 +450,39 @@ log: { n, items: [{ id, t, k, o, a, b, x }…] }   // n čítač id; items nejst
 Systémy zapisují přes `logAdd(state, entry)` / `logAddMany` (`engine/log.js`); války, mír, kapitulace a bloky se zapisují vždy, technologie, cíle, stavby a události jen u země hráče (u pozorovatele nic).
 **Rozhraní:** záložka *Zprávy* (`L`) – seznam od nejnovějších s ikonou, datem a textem (`ui/logText.js`, čistá funkce), filtr *Vše / Moje / Světové*; důležité nové záznamy se ohlásí oznámením (válka se zemí hráče, kapitulace, dokončený výzkum a cíl). Okno *Přehled zemí* (`O`): pořadí podle vítězných bodů, divize, továrny, stabilita, stav (válka, kapitulace, blok); klik na řádek ukáže hlavní město. Selektor `countryTable(state)`.
 
+## 4j. Námořnictvo a přeprava přes moře (M27)
+
+Námořnictvo podle vzoru HOI4 ve zjednodušené podobě: **loděnice**, **lodě** vyráběné na linkách, **flotily** na mořských oblastech, **námořní boj** a **přeprava divizí** přes moře včetně vylodění. Bez toho by Britské ostrovy, Skandinávie a Středomoří byly pro armády nedosažitelné. Data (`src/data/navy/*`: lodě, ceny a suroviny, počáteční loďstva zemí) a čísla (`src/engine/nav/constants.js`, `NAV`) jsou naše. Pohyb flotil a přeprava se počítají **každou hodinu** (`navHour` za armádou), boj, potopení a výroba **denně**. Příkazy nehlídají, komu věc patří vůči hráči – to dělá `ui/actions.js`.
+
+### Tvar stavu (`state.nav`, `GAME_VERSION = 10`)
+```
+nav: {
+  ver, fn,                                  // ver zvyšuje změna flotil, přepravy a rezervy (klíč mezipamětí UI); fn čítač id flotil
+  fleets: [null, { o, nm, p, ships: {dd, ca, bb, ss, tr}, c: {…}, mx, to, path: [mořské oblasti…], prog }…],
+  pool:   [null, { dd, ca, bb, ss, tr }…],  // nové a nezařazené lodě v přístavu země (mořská oblast přístavu = `homeSea`)
+  sail:   [{ id, o, from, to, route: […], t0, arrive, div: {…divize…} }…]   // divize na moři
+}
+ind.st[stát] = { civ, mil, dok, res }       // nová budova `dok` (námořní loděnice; jen ve státě s přístavem)
+```
+`p` flotily je mořská oblast (štítek `L + 1 …`), `to` cílová oblast, `path` zbývající oblasti rozkazu, `prog` 0–100 postupu do první oblasti cesty; `c` zbytky škod po druzích lodí, `mx` největší součet síly (pro ústup).
+
+### Lodě a výroba
+`SHIPS`: torpédoborec (`dd`), křižník (`ca`), bitevní loď (`bb`), ponorka (`ss`), transportní loď (`tr`) – síla `hp`, palebná síla `atk`, rychlost `spd` (km/h), cena v bodech výroby a suroviny na kus (`SHIP_PROD`). **Loděnice** (`dok`: 900 bodů / 60 dní, zabírá stavební slot, jen ve státě s přístavem) dávají body lodním linkám: lodní linka je obyčejná linka (`ind.lines`) s lodí místo výzbroje a `fac` = počet loděnic; vojenské továrny a loděnice se počítají odděleně (`milFree` × `dockFree`), na loděnice nepůsobí spotřební zboží. Hotové lodě jdou do `nav.pool`.
+
+### Flotily a boj
+- `formFleet(o, lodě, jméno)` vezme lodě z rezervy a založí flotilu v `homeSea(o)` (mořská oblast nejlepšího přístavu, který země ovládá); `orderFleet(id, oblast)` zadá cestu po mořských oblastech (nejkratší podle vzdálenosti středů); `disbandFleet` vrátí lodě do rezervy (jen v domovské oblasti).
+- **Boj** (denně) v oblasti, kde jsou flotily válčících stran: obě strany ztratí podíl síly `min(DMG_CAP, DMG · palba protivníka / síla strany)`, ztráty se rozdělí podle druhů lodí s přenosem zbytků; flotila pod `RETREAT` svého maxima ustoupí do nejbližší domovské oblasti, prázdná flotila zaniká.
+- **Ovládání moře:** oblast ovládá strana, která tam má flotilu bez bojové protistrany (válčící strany spolu bojují). `seaBlocked(state, o, oblast)` = nepřátelská flotila a žádná vlastní nebo spojenecká.
+
+### Přeprava a vylodění
+`orderSail(divIds, cíl)`: divize musí stát v přístavu, mimo bitvu; cíl je pobřežní provincie, kterou země ovládá, nebo nepřátelská bez obránců (**vylodění**; neutrální cizí ne). Trasa vede po mořských oblastech, které nejsou zablokované nepřítelem; doba = nalodění `LOAD_H` + délka / `TR_SPEED`. Každá divize zabere jednu transportní loď (kapacita = všechny `tr` země minus divize na moři). Divize na moři zmizí z `mil.divs` (záznam v `nav.sail` nese celý objekt) a po příchodu se objeví v cíli s ztrátou organizace při vylodění mimo přístav (`LAND_ORG`); při příchodu do provincie s obránci se vrátí do výchozího přístavu. Denně se kontroluje, zda na trase nezablokovala oblast nepřátelská flotila: divize se **potopí** (zmizí, mizí i transportní loď). Přeprava hlásí zápisy v deníku (`landing`, `sunk`).
+
+### AI
+AI země zakládá loděnice podle `NAVY_NATIONAL`, staví lodě, z rezervy skládá flotilu a drží ji v domovské oblasti; na moři neútočí a nevyloďuje.
+
+### Záměrná zjednodušení
+Žádné konvoje a obchodní válka, ponorky jen jako levné lodě bez zvláštních pravidel, žádné letadlové lodě a letecká podpora, žádný palivový dosah, ostřelování pobřeží, miny ani námořní mise (hlídka, eskorta), vylodění jen na nehájenou provincii, jedna transportní loď = jedna divize.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -530,13 +563,15 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `ai` (17): nastavení a vypnutá AI (výchozí v enginu), průmysl AI (fronta, linky, růst po roce), armáda AI (cílový počet, výcvik, armády, útočné plány), diplomacie AI (mír při vyčerpání a při vleklé válce, hráči mír nevnucuje, historické války a bloky), obtížnost, čistota, determinismus a nespotřebovávání `state.rng`;
   - `save` (9): obálka a kontrola stavu (verze, tvar, chybové hlášky), shodné pokračování po načtení, sloty v úložišti (falešný `localStorage`: uložení, výpis, smazání, plné / zakázané / vadné úložiště), akce rozhraní (uložení, načtení, rychlé sloty, chybové stavy);
   - `log` (9): deník (id, čas, kruhová paměť, verze a kontrola uložené hry), zápisy ze systémů (válka, mír, bloky, kapitulace vždy; technologie, cíle, stavby, události jen hráči), texty záznamů, přehled zemí;
+  - `nav` (19): flotily (sestavení, rozpuštění, pohyb po mořích, blokády), loděnice a lodní linky, přeprava divizí (nalodění, plavba, vylodění), námořní boj a potopení, AI loďstvo;
+  - `nav-ui` (9): akce hráče (výběr flotily, rozkazy, sestavení, rozpuštění, přeprava z rozhraní), žetony a trasy flotil;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **69 kontrol** (od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **74 kontrol** (od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -555,6 +590,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M24** | **AI** zemí (stejné příkazy jako hráč): průmysl, výcvik a armády, útočné plány, mír, historické bloky a války, 3 obtížnosti; rozhraní: volba při startu | **hotovo** |
 | **M25** | **Uložené hry**: obálka a kontrola stavu v enginu, sloty (5 ručních, automatický, rychlý) v `localStorage`, dialog, F6 / F9, automatické měsíční uložení | **hotovo** |
 | **M26** | **Zprávy a přehled zemí**: deník dění ve stavu, panel Zprávy s filtry, oznámení důležitých událostí, okno Přehled zemí | **hotovo** |
-| později | letectvo, loďstvo a konvoje, špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
+| **M27** | **Námořnictvo a přeprava přes moře**: loděnice, lodě, flotily, námořní boj, přeprava divizí; rozhraní: panel Námořnictvo (M), žetony flotil | **hotovo** |
+| později | letectvo, konvoje, špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
