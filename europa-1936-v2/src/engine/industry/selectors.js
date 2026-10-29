@@ -50,6 +50,9 @@ export function stateIndustry(state, s) {
   };
 }
 
+/** Úroveň pevnosti v provincii `p` (0–5). */
+export const fortOf = (state, p) => (state.ind.fort && state.ind.fort[p]) || 0;
+
 /** Body stavby: kolik bodů projekt potřebuje a jak rychle může postupovat. */
 export const projectInfo = (kind) => ({ ...BUILDINGS[kind], perDay: BUILDINGS[kind].cost / BUILDINGS[kind].days });
 

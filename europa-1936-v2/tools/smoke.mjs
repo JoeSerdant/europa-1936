@@ -65,6 +65,7 @@ try {
   await page.waitForSelector('.dossier h2', { timeout: 3000 });
   check('klik na provincii otevře panel', (await page.locator('.dossier h2').innerText()).length > 0);
   await shot('dossier');
+  check('karta vlastní provincie nabízí stavbu pevnosti', (await page.locator('.prov-fort').count()) === 1);
 
   // zvýraznění pod myší: po posunu kamery bez pohybu myši se přepočítá a při tažení mapy se ruší
   const hx = Math.round(W * 0.42), hy = Math.round(H * 0.55);

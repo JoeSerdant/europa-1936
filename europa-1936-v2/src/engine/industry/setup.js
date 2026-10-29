@@ -28,6 +28,7 @@ export function createInd(w, rng) {
     ver: 0, jn: 0,
     st: Array.from({ length: w.states.length }, (_, s) => (s ? { civ: 0, mil: 0, dok: 0, res: {} } : null)),
     inf: new Array(w.states.length).fill(0),
+    fort: {},
     cons: new Array(w.owners.length).fill(0),
     build: [], lines: [], trade: [],
   };

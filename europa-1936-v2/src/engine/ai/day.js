@@ -10,6 +10,7 @@ import { aiAir } from './air.js';
 import { aiDoctrine } from './doc.js';
 import { aiDecisions } from './decisions.js';
 import { aiSpy } from './spy.js';
+import { aiForts } from './forts.js';
 
 export function aiDay(state) {
   const w = getWorld();
@@ -20,6 +21,7 @@ export function aiDay(state) {
     if (o === player || state.dip.cap[o]) continue;
     state = aiDecisions(state, o);
     state = aiSpy(state, o);
+    state = aiForts(state, o);
     state = aiIndustry(state, o);
     state = aiArmy(state, o, scan);
     state = aiNavy(state, o);

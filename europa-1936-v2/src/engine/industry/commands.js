@@ -18,7 +18,7 @@ const validState = (w, s) => isInt(s) && s >= 1 && s < w.states.length;
 /** Zadá stavbu `kind` ('civ' | 'mil' | 'inf') ve státě `s`; stavba přijde na konec fronty vlastníka. Stát musí ovládat jeho vlastník. */
 export function build(state, s, kind) {
   const w = getWorld(), ind = state.ind;
-  if (!validState(w, s) || !BUILDINGS[kind]) return state;
+  if (!validState(w, s) || !BUILDINGS[kind] || BUILDINGS[kind].province) return state;
   const o = state.stateOwner[s];
   if (!o || state.ctrl[w.states[s].cap] !== o) return state;
   if (BUILDINGS[kind].port && !w.states[s].v.some((p) => w.portLevel[p] > 0)) return state;
@@ -27,6 +27,18 @@ export function build(state, s, kind) {
   else if ((kind === 'inf' ? ind.inf[s] || 0 : ind.st[s][kind] || 0) + ind.build.filter((b) => b.s === s && b.k === kind).length >= (BUILDINGS[kind].max ?? I.INF_MAX)) return state;
   const id = ind.jn + 1;
   return patch(state, { jn: id, build: [...ind.build, { id, o, s, k: kind, prog: 0 }] });
+}
+
+/** Zadá pevnost v provincii `p` (stát i kontrola patří stejné zemi); úroveň do `max`, stavby se řadí do fronty země. */
+export function buildFort(state, p) {
+  const w = getWorld(), ind = state.ind, B = BUILDINGS.fort;
+  if (!isInt(p) || p < 1 || p > w.L) return state;
+  const s = w.provState[p], o = state.stateOwner[s];
+  if (!o || state.ctrl[p] !== o) return state;
+  if ((ind.fort[p] || 0) + ind.build.filter((b) => b.p === p).length >= B.max) return state;
+  if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return state;
+  const id = ind.jn + 1;
+  return patch(state, { jn: id, build: [...ind.build, { id, o, s, p, k: 'fort', prog: 0 }] });
 }
 
 export function cancelBuild(state, id) {

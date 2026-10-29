@@ -46,6 +46,7 @@ export const C = {
   ARMOR_DEFLECT: 0.5,       // další snížení poškození, když pancíř cíle převyšuje průraz útočníka
   ARMOR_OUTCLASS: 0.3,      // bonus poškození, když pancíř útočníka převyšuje průraz cíle
   DIG_BONUS: 0.04,          // obrana (snížení zásahů) za stupeň zakopání
+  FORT_DEF: 0.12,        // bonus k obraně za úroveň pevnosti v bráněné provincii (M42)
   DIG_MAX: 5,
   DIG_DAYS: 1,              // dní na jeden stupeň zakopání (ženisté zrychlují)
   XP_BONUS: 0.04,           // bonus útoku i obrany za úroveň zkušenosti (0–4)

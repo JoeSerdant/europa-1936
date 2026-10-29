@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { getWorld, fleetsInSea, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
-import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, justifyOn, selectFleet } from '../actions.js';
+import { getWorld, fleetsInSea, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
+import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, buildFortHere, justifyOn, selectFleet } from '../actions.js';
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
 const KIND_NOTE = ['', 'přes řeku', 'průliv'];
@@ -77,10 +77,31 @@ function StateIndustry({ s }) {
       </dl>
       {mine && (
         <div className="ind-btns">
-          {BUILDING_IDS.filter((k) => k !== 'dok' || info.port).map((k) => (
+          {BUILDING_IDS.filter((k) => !BUILDINGS[k].province && (k !== 'dok' || info.port)).map((k) => (
             <button key={k} className="sbtn" onClick={() => buildIn(s, k)} title={BUILDINGS[k].info}><Icon name="plus" size={14} />{BUILDINGS[k].n}</button>
           ))}
         </div>
+      )}
+    </section>
+  );
+}
+
+/** Pevnost v provincii: úroveň, rozestavěné stavby a (u vlastní provincie) tlačítko stavby. */
+function ProvinceFort({ p }) {
+  const state = useGameSlow((g) => g, 700);
+  const me = playerIdx(state);
+  const lv = fortOf(state, p);
+  const queued = state.ind.build.filter((b) => b.p === p).length;
+  const mine = me && state.ctrl[p] === me && state.stateOwner[getWorld().provState[p]] === me;
+  if (!lv && !queued && !mine) return null;
+  return (
+    <section className="prov-fort">
+      <h3>Pevnost</h3>
+      <dl className="kv">
+        <Row label="Úroveň">{lv} z {BUILDINGS.fort.max}{queued ? ` · rozestavěno ${queued}` : ''}</Row>
+      </dl>
+      {mine && lv + queued < BUILDINGS.fort.max && (
+        <div className="ind-btns"><button className="sbtn" onClick={() => buildFortHere(p)} title={BUILDINGS.fort.info}><Icon name="plus" size={14} />Postavit pevnost ({BUILDINGS.fort.cost} b.)</button></div>
       )}
     </section>
   );
@@ -177,6 +198,7 @@ function LandDossier({ p, owner, ctrl }) {
           {o.h && <Row label="Přístav">{PORT_NAMES[o.h[1]] || `úroveň ${o.h[1]}`} · {w.seaName(o.h[0])}</Row>}
           <Row label="Železnice">{rail ? `úroveň ${rail} z 5` : 'žádná'}</Row>
         </dl>
+        <ProvinceFort p={p} />
         <ProvinceUnits p={p} />
         <WarSection idx={owner[o.s]} name={own.name} />
         {o.k.length > 0 && (
