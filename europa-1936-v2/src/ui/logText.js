@@ -40,6 +40,7 @@ export function logLine(e, me = 0) {
     case 'gar': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} zaručuje nezávislost země ${nm(e.b)}.` };
     case 'garend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} už nezaručuje nezávislost země ${nm(e.b)}.` };
     case 'ace': return { icon: 'air', tone: 'good', world: false, mine: true, text: `Křídlo ${PLANES[e.x]?.n || e.x}: ${ACE_NAMES[e.y] || 'eso'} se vyznamenal ve vzdušném boji.` };
+    case 'free': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.x].name} se osamostatnila a přestala být loutkou země ${w.owners[e.o].name}.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };
   }
 }

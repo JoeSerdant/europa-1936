@@ -27,7 +27,7 @@ export function validateState(s) {
   for (const k of ['tech', 'pol', 'nat']) if (!isArr(s[k].own) || s[k].own.length !== w.owners.length) return `Uložená hra je poškozená (${k}).`;
   if (!isArr(s.doc.own) || s.doc.own.length !== w.owners.length) return 'Uložená hra je poškozená (doktríny).';
   if (!isArr(s.air.wings) || !isArr(s.air.pool) || s.air.pool.length !== w.owners.length) return 'Uložená hra je poškozená (letectvo).';
-  if (!isArr(s.dip.fac) || s.dip.fac.length !== w.owners.length || !isArr(s.dip.sub) || !isArr(s.dip.conf) || !isArr(s.dip.gar)) return 'Uložená hra je poškozená (diplomacie).';
+  if (!isArr(s.dip.fac) || s.dip.fac.length !== w.owners.length || !isArr(s.dip.sub) || !isArr(s.dip.conf) || !isArr(s.dip.gar) || !isArr(s.dip.au)) return 'Uložená hra je poškozená (diplomacie).';
   return null;
 }
 

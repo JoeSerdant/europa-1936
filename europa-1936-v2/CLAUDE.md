@@ -63,3 +63,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 48. Letečtí esa (§ 4zd v `SPEC.md`): stupeň es čti jen přes pole `wg.a` křídla a bonus přes `AIR.ACE_BONUS` v `power` (`air/day.js`); nová křídla vznikají s `a: 0`.
 49. Velitelská moc (§ 4ze v `SPEC.md`): moc a aktivní schopnosti se mění jen přes `useAbility` a `cmdDay`; bonusy schopností čti jen v `modsOf` (`abilityMods`). Nová schopnost = řádek v `data/cmd/abilities.js` s klíči z `MOD_KEYS` + test.
 50. Dovednosti velitelů (§ 4zf v `SPEC.md`): úroveň čti jen přes `genLevel`, bonusy přes `genMods`; nová dovednost = pole generála + řádek v `genMods`, `genLevel`, `dailyLeaders`, `SKILLS` v UI + `GAME_VERSION`.
+51. Autonomie loutek (§ 4zg v `SPEC.md`): autonomii čti přes `autonomyOf`/`autonomyLevel` a měň jen v `subjectsDay`, `tightenControl`, `loosenControl`, `makePuppet`, `annexPuppet`; nový příspěvek loutky násobit `DIP.AU_MULT`.

@@ -6,6 +6,7 @@ import { atWar, enemiesOf } from '../army/war.js';
 import { withCtx, settleAfterPeace, declareWar, makePeace } from '../army/commands.js';
 import { COUNTRIES } from '../../data/countries.js';
 import { logAdd } from '../log.js';
+import { setRel } from './core.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 const tagOf = (o) => getWorld().owners[o].tag;
@@ -19,6 +20,39 @@ export function subjectsOf(state, o) {
   if (!state.dip.sub) return out;
   for (let t = 1; t < state.dip.sub.length; t++) if (state.dip.sub[t] === o) out.push(t);
   return out;
+}
+
+/** Úroveň autonomie loutky podle hodnoty `au`: 0 kolonie, 1 loutka, 2 dominion, 3 nespokojená. */
+export const autonomyLevel = (au) => DIP.AU_LEVELS.filter((x) => au >= x).length;
+export const AUTONOMY_NAMES = ['Kolonie', 'Loutkový stát', 'Dominion', 'Nespokojená loutka'];
+export const autonomyOf = (state, p) => (state.dip.au && state.dip.au[p]) || 0;
+
+/** Proč pán nemůže změnit autonomii loutky (český text), nebo null. */
+export function autonomyBlock(state, overlord, puppet, tighten) {
+  if (!ok(overlord) || !ok(puppet) || overlordOf(state, puppet) !== overlord) return 'Není to vaše loutka.';
+  const au = autonomyOf(state, puppet);
+  if (tighten) {
+    if (au <= 0) return 'Kontrola je už úplná.';
+    if (state.pol.own[overlord].pp < DIP.AU_TIGHT_PP) return `Chybí politická moc (${Math.ceil(DIP.AU_TIGHT_PP - state.pol.own[overlord].pp)}).`;
+  } else if (au >= 100) return 'Loutka je zcela nezávislá.';
+  return null;
+}
+
+/** Pán utáhne kontrolu: autonomie klesne o `AU_TIGHT`, stojí politickou moc a stabilitu loutky. */
+export function tightenControl(state, overlord, puppet) {
+  if (autonomyBlock(state, overlord, puppet, true)) return state;
+  const au = state.dip.au.slice(); au[puppet] = Math.max(0, au[puppet] - DIP.AU_TIGHT);
+  const pol = state.pol.own.slice();
+  pol[overlord] = { ...pol[overlord], pp: pol[overlord].pp - DIP.AU_TIGHT_PP };
+  pol[puppet] = { ...pol[puppet], stab: Math.max(0, pol[puppet].stab - 0.03) };
+  return { ...patch(state, { au }), pol: { ...state.pol, own: pol } };
+}
+
+/** Pán uvolní kontrolu: autonomie vzroste o `AU_LOOSE` a vztah se zlepší. */
+export function loosenControl(state, overlord, puppet) {
+  if (autonomyBlock(state, overlord, puppet, false)) return state;
+  const au = state.dip.au.slice(); au[puppet] = Math.min(100, au[puppet] + DIP.AU_LOOSE);
+  return patch(state, { au, rel: setRel(state.dip.rel, overlord, puppet, 10) });
 }
 
 /** Zbylé státy země `o` (které jí ještě patří). */
@@ -45,7 +79,8 @@ export function makePuppet(state, victor, loser) {
   const sub = state.dip.sub.slice(); sub[loser] = victor;
   const pol = state.pol.own.slice();
   pol[loser] = { ...pol[loser], stab: Math.max(pol[loser].stab, 0.35) };
-  return logAdd({ ...patch(state, { cap, sub }), pol: { ...state.pol, own: pol } }, { k: 'puppet', o: victor, x: loser });
+  const au = state.dip.au.slice(); au[loser] = DIP.AU_START;
+  return logAdd({ ...patch(state, { cap, sub, au }), pol: { ...state.pol, own: pol } }, { k: 'puppet', o: victor, x: loser });
 }
 
 /** Vítěz anektuje zbytek poraženého (stát zanikne). */
@@ -60,9 +95,10 @@ export function annexPuppet(state, overlord, puppet) {
   if (!ok(overlord) || !ok(puppet) || overlordOf(state, puppet) !== overlord || state.pol.own[overlord].pp < DIP.ANNEX_PP) return state;
   const sub = state.dip.sub.slice(); sub[puppet] = 0;
   const cap = state.dip.cap.slice(); cap[puppet] = 1;
+  const au = state.dip.au.slice(); au[puppet] = 0;
   const pol = state.pol.own.slice();
   pol[overlord] = { ...pol[overlord], pp: pol[overlord].pp - DIP.ANNEX_PP };
-  const n = { ...patch(state, { sub, cap }), pol: { ...state.pol, own: pol } };
+  const n = { ...patch(state, { sub, cap, au }), pol: { ...state.pol, own: pol } };
   return logAdd(absorb(n, puppet, overlord), { k: 'annex', o: overlord, x: puppet });
 }
 
@@ -113,12 +149,23 @@ export function subjectsDay(state) {
     const foes = new Set(enemiesOf(state.mil, v));
     for (const e of foes) if (e !== p && !atWar(state.mil, p, e) && !state.dip.cap[e]) state = declareWar(state, tagOf(p), tagOf(e));
     for (const e of enemiesOf(state.mil, p)) if (!foes.has(e) && e !== v) state = makePeace(state, tagOf(p), tagOf(e));
+    // autonomie roste; při 100 se loutka osamostatní
+    const au0 = state.dip.au[p] + DIP.AU_GROW;
+    if (au0 >= 100) {
+      const nsub = state.dip.sub.slice(); nsub[p] = 0;
+      const nau = state.dip.au.slice(); nau[p] = 0;
+      state = logAdd(patch(state, { sub: nsub, au: nau, rel: setRel(state.dip.rel, v, p, -20) }), { k: 'free', o: v, x: p });
+      continue;
+    }
+    const au = state.dip.au.slice(); au[p] = au0;
+    state = patch(state, { au });
+    const mult = DIP.AU_MULT[autonomyLevel(au0)];
     // příspěvky
     const man = state.mil.man.slice();
-    const give = Math.floor((man[p] || 0) * DIP.SUB_MAN);
+    const give = Math.floor((man[p] || 0) * DIP.SUB_MAN * mult);
     if (give > 0) { man[p] -= give; man[v] = (man[v] || 0) + give; state = { ...state, mil: { ...state.mil, man } }; }
     const own = state.pol.own.slice();
-    own[v] = { ...own[v], pp: own[v].pp + DIP.SUB_PP };
+    own[v] = { ...own[v], pp: own[v].pp + DIP.SUB_PP * mult };
     state = { ...state, pol: { ...state.pol, own } };
   }
   void w;

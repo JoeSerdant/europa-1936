@@ -4,6 +4,7 @@ import { HIST_WARS, HIST_FACTIONS, HIST_GUARANTEES } from '../../data/ai/plans.j
 import { hasWar, enemiesOf } from '../army/war.js';
 import { divisionCount } from '../army/selectors.js';
 import { justifyWar, startWar, proposePeace, justReady, warBlock, createFaction, inviteToFaction } from '../dip/commands.js';
+import { subjectsOf, autonomyOf, tightenControl } from '../dip/subjects.js';
 import { guarantee } from '../dip/guarantee.js';
 import { campOf, hasCapitulated, warScore, pairKey } from '../dip/core.js';
 import { AI } from './constants.js';
@@ -11,6 +12,7 @@ import { playerOf } from './core.js';
 
 export function aiDiplomacy(state, o) {
   const w = getWorld(), tag = w.owners[o].tag;
+  for (const p of subjectsOf(state, o)) if (autonomyOf(state, p) >= 70) state = tightenControl(state, o, p);   // M55: pán drží loutku na uzdě
   // mír, když prohrává
   if (hasWar(state.mil, o)) {
     const p = state.pol.own[o];

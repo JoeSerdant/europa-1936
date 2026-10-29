@@ -3,7 +3,7 @@ import { getWorld } from '../world.js';
 import { DIP } from './constants.js';
 import { relOf, factionOf, sameFaction, warScore, vpHeld, hasCapitulated } from './core.js';
 import { atWar } from '../army/war.js';
-import { overlordOf } from './subjects.js';
+import { overlordOf, autonomyOf, autonomyLevel, autonomyBlock } from './subjects.js';
 import { lendFriend } from './lend.js';
 import { guarantees, guaranteeBlock } from './guarantee.js';
 import { warBlock, justReady, peaceBlock, inviteBlock } from './commands.js';
@@ -34,6 +34,7 @@ export function diplomacyOf(state, o) {
       inviteBlock: fac ? inviteBlock(state, o, t) : 'Nejste v žádném bloku.',
       score: war ? warScore(state, o, t) : 0,
       overlord: overlordOf(state, t), mine: overlordOf(state, t) === o,
+      au: autonomyOf(state, t), auLevel: autonomyLevel(autonomyOf(state, t)), tightBlock: autonomyBlock(state, o, t, true), looseBlock: autonomyBlock(state, o, t, false),
       annexBlock: overlordOf(state, t) !== o ? 'Není to vaše loutka.' : state.pol.own[o].pp < DIP.ANNEX_PP ? `Chybí politická moc (${Math.ceil(DIP.ANNEX_PP - state.pol.own[o].pp)}).` : null,
     });
   }
