@@ -1,23 +1,41 @@
+import { useEffect, useRef, useState } from 'react';
 import { useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { MODES, TERRAIN_COLORS, CLIMATE_COLORS, SUPPLY_CSS } from '../map/colors.js';
 import { TERRAIN_CS, CLIMATE_CS } from '../../engine/index.js';
 import { setMode } from '../actions.js';
 
-/** Svislá lišta mapových režimů (vlevo). */
+/** Mapové režimy jako v HOI4: tlačítko dole vedle minimapy otevře seznam (název, ikona, klávesa 1–8). */
 export function MapModes() {
   const mode = useUi((s) => s.mode);
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const away = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const esc = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', away);
+    window.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('pointerdown', away); window.removeEventListener('keydown', esc); };
+  }, [open]);
+  const cur = MODES.find((m) => m.id === mode) || MODES[0];
   return (
-    <nav className="rail" aria-label="Mapové režimy">
-      {MODES.map((m, i) => (
-        <div className="rail-item" key={m.id}>
-          <button className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)} aria-label={m.name} aria-pressed={m.id === mode}>
-            <Icon name={m.id} size={22} />
-          </button>
-          <span className="tip"><b>{m.name}</b><i>{m.hint}</i><kbd>{i + 1}</kbd></span>
-        </div>
-      ))}
-    </nav>
+    <div className="mm" ref={ref}>
+      {open && (
+        <ul className="mm-list" role="listbox" aria-label="Mapové režimy">
+          {MODES.map((m, i) => (
+            <li key={m.id}>
+              <button role="option" aria-selected={m.id === mode} className={m.id === mode ? 'on' : ''} title={m.hint} onClick={() => { setMode(m.id); setOpen(false); }}>
+                <kbd>{i + 1}</kbd><span>{m.name}</span><Icon name={m.id} size={18} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button className="mm-trigger" data-mode={cur.name} aria-expanded={open} aria-label={`Mapové režimy (aktuální: ${cur.name})`} title="Mapové režimy (1–8)" onClick={() => setOpen(!open)}>
+        <Icon name={cur.id} size={20} /><span><i>Mapový režim</i><b>{cur.name}</b></span><Icon name="chevron" size={16} className="mm-chev" />
+      </button>
+    </div>
   );
 }
 

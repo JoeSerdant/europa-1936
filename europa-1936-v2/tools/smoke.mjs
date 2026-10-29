@@ -93,10 +93,16 @@ try {
   for (const [key, mode] of [['2', 'Terén'], ['5', 'Obyvatelé'], ['6', 'Vítězné body'], ['1', 'Politická']]) {
     await page.keyboard.press(key);
     await page.waitForTimeout(300);
-    const on = await page.locator('.rail-item > button.on').getAttribute('aria-label');
+    const on = await page.locator('.mm-trigger').getAttribute('data-mode');
     check(`režim ${key} = ${mode}`, on === mode, on);
     if (key === '2') await shot('terrain');
   }
+  await page.locator('.mm-trigger').click();
+  check('seznam mapových režimů dole má 8 položek s klávesami', (await page.locator('.mm-list li').count()) === 8 && (await page.locator('.mm-list kbd').first().innerText()) === '1');
+  await shot('mapmodes');
+  await page.locator('.mm-list button', { hasText: 'Státy' }).click();
+  check('výběr ze seznamu přepne režim a seznam se zavře', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Státy' && (await page.locator('.mm-list').count()) === 0);
+  await page.keyboard.press('1');
 
   // výkon: posun kamery přes mapu při průběžném kreslení (s vynuceným dokončením snímku)
   const perf = await page.evaluate(() => {
@@ -261,7 +267,7 @@ try {
   // mapový režim Zásobování (klávesa 7)
   await page.keyboard.press('7');
   await page.waitForTimeout(500);
-  check('režim 7 = Zásobování', (await page.locator('.rail-item > button.on').getAttribute('aria-label')) === 'Zásobování');
+  check('režim 7 = Zásobování', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Zásobování');
   await shot('supply');
   await page.keyboard.press('1');
 
@@ -323,7 +329,7 @@ try {
   await page.getByRole('tab', { name: 'Stavby' }).click();
   await page.keyboard.press('8');
   await page.waitForTimeout(500);
-  check('režim 8 = Průmysl s vysvětlivkami', (await page.locator('.rail-item > button.on').getAttribute('aria-label')) === 'Průmysl' && (await page.locator('.legend').innerText()).includes('továren'));
+  check('režim 8 = Průmysl s vysvětlivkami', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Průmysl' && (await page.locator('.legend').innerText()).includes('továren'));
   await shot('industry-map');
   await page.keyboard.press('1');
   const ind3 = await E(() => {
