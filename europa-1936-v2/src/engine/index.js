@@ -12,4 +12,5 @@ export * from './research/index.js';
 export * from './politics/index.js';
 export * from './nat/index.js';
 export * from './dip/index.js';
+export * from './ai/index.js';
 export { BATTALIONS, SUPPORT, ALL_UNITS, GRID, TERRAIN_RULES, RIVER, EQUIP, EQUIP_IDS, TRAITS, TPL_KINDS } from '../data/army/index.js';

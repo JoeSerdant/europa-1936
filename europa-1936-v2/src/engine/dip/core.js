@@ -4,7 +4,7 @@ import { COUNTRIES } from '../../data/countries.js';
 import { IDEO_REL, PAIR_REL } from '../../data/dip/index.js';
 import { atWar, enemiesOf } from '../army/war.js';
 
-const pairKey = (a, b) => (a < b ? `${a}-${b}` : `${b}-${a}`);
+export const pairKey = (a, b) => (a < b ? `${a}-${b}` : `${b}-${a}`);
 const baseCache = new Map();
 
 /** Základ vztahu dvou zemí: ideologie + historická tabulka (bez uložených změn). */

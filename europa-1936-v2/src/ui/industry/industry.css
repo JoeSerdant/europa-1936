@@ -130,3 +130,8 @@ li.on > .pol-opt { opacity: 1; box-shadow: inset 3px 0 0 var(--brass), inset 0 0
 .dip-found { display: flex; gap: 6px; }
 .dip-found input { flex: 1; min-width: 0; min-height: 30px; padding: 0 8px; font: 500 14px/1.2 var(--body); color: var(--paper); background: var(--ink-0); border: 0; box-shadow: inset 0 0 0 1px var(--rule-hi); }
 .dip-found input:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--brass); }
+
+/* ------------------------------------------------------------------ AI zemí (M24) */
+.ai-opts { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.ai-opts .muted { margin-right: 4px; font-size: 13px; }
+.ai-hist { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 13px; color: var(--text-2); cursor: pointer; }

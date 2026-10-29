@@ -35,7 +35,7 @@ export function capitulate(state, loser) {
   const next = {
     ...state, stateOwner, ctrl, ownerVer: state.ownerVer + 1,
     mil: { ...state.mil, wars, ver: state.mil.ver + 1 },
-    dip: { ...state.dip, cap, fac, facs, just: state.dip.just.filter((j) => j.a !== loser && j.b !== loser), ver: state.dip.ver + 1 },
+    dip: { ...state.dip, cap, fac, facs, since: Object.fromEntries(Object.entries(state.dip.since || {}).filter(([k]) => !k.split('-').map(Number).includes(loser))), just: state.dip.just.filter((j) => j.a !== loser && j.b !== loser), ver: state.dip.ver + 1 },
     pol: { ...state.pol, own: pol },
   };
   void annexed;

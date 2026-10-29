@@ -7,7 +7,7 @@ import { COUNTRIES, IDEOLOGIES, TIER_NAMES, DIFF_NAMES } from '../../data/countr
 
 const TIER_HEADS = { 1: 'Velmoci', 2: 'Regionální mocnosti', 3: 'Malé státy' };
 import { allCountries, countryStats, getWorld } from '../../engine/index.js';
-import { goMenu, pickCountry, startGame, INSETS } from '../actions.js';
+import { goMenu, pickCountry, startGame, setAiOptions, INSETS } from '../actions.js';
 import { fmtInt, fmtPop, fmtArea } from '../format.js';
 
 function Pips({ n, total = 5 }) {
@@ -21,6 +21,8 @@ function Pips({ n, total = 5 }) {
 /** Obrazovka výběru země: seznam vlevo, mapa uprostřed (klik na zemi ji vybere), karta země vpravo. */
 export function CountrySelect() {
   const pickTag = useUi((s) => s.pickTag);
+  const aiLevel = useUi((s) => s.aiLevel);
+  const aiHist = useUi((s) => s.aiHist);
   const owner = useGame((s) => s.stateOwner);
   const groups = useMemo(() => {
     const list = allCountries().filter((c) => COUNTRIES[c.tag]);
@@ -94,6 +96,13 @@ export function CountrySelect() {
           <p className="blurb">{info.blurb}</p>
         </div>
         <footer>
+          <div className="ai-opts" role="group" aria-label="Chování AI zemí">
+            <span className="muted">AI zemí</span>
+            {[[1, 'Lehká'], [2, 'Běžná'], [3, 'Těžká']].map(([n, t]) => (
+              <button key={n} className={`sbtn ${aiLevel === n ? 'primary' : ''}`} aria-pressed={aiLevel === n} onClick={() => setAiOptions({ aiLevel: n })} title={n === 2 ? 'Běžná obtížnost' : n === 1 ? 'AI zemí je o 10 % slabší v průmyslu a výzkumu' : 'AI zemí je o 10 % silnější v průmyslu a výzkumu'}>{t}</button>
+            ))}
+            <label className="ai-hist" title="Historické sklony AI k válkám a blokům (např. napětí kolem Československa a Polska)"><input type="checkbox" checked={!!aiHist} onChange={(e) => setAiOptions({ aiHist: e.target.checked })} /> Historické plány</label>
+          </div>
           <button className="btn primary big" onClick={() => startGame(pickTag)}>Začít hru</button>
         </footer>
       </aside>
