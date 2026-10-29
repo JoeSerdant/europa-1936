@@ -1,6 +1,7 @@
 // Pohyb divizí po provinciích (hodinový krok). Divize s rozkazem postupuje do první provincie cesty:
 //  - je-li v ní nepřítel, otevře/připojí se bitva (postup stojí, dokud trvá),
 //  - jinak roste postup `prog`; při 100 % divize vstoupí a případnou nepřátelskou provincii obsadí.
+import { weatherAt } from '../weather.js';
 import { getWorld } from '../world.js';
 import { C } from './constants.js';
 import { geo, adjacency } from './geo.js';
@@ -23,6 +24,7 @@ export function moveSpeed(ctx, d, st, next, kind) {
   const t = w.terrain[next];
   let mult = 1 + (st.terr[t]?.mov || 0) + (kind === 1 ? st.terr.r?.mov || 0 : 0) + modsOf(ctx, d).speed;
   mult -= C.INFRA_SPEED * (5 - ctx.infra[next]);
+  mult -= weatherAt(ctx.tick, next).spd;   // M43: mráz a bláto zpomalují pochod
   const share = st.org ? d.org / st.org : 1;
   if (share < C.ORG_SPEED_LOW) mult += C.ORG_SPEED_ZERO * (1 - share / C.ORG_SPEED_LOW);
   mult += C.SUP_SPEED * lackOf(d);

@@ -4,6 +4,7 @@
 //  3. Každá divize na frontě rozdělí útok mezi nepřátelskou frontu (35 % na hlavní cíl), zásah ubírá organizaci a sílu.
 //  4. Divize s nulovou organizací ustoupí (obránce) nebo ztratí chuť k útoku (útočník); bez místa k ústupu zaniká.
 //  5. Bez obránců útočníci vyhrávají a postupují do provincie; bez útočníků obránci obstáli.
+import { weatherAt } from '../weather.js';
 import { getWorld } from '../world.js';
 import { C, xpLevel } from './constants.js';
 import { geo, adjacency } from './geo.js';
@@ -51,6 +52,7 @@ function profile(ctx, id, role, info) {
     if (fl) f += C.FORT_DEF * fl;
     if (info.dirs > 1) f += C.MULTIDIR_DEF * (1 - 1 / info.dirs);
   }
+  a -= weatherAt(ctx.tick, info.p).atk;   // M43: počasí v bojové provincii
   const side = att ? info.attSide : info.depSide;
   const asup = ctx.state.air && ctx.state.air.sup;   // M30: podpora z letadel (klíč `vlastník:stát`)
   if (asup) a += asup[`${d.o}:${getWorld().provState[d.p]}`] || 0;

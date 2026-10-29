@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { getWorld, fleetsInSea, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
+import { getWorld, fleetsInSea, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
 import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, buildFortHere, justifyOn, selectFleet } from '../actions.js';
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
@@ -179,6 +179,8 @@ function LandDossier({ p, owner, ctrl }) {
   w.forCoast(p, (s, len) => seas.push({ l: s, name: w.seaName(s), len }));
   seas.sort((a, b) => b.len - a.len);
   const cap = w.owners[owner[o.s]].cap === p;
+  const tick = useGameSlow((g) => g.tick, 5000);
+  const weather = weatherAt(tick, p);
   return (
     <>
       <div className="head">
@@ -197,6 +199,7 @@ function LandDossier({ p, owner, ctrl }) {
           {o.v > 0 && <Row label="Vítězné body"><b className="gold">{o.v}</b></Row>}
           {o.h && <Row label="Přístav">{PORT_NAMES[o.h[1]] || `úroveň ${o.h[1]}`} · {w.seaName(o.h[0])}</Row>}
           <Row label="Železnice">{rail ? `úroveň ${rail} z 5` : 'žádná'}</Row>
+          <Row label="Počasí">{weather.label}, {Math.round(weather.t)} °C</Row>
         </dl>
         <ProvinceFort p={p} />
         <ProvinceUnits p={p} />

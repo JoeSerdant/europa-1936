@@ -83,6 +83,8 @@ export function Legend() {
         <p className="legend-note">Jen okupované státy. Garnizona (divize v okupovaném státě) odboj snižuje a poddajnost zrychluje.</p>
       </>
     );
+  } else if (mode === 'weather') {
+    body = <p className="legend-note">Bílá = mráz (zpomaluje pochod a obnovu organizace, snižuje útok), hnědá = bláto na jaře a na podzim, oranžová = vedro. Barvy se mění s ročním obdobím.</p>;
   } else if (mode === 'states') {
     body = <p>Odstíny rozlišují jednotlivé státy – stát je jednotka vlastnictví.</p>;
   }

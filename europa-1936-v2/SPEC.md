@@ -532,6 +532,14 @@ Nový stav `state.spy = { ver, own[o] = { ag, ops: [{ id, k, t, left }], intel: 
 - **AI** (`ai/forts.js`): ve válce staví pevnosti ve vlastních provinciích na frontě, nejvýš dvě rozestavěné najednou.
 - **Rozhraní:** karta provincie ukazuje úroveň pevnosti a tlačítko stavby; záznam „Stavba dokončena“ s názvem provincie.
 
+## 4u. Počasí a roční období (M43)
+
+Bez uloženého stavu: `weatherAt(tick, p)` (`src/engine/weather.js`) odvozuje počasí z měsíce a podnebí regionu provincie. Teplota = `průměr − rozkmit·cos(2π(měsíc−1)/12)` podle podnebí; z ní `cold` (mráz od 0 °C dolů, plný při −12 °C), `mud` (bláto v březnu, dubnu, říjnu a listopadu v mírném pásu při 0–12 °C) a `heat` (nad 28 °C). Účinky (násobí se silou jevu):
+
+- **Boj** (`army/combat.js`): postih k útoku obou stran v bojové provincii (`atk`).
+- **Pohyb** (`army/movement.js`): snížení rychlosti (`spd`). **Obnova organizace a opotřebení** (`army/upkeep.js`): pomalejší obnova (`org`), v mrazu větší ztráty bez zásob.
+- **Rozhraní:** řádek Počasí na kartě provincie, mapový režim Počasí (bílá = mráz, hnědá = bláto, oranžová = vedro; mění se s měsícem).
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -673,13 +681,14 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `tutorial` (3): kroky, odškrtávání a latch, splnění všech kroků;
   - `spy` (6): agenti a strop, operace a jejich hlídání, šance, vyhodnocení, AI a uložení;
   - `fort` (4): stavba a omezení, dokončení, účinek v boji, AI a uložení;
+  - `weather` (5): zima a léto, bláto, vedro, nezáporné účinky, závislost na datu a provincii;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **97 kontrol** (od M42 stavba pevnosti na kartě provincie; od M41 okno Zpravodajství; od M40 průvodce; od M39 volba scénáře; od M37 kurzory a přepínač zvuku; od M36 dialog konce hry; od M35 okno Rozhodnutí; od M34 okno Důstojnický sbor; od M33 mírová konference po kapitulaci; od M32 letecké mise na mapě; od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **98 kontrol** (od M43 mapový režim Počasí; od M42 stavba pevnosti na kartě provincie; od M41 okno Zpravodajství; od M40 průvodce; od M39 volba scénáře; od M37 kurzory a přepínač zvuku; od M36 dialog konce hry; od M35 okno Rozhodnutí; od M34 okno Důstojnický sbor; od M33 mírová konference po kapitulaci; od M32 letecké mise na mapě; od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -714,6 +723,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M40** | **Průvodce**: karta s úkoly (10 kroků), odškrtávání podle činnosti hráče, vypnutí v nabídce | **hotovo** |
 | **M41** | **Zpravodajství**: agenti, operace proti cizím zemím, protišpionáž, AI, okno Zpravodajská agentura | **hotovo** |
 | **M42** | **Pevnosti**: provinční stavba s bonusem k obraně, AI na frontě, karta provincie | **hotovo** |
+| **M43** | **Počasí a roční období**: mráz, bláto a vedro podle podnebí a měsíce, účinky na boj, pohyb a organizaci, mapový režim Počasí | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

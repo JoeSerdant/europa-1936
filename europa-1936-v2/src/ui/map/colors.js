@@ -1,4 +1,5 @@
 // Barvy mapy: palety a vybarvení oblastí podle mapového režimu. Čisté funkce (bez DOM), takže jdou testovat.
+import { weatherAt } from '../../engine/weather.js';
 import { TERRAIN } from '../../engine/worldCore.js';
 import { supplyFlow } from '../../engine/army/supply.js';
 import { infraOf } from '../../engine/industry/infra.js';
@@ -20,6 +21,7 @@ export const MODES = [
   { id: 'industry', name: 'Průmysl', hint: 'Továrny ve státech' },
   { id: 'resistance', name: 'Odboj', hint: 'Odboj v okupovaných státech' },
   { id: 'compliance', name: 'Poddajnost', hint: 'Poddajnost okupovaných států' },
+  { id: 'weather', name: 'Počasí', hint: 'Mráz, bláto a vedro podle ročního období' },
 ];
 
 export const CLIMATE_COLORS = {
@@ -110,6 +112,12 @@ export function fillColors(world, game, mode, focus = 0) {
         const e = game && game.ind ? game.ind.st[world.provState[p]] : null;
         const n = e ? e.civ + e.mil + (e.dok || 0) : 0;
         c = n ? ramp(0.12 + n / 16) : mix(ownerRgb[o], [40, 44, 48], 0.62);
+        break;
+      }
+      case 'weather': {
+        const wt = weatherAt(game ? game.tick : 0, p);
+        const base = mix(ownerRgb[o], terr[world.terrain[p]], 0.3);
+        c = wt.cold > 0.05 ? mix(base, [226, 238, 250], Math.min(0.92, 0.25 + wt.cold)) : wt.mud ? mix(base, [122, 92, 58], 0.62) : wt.heat > 0.05 ? mix(base, [236, 168, 80], Math.min(0.8, 0.3 + wt.heat)) : mix(base, [110, 170, 110], 0.22);
         break;
       }
       case 'resistance': case 'compliance': {
