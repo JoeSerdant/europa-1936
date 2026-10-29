@@ -73,6 +73,8 @@ export function selectLabel(l, fly = false) {
 export const closeDossier = () => { setUi({ selected: 0 }); applyInsets(); };
 /** Zavře celý pravý panel (údaje o oblasti i armádu a nábor). */
 export const closeSide = () => { setUi({ selected: 0, panel: null }); applyInsets(); };
+/** Schová okno přes celou obrazovku, ale nechá označenou provincii (např. místo nástupu nových divizí). */
+export const hideFull = () => { setUi({ panel: null }); applyInsets(); };
 export const setMode = (mode) => setUi({ mode });
 export const setHelp = (open) => setUi({ helpOpen: !!open });
 export const setMenuOpen = (open) => setUi({ menuOpen: !!open });

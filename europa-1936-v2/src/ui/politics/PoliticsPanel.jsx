@@ -3,6 +3,7 @@ import { Icon } from '../common/Icon.jsx';
 import { politicsOf } from '../../engine/index.js';
 import { playerIdx, changeLaw, hireAdv, dismissAdv } from '../actions.js';
 import { fmtNum } from '../format.js';
+import { Screen } from '../common/Screen.jsx';
 
 const pct = (v) => `${Math.round(v * 100)} %`;
 const MODS = { stab: 'stabilita', ws: 'podpora války', cons: 'spotřební zboží', build: 'stavby', prod: 'výroba', extract: 'těžba', imp: 'cena dovozu', man: 'lidská síla', research: 'výzkum' };
@@ -63,22 +64,29 @@ function Advisor({ a }) {
 export function PoliticsPanel() {
   const state = useGameSlow((s) => s, 600);
   const me = playerIdx(state);
-  if (!me) return <div className="recruit-panel"><p className="empty">Jako pozorovatel nevedete žádnou politiku.</p></div>;
+  if (!me) return <div className="prod-screen politics-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádnou politiku.</p></div></div>;
   const p = politicsOf(state, me);
   return (
-    <div className="recruit-panel politics-panel">
+    <Screen cls="politics-panel" title="Politika" icon="politics" head={(
       <section className="pol-head" aria-label="Souhrn politiky">
         <Meter label="Stabilita" value={p.stab} target={p.target.stab} cls="hp" hint={`Výstup továren a staveb ×${fmtNum(p.stabMult, 2)}`} />
         <Meter label="Podpora války" value={p.ws} target={p.target.ws} cls="org" hint="Odemyká přísnější zákony a ovlivňuje příliv lidské síly" />
         <div className="pol-pp" title="Politická moc: platí se jí zákony a poradci"><Icon name="general" size={18} /><b>{Math.floor(p.pp)}</b><span className="muted">PM · +{p.income} za den</span></div>
         <p className="muted pol-sum">Výroba ×{fmtNum(p.out, 2)} · lidská síla ×{fmtNum(p.man, 2)} · spotřební zboží {pct(p.cons)}</p>
       </section>
-      <div className="side-scroll">
-        <div className="sec-head"><h3>Zákony</h3></div>
-        {p.laws.map((c) => <Law key={c.cat} cat={c} />)}
-        <div className="sec-head"><h3>Poradci</h3></div>
-        {p.advisors.map((a) => <Advisor key={a.slot} a={a} />)}
+    )}>
+      <div className="prod-body">
+        <div className="prod-cols">
+          <div className="prod-left">
+            <div className="sec-head"><h3>Zákony</h3></div>
+            <div className="law-grid">{p.laws.map((c) => <Law key={c.cat} cat={c} />)}</div>
+          </div>
+          <aside className="prod-right">
+            <div className="sec-head"><h3>Poradci</h3></div>
+            {p.advisors.map((a) => <Advisor key={a.slot} a={a} />)}
+          </aside>
+        </div>
       </div>
-    </div>
+    </Screen>
   );
 }
