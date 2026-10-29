@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useUi } from '../store.js';
+import { useUi, useGame } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { BATTALIONS, SUPPORT, GRID, EQUIP, deriveStats, validateTemplate } from '../../engine/index.js';
-import { closeDesigner, updateDraft, saveDesigner } from '../actions.js';
+import { BATTALIONS, SUPPORT, GRID, EQUIP, deriveStats, validateTemplate, isUnlocked } from '../../engine/index.js';
+import { playerIdx, closeDesigner, updateDraft, saveDesigner } from '../actions.js';
 import { fmtInt, fmtNum, fmtDays } from '../format.js';
 import { placeBattalion, removeBattalion, toggleSupport, setName } from './designer.js';
 import { ClsIcon } from './parts.jsx';
@@ -51,8 +51,12 @@ export function TemplateDesigner() {
   const [error, setError] = useState('');
   useEffect(() => { setError(''); setBrush('pesi'); setPeek(null); }, [dz && dz.tplId, !!dz]);
   const draft = dz ? dz.draft : null;
-  const stats = useMemo(() => (draft && draft.reg.length ? deriveStats(draft) : null), [draft]);
-  const problem = useMemo(() => (draft ? validateTemplate(draft) : null), [draft]);
+  const game = useGame((s) => s);
+  const me = playerIdx(game);
+  const lv = game.mil.lv[me] || null;
+  const open = (def) => isUnlocked(game, me, def.unlock);
+  const stats = useMemo(() => (draft && draft.reg.length ? deriveStats(draft, lv) : null), [draft, lv]);
+  const problem = useMemo(() => (draft ? validateTemplate(draft, open) : null), [draft, game.tech]);
   if (!dz) return null;
 
   const edit = (next) => { if (next !== draft) { setError(''); updateDraft(next); } };
@@ -128,9 +132,9 @@ export function TemplateDesigner() {
             <ul className="dz-palette" aria-label="Druhy praporů">
               {Object.entries(BATTALIONS).map(([id, d]) => (
                 <li key={id}>
-                  <button className={`dz-pick ${brush === id ? 'on' : ''}`} disabled={!!d.unlock} onClick={() => setBrush(id)}
+                  <button className={`dz-pick ${brush === id ? 'on' : ''}`} disabled={!open(d)} onClick={() => setBrush(id)}
                     onMouseEnter={() => setPeek(id)} onMouseLeave={() => setPeek(null)} onFocus={() => setPeek(id)} onBlur={() => setPeek(null)} aria-pressed={brush === id}>
-                    <b>{d.ab}</b><span>{d.n}</span>{d.unlock ? <i>výzkum</i> : null}
+                    <b>{d.ab}</b><span>{d.n}</span>{!open(d) ? <i>výzkum</i> : null}
                   </button>
                 </li>
               ))}
@@ -139,9 +143,9 @@ export function TemplateDesigner() {
             <ul className="dz-palette" aria-label="Druhy podpůrných rot">
               {Object.entries(SUPPORT).map(([id, d]) => (
                 <li key={id}>
-                  <button className={`dz-pick ${draft.sup.includes(id) ? 'on' : ''}`} disabled={!!d.unlock || (!draft.sup.includes(id) && draft.sup.length >= GRID.support)}
+                  <button className={`dz-pick ${draft.sup.includes(id) ? 'on' : ''}`} disabled={!open(d) || (!draft.sup.includes(id) && draft.sup.length >= GRID.support)}
                     onClick={() => edit(toggleSupport(draft, id))} onMouseEnter={() => setPeek(id)} onMouseLeave={() => setPeek(null)} onFocus={() => setPeek(id)} onBlur={() => setPeek(null)} aria-pressed={draft.sup.includes(id)}>
-                    <b>{d.ab}</b><span>{d.n}</span>{d.unlock ? <i>výzkum</i> : null}
+                    <b>{d.ab}</b><span>{d.n}</span>{!open(d) ? <i>výzkum</i> : null}
                   </button>
                 </li>
               ))}

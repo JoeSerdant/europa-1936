@@ -1,6 +1,6 @@
 // Automatická kontrola hry v prohlížeči (Playwright): menu → výběr země → hra, klik na provincii, běh času, režimy, nabídka, výkon snímku
 // a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc)
-// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry).
+// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní).
 // Spuštění:  npm run dev  (nebo npm run build && npm run preview)  a pak  node tools/smoke.mjs [šířka výška]
 //   URL=http://localhost:4173 node tools/smoke.mjs 1366 768
 // Potřebuje balíček playwright (npm i -D playwright && npx playwright install chromium). Snímky: tools/preview/smoke-*.png.
@@ -310,6 +310,33 @@ try {
   });
   check('tři herní dny: stavba postoupila, linky vyrábějí a jejich efektivita roste', ind3.prog > 0 && ind3.made > 0 && ind3.eff, `body staveb ${Math.round(ind3.prog)}, kusů za poslední den ${ind3.made}`);
   await page.keyboard.press('i');
+  await page.waitForTimeout(150);
+
+  // výzkum (M20): panel Výzkum (R), zadání technologie, obory, běh času
+  await page.keyboard.press('r');
+  await page.waitForSelector('.research-panel', { timeout: 3000 });
+  check('klávesa R otevře panel Výzkum se sloty', (await ui()).panel === 'research' && (await page.locator('.rs-slot').count()) === 3 && (await page.locator('.tech-card').count()) >= 30);
+  await page.locator('.tech-card.available').first().getByRole('button', { name: 'Zkoumat' }).click();
+  await page.waitForSelector('.rs-slot:not(.empty)', { timeout: 3000 });
+  check('„Zkoumat“ obsadí slot výzkumu', (await page.locator('.rs-slot:not(.empty)').count()) === 1 && (await page.locator('.tech-card.active').count()) === 1);
+  await page.getByRole('tab', { name: 'Tanky a motorizace' }).click();
+  await page.waitForTimeout(200);
+  const tankCards = await page.locator('.tech-card').count();
+  check('obor Tanky a motorizace filtruje seznam a ukazuje zamčené technologie', tankCards >= 10 && tankCards < 30 && (await page.locator('.tech-card.locked').count()) >= 5, `${tankCards} karet`);
+  await shot('research');
+  await page.getByRole('tab', { name: 'Vše' }).click();
+  const tech3 = await E(() => {
+    const { gameStore, engine } = window.__e1936;
+    const s0 = gameStore.getState();
+    const GER = engine.getWorld().ownerIdx.GER;
+    const s1 = engine.advance(s0, 24 * 80);
+    gameStore.setState(s1);
+    return { done: Object.keys(s1.tech.own[GER].done), ai: Object.keys(s1.tech.own[engine.getWorld().ownerIdx.FRA].done).length, lv: s1.mil.lv[GER] };
+  });
+  check('80 dní: zadaná technologie je hotová, AI země také zkoumají', tech3.done.length >= 1 && tech3.ai >= 1, `hotovo ${tech3.done.join(', ')}, FRA ${tech3.ai}`);
+  await page.waitForTimeout(700);
+  check('hotové technologie jsou v seznamu označené', (await page.locator('.tech-card.done').count()) >= 1);
+  await page.keyboard.press('r');
   await page.waitForTimeout(150);
 
   // výkon vrstvy žetonů (čas příkazů v jednom snímku)

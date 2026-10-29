@@ -69,6 +69,7 @@
 .side-tabs .tab.off { opacity: 0.4; cursor: default; }
 .side-tabs .tab:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--brass); }
 .side-tabs .tab svg { flex: none; }
+.side-tabs .tab:not(.on) .lbl { display: none; }
 .side-tabs .close { margin-left: auto; align-self: center; margin-right: 4px; }
 .chip-flag { display: inline-flex; align-items: center; gap: 7px; }
 .war-sec .war-state { margin-bottom: 8px; color: var(--text-2); }

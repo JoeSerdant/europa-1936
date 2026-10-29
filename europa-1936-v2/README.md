@@ -3,18 +3,19 @@
 Velká strategie ve stylu **Hearts of Iron IV**, odehrávající se v lednu 1936 na mapě Evropy, Středomoří, severní Afriky a Blízkého východu.
 Nová hra od základů: vlastní kód, vlastní mapa (generovaná z veřejných geodat Natural Earth), vlastní texty a grafika.
 
-**Stav: milník M19 – Průmysl.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
+**Stav: milník M20 – Výzkum.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
 minimapa a panel s údaji o oblasti (M17) a **pozemní armáda**: divize ze šablon (vlastní návrhář), výzbroj a lidská síla, výcvik, velitelé, armády a skupiny armád, plány (Hájit oblast, Linie fronty),
 rozkazy, zásobování, boj s šířkou fronty, terénem a organizací a počáteční rozmístění všech zemí. Války se zatím vyhlašují z karty oblasti (dočasně).
 A od M19 **průmysl**: státy se sloty podle velikosti, civilní a vojenské továrny, fronta staveb, výrobní linky výzbroje s efektivitou, suroviny (ocel, hliník, ropa, wolfram, chrom, guma), obchodní smlouvy, spotřební zboží a vylepšování infrastruktury (zlepšuje pochod i zásobování). Výroba plní sklady výzbroje, ze kterých se nabírají divize.
-Výzkum, politika, focusy a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, § 8).
+A od M20 **výzkum**: 39 technologií v pěti oborech, sloty, předstih před historickým rokem, úrovně výzbroje (silnější divize za dražší výrobu), odemykání jednotek (mechanizovaná pěchota, střední a těžké tanky, spojovací a logistické roty, nemocnice) a bonusy průmyslu.
+Politika, focusy a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, § 8).
 
 ## Spuštění
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 242 testů
+npm test           # 271 testů
 npm run build      # kontrola vstupů (check-build.mjs) + produkční build do dist/
 ```
 
@@ -47,7 +48,7 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 | označit provincii nebo moře | klik |
 | pauza, rychlost | mezerník, + a − |
 | mapové režimy | 1–8 (politická, terén, státy, regiony, obyvatelé, vítězné body, zásobování, průmysl) |
-| panel Armáda, Nábor, Průmysl | V, N, I |
+| panel Armáda, Nábor, Průmysl, Výzkum | V, N, I, R |
 | vybrat jednotky | klik na žeton (Shift přidává, dvojklik = celá armáda), Shift + tažení = obdélník |
 | rozkaz | pravé tlačítko na mapě (nepřátelská provincie = útok), X = zastavit, F = zaměřit výběr |
 | zavřít okno, zrušit výběr, nabídka | Esc |
@@ -68,6 +69,13 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 3. Záložka **Výroba**: vojenské továrny jsou rozdělené do **linek** podle druhu výzbroje. Nová linka začíná s nízkou efektivitou a roste ke stropu; změna druhu výzbroje ji vynuluje. Hotové kusy jdou do skladu (vidět i v záložce Nábor).
 4. Záložka **Obchod**: tabulka surovin (těžba, dovoz, vývoz, potřeba, krytí) a smlouvy. Chybí-li surovina, linky vyrábějí pomaleji (nejméně 25 %). Dovoz stojí civilní továrny, vývozce dodá jen svůj přebytek a ve válce se smlouva přeruší.
 5. Mapový režim **Průmysl** (8) ukáže počet továren ve státech.
+
+### Jak na výzkum
+
+1. Panel **Výzkum** (R) má 2–5 slotů (podle velikosti země a laboratoří). Technologii zadáš tlačítkem *Zkoumat*; rozpracovaný postup se při přerušení zachová.
+2. Technologie mají **historický rok**: výzkum o roky předem je výrazně pomalejší. Zkoumání potřebuje hotové předpoklady (zamčené karty ukazují, co chybí).
+3. Technologie výzbroje zvedají **úroveň** (silnější útok a obrana všech divizí téhož druhu, ale kus výzbroje se vyrábí dráž). Další odemykají jednotky pro návrhář šablon a nové linky výroby; průmyslové dávají strop efektivity, body stavby, těžbu, rychlost výzkumu a sloty.
+4. Země bez hráče si technologie vybírají samy podle dějin.
 
 ## Dokumentace
 

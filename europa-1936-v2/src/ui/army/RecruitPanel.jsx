@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { templatesOf, templateView, queueOf, EQUIP, EQUIP_IDS, ARMY, getWorld } from '../../engine/index.js';
+import { isUnlocked, templatesOf, templateView, queueOf, EQUIP, EQUIP_IDS, ARMY, getWorld } from '../../engine/index.js';
 import { playerIdx, recruitSite, recruitDivisions, cancelTraining, openDesigner, removeTemplate } from '../actions.js';
 import { fmtInt, fmtNum, fmtDays } from '../format.js';
 import { ClsIcon } from './parts.jsx';
@@ -111,7 +111,7 @@ export function RecruitPanel() {
       <section className="stock">
         <div className="man"><Icon name="population" size={20} /><span><i>Lidská síla</i><b>{fmtInt(man)}</b></span></div>
         <ul className="eq">
-          {EQUIP_IDS.filter((e) => !EQUIP[e].unlock).map((e) => (
+          {EQUIP_IDS.filter((e) => isUnlocked(state, me, EQUIP[e].unlock)).map((e) => (
             <li key={e} title={EQUIP[e].n}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>
           ))}
         </ul>

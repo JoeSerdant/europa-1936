@@ -6,6 +6,7 @@ import {
   createArmy, renameArmy, disbandArmy, assignDivisions, createGroup, renameGroup, disbandGroup, assignArmies, assignCommander,
   setPlan, clearPlan, setPlanMode, suggestFront,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
+  startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
@@ -26,7 +27,7 @@ export function applyInsets() {
   mc.setInsets(u.selected || u.panel ? INSETS.gameDossier : INSETS.game);
 }
 
-const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', toast: null };
+const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', toast: null };
 
 export function goMenu() {
   gameStore.setState(createGame());
@@ -458,7 +459,8 @@ export function saveDesigner() {
   const s = gameStore.getState();
   const d = uiStore.getState().designer;
   if (!d || !s.player) return 'Nelze uložit.';
-  const err = validateTemplate(d.draft);
+  const me = playerIdx(s);
+  const err = validateTemplate(d.draft, (def) => isUnlocked(s, me, def.unlock));
   if (err) return err;
   const ok = d.tplId ? run(editTemplate, d.tplId, d.draft) : run(createTemplate, s.player, d.draft);
   if (!ok) return d.tplId ? 'Šablonu se nepodařilo upravit.' : `Země smí mít nejvýš ${ARMY.TPL_MAX} šablon.`;
@@ -524,3 +526,19 @@ export function newTrade(partner, res, amt, out) {
 const ownTrade = (s, id) => { const d = s.ind.trade.find((x) => x.id === id); const me = playerIdx(s); return !!d && (d.from === me || d.to === me); };
 export const changeTrade = (id, amt) => ownTrade(gameStore.getState(), id) && run(setTradeAmount, id, amt);
 export const dropTrade = (id) => ownTrade(gameStore.getState(), id) && run(cancelTrade, id);
+
+// ============================================================ výzkum (M20)
+export const setTechCat = (techCat) => setUi({ techCat });
+
+/** Zadá výzkum technologie do prvního volného slotu hráče (nebo do slotu `slot`); při neúspěchu řekne proč. */
+export function researchTech(id, slot = -1) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me || !TECHS[id]) return false;
+  const r = researchOf(s, me);
+  const target = slot >= 0 ? slot : r.slots.findIndex((x) => !x.id);
+  if (target < 0) { toast('Všechny sloty výzkumu jsou obsazené. Zrušte některý, nebo zadejte technologii přímo do slotu.'); return false; }
+  if (r.slots.some((x) => x.id === id)) { toast('Tato technologie se už zkoumá.'); return false; }
+  if (!run(startResearch, me, target, id)) { toast('Technologii zatím nelze zkoumat (chybí předpoklady).'); return false; }
+  return true;
+}
+export const stopResearch = (slot) => { const me = playerIdx(); return !!me && run(cancelResearch, me, slot); };

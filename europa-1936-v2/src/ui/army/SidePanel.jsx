@@ -5,12 +5,14 @@ import { DossierView } from '../hud/Dossier.jsx';
 import { ArmyPanel } from './ArmyPanel.jsx';
 import { RecruitPanel } from './RecruitPanel.jsx';
 import { IndustryPanel } from '../industry/IndustryPanel.jsx';
+import { ResearchPanel } from '../research/ResearchPanel.jsx';
 
 const TABS = [
   { id: null, name: 'Oblast', icon: 'provinces' },
   { id: 'army', name: 'Armáda', icon: 'army', key: 'V' },
   { id: 'recruit', name: 'Nábor', icon: 'recruit', key: 'N' },
   { id: 'industry', name: 'Průmysl', icon: 'industry', key: 'I' },
+  { id: 'research', name: 'Výzkum', icon: 'research', key: 'R' },
 ];
 
 /**
@@ -31,13 +33,13 @@ export function SidePanel() {
           return (
             <button key={t.name} role="tab" aria-selected={on} aria-disabled={off || undefined} className={`tab ${on ? 'on' : ''} ${off ? 'off' : ''}`}
               onClick={() => { if (!off) openPanel(t.id); }} title={off ? 'Klikněte na provincii na mapě' : t.key ? `${t.name} (${t.key})` : t.name}>
-              <Icon name={t.icon} size={17} />{t.name}
+              <Icon name={t.icon} size={17} /><span className="lbl">{t.name}</span>
             </button>
           );
         })}
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít panel" title="Zavřít (Esc)"><Icon name="close" size={18} /></button>
       </nav>
-      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : panel === 'industry' ? <IndustryPanel /> : <DossierView />}
+      {panel === 'army' ? <ArmyPanel /> : panel === 'recruit' ? <RecruitPanel /> : panel === 'industry' ? <IndustryPanel /> : panel === 'research' ? <ResearchPanel /> : <DossierView />}
     </aside>
   );
 }

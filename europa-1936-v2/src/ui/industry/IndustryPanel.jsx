@@ -3,7 +3,7 @@ import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import {
   getWorld, industryOf, stateIndustry, projectEta, allCountries, countryName, slotsUsed, slotsOf, atWar,
-  BUILDINGS, BUILDING_IDS, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND,
+  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND,
 } from '../../engine/index.js';
 import {
   playerIdx, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel,
@@ -16,7 +16,6 @@ const TABS = [
   { id: 'trade', name: 'Obchod' },
 ];
 const pct = (v) => `${Math.round(Math.max(0, v) * 100)} %`;
-const EQ_IDS = Object.keys(EQUIP_PROD).filter((e) => !EQUIP[e].unlock);
 const stateName = (s) => getWorld().states[s].n;
 
 function Sum({ label, value, title, cls }) {
@@ -99,7 +98,7 @@ function BuildTab({ state, me, sum }) {
 }
 
 // ------------------------------------------------------------------ výroba
-function LineCard({ line, state }) {
+function LineCard({ line, state, eqs }) {
   const warn = line.f < 0.999;
   const need = Object.entries(line.need);
   const short = need.filter(([r]) => (state.res[r]?.f ?? 0) < 0.999).map(([r]) => RESOURCES[r].n);
@@ -107,7 +106,7 @@ function LineCard({ line, state }) {
     <article className="tpl-card ind-line" aria-label={`Linka ${EQUIP[line.eq].n}`}>
       <header>
         <select value={line.eq} onChange={(e) => setLineEq(line.id, e.target.value)} aria-label="Druh výzbroje na lince" title="Změna druhu výzbroje vynuluje efektivitu">
-          {EQ_IDS.map((e) => <option key={e} value={e}>{EQUIP[e].n}</option>)}
+          {eqs.map((e) => <option key={e} value={e}>{EQUIP[e].n}</option>)}
         </select>
         <div className="ind-fac">
           <button className="icon-btn sm" onClick={() => setLineFac(line.id, line.fac - 1)} aria-label="Ubrat továrnu" title={line.fac === 1 ? 'Zrušit linku' : 'Ubrat továrnu'}><Icon name={line.fac === 1 ? 'trash' : 'minus'} size={14} /></button>
@@ -116,13 +115,13 @@ function LineCard({ line, state }) {
         </div>
       </header>
       <div className="tpl-stats ind-stats">
-        <Sum label="Efektivita" value={pct(line.eff)} title={`Roste ke stropu ${pct(IND.EFF_CAP)}`} />
+        <Sum label="Efektivita" value={pct(line.eff)} title={`Roste ke stropu ${pct(state.effCap)}`} />
         <Sum label="Kusů/den" value={fmtNum(line.perDay, 1)} title="Očekávaná výroba za den včetně nedostatku surovin" cls={warn ? 'warn' : ''} />
         <Sum label="Dnes" value={fmtInt(line.out)} title="Kusů dodaných do skladu při posledním denním výpočtu" />
         <Sum label="Surovin" value={pct(line.f)} title={warn ? `Nedostatek: ${short.join(', ')}` : 'Suroviny stačí'} cls={warn ? 'warn' : ''} />
       </div>
       <div className="tpl-cost">
-        <span className="cost" title="Výrobní body na kus">{fmtNum(EQUIP_PROD[line.eq].cost, 1)} IC</span>
+        <span className="cost" title="Výrobní body na kus (vyšší úroveň výzbroje je dražší)">{fmtNum(line.cost, 1)} IC</span>
         {need.map(([r, n]) => <span key={r} className={`cost ${(state.res[r]?.f ?? 0) < 0.999 ? 'lack' : ''}`} title={`${RESOURCES[r].n} na kus`}>{RESOURCES[r].ab} {fmtNum(n, 1)}</span>)}
       </div>
     </article>
@@ -131,22 +130,23 @@ function LineCard({ line, state }) {
 
 function ProdTab({ state, me, sum }) {
   const stock = state.mil.stock[me] || {};
+  const eqs = producibleEquip(state, me);
   return (
     <>
       <section className="stock ind-stock">
         <ul className="eq">
-          {EQ_IDS.map((e) => <li key={e} title={`${EQUIP[e].n} ve skladu`}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>)}
+          {eqs.map((e) => <li key={e} title={`${EQUIP[e].n} ve skladu`}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>)}
         </ul>
       </section>
       <div className="sec-head"><h3>Výrobní linky{sum.lines.length ? ` (${sum.lines.length})` : ''}</h3>
         <span className="ind-add">
           <select value="" onChange={(e) => { if (e.target.value) newLine(e.target.value, 1); }} aria-label="Nová linka" disabled={sum.milFree < 1 || sum.lines.length >= IND.LINES_MAX}>
             <option value="">+ Nová linka…</option>
-            {EQ_IDS.map((e) => <option key={e} value={e}>{EQUIP[e].n}</option>)}
+            {eqs.map((e) => <option key={e} value={e}>{EQUIP[e].n}</option>)}
           </select>
         </span>
       </div>
-      {!sum.lines.length ? <p className="empty">Žádná výroba. Postavte vojenské továrny a založte linku.</p> : sum.lines.map((l) => <LineCard key={l.id} line={l} state={sum} />)}
+      {!sum.lines.length ? <p className="empty">Žádná výroba. Postavte vojenské továrny a založte linku.</p> : sum.lines.map((l) => <LineCard key={l.id} line={l} state={sum} eqs={eqs} />)}
       {sum.milFree > 0 && <p className="muted ind-note">{sum.milFree} {sum.milFree === 1 ? 'volná továrna čeká' : 'volné továrny čekají'} na přiřazení k lince.</p>}
     </>
   );
