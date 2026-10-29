@@ -5,6 +5,7 @@ import { AIR } from './constants.js';
 import { PLANES } from '../../data/air/planes.js';
 import { atWar } from '../army/war.js';
 import { afbOf, levelMult } from './core.js';
+import { docMods } from '../doc/core.js';
 import { logAdd } from '../log.js';
 
 const key = (o, s) => `${o}:${s}`;
@@ -28,7 +29,8 @@ export function airDay(state) {
 
   // 2) síla hlídek podle země a cílového státu
   const patrol = new Map();      // `${o}:${s}` → síla
-  const power = (wg, field) => wg.n * PLANES[wg.t][field] * levelMult(state, wg.o, wg.t);
+  const dmul = { atk: 'patrol', cas: 'cas', bomb: 'bomb' };
+  const power = (wg, field) => wg.n * PLANES[wg.t][field] * levelMult(state, wg.o, wg.t) * (1 + (dmul[field] ? docMods(state, wg.o)[dmul[field]] : 0));
   for (const wg of wings) if (wg && wg.m === 'air') patrol.set(key(wg.o, wg.to), (patrol.get(key(wg.o, wg.to)) || 0) + power(wg, 'atk'));
   const foesPatrol = (o, s) => {
     let e = 0;

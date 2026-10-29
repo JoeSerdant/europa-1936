@@ -5,6 +5,7 @@ export * from './log.js';
 export { countryTable, worldTension } from './overview.js';
 export * from './nav/index.js';
 export * from './air/index.js';
+export * from './doc/index.js';
 export * from './commands.js';
 export * from './tick.js';
 export * from './selectors.js';

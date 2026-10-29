@@ -7,6 +7,7 @@ import { aiArmy, aiOffense, scanArmies } from './army.js';
 import { aiDiplomacy } from './diplomacy.js';
 import { aiNavy } from './navy.js';
 import { aiAir } from './air.js';
+import { aiDoctrine } from './doc.js';
 
 export function aiDay(state) {
   const w = getWorld();
@@ -19,6 +20,7 @@ export function aiDay(state) {
     state = aiArmy(state, o, scan);
     state = aiNavy(state, o);
     state = aiAir(state, o);
+    state = aiDoctrine(state, o);
     if (weekly) state = aiOffense(state, o);
     if (!state.dip.sub[o]) state = aiDiplomacy(state, o);   // loutky nevedou vlastní diplomacii (M33)
   }

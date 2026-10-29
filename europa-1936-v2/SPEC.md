@@ -471,6 +471,16 @@ Rozšíření § 4f (`GAME_VERSION` 13): `dip.sub[o]` = pán loutkového státu 
 - **Anexe loutky** (`annexPuppet`): za `ANNEX_PP` politické moci; státy se převedou, jednotky loutky zaniknou, země zanikne.
 - **Rozhraní:** dialog Mírová konference, v Diplomacii štítek „vaše loutka“ / „loutka“ a tlačítko Anektovat loutku; záznamy `puppet`, `annex` v Zprávách.
 
+## 4n. Doktríny (M34)
+
+Stav `state.doc = { ver, own[o] = { xp: { land, air, sea }, done: { id: 1 }, track: { větev: směr }, c } }` (`GAME_VERSION` 14). Data `src/data/doc/doctrines.js` (3 větve × 3 směry × 3 stupně), čísla `src/engine/doc/constants.js` (`DOC`).
+
+- **Zkušenosti** (`docDay`, o půlnoci): armáda `LAND_BASE` + za každou divizi v boji `LAND_BATTLE` (nejvíc `LAND_BATTLE_MAX`), letectvo za letadla na misi, námořnictvo za flotily na cestě; strop `XP_MAX`.
+- **Přijetí** (`adoptDoctrine`): stupeň n stojí `DOC.COST[n−1]` zkušeností své větve, vyžaduje stupeň n−1 téhož směru; první stupeň zamkne směr celé větve (`docBlock` vrací český důvod).
+- **Účinky** (`docMods`, součet hotových doktrín): pozemní jdou do `army/unit.js:modsOf` (klíče `atk, def, atkArm, atkInf, defInf, hillAtk, hillDef` spolu s bonusy velitele), letecké násobí sílu hlídek, podporu boje a bombardování v `airDay`, námořní palebnou sílu flotil v boji a nájezdy / krytí konvojů v `routeRisk`.
+- **AI** (`ai/doc.js`): každá země jde směrem podle svého pořadí a bere stupně, jakmile na ně má zkušenosti.
+- **Rozhraní:** okno Důstojnický sbor (klávesa `K`), zkušenosti v horní liště; cheat `xp <land|air|sea> <n>`; záznam `doctrine`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -603,13 +613,14 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
   - `air` (11): počáteční letectvo, příkazy (rezerva, kapacita, mise, dolet, válka), denní krok (podpora boje, krytí hlídkami, bombardování, ztráta letiště), výroba a letiště, výzkum, AI;
   - `convoy` (6): trasy po souši a po moři, potřeba konvojů, nedostatek lodí, riziko a krytí, nájezdy, determinismus;
   - `puppet` (8): konference (hráč a AI), loutka, anexe zbytku i loutky, války pána a příspěvky, uložení;
+  - `doctrine` (7): zkušenosti, cena a zámky, účinky, nezávislost větví, AI, uložení;
   - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
 - `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
   Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
 - `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
   zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
   vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
-  **86 kontrol** (od M33 mírová konference po kapitulaci; od M32 letecké mise na mapě; od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+  **88 kontrol** (od M34 okno Důstojnický sbor; od M33 mírová konference po kapitulaci; od M32 letecké mise na mapě; od M30 okno Letectvo, zadání mise; od M29 lišta nabídek, Logistika, konzole, seznam mapových režimů; od M27 žetony flotil, panel Námořnictvo (M), sestavení flotily, Esc ruší výběr flotily; od M26 panel Zprávy, filtry a Přehled zemí; od M25 rychlé uložení F6, dialog uložení, načtení z hlavního menu; od M24 volba obtížnosti AI a bílý mír po zkoušce války; od M23 ospravedlnění a vyhlášení války z karty oblasti a panel Diplomacie; od M22 panel Cíle a dialog události; od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní; od M21 panel Politika a horní lišta) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
 - Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
   při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
 - Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
@@ -635,6 +646,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M31** | **Konvoje a obchodní válka**: námořní obchod potřebuje transportní lodě, nájezdy a eskorta, AI | **hotovo** |
 | **M32** | **Letectvo na mapě**: čáry misí, kruhy hlídek, odznaky letišť | **hotovo** |
 | **M33** | **Loutkové státy a mírová konference**: rozhodnutí o zbytku poraženého, loutky vedou války pána a platí příspěvky, anexe | **hotovo** |
+| **M34** | **Doktríny**: zkušenosti tří větví, stromy po třech směrech a stupních, účinky na boj, letectvo a konvoje, AI, okno Důstojnický sbor | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

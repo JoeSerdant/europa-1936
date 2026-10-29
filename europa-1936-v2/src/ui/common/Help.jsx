@@ -10,7 +10,7 @@ const ROWS = [
   ['Rozkaz jednotkám (pohyb, útok)', ['pravé tlačítko myši']],
   ['Zastavit vybrané / zaměřit výběr', ['X', 'F']],
   ['Okna jako v HOI4: Vláda / Výzkum / Diplomacie / Obchod / Stavby / Výroba / Nábor / Logistika', ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I']],
-  ['Armáda / Letectvo / Cíle / Zprávy / Námořnictvo', ['V', 'A', 'C', 'L', 'M']],
+  ['Armáda / Letectvo / Doktríny / Cíle / Zprávy / Námořnictvo', ['V', 'A', 'K', 'C', 'L', 'M']],
   ['Přehled zemí', ['O']],
   ['Konzole s cheaty (help = seznam příkazů)', ['~', 'F2']],
   ['Zrušit výběr, zavřít okno', ['Esc']],

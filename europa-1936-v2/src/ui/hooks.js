@@ -93,6 +93,7 @@ export function useHotkeys() {
       else if (k === 'u') togglePanel('recruit');
       else if (k === 'i') togglePanel('logistics');
       else if (k === 'a') togglePanel('air');
+      else if (k === 'k') togglePanel('doctrine');
       else if (k === 'c') togglePanel('nat');
       else if (k === 'l') togglePanel('log');
       else if (k === 'm') togglePanel('navy');

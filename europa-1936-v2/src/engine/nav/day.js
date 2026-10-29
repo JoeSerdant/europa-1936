@@ -6,6 +6,7 @@ import { sameFaction } from '../dip/core.js';
 import { logAddMany } from '../log.js';
 import { NAV } from './constants.js';
 import { tradeRoute, routeRisk, needOf } from './convoy.js';
+import { docMods } from '../doc/core.js';
 import { seaGraph, seaKm, powerOf, fleetSpeed, seaRoute, homeSeas, seaBlocked } from './core.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
@@ -109,8 +110,9 @@ function combat(state) {
     const sideB = owners.filter((x) => !sideA.includes(x) && atWar(state.mil, A, x) || (!sideA.includes(x) && sideA.some((a) => atWar(state.mil, a, x))));
     if (!sideB.length) continue;
     const idsA = ids.filter((i) => sideA.includes(f0[i].o)), idsB = ids.filter((i) => sideB.includes(f0[i].o));
-    const pa = idsA.reduce((a, i) => { const p = powerOf(f0[i].ships); return { hp: a.hp + p.hp, atk: a.atk + p.atk }; }, { hp: 0, atk: 0 });
-    const pb = idsB.reduce((a, i) => { const p = powerOf(f0[i].ships); return { hp: a.hp + p.hp, atk: a.atk + p.atk }; }, { hp: 0, atk: 0 });
+    const fire = (i) => 1 + docMods(state, f0[i].o).fire;
+    const pa = idsA.reduce((a, i) => { const p = powerOf(f0[i].ships); return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i) }; }, { hp: 0, atk: 0 });
+    const pb = idsB.reduce((a, i) => { const p = powerOf(f0[i].ships); return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i) }; }, { hp: 0, atk: 0 });
     if (pa.atk <= 0 && pb.atk <= 0) continue;
     const fa = lossFrac(pb.atk, pa.hp), fb = lossFrac(pa.atk, pb.hp);
     if (!copy) { fleets = fleets.slice(); copy = true; }
