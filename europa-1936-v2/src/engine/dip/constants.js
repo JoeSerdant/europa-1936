@@ -1,5 +1,8 @@
 // Vyvážení diplomacie (M23): všechna čísla na jednom místě. Čas ve dnech.
 export const DIP = {
+  LEND_MAX: 0.25,         // půjčka a pronájem: nejvíc podíl skladu najednou
+  LEND_REL: 3,            // zlepšení vztahu za jednu zásilku
+  LEND_AI_MIN: 300,       // AI posílá jen druhy výzbroje, kterých má aspoň tolik kusů
   JUST_PP: 25,            // cena ospravedlnění války v politické moci
   JUST_DAYS: 30,          // doba ospravedlňování
   JUST_KEEP: 365,         // jak dlouho po dokončení ospravedlnění platí

@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { play } from './sound.js';
@@ -762,6 +762,18 @@ export const conferencePuppet = (id) => run(confPuppet, id);
 export const conferenceAnnex = (id) => run(confAnnex, id);
 export const conferenceSkip = (id) => run(confSkip, id);
 export const annexOwnPuppet = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(annexPuppet, me, t); };
+
+// ============================================================ půjčka a pronájem (M47)
+export function lendTo(tag, eq) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const n = lendMax(s, me, eq);
+  const why = lendBlock(s, me, t, eq, n);
+  if (why) { toast(why); return false; }
+  if (!run(lendLease, me, t, eq, n)) return false;
+  toast(`Odesláno: ${EQUIP[eq].n} × ${n} (${countryName(tag)}).`);
+  return true;
+}
 
 // ============================================================ doktríny (M34)
 export const adoptDoc = (id) => !!playerIdx() && run(adoptDoctrine, playerIdx(), id);
