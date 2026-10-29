@@ -16,6 +16,8 @@ export const AI = {
   STALEMATE_DAYS: 150,              // AI navrhne bílý mír, když válka trvá aspoň tolik dní bez výrazného skóre
   STALEMATE_SCORE: 0.03,
   PEACE_WS: 0.2,                    // nebo podpora války pod tuto hodnotu (a protivník nevede)
+  AIR_SHARE: 0.1,                   // podíl vojenských továren na letecké linky v míru
+  AIR_SHARE_WAR: 0.16,              // ve válce
   PLAN_DAYS: 7,                     // jak často AI přepočítává útočné plány
   STAB_MIN: 0.4,                    // nejmenší stabilita pro vyhlášení války
   LEVEL_EFF: 0.1,                   // odchylka výroby, staveb a výzkumu AI za stupeň obtížnosti od běžné

@@ -6,6 +6,7 @@ import { aiIndustry } from './industry.js';
 import { aiArmy, aiOffense, scanArmies } from './army.js';
 import { aiDiplomacy } from './diplomacy.js';
 import { aiNavy } from './navy.js';
+import { aiAir } from './air.js';
 
 export function aiDay(state) {
   const w = getWorld();
@@ -17,6 +18,7 @@ export function aiDay(state) {
     state = aiIndustry(state, o);
     state = aiArmy(state, o, scan);
     state = aiNavy(state, o);
+    state = aiAir(state, o);
     if (weekly) state = aiOffense(state, o);
     state = aiDiplomacy(state, o);
   }

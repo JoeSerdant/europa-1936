@@ -3,7 +3,7 @@
 Velká strategie ve stylu **Hearts of Iron IV**, odehrávající se v lednu 1936 na mapě Evropy, Středomoří, severní Afriky a Blízkého východu.
 Nová hra od základů: vlastní kód, vlastní mapa (generovaná z veřejných geodat Natural Earth), vlastní texty a grafika.
 
-**Stav: milník M29 – Lišta nabídek, Logistika a konzole.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
+**Stav: milník M30 – Letectvo.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
 minimapa a panel s údaji o oblasti (M17) a **pozemní armáda**: divize ze šablon (vlastní návrhář), výzbroj a lidská síla, výcvik, velitelé, armády a skupiny armád, plány (Hájit oblast, Linie fronty),
 rozkazy, zásobování, boj s šířkou fronty, terénem a organizací a počáteční rozmístění všech zemí. Války se zatím vyhlašují z karty oblasti (dočasně).
 A od M19 **průmysl**: státy se sloty podle velikosti, civilní a vojenské továrny, fronta staveb, výrobní linky výzbroje s efektivitou, suroviny (ocel, hliník, ropa, wolfram, chrom, guma), obchodní smlouvy, spotřební zboží a vylepšování infrastruktury (zlepšuje pochod i zásobování). Výroba plní sklady výzbroje, ze kterých se nabírají divize.
@@ -15,7 +15,7 @@ Rozhodnutí a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, �
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 406 testů
+npm test           # 417 testů
 npm run build      # kontrola vstupů (check-build.mjs) + produkční build do dist/
 ```
 
@@ -54,6 +54,7 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 | rychlé uložení / načtení | F6 / F9 |
 | panel Zprávy, přehled zemí | L, O |
 | panel Námořnictvo | M |
+| okno Letectvo | A |
 | okna Vláda, Výzkum, Diplomacie, Obchod, Stavby, Výroba, Nábor, Logistika | Q, W, E, R, T, Y, U, I |
 | konzole s cheaty (`help`) | ~ nebo F2 |
 | zavřít okno, zrušit výběr, nabídka | Esc |
@@ -109,6 +110,10 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 ### Uložené hry
 
 Nabídka (Esc) → **Uložit hru** / **Načíst hru**, nebo **Načíst hru** v hlavním menu. K dispozici je pět ručních slotů, **rychlé uložení** (F6, načtení F9) a **automatické uložení** jednou za herní měsíc. Uložené hry žijí v úložišti prohlížeče (`localStorage`) a platí jen pro stejnou verzi hry.
+
+### Jak na letectvo
+
+Okno **Letectvo** (A): letadla z výroby (linky v okně Výroba, Y) padají do rezervy; z rezervy sestavíte křídla na letištích (letiště stavíte v okně Stavby, T). Křídlu zadáte misi: **Hlídky** (stíhači kryjí stát a sestřelují nepřátelská letadla), **Podpora boje** (bonus k útoku vašich divizí ve zvoleném státě, nejlépe pod krytím hlídek) nebo **Bombardování** (válečný protivník ztrácí podporu války a zásoby). Mise se vyhodnocují o půlnoci.
 
 ### Jak na námořnictvo
 

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { Screen } from '../common/Screen.jsx';
-import { industryOf, EQUIP, EQUIP_IDS, RESOURCES, RES_IDS, SHIPS, SHIP_IDS, transportsOf, isUnlocked } from '../../engine/index.js';
+import { industryOf, EQUIP, EQUIP_IDS, RESOURCES, RES_IDS, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, transportsOf, isUnlocked } from '../../engine/index.js';
 import { playerIdx } from '../actions.js';
 import { fmtInt, fmtNum } from '../format.js';
 import { EQUIP_GROUPS } from '../../data/industry/groups.js';
@@ -32,6 +32,15 @@ export function LogisticsPanel() {
     const lines = sum.lines.filter((l) => l.eq === e);
     if (!lines.length && !(pool[e] > 0)) continue;
     rows.push({ e, n: SHIPS[e].n, ab: SHIPS[e].ab, color: groupColor(e), lines: lines.length, fac: lines.reduce((a, l) => a + l.fac, 0), day: lines.reduce((a, l) => a + l.perDay, 0), eff: lines.length ? lines.reduce((a, l) => a + l.eff * l.fac, 0) / Math.max(1, lines.reduce((a, l) => a + l.fac, 0)) : 0, have: pool[e] || 0, lack: lines.some((l) => l.f < 0.999) });
+  }
+  const apool = state.air.pool[me] || {};
+  const inWings = {};
+  for (const wg of state.air.wings) if (wg && wg.o === me) inWings[wg.t] = (inWings[wg.t] || 0) + wg.n;
+  for (const e of PLANE_IDS) {
+    const lines = sum.lines.filter((l) => l.eq === e);
+    const have = (apool[e] || 0) + (inWings[e] || 0);
+    if (!lines.length && !have) continue;
+    rows.push({ e, n: PLANES[e].n, ab: PLANES[e].ab, color: groupColor(e), lines: lines.length, fac: lines.reduce((a, l) => a + l.fac, 0), day: lines.reduce((a, l) => a + l.perDay, 0), eff: lines.length ? lines.reduce((a, l) => a + l.eff * l.fac, 0) / Math.max(1, lines.reduce((a, l) => a + l.fac, 0)) : 0, have, lack: lines.some((l) => l.f < 0.999) });
   }
   const tr = transportsOf(state, me);
   const milUse = sum.milAvail > 0 ? Math.min(1, sum.milUsed / sum.milAvail) : 0;

@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  runCheat, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { mapController as mc } from './map/controller.js';
@@ -745,3 +745,11 @@ export function runConsole(text) {
   }
   return r.msg;
 }
+
+// ============================================================ letectvo (M30)
+const myWing = (id) => { const s = gameStore.getState(), w = s.air.wings[id]; return w && w.o === playerIdx(s) ? w : null; };
+export const formAirWing = (t, n, st) => !!playerIdx() && run(formWing, playerIdx(), t, n, st);
+export const disbandAirWing = (id) => !!myWing(id) && run(disbandWing, id);
+export const reinforceAirWing = (id, n) => !!myWing(id) && run(reinforceWing, id, n);
+export const rebaseAirWing = (id, st) => !!myWing(id) && run(rebaseWing, id, st);
+export const setAirMission = (id, m, to) => !!myWing(id) && run(setMission, id, m, to);

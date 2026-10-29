@@ -4,12 +4,15 @@ import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { BUILDINGS, PROD, isShip, RESOURCES } from '../../data/industry/index.js';
 import { EQUIP } from '../../data/army/equipment.js';
+import { PLANES } from '../../data/air/planes.js';
 import { isUnlocked } from '../research/core.js';
 import { consOf } from '../politics/core.js';
 import { tallyOwners, factoryUse, slotsOf, slotsUsed } from './core.js';
 
 const patch = (state, p) => ({ ...state, ind: { ...state.ind, ...p, ver: state.ind.ver + 1 } });
 const isInt = (n) => Number.isInteger(n);
+const unlockOf = (eq) => (EQUIP[eq] ? EQUIP[eq].unlock : PLANES[eq].unlock);
+const kindOf = (eq) => (isShip(eq) ? 's' : PLANES[eq] ? 'a' : 'g');
 const validState = (w, s) => isInt(s) && s >= 1 && s < w.states.length;
 
 /** Zadá stavbu `kind` ('civ' | 'mil' | 'inf') ve státě `s`; stavba přijde na konec fronty vlastníka. Stát musí ovládat jeho vlastník. */
@@ -21,7 +24,7 @@ export function build(state, s, kind) {
   if (BUILDINGS[kind].port && !w.states[s].v.some((p) => w.portLevel[p] > 0)) return state;
   if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return state;
   if (BUILDINGS[kind].slot) { if (slotsUsed(ind, s) >= slotsOf(ind, s)) return state; }
-  else if ((ind.inf[s] || 0) + ind.build.filter((b) => b.s === s && b.k === kind).length >= I.INF_MAX) return state;
+  else if ((kind === 'inf' ? ind.inf[s] || 0 : ind.st[s][kind] || 0) + ind.build.filter((b) => b.s === s && b.k === kind).length >= (BUILDINGS[kind].max ?? I.INF_MAX)) return state;
   const id = ind.jn + 1;
   return patch(state, { jn: id, build: [...ind.build, { id, o, s, k: kind, prog: 0 }] });
 }
@@ -61,7 +64,7 @@ const milFree = (state, o, exceptId = 0) => freeFor(state, o, false, exceptId);
 /** Nová linka `eq` s `fac` továrnami (1 až volné továrny, nejvýš LINE_MAX_FAC). */
 export function addLine(state, o, eq, fac = 1) {
   const w = getWorld(), ind = state.ind;
-  if (!isInt(o) || o < 1 || o >= w.owners.length || !PROD[eq] || (!isShip(eq) && !isUnlocked(state, o, EQUIP[eq].unlock))) return state;
+  if (!isInt(o) || o < 1 || o >= w.owners.length || !PROD[eq] || (!isShip(eq) && !isUnlocked(state, o, unlockOf(eq)))) return state;
   if (!isInt(fac) || fac < 1 || fac > I.LINE_MAX_FAC || fac > freeFor(state, o, isShip(eq))) return state;
   if (ind.lines.filter((l) => l.o === o).length >= I.LINES_MAX) return state;
   const id = ind.jn + 1;
@@ -81,7 +84,7 @@ export function setLineFactories(state, id, fac) {
 /** Přepne linku na jiný druh výzbroje: efektivita i rozpracovaná výroba se ztratí. */
 export function setLineEquip(state, id, eq) {
   const ind = state.ind, l = ind.lines.find((x) => x.id === id);
-  if (!l || !PROD[eq] || eq === l.eq || isShip(eq) !== isShip(l.eq) || (!isShip(eq) && !isUnlocked(state, l.o, EQUIP[eq].unlock))) return state;
+  if (!l || !PROD[eq] || eq === l.eq || kindOf(eq) !== kindOf(l.eq) || (!isShip(eq) && !isUnlocked(state, l.o, unlockOf(eq)))) return state;
   return patch(state, { lines: ind.lines.map((x) => (x.id === id ? { ...x, eq, eff: I.EFF_START, acc: 0, out: 0 } : x)) });
 }
 

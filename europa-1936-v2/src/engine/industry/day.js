@@ -2,7 +2,7 @@
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { logAddMany } from '../log.js';
-import { BUILDINGS, isShip } from '../../data/industry/index.js';
+import { BUILDINGS, isShip, isAir } from '../../data/industry/index.js';
 import { modsOf } from '../research/core.js';
 import { polModsOf, outMult, consOf } from '../politics/core.js';
 import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
@@ -41,6 +41,7 @@ export function industryDay(state) {
   // 3) výroba, růst efektivity a stavby po zemích
   let stock = state.mil.stock, stockOwn = false;
   let navPool = state.nav ? state.nav.pool : null, poolOwn = false;
+  let airPool = state.air ? state.air.pool : null, airOwn = false;
   const lines = [];
   const progress = new Map();   // id stavby → nový postup
   const done = [];              // dokončené stavby
@@ -61,6 +62,9 @@ export function industryDay(state) {
       if (whole > 0 && isShip(l.eq) && navPool) {
         if (!poolOwn) { navPool = navPool.slice(); poolOwn = true; }
         navPool[o] = { ...navPool[o], [l.eq]: (navPool[o][l.eq] || 0) + whole };
+      } else if (whole > 0 && isAir(l.eq) && airPool) {
+        if (!airOwn) { airPool = airPool.slice(); airOwn = true; }
+        airPool[o] = { ...airPool[o], [l.eq]: (airPool[o][l.eq] || 0) + whole };
       } else if (whole > 0) {
         if (!stockOwn) { stock = stock.slice(); stockOwn = true; }
         stock[o] = { ...stock[o], [l.eq]: (stock[o][l.eq] || 0) + whole };
@@ -99,5 +103,6 @@ export function industryDay(state) {
   const mil = stockOwn ? { ...state.mil, stock } : state.mil;
   const player = state.player ? w.ownerIdx[state.player] : 0;
   const nav = poolOwn ? { ...state.nav, pool: navPool, ver: state.nav.ver + 1 } : state.nav;
-  return logAddMany({ ...state, mil, nav, ind: next }, done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k })));
+  const air = airOwn ? { ...state.air, pool: airPool, ver: state.air.ver + 1 } : state.air;
+  return logAddMany({ ...state, mil, nav, air, ind: next }, done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k })));
 }

@@ -3,7 +3,7 @@ import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import {
   getWorld, industryOf, stateIndustry, projectEta, allCountries, countryName, slotsUsed, slotsOf, atWar,
-  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS,
+  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, isUnlocked,
 } from '../../engine/index.js';
 import {
   playerIdx, closeSide, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel,
@@ -117,8 +117,8 @@ function BuildTab({ state, me, sum }) {
 }
 
 // ------------------------------------------------------------------ výroba
-const nameOf = (e) => (EQUIP[e] ? EQUIP[e].n : SHIPS[e].n);
-const abOf = (e) => (EQUIP[e] ? EQUIP[e].ab : SHIPS[e].ab);
+const nameOf = (e) => (EQUIP[e] || SHIPS[e] || PLANES[e]).n;
+const abOf = (e) => (EQUIP[e] || SHIPS[e] || PLANES[e]).ab;
 const groupOf = (e) => EQUIP_GROUPS.find((g) => g.items.includes(e)) || EQUIP_GROUPS[0];
 
 /** Dlaždice s zkratkou výzbroje v barvě skupiny. */
@@ -134,7 +134,7 @@ function FacRow({ n }) {
   return <span className="fac-row" aria-hidden="true">{cells}</span>;
 }
 
-function LineCard({ line, state, eqs }) {
+function LineCard({ line, state, eqs, planes }) {
   const warn = line.f < 0.999;
   const need = Object.entries(line.need);
   const short = need.filter(([r]) => (state.res[r]?.f ?? 0) < 0.999).map(([r]) => RESOURCES[r].n);
@@ -144,7 +144,7 @@ function LineCard({ line, state, eqs }) {
       <EqTile eq={line.eq} />
       <div className="pl-main">
         <select value={line.eq} onChange={(e) => setLineEq(line.id, e.target.value)} aria-label={line.naval ? 'Druh lodi na lince' : 'Druh výzbroje na lince'} title="Změna druhu vynuluje efektivitu">
-          {(line.naval ? SHIP_IDS : eqs).map((e) => <option key={e} value={e}>{nameOf(e)}</option>)}
+          {(line.naval ? SHIP_IDS : line.air ? planes : eqs).map((e) => <option key={e} value={e}>{nameOf(e)}</option>)}
         </select>
         <div className="tpl-cost">
           <span className="cost" title="Výrobní body na kus (vyšší úroveň výzbroje je dražší)">{fmtNum(line.cost, 1)} IC</span>
@@ -164,19 +164,19 @@ function LineCard({ line, state, eqs }) {
       <div className="tpl-stats ind-stats">
         <Sum label="Kusů/den" value={fmtNum(line.perDay, 1)} title="Očekávaná výroba za den včetně nedostatku surovin" cls={warn ? 'warn' : ''} />
         <Sum label="Dnes" value={fmtInt(line.out)} title="Kusů dodaných do skladu při posledním denním výpočtu" />
-        <Sum label="Ve skladu" value={line.naval ? fmtInt(state.pool ? (state.pool[line.eq] || 0) : 0) : fmtInt(stock)} title="Kusů nahromaděných ve skladu" />
+        <Sum label="Ve skladu" value={line.naval || line.air ? fmtInt(state.pool ? (state.pool[line.eq] || 0) : 0) : fmtInt(stock)} title="Kusů nahromaděných ve skladu" />
         <Sum label="Surovin" value={pct(line.f)} title={warn ? `Nedostatek: ${short.join(', ')}` : 'Suroviny stačí'} cls={warn ? 'warn' : ''} />
       </div>
     </article>
   );
 }
 
-function NewLinePicker({ sum, eqs }) {
+function NewLinePicker({ sum, eqs, planes }) {
   return (
     <section className="prod-new" aria-label="Nová linka">
       <div className="sec-head"><h3>Nová linka</h3><span className="muted">volné: {sum.milFree} továren{sum.dockFree > 0 ? `, ${sum.dockFree} loděnic` : ''}</span></div>
       {EQUIP_GROUPS.map((g) => {
-        const items = g.items.filter((e) => (g.naval ? true : eqs.includes(e)));
+        const items = g.items.filter((e) => (g.naval ? true : g.air ? planes.includes(e) : eqs.includes(e)));
         if (!items.length) return null;
         const free = g.naval ? sum.dockFree : sum.milFree;
         return (
@@ -200,17 +200,18 @@ function NewLinePicker({ sum, eqs }) {
 function ProdTab({ state, me, sum }) {
   const stock = state.mil.stock[me] || {};
   const eqs = producibleEquip(state, me);
-  const view = { ...sum, stock, pool: state.nav && state.nav.pool ? state.nav.pool[me] || {} : {} };
+  const planes = PLANE_IDS.filter((p) => isUnlocked(state, me, PLANES[p].unlock));
+  const view = { ...sum, stock, pool: { ...(state.nav && state.nav.pool ? state.nav.pool[me] || {} : {}), ...(state.air.pool[me] || {}) } };
   return (
     <div className="prod-cols">
       <div className="prod-left">
         <div className="sec-head"><h3>Výrobní linky{sum.lines.length ? ` (${sum.lines.length})` : ''}</h3><span className="muted">{sum.mil - sum.milFree} z {sum.mil} vojenských továren pracuje</span></div>
-        {!sum.lines.length ? <p className="empty">Žádná výroba. Vyberte vpravo druh výzbroje a založte linku.</p> : sum.lines.map((l) => <LineCard key={l.id} line={l} state={view} eqs={eqs} />)}
+        {!sum.lines.length ? <p className="empty">Žádná výroba. Vyberte vpravo druh výzbroje a založte linku.</p> : sum.lines.map((l) => <LineCard key={l.id} line={l} state={view} eqs={eqs} planes={planes} />)}
         {sum.dockFree > 0 && <p className="muted ind-note">{sum.dockFree} {sum.dockFree === 1 ? 'volná loděnice čeká' : 'volné loděnice čekají'} na lodní linku.</p>}
         {sum.milFree > 0 && <p className="muted ind-note">{sum.milFree} {sum.milFree === 1 ? 'volná továrna čeká' : 'volné továrny čekají'} na přiřazení k lince.</p>}
       </div>
       <aside className="prod-right">
-        <NewLinePicker sum={sum} eqs={eqs} />
+        <NewLinePicker sum={sum} eqs={eqs} planes={planes} />
         <section className="stock ind-stock prod-stock" aria-label="Sklad">
           <div className="sec-head"><h3>Sklad výzbroje</h3></div>
           <ul className="eq">

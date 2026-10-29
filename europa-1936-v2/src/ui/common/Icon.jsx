@@ -25,6 +25,7 @@ const ICONS = {
   navy: 'M3 15h18l-3 4H6zM12 4v7M9 8h6M6 11h12v4M17 5l3 2-3 2',
   build: 'M3 20h18M6 20V9l6-5 6 5v11M10 20v-6h4v6M9 11h6',
   trade: 'M4 8h14l-3.5-3.5M20 16H6l3.5 3.5M12 11v2',
+  air: 'M12 3l2 6.5 7.5 3.5v2L14 13l-.5 5 2.5 1.8V21.5L12 20.5l-4 1v-1.7l2.5-1.8-.5-5-7.5 2V13l7.5-3.5z',
   chevron: 'M8 10l4 4 4-4',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',

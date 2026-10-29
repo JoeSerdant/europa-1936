@@ -10,6 +10,7 @@ export const CATS = {
   zbran: { n: 'Dělostřelectvo' },
   tanky: { n: 'Tanky a motorizace' },
   podpora: { n: 'Podpora a logistika' },
+  letectvo: { n: 'Letectvo' },
   prumysl: { n: 'Průmysl a věda' },
 };
 export const CAT_IDS = Object.keys(CATS);
@@ -48,6 +49,15 @@ export const TECHS = {
   nem: t('podpora', 'Polní nemocnice', 1938, 70, [], {}, 'Odemyká polní nemocnici: rychlejší doplňování síly po bojích.'),
   podpora2: t('podpora', 'Podpůrná výzbroj II', 1938, 70, [], { lv: { podpora: 2 } }, 'Lepší vybavení podpůrných rot.'),
   podpora3: t('podpora', 'Podpůrná výzbroj III', 1942, 100, ['podpora2'], { lv: { podpora: 3 } }, 'Moderní polní vybavení.'),
+  // ---- letectvo ----
+  sti2: t('letectvo', 'Stíhací letouny II', 1937, 80, [], { lv: { sti: 2 } }, 'Rychlejší jednoplošníky: silnější hlídky.'),
+  sti3: t('letectvo', 'Stíhací letouny III', 1940, 110, ['sti2'], { lv: { sti: 3 } }, 'Silnější motory a výzbroj stíhačů.'),
+  bit2: t('letectvo', 'Bitevní letouny II', 1937, 80, [], { lv: { bit: 2 } }, 'Lepší podpora pozemních bojů.'),
+  bit3: t('letectvo', 'Bitevní letouny III', 1941, 110, ['bit2'], { lv: { bit: 3 } }, 'Pancéřované bitevní stroje.'),
+  tac2: t('letectvo', 'Taktické bombardéry II', 1938, 90, [], { lv: { tac: 2 } }, 'Větší nálož a dolet.'),
+  tac3: t('letectvo', 'Taktické bombardéry III', 1941, 110, ['tac2'], { lv: { tac: 3 } }, 'Rychlé dvoumotorové bombardéry.'),
+  strbomb: t('letectvo', 'Strategické bombardování', 1939, 130, ['tac2'], {}, 'Odemyká strategický bombardér: dálkové údery na zázemí protivníka.'),
+  str2: t('letectvo', 'Strategické bombardéry II', 1943, 130, ['strbomb'], { lv: { str: 2 } }, 'Čtyřmotorové těžké bombardéry.'),
   // ---- průmysl a věda ----
   org1: t('prumysl', 'Organizace výroby I', 1936, 60, [], { mod: { effCap: 0.05 } }, 'Strop efektivity výrobních linek +5 %.'),
   org2: t('prumysl', 'Organizace výroby II', 1938, 90, ['org1'], { mod: { effCap: 0.05 } }, 'Strop efektivity výrobních linek +5 %.'),

@@ -13,6 +13,7 @@ const ITEMS = [
   { id: 'prod', name: 'Výroba', icon: 'industry', key: 'Y', ind: 'prod' },
   { id: 'recruit', name: 'Nábor a rozmístění', icon: 'recruit', key: 'U' },
   { id: 'logistics', name: 'Logistika', icon: 'supply', key: 'I' },
+  { id: 'air', name: 'Letectvo', icon: 'air', key: 'A' },
   { id: 'army', name: 'Armáda', icon: 'army', key: 'V' },
   { id: 'navy', name: 'Námořnictvo', icon: 'navy', key: 'M' },
   { id: 'log', name: 'Zprávy', icon: 'log', key: 'L' },

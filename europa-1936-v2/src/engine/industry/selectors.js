@@ -2,7 +2,7 @@
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { EQUIP } from '../../data/army/equipment.js';
-import { BUILDINGS, EQUIP_PROD, PROD, isShip } from '../../data/industry/index.js';
+import { BUILDINGS, EQUIP_PROD, PROD, isShip, isAir } from '../../data/industry/index.js';
 import { modsOf, isUnlocked } from '../research/core.js';
 import { polModsOf, outMult, consOf } from '../politics/core.js';
 import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, lineRate, slotsOf, slotsUsed, categoryOf, itemCost } from './core.js';
@@ -30,7 +30,7 @@ export function industryOf(state, o) {
     civAvail: Math.max(0, use.civAfterCons - tradeCiv), milAvail: use.milAvail, milUsed: used, milFree: Math.max(0, Math.floor(use.milAvail - used + 1e-9)),
     points: Math.max(0, use.civAfterCons - tradeCiv) * I.IC_PER_FAC * (1 + mods.build + pm.build) * out,
     effCap: I.EFF_CAP + mods.effCap,
-    lines: lines.map((l) => ({ ...l, rate: lineRate(l, lv), perDay: lineRate(l, lv) * l.f * out, need: PROD[l.eq].res, cost: itemCost(l.eq, lv), naval: isShip(l.eq) })),
+    lines: lines.map((l) => ({ ...l, rate: lineRate(l, lv), perDay: lineRate(l, lv) * l.f * out, need: PROD[l.eq].res, cost: itemCost(l.eq, lv), naval: isShip(l.eq), air: isAir(l.eq) })),
     res,
     build: ind.build.filter((b) => b.o === o),
     trade: ind.trade.filter((d) => d.from === o || d.to === o),
@@ -44,7 +44,7 @@ export function stateIndustry(state, s) {
   const w = getWorld();
   const cat = categoryOf(w.states[s].p);
   return {
-    s, cat, civ: e.civ, mil: e.mil, dok: e.dok || 0, port: w.states[s].v.some((p) => w.portLevel[p] > 0), inf: ind.inf[s] || 0, res: e.res,
+    s, cat, civ: e.civ, mil: e.mil, dok: e.dok || 0, port: w.states[s].v.some((p) => w.portLevel[p] > 0), inf: ind.inf[s] || 0, afb: e.afb || 0, res: e.res,
     slots: slotsOf(ind, s), used: slotsUsed(ind, s),
     queued: ind.build.filter((b) => b.s === s),
   };
