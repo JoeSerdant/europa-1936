@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  guarantee, revokeGuarantee, guaranteeBlock, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { play } from './sound.js';
@@ -762,6 +762,18 @@ export const conferencePuppet = (id) => run(confPuppet, id);
 export const conferenceAnnex = (id) => run(confAnnex, id);
 export const conferenceSkip = (id) => run(confSkip, id);
 export const annexOwnPuppet = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(annexPuppet, me, t); };
+
+// ============================================================ záruky nezávislosti (M48)
+export function guaranteeFor(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = guaranteeBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  if (!run(guarantee, me, t)) return false;
+  toast(`Zaručujete nezávislost: ${countryName(tag)}.`);
+  return true;
+}
+export const revokeGuaranteeFor = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(revokeGuarantee, me, t); };
 
 // ============================================================ půjčka a pronájem (M47)
 export function lendTo(tag, eq) {

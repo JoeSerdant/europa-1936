@@ -5,6 +5,7 @@ import { relOf, factionOf, sameFaction, warScore, vpHeld, hasCapitulated } from 
 import { atWar } from '../army/war.js';
 import { overlordOf } from './subjects.js';
 import { lendFriend } from './lend.js';
+import { guarantees, guaranteeBlock } from './guarantee.js';
 import { warBlock, justReady, peaceBlock, inviteBlock } from './commands.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
@@ -27,6 +28,7 @@ export function diplomacyOf(state, o) {
       canJustify: !wb && !j && state.dip.just.filter((x) => x.a === o).length < DIP.JUST_MAX && state.pol.own[o].pp >= DIP.JUST_PP,
       justifyBlock: wb || (j ? 'Už se ospravedlňuje.' : state.dip.just.filter((x) => x.a === o).length >= DIP.JUST_MAX ? 'Příliš mnoho ospravedlnění.' : state.pol.own[o].pp < DIP.JUST_PP ? `Chybí politická moc (${Math.ceil(DIP.JUST_PP - state.pol.own[o].pp)}).` : null),
       canDeclare: !wb && justReady(state, o, t),
+      garMine: guarantees(state, o, t), garTheirs: guarantees(state, t, o), garBlock: guaranteeBlock(state, o, t),
       friend: lendFriend(state, o, t) && !hasCapitulated(state, t) && !war,
       peaceBlock: war ? peaceBlock(state, o, t) : 'Nejste ve válce.',
       inviteBlock: fac ? inviteBlock(state, o, t) : 'Nejste v žádném bloku.',

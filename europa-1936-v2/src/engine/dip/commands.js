@@ -6,6 +6,7 @@ import { declareWar, makePeace, cleanName } from '../army/commands.js';
 import { atWar, enemiesOf } from '../army/war.js';
 import { DIP } from './constants.js';
 import { logAdd } from '../log.js';
+import { joiningGuarantors, breakGuarantees } from './guarantee.js';
 import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey } from './core.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
@@ -42,8 +43,10 @@ export const justReady = (state, a, b) => state.dip.just.some((j) => j.a === a &
 export function startWar(state, a, b) {
   if (warBlock(state, a, b) || !justReady(state, a, b)) return state;
   const attackers = campOf(state, a).filter((x) => !hasCapitulated(state, x));
-  const defenders = campOf(state, b).filter((x) => !hasCapitulated(state, x));
-  let s = state;
+  let defenders = campOf(state, b).filter((x) => !hasCapitulated(state, x));
+  const guard = joiningGuarantors(state, b, attackers);   // M48: zaručitelé obránce se přidají i s bloky
+  for (const g of guard) for (const x of campOf(state, g)) if (!hasCapitulated(state, x) && !attackers.includes(x) && !defenders.includes(x)) defenders = [...defenders, x];
+  let s = breakGuarantees(state, b, attackers);
   const since = { ...state.dip.since };
   for (const x of attackers) for (const y of defenders) {
     if (x === y || atWar(s.mil, x, y)) continue;

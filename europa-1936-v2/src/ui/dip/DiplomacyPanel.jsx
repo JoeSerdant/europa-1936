@@ -3,7 +3,7 @@ import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { diplomacyOf, DIP, getWorld, EQUIP, EQUIP_IDS } from '../../engine/index.js';
-import { playerIdx, annexOwnPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { playerIdx, annexOwnPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -28,6 +28,8 @@ function Row({ c, me }) {
   const [open, setOpen] = useState(false);
   const flags = [];
   if (c.war) flags.push(['war', 'válka']);
+  if (c.garMine) flags.push(['ally', 'vaše záruka']);
+  else if (c.garTheirs) flags.push(['ally', 'zaručuje vás']);
   if (c.ally) flags.push(['ally', 'spojenec']);
   if (c.mine) flags.push(['ally', 'vaše loutka']);
   else if (c.overlord) flags.push(['cap', 'loutka']);
@@ -54,6 +56,9 @@ function Row({ c, me }) {
               <button className="sbtn" disabled={!c.canJustify} onClick={() => justifyOn(c.tag)} title={c.justifyBlock || `Ospravedlnit válku: ${DIP.JUST_PP} PM, ${DIP.JUST_DAYS} dní`}>Ospravedlnit válku</button>
             )}
             {c.mine && <button className="sbtn danger" disabled={!!c.annexBlock} onClick={() => annexOwnPuppet(c.tag)} title={c.annexBlock || 'Anektovat loutku (stojí politickou moc)'}>Anektovat loutku</button>}
+            {c.garMine
+              ? <button className="sbtn" onClick={() => revokeGuaranteeFor(c.tag)} title="Zrušit záruku nezávislosti">Zrušit záruku</button>
+              : <button className="sbtn" disabled={!!c.garBlock} onClick={() => guaranteeFor(c.tag)} title={c.garBlock || `Zaručit nezávislost (${DIP.GAR_PP} PM): napadne-li ji někdo, přidáte se do války`}>Zaručit nezávislost</button>}
             <button className="sbtn" disabled={!!c.inviteBlock} onClick={() => inviteBloc(c.tag)} title={c.inviteBlock || 'Pozvat do bloku'}>Pozvat do bloku</button>
             <button className="sbtn" onClick={() => selectLabel(getWorld().owners[c.o].cap, true)} title="Ukázat hlavní město"><Icon name="target" size={14} />Ukázat</button>
           </div>

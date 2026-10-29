@@ -56,3 +56,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 41. Statistiky (§ 4w v `SPEC.md`): `state.stat` plní jen `statHour` (snímek každých 30 dní, limit `STAT.MAX`); nová metrika = položka v `STAT_METRICS` + `snapshot` + `createStat` + zvednout `GAME_VERSION`.
 42. Železniční pohyb (§ 4x v `SPEC.md`): rychlost po železnici se počítá jen v `stepHoursFor` (hledání cest) a v `movementStep` (skutečný pohyb) se stejným vzorcem; změna vzorce = změnit obě místa a `test/rail.test.js`.
 43. Půjčka a pronájem (§ 4y v `SPEC.md`): zásilky výzbroje jdou jen příkazem `lendLease` (kontroly v `lendBlock`), hráčova akce v `ui/actions.js lendTo`; nové druhy zásob se do zásilek dostanou samy přes `EQUIP_IDS`.
+44. Záruky (§ 4z v `SPEC.md`): zapojení zaručitelů do války se děje jen v `startWar` (jednou, přes `joiningGuarantors`); nová záruka = `guarantee`, nikdy přímý zápis do `dip.gar`.
