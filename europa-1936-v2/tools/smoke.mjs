@@ -88,6 +88,7 @@ try {
 
   await page.keyboard.press('Space');
   await page.waitForTimeout(1500);
+  check('průvodce ukazuje úkol', (await page.locator('.tutorial').count()) === 1 && /průvodce \d+\/\d+/i.test(await page.locator('.tutorial').innerText()));
   check('čas běží', !(await page.locator('.topbar').innerText()).includes('1. ledna 1936'));
   await page.keyboard.press('Space');
 
@@ -587,7 +588,7 @@ try {
   check('Esc zavře dialog uložených her', (await page.locator('.save-dialog').count()) === 0);
   await page.keyboard.press('Escape');
   await page.waitForSelector('.dialog');
-  check('nabídka má přepínač zvuku a stránka vlastní kurzory', (await page.getByRole('button', { name: /Zvuk:/ }).count()) === 1 && /url\(/.test(await page.evaluate(() => getComputedStyle(document.body).cursor)));
+  check('nabídka má přepínač zvuku a průvodce, stránka vlastní kurzory', (await page.getByRole('button', { name: /Zvuk:/ }).count()) === 1 && (await page.getByRole('button', { name: /Průvodce:/ }).count()) === 1 && /url\(/.test(await page.evaluate(() => getComputedStyle(document.body).cursor)));
   await page.getByRole('button', { name: 'Hlavní menu' }).click();
   await page.getByRole('button', { name: 'Odejít do menu' }).click();
   await page.waitForSelector('.menu');

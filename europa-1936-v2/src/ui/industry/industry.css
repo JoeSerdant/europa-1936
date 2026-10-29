@@ -418,3 +418,9 @@ button.st-row:hover { background: var(--ink-3); }
 /* ------------------------------------------------------------------ scénáře (M39) */
 .scn-opts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .scn-info { font-size: 12.5px; margin: 2px 0 6px; }
+
+/* ------------------------------------------------------------------ průvodce (M40) */
+.tutorial { width: min(440px, 100%); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 6px; pointer-events: auto; border-top: 2px solid var(--brass); }
+.tutorial header { display: flex; align-items: center; justify-content: space-between; }
+.tutorial header b { font: 600 13px/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass-hi); }
+.tutorial p { font-size: 14px; line-height: 1.35; }
