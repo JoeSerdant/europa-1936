@@ -1,0 +1,32 @@
+# Evropa 1936 – 2. generace: pokyny pro Claude
+
+Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, texty a grafika**. Staré projekty (`europa-1936`, M0–M16) se nemění.
+**Nejdřív si přečti `SPEC.md`** (architektura, formát světa, plán milníků). Hra je **jen pro počítač** – žádná optimalizace pro mobily a dotyk.
+
+## Příkazy
+
+- `npm test` – vitest; musí projít před každým „hotovo“
+- `npm run build` – produkční build; musí projít
+- `npm run dev` – vývojový server (s `?debug` vystaví `window.__e1936`)
+- `npm run world` – přegeneruje `src/data/world.json` (po `npm run world:fetch`); po změně generátoru si prohlédni PNG (`npm run world:preview`)
+- `node tools/smoke.mjs [šířka výška]` – kontrola v prohlížeči (Playwright; potřebuje běžící `npm run dev` nebo `URL=…`); před „hotovo“ při 1920×1080 i 1366×768
+
+## Pravidla
+
+1. `src/engine/` je čistá logika: bez Reactu, DOM, `Math.random`, `Date.now`; náhoda jen přes `rng.js`, čas jen přes `state.tick` (1 tick = 1 herní hodina).
+2. Herní stav je jeden serializovatelný JSON; příkazy jsou čisté `(state, …) → state` a při neplatném vstupu vrací **tentýž objekt**. Svět je neměnný a do stavu se nekopíruje.
+3. Nový systém = tvar dat do `SPEC.md` → čistá funkce v `engine/` → zapojit do `advanceHour` v `tick.js` → testy → až potom UI.
+4. Obsah hry (jednotky, technologie, focusy, události, zdroje) patří do `src/data/` jako data, ne do podmínek v kódu.
+5. `src/data/world.json` je generovaný – needituj ručně, uprav `tools/` a přegeneruj. Změna světa mění ID provincií: aktualizuj testy.
+6. Texty v rozhraní a komentáře česky; identifikátory v kódu bez diakritiky.
+7. Změna architektury, tvaru stavu nebo formátu světa = aktualizace `SPEC.md` ve stejném kroku; změna tvaru stavu zvedne `GAME_VERSION`.
+8. **Selektory `useGame`/`useUi` musí vracet stabilní hodnoty** (primitiva nebo existující objekty), jinak se `useSyncExternalStore` zacyklí. Drahé souhrny (země, státy) se cachují podle pole `stateOwner`.
+9. Mapa se **nekreslí z Reactu**: `mapController` + `MapRenderer` (dlaždicová mezipaměť). Změny vzhledu mapy dělej přes `invalidate()` (nová `version`), nikdy nekresli do plátna mimo renderer. Popisky se kreslí s ochranou proti překrývání.
+10. Změny stavu, UI a kamery dělej společně v `ui/actions.js`; klávesy jsou v `ui/hooks.js` (a v `MapView.jsx` pro pohyb kamery).
+11. Z HOI4 se **nikdy nekopíruje** mapa, text, tabulka dat ani obrázek; jeho soubory slouží jen k pochopení mechanik. Vlajky bez státních znaků a bez symbolů extremistických režimů (Německo = prostá černo-bílo-červená trikolóra, SSSR = rudá s hvězdou).
+12. Pracuj po malých ověřitelných krocích. Po dokončení milníku uveď, co je hotové a co se ověřilo (testy, build, prohlížeč při 1920×1080 a 1366×768), a navrhni **jeden** další krok.
+13. Výkon: snímek mapy mívá 3–8 ms; po úpravě renderu změř (`__e1936.map.renderer.stats`) – žádný nový vektor nesmí do každého snímku, patří do dlaždic. Výjimka je vrstva jednotek (žetony, cesty, plán – `ui/map/units.js`): hýbe se, kreslí se nad dlaždicemi a jen při změně; drž ji kolem 3–4 ms (`stats.unitsMs`), při tisících žetonů přejít na sprite mezipaměť.
+14. Nasazení: `npm run build` musí projít i na čisté kopii (bez `node_modules`, `dist`, `tools/cache`) a vytvořit **plochý** `dist/` s relativními cestami (`assetsDir: ''`, `base: './'`). `check-build.mjs` zůstává **v kořeni** (kořenové soubory se na server dostanou vždy; nahrávací nástroje z Windows umí složky poškodit). Přesuneš-li vstupní soubor (`src/main.jsx`, `src/App.jsx`, `src/data/*`), uprav `REQUIRED` v `check-build.mjs` – kontrola před buildem a test „skutečný projekt“ na to spoléhají.
+15. Armáda (§ 4a v `SPEC.md`): všechna čísla vyvážení jsou v `src/engine/army/constants.js` (`ARMY`), data praporů, výzbroje, terénu a sestav v `src/data/army/`. Stav `state.mil` se mění jen čistými příkazy (`army/commands.js`) nebo v hodinovém systému přes pracovní kontext `army/ctx.js` (kopie při prvním zápisu, bez změny = tentýž objekt). Příkazy nehlídají, komu divize patří vůči hráči – to dělá `ui/actions.js`; engine je neutrální pro AI (M24). Nová data v `mil` = SPEC § 4a + `GAME_VERSION` + test čistoty a determinismu (`test/army-system.test.js`).
+16. Průmysl (§ 4b v `SPEC.md`): čísla vyvážení jsou v `src/engine/industry/constants.js` (`IND`), data budov, kategorií, cen výzbroje, surovin a počátečního průmyslu v `src/data/industry/`. Stav `state.ind` se mění jen čistými příkazy (`industry/commands.js`) a jednou denně v `industryDay` (po půlnoci, po armádě). Příkazy nehlídají vlastnictví vůči hráči – to dělá `ui/actions.js`. Infrastruktura provincie se čte přes `infraOf(state)` (základ světa + stavby), ne přímo z `geo(w).infra`. Nová data v `ind` = SPEC § 4b + `GAME_VERSION` + test čistoty a determinismu (`test/industry.test.js`).
+17. Výzkum (§ 4c v `SPEC.md`): čísla v `src/engine/research/constants.js` (`RES`), stromy v `src/data/research/techs.js`. Stav `state.tech` se mění jen příkazy (`research/commands.js`) a denním krokem `researchDay`; úrovně výzbroje žijí v `mil.lv` (mění je jen dokončený výzkum) a statistiky divizí je čtou přes `statsOf`/`tplStats` – nikdy `deriveStats(tpl)` bez úrovní tam, kde záleží na síle země. Zámek jednotky = pole `unlock` s id technologie; kontrola vždy přes `isUnlocked(state, o, klíč)`. Nová data v `tech`/`mil.lv` = SPEC § 4c + `GAME_VERSION` + test čistoty (`test/research.test.js`).

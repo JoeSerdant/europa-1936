@@ -1,0 +1,138 @@
+// Státy (provincie 1. řádu) Sovětského svazu v rámci mapy a Blízkého východu. Formát viz statesWest.js.
+
+export const SOV = [
+  // sever a severozápad
+  ['Murmansk', 34.0, 67.8, { sp: 2 }],
+  ['Karélie', 33.3, 63.4, { sp: 1.6 }],
+  ['Leningrad', 30.3, 59.9, { w: 0.8 }],
+  ['Novgorod', 31.9, 58.4],
+  ['Pskov', 29.0, 57.4],
+  ['Archangelsk', 41.0, 64.5, { sp: 2.2 }],
+  ['Vologda', 40.5, 59.2],
+  ['Komi', 51.0, 61.5, { sp: 2.2 }],
+  ['Pečora', 55.0, 66.0, { sp: 3 }],
+  ['Polární Ural', 62.0, 65.5, { sp: 3 }],
+  // střed
+  ['Moskva', 37.6, 55.75, { w: 0.8 }],
+  ['Tver', 35.9, 57.0],
+  ['Smolensk', 32.0, 54.8],
+  ['Brjansk', 34.4, 53.1],
+  ['Kursk', 36.2, 51.8],
+  ['Tula', 37.6, 54.2],
+  ['Rjazaň', 40.8, 54.6],
+  ['Voroněž', 39.2, 51.5],
+  ['Tambov', 41.5, 52.8],
+  ['Jaroslavl', 40.0, 57.4],
+  ['Gorkij', 44.0, 56.3],
+  ['Kirov', 49.0, 58.6, { sp: 1.4 }],
+  ['Čuvašsko', 47.3, 55.9],
+  ['Kazaň', 50.0, 55.6],
+  ['Udmurtsko', 53.2, 57.0],
+  ['Perm', 56.5, 58.5, { sp: 1.2 }],
+  ['Sverdlovsk', 60.6, 57.0, { sp: 1.2 }],
+  ['Čeljabinsk', 60.8, 54.6],
+  ['Ufa', 56.0, 54.6],
+  ['Orenburg', 55.2, 51.8, { sp: 1.2 }],
+  ['Penza', 45.0, 53.2],
+  ['Uljanovsk', 48.3, 54.3],
+  ['Kujbyšev', 50.5, 53.0],
+  ['Saratov', 46.0, 51.5],
+  ['Stalingrad', 44.5, 49.0],
+  ['Astrachaň', 47.5, 46.5, { sp: 1.6 }],
+  ['Kalmycko', 45.0, 46.2, { sp: 1.6 }],
+  // Bělorusko
+  ['Minsk', 27.6, 53.9],
+  ['Vitebsk', 30.2, 55.2],
+  ['Mogilev', 30.5, 53.9],
+  ['Gomel', 30.9, 52.4],
+  // Ukrajina
+  ['Kyjev', 30.5, 50.4],
+  ['Žytomyr', 28.5, 50.3],
+  ['Podolí', 28.2, 49.2],
+  ['Černihiv', 31.8, 51.4],
+  ['Sumy', 34.8, 50.9],
+  ['Charkov', 36.3, 49.8],
+  ['Poltava', 34.5, 49.5],
+  ['Čerkasy', 31.8, 49.3],
+  ['Kirovohrad', 32.4, 48.5],
+  ['Dněpropetrovsk', 35.0, 48.5],
+  ['Doněck', 37.8, 48.0],
+  ['Luhansk', 39.3, 48.6],
+  ['Záporoží', 35.6, 47.2],
+  ['Nikolajev', 32.0, 47.0],
+  ['Oděsa', 30.7, 46.5],
+  ['Krym', 34.3, 45.0],
+  ['Moldavská ASSR', 29.3, 47.5, { w: 0.5 }],
+  // Don, Kuban, Kavkaz
+  ['Rostov', 40.0, 47.4],
+  ['Kuban', 39.0, 45.1],
+  ['Stavropol', 42.5, 44.9],
+  ['Severní Kavkaz', 44.2, 43.3],
+  ['Čečensko', 45.8, 43.4, { w: 0.7 }],
+  ['Dagestán', 47.2, 42.9, { w: 0.8 }],
+  // Zakavkazsko
+  ['Abcházie a Kolchida', 41.8, 42.5],
+  ['Tbilisi', 44.4, 41.8],
+  ['Arménie', 44.9, 40.2],
+  ['Karabach', 46.6, 40.3],
+  ['Baku', 49.4, 40.4],
+  // Střední Asie v rámci mapy
+  ['Uralsk', 51.0, 50.3, { sp: 2 }],
+  ['Aktobe', 57.5, 49.5, { sp: 2.5 }],
+  ['Gurjev', 53.0, 47.0, { sp: 3 }],
+  ['Ustjurt', 56.0, 43.5, { sp: 4 }],
+  ['Aral', 61.5, 46.0, { sp: 4 }],
+  ['Karakalpakstán', 59.5, 42.5, { sp: 4 }],
+  ['Krasnovodsk', 54.5, 39.5, { sp: 4 }],
+  ['Ašchabad', 58.8, 38.3, { sp: 3 }],
+  ['Daševuz', 60.0, 40.9, { sp: 3 }],
+];
+
+export const EGY = [
+  ['Káhira', 31.25, 30.05, { w: 0.5 }],
+  ['Delta Nilu', 31.0, 31.0, { w: 0.8 }],
+  ['Alexandrie', 29.9, 31.0, { w: 0.8 }],
+  ['Sinaj', 33.9, 29.5, { sp: 2 }],
+  ['Střední Egypt', 31.0, 27.8],
+  ['Horní Egypt', 32.5, 25.8],
+  ['Západní poušť', 27.0, 28.5, { sp: 4 }],
+  ['Východní poušť', 33.3, 27.0, { sp: 3 }],
+];
+
+export const IRQ = [
+  ['Bagdád', 44.4, 33.3, { w: 0.6 }],
+  ['Mosul', 43.0, 36.2],
+  ['Kirkúk', 44.6, 35.4, { w: 0.8 }],
+  ['Basra', 47.4, 30.8],
+  ['Eufrat', 44.3, 31.9],
+  ['Anbár', 41.5, 32.8, { sp: 3 }],
+];
+
+export const PER = [
+  ['Teherán', 51.4, 35.7, { w: 0.7 }],
+  ['Mázandarán', 52.8, 36.5],
+  ['Ázerbájdžán', 46.3, 38.1],
+  ['Kurdistán', 47.0, 34.5],
+  ['Chúzistán', 49.0, 31.5],
+  ['Isfahán', 51.7, 32.7],
+  ['Fárs', 52.5, 29.8],
+  ['Hormozgán', 55.8, 27.3],
+  ['Kermán', 57.1, 30.3, { sp: 2 }],
+  ['Jazd', 55.0, 32.5, { sp: 3 }],
+  ['Semnán', 54.8, 35.8, { sp: 2 }],
+  ['Chorásán', 59.6, 36.3, { sp: 1.6 }],
+  ['Sistán', 60.6, 28.5, { sp: 4 }],
+];
+
+export const SAU = [
+  ['Hidžáz', 40.0, 23.8, { sp: 4 }],
+  ['Tabúk', 37.5, 28.0, { sp: 3 }],
+  ['Hail', 42.0, 27.0, { sp: 3 }],
+  ['Al-Džawf', 40.0, 30.5, { sp: 3 }],
+  ['Nadžd', 46.0, 25.8, { sp: 5 }],
+  ['Hasa', 49.5, 26.3, { sp: 5 }],
+];
+
+export const OMA = [
+  ['Omán', 57.5, 23.6, { sp: 5 }],
+];

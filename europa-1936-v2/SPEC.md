@@ -1,0 +1,419 @@
+# Evropa 1936 – 2. generace: specifikace
+
+Strategie v duchu **Hearts of Iron IV** (React + Canvas 2D): Evropa, Středomoří, severní Afrika a Blízký východ v lednu 1936.
+Je to **nová hra od základů** – vlastní kód, vlastní mapa, vlastní texty i grafika; staré projekty (`europa-1936`, M0–M16) zůstávají nedotčené.
+Cíl: mechaniky věrné vzoru zhruba z 90 %, deset procent je záměrné zjednodušení (viz „Odchylky od vzoru“).
+
+> **Zásada o vzoru:** soubory z instalace HOI4 slouží **jen jako technická dokumentace** (jak mechaniky fungují). Nekopíruje se z nich mapa,
+> text, tabulka dat ani obrázek. Geometrie světa vzniká z veřejných geodat Natural Earth (public domain), všechna jména, čísla a obsah jsou naše.
+
+## 1. Příkazy
+
+| Příkaz | Účel |
+|---|---|
+| `npm run dev` | vývojový server (s `?debug` je v konzoli `window.__e1936 = { map, gameStore, uiStore, engine }`) |
+| `npm test` | vitest (musí projít před každým „hotovo“) |
+| `npm run build` | `check-build.mjs` (oprava poškozených cest + kontrola vstupů) a produkční build do **ploché** složky `dist/` (relativní `base`, běží v kořeni i v podsložce) |
+| `npm run check:inputs` | jen `check-build.mjs`: opraví soubory typu `src\main.jsx` a ověří, že existují `index.html`, `src/main.jsx`, `src/App.jsx`, `src/data/*` … (při chybě vypíše obsah adresáře) |
+| `npm run world:fetch` | stáhne geodata Natural Earth do `tools/cache/` (jednou; složka není v gitu) |
+| `npm run world` | přegeneruje `src/data/world.json` (≈ 20 s, deterministické) |
+| `npm run world:preview -- owner\|terrain x,y,w,h scale` | PNG náhled **exportovaného** světa do `tools/preview/` |
+| `node tools/smoke.mjs [šířka výška]` | automatická kontrola v prohlížeči (Playwright; viz § 7) |
+
+Proměnné generátoru: `STOP=1..5` (zastaví po kroku a vykreslí náhled), `NO_EXPORT=1`, `SVGMODE=owner\|state\|prov\|sea\|terrain`, `CROP`, `SCALE`, `SHOW_STRAITS=1`.
+
+## 2. Adresáře
+
+```
+src/
+  engine/        čistá logika (žádný React, DOM, Math.random, Date.now)
+    worldCore.js   načtení světa do typovaných polí (bez JSON importu – použitelné i z nástrojů v Node)
+    world.js       getWorld() nad src/data/world.json
+    game.js        createGame(), SPEEDS, stav hry
+    commands.js    příkazy (čisté funkce state → state)
+    tick.js        advanceHour / advance / hoursForElapsed
+    selectors.js   dotazy na stav (vlastník, souhrny země; mezipaměť podle pole stateOwner)
+    store.js       minimální store (getState/setState/update/subscribe)
+    rng.js, time.js
+    industry/      M19 – průmysl (viz § 4b): constants (vyvážení), core (sloty, souhrn po zemích, toky surovin), setup (počáteční továrny), day (denní krok), commands, selectors, infra, system, index
+    army/          M18 – armáda (viz § 4a): constants (vyvážení), geo, war, paths, heap, stats, unit, ctx (pracovní kontext hodiny), setup (počáteční rozmístění),
+                   system (pořadí kroků), daily, training, movement, combat, supply, upkeep, leaders, plans, commands, selectors, index (veřejné rozhraní)
+  data/
+    world.json     GENEROVANÝ svět – needitovat ručně
+    countries.js   popis zemí (vůdce, vláda, ideologie, vlajka, obtížnost, text)
+    industry/      M19 – data průmyslu: budovy, kategorie států, ceny výzbroje a suroviny, počáteční průmysl zemí a smlouvy
+    army/          M18 – data armády: výzbroj, prapory a podpora, terén, šablony, národní sestavy, rysy a jména velitelů
+  ui/
+    store.js       gameStore + uiStore + useGame/useUi/useGameSlow
+    actions.js     přechody mezi obrazovkami, výběr oblasti a jednotek, rozkazy, armády, plány, nábor, návrhář šablon (jediné místo, které mění zároveň stav, UI a kameru)
+    hooks.js       herní smyčka a klávesové zkratky
+    format.js      formátování čísel (česky)
+    theme.css      vzhled (army/army.css přidává vzhled armády)
+    map/           camera, geometry, colors, labels, tiles (čistá logika) + renderer, controller, MapView, Minimap (Canvas/DOM); units (žetony, cesty, plán na mapě, hit-testy) a counters (kreslení žetonu)
+    hud/           TopBar, MapModes (+Legend), Dossier, Tooltip, GameMenu, Hud
+    army/          SidePanel (záložky Oblast / Armáda / Nábor), ArmyPanel (strom skupin, armád a divizí), RecruitPanel, TemplateDesigner (+ designer.js, čistá logika), SelectionBar, PlanBar, parts, helpers, bridge
+    menu/          MainMenu, CountrySelect
+    common/        Flag, Icon, Help, Toast
+tools/
+  generateWorld.js + world/*.js + world/data/*.js   generátor světa (viz § 3)
+  fetchGeodata.js, previewWorld.js, cropOf.js, smoke.mjs
+check-build.mjs  příprava před `vite build` – záměrně v kořeni, ne v tools/ (kořenové soubory se na server dostanou vždy): oprava cest (`fixPaths`) a kontrola vstupů
+                 (seznam povinných souborů `REQUIRED`; měníš-li vstupní soubory, uprav i ten)
+vercel.json      nasazení na Vercel: Vite, `npm run build`, výstup `dist`
+test/            world, game, map, ui, tools, army-* (commands, combat, setup, system, war-supply, ui) + armyKit.js (pomůcky pro bojiště v testech) (vitest, prostředí node)
+```
+
+## 3. Generátor světa
+
+Surový rastr 2,5 km/pixel → sdílené hladké vektorové oblouky. Souřadnice světa jsou v **pixelech mapového listu** (2728 × 2048 px = 6820 × 5120 km),
+kuželová konformní projekce (centrální poledník 16° V, rovnoběžky 38° a 62° S). Co leží východněji než 63,6° V, je „prázdná pevnina“ (štítek 0).
+
+Kroky (`tools/generateWorld.js`, každý je modul v `tools/world/`):
+
+1. **vlastníci** – rastr zemí 1936 z Natural Earth + převody území + jezera + průlivy (`owners.js`, `config.js` – tagy, barvy, hlavní města)
+2. **státy** – geodetický růst ze semínek (`statesStep.js`, data `statesWest/NorthEast/East/states.js`); stát = jednotka vlastnictví (jako HOI4)
+3. **řeky a provincie** – k-means + růst uvnitř států, sloučení drobných slepenců (`provincesStep.js`, `tinyStep.js`)
+4. **moře** – námořní provincie (`seaStep.js`, 40 mořských regionů v `data/seaRegions.js`)
+5. **štítky a vektorizace** – hranice jako sdílené oblouky (`vectorStep.js`, `trace.js`)
+6. **terén, města, vítězné body** – vrstvený rastr + většinové hlasování (`terrainStep.js`, `placesStep.js`; města `data/citiesEurope.js`, `citiesExtra.js` – 766 měst)
+7. **sousednosti, přístavy, železnice** – (`networkStep.js`, data `networkData.js`)
+8. **regiony a obyvatelstvo** – 122 strategických regionů s podnebím (`regionsStep.js`, `data/landRegions.js`, `data/population.js`)
+9. **export** – `src/data/world.json` (`exportStep.js`, `WORLD_FORMAT = 1`)
+
+Výsledek: **2895 provincií, 393 námořních oblastí, 96 jezer, 527 států, 35 zemí**, 618 M obyvatel, 1007 železničních spojů.
+
+### Formát `world.json` (v1)
+
+Jednotný prostor štítků: `0` = prázdná pevnina, `1..L` pevninské provincie, `L+1..L+S` moře, `L+S+1..` jezera (nejsou provincie, jen kreslí se).
+
+| klíč | význam |
+|---|---|
+| `v`, `frame{w,h,km}`, `counts{land,sea,lake}` | verze, rozměr listu, počty |
+| `terrains` | názvy terénů: 0 rovina, 1 les, 2 pahorkatina, 3 hory, 4 bažiny, 5 poušť, 6 město |
+| `owners[null,{tag,name,color,cap}]` | země (index = id vlastníka), `cap` = provincie hlavního města |
+| `states[null,{id,n,o,p,a,v[],cap}]` | státy: vlastník, obyvatelé (tis.), plocha (km²), provincie, hlavní provincie |
+| `regions[[name,climate]]`, `seaRegions[name]` | regiony (provincie ukazuje `r` od 1), mořské regiony (`r` od 0) |
+| `land[null,{n,s,o,t,v,p,a,b,c,r,k,j,q,h?}]` | provincie: jméno, stát, vlastník, terén, vítězné body, obyvatelé (tis.), plocha, obálka `b`, střed `c`, region, města `k[[jméno,tis.,x,y]]`, sousedé `j[[id,druh,km]]` (0 souš, 1 řeka, 2 průliv), pobřeží `q[[moře,km]]`, přístav `h[moře,úroveň]` |
+| `sea[null,{n,r,a,b,c,j,q}]` | moře: region, plocha, obálka, střed, sousední moře `j`, pobřežní provincie `q` |
+| `lakes[{b,a}]`, `rails[[a,b,úroveň1-5]]`, `hubs` | jezera, železniční spoje, uzly |
+| `arcs`, `rings` | geometrie: oblouky `[třída,levý,pravý,x0,y0,dx,dy,…]` (0,1 px), okruhy štítků jako podepsaná čísla oblouků (`~i` = opačný směr) |
+
+Třídy oblouků: 0 rám, 1 provincie, 2 stát, 3 země, 4 pobřeží, 5 jezero, 6 moře, 7 okraj prázdna. Vykreslování třídí pozemní oblouky podle **aktuálních** vlastníků.
+
+Pravidla, která svět splňuje (hlídá `test/world.test.js`): jména unikátní, vlastník státu = vlastník jeho provincií, hlavní města existují, sousednosti souměrné,
+vlastníci souvislí (FRA ≥ 50 % kvůli koloniím, ostatní ≥ 90 %), každý oblouk sousedí právě s tolika štítky, kolik jich je ≥ 0, populace sedí.
+
+Vítězné body podle největšího města provincie (tis. obyv.): ≥ 2500 → 40, 1500 → 32, 1000 → 26, 600 → 20, 400 → 15, 250 → 11, 150 → 8, 100 → 6, 60 → 4, 40 → 3, 25 → 2, 12 → 1;
+druhá města ≥ 60 tis. přidávají polovinu, hlavní město +10. Železnice: uzly = města ≥ 40 tis. a hlavní města, spojení Dijkstrou po grafu provincií, úroveň z menšího města (+1 při velkém provozu).
+
+## 4. Engine
+
+**Herní stav** (`createGame`, `GAME_VERSION = 4`, čistý JSON):
+
+```
+{ v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind, tech }
+```
+`stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b), `tech` = výzkum (§ 4c).
+Čas: 1 tick = 1 herní hodina, start 1. 1. 1936 00:00; rychlosti 1–5 = `[12, 24, 48, 96, 240]` herních hodin za sekundu (`SPEEDS[0]` = pauza).
+Hra začíná pozastavená. `hoursForElapsed(state, ms, carry)` přenáší zlomky hodin.
+
+Pravidla:
+1. `src/engine/` nezná React ani DOM; náhoda jen přes `rng.js`, čas jen přes `state.tick`.
+2. Příkazy jsou čisté `(state, …) → state`; při neplatném vstupu vrací **tentýž objekt**. Stav se nemutuje.
+3. Svět (`getWorld()`) je neměnný a **nikdy se nekopíruje do stavu**; stav drží jen to, co se mění.
+4. Změna tvaru stavu = zvednout `GAME_VERSION` a upravit testy.
+5. Selektory mají mezipaměť podle pole `stateOwner` (stejné pole při plynutí času, nové po změně vlastnictví).
+6. Systémy času (armáda, průmysl, výzkum, …) se přidávají do `advanceHour` v pevném pořadí; každý má vlastní soubor a testy.
+
+API světa (`getWorld()`): `L, S, K, nLabel`, `owners, ownerIdx, tags`, `states, stateOwner0`, `land, sea`, typovaná pole `provOwner0, provState, terrain, vp, pop, area, region, portSea, portLevel`,
+CSR sousednosti `landAdj, coast, seaAdj, seaCoast, rails`, pomocné `kind(l), isLand, isSea, provName, seaName, stateName, ownerTag,
+forLandNeighbors(p, cb), forSeaNeighbors(l, cb), forCoast(p, cb)`.
+
+## 4a. Armáda (M18)
+
+Pozemní válka podle vzoru HOI4: **divize ze šablon**, výzbroj a lidská síla ve skladech, velitelé, armády a skupiny armád, plány a rozkazy, zásobování, boj s šířkou fronty, terénem a organizací.
+Všechna čísla (statistiky praporů, terén, vzorce) jsou **naše**: data v `src/data/army/*`, vyvážení vzorců na jednom místě v `src/engine/army/constants.js` (`ARMY`); ze vzoru je převzat jen princip.
+Letectvo, loďstvo a přepravu přes moře zatím nemáme: průlivy jsou pro pozemní jednotky neprůchodné, vzdušná a námořní podpora v boji chybí.
+Příkazy enginu nekontrolují, komu divize patří vůči hráči – to dělá rozhraní (`ui/actions.js`); engine je neutrální, aby jím šla řídit i AI (M24).
+
+### Pojmy
+- **Prapor** (`BATTALIONS`) – pěší (`pesi`), jízdní (`jezdci`), horští střelci (`horsti`), motorizovaný (`motor`), lehký tank (`ltank`); mechanizovaný, střední a těžký tank jsou zamčené do M20 (`unlock`). Stojí v **pluku** (sloupec mřížky 5 × 5, `GRID`); prapor má šířku `w`, obvykle 2.
+- **Podpůrná rota** (`SUPPORT`) – ženisté (`ing`), dělostřelectvo (`del`), protitankové (`pt`), průzkum (`zvid`); spojaři, logistika a polní nemocnice (`spoj`, `log`, `nem`) jsou zamčené do M20. Mřížka podpory 1 × 5; rota nemá šířku, dává útok, zakopání, průzkum, úsporu zásob nebo léčení.
+- **Výzbroj** (`EQUIP`) – pušky, děla, protitanková děla, auta, obrněná vozidla, lehké tanky, podpůrná výzbroj (střední a těžké tanky zamčené). Sklady jsou po zemích; divize nenese počty kusů, výzbroj se jen odečítá při náboru a doplňování (`need`).
+- **Šablona** (`tpl`) – 1–5 pluků po 1–5 praporech + až 5 podpůrných rot; nejvýš `TPL_MAX` = 40 šablon na zemi. **Divize** je instance šablony; po úpravě šablony si divize ponechají sílu a organizaci (nejvýš nové maximum). Smazat jde jen šablonu, kterou nepoužívá žádná divize ani výcvik.
+- **Armáda** – divize pod generálem, nejvýš `ARMY_CAP` = 24 divizí. **Skupina armád** – armády pod polním maršálem, nejvýš `GROUP_CAP` = 5 armád. Divize smí stát i mimo armádu, pak neplní žádný plán. Velitel má nejvýš jedno místo: přiřazení ho uvolní z původního.
+- **Plán** armády: *Hájit oblast* (`area`) nebo *Linie fronty* (`front` s cílovými provinciemi a režimem útoku Opatrně / Vyváženě / Zteče).
+
+### Tvar stavu (`state.mil`, `GAME_VERSION = 2`)
+```
+mil: {
+  ver,                       // zvyšuje se při změně struktury (vznik/zánik/přesun divize, armády, skupiny, velitele, šablony) – klíč mezipamětí (`armyTree`, UI)
+  bn, qn,                    // čítače id bitev a položek výcviku (id se nikdy nepoužije znovu)
+  wars: [[a, b], …],         // dvojice indexů zemí ve válce (a < b); M23 přidá frakce, cíle a kapitulaci
+  tpl:   [null, Tpl…],       // šablony: index = id, null = smazaná
+  divs:  [null, Div…],       // divize
+  armies:[null, Army…],      // armády
+  groups:[null, Group…],     // skupiny armád
+  gens:  [null, Gen…],       // velitelé
+  battles: [Battle…],        // právě probíhající bitvy (hustý seznam)
+  queue: [QItem…],           // divize ve výcviku
+  stock: [null, {výzbroj: počet}…],   // sklady výzbroje podle indexu země
+  man:   [0, počet…],        // zásoba lidské síly podle indexu země
+  cas:   [0, počet…],        // ztráty podle indexu země (statistika; M23 válečné skóre)
+}
+Tpl    = { o, nm, short?, reg: [[typ…]…], sup: [typ…] }                   // reg = pluky (sloupce), v každém řada praporů shora dolů; short = zkrácený název do jmen divizí
+Div    = { o, tpl, nr, p, org, hp, xp, army, path[], prog, b, rt, dig, sup, sg, hold }
+         // nr pořadové číslo jména, p provincie, org/hp aktuální (hp = síla), xp 0–1, army id armády (0 = žádná),
+         // path zbývající provincie rozkazu, prog 0–100 postup do první provincie cesty, b id bitvy (0 = žádná),
+         // rt hodin ústupu (nemůže útočit), dig zakopání 0–5 (stupně, i zlomky), sup poměr zásobování 0–1,
+         // sg hodin zásoby v batohu (0–72), hold hodin výdrže po neúspěšném útoku
+Army   = { o, nm, grp, cmd, plan, pl }                                      // grp id skupiny, cmd id generála, plan | null, pl nahromaděné plánování 0–strop
+Group  = { o, nm, cmd }
+Gen    = { o, nm, r: 'M'|'G', a, d, pl, lg, tr[], xp }                      // maršál / generál; útok, obrana, plánování, logistika (1–9), rysy, zkušenosti
+Battle = { id, p, att[], dep[], from[], hrs, fa[], fd[], adv }              // p napadená provincie, att/dep id divizí, from odkud útočí, hrs trvání;
+                                                                            // fa/fd divize na frontě v poslední hodině, adv podíl útočníků na zásazích 0–1 (ukazatel pro UI)
+QItem  = { id, o, tpl, p, done }                                            // id z `qn`, p místo vzniku, done = absolutní herní hodina dokončení výcviku
+Plan   = { k: 'area', area: [prov…], auto? } | { k: 'front', line: [prov…], to: [prov…], mode: 'careful'|'balanced'|'rush' }
+         // auto = plán přidělila obranná AI (hráčův plán ho nemá; AI ho smí přepsat)
+```
+Světové pole se do stavu nekopíruje; provincie jsou čísla `1..L`. Mazání = `null` v poli.
+
+### Počáteční rozmístění (`setup.js`, data `data/army/national.js`)
+`createMil` vyrobí armádu všech zemí z `NATIONAL` (počty divizí podle druhu `pesi, brig, motor, tank, hory, kav`, zkušenost, záloha výzbroje `res`, podíl obyvatel jako lidská síla, počet velitelů navíc `pool`). Deterministicky z `rng`:
+- každá země dostane kopie použitých šablon a divize v provinciích vlastního území podle váhy (vítězné body, hranice, uzly, přístavy, hlavní město); jen tam, kde by divize dostala zásoby. Druh se přiřazuje podle vhodnosti terénu (horské do hor, tanky na roviny s uzly …);
+- divize se shlukují do armád podle polohy (nejvýš 16 divizí), armády do skupin armád (nejvýš 5 armád; Sever / Střed / Jih); země s méně než 3 divizemi armády nemají;
+- sklady = potřeba nasazených divizí × `res`, nejméně záloha podle velikosti země; velitelé mají jména podle kultury (`names.js`), dovednosti podle velikosti země a rysy (`traits.js`).
+
+### Statistiky divize (`stats.js`, čistá funkce šablony a úrovně výzbroje, mezipaměť podle objektu šablony)
+Součet přes prapory: `hp, soft, hard, def, brk, men, sup, need` + podpůrné `rec` (průzkum), `eng` (ženisté), `supSave`, `healing`; `days` = nejdelší výcvik; `width` = součet `w` liniových praporů.
+Průměr váhou lidské síly: `org` (liniové), `hardness` (všechny). `pierce` = 0,4 · nejvyšší + 0,6 · průměr (jen prapory s průrazem), `armor` = 0,4 · nejvyšší + 0,6 · průměr (liniové); `speed` = nejpomalejší liniový prapor;
+`cls` (`inf, arm, mot, cav, mtn`) = převažující druh liniové lidské síly (ikona žetonu, rysy velitelů); `terr[terén] = {atk, def, mov}` průměr bonusů praporů (`r` = přechod řeky).
+Úroveň výzbroje (`EQUIP_LEVEL_MULT`, zatím jen 1; M20 ji zvedá) násobí útok, obranu, průraz a pancíř příslušného druhu výzbroje. `validateTemplate` vrací český popis chyby nebo `null`.
+
+### Pohyb a rozkazy (`movement.js`, `paths.js`)
+- Cesta: Dijkstra po sousednostech provincií, cena = hodiny přechodu pěšáka (`PROV_HOURS` × vzdálenost středů / `PROV_KM`, omezeno na `DIST_MIN`–`DIST_MAX` × cena terénu cílové provincie × řeka +25 %); rychlost divize ji škáluje (`SPEED_REF` = 4).
+- Vstoupit smí do vlastní provincie a do provincie, jejíž držitel je s divizí ve válce (`ctrl`); cizí neutrální území a průlivy jsou zavřené.
+- Postup `prog += 100 / hodiny`; při 100 % divize vstoupí. Je-li v cílové provincii nepřítel, místo vstupu se otevře nebo připojí **bitva** (postup stojí, dokud trvá; útočit smí divize bez `hold` a `rt` a s organizací aspoň 10 %). Prázdnou nepřátelskou provincii divize obsadí (`ctrl[p] = o`, `ownerVer++`).
+- Pohyb stojí organizaci (`ORG_MOVE_COST`, nikdy pod 10 % maxima) a ruší zakopání; zpomaluje ho nízká organizace, nedostatek zásob a slabá infrastruktura cílové provincie.
+
+### Boj (`combat.js`)
+Bitva = jedna napadená provincie; útočníci stojí v sousedních provinciích a bojují „přes hranici“. Šířka bitvy `W` = šířka terénu × (1 + 0,5 · (počet směrů útoku − 1)). Strany nasazují divize na frontu podle pořadí příchodu, dokud nenaplní `W`; ostatní jsou **v záloze** (nahradí padlé).
+Přeplnění šířky (nejvýš −33 %) a stohování nad 5 divizí (−2 % za divizi) penalizují útok; útok z více směrů snižuje obranu.
+Každou hodinu každá divize ve frontě rozdělí svůj útok mezi nepřátelskou frontu (35 % na náhodně zvolený hlavní cíl):
+`zásah = (soft · (1 − tvrdost cíle) + hard · tvrdost) · útok · (1 − uhnutí) · pancíř(průraz vs. pancíř) · síla · kostka · podíl / obrana cíle`, kde
+- `útok` = 1 + terén praporů + velitel + zkušenosti (+4 % za úroveň) + zásobování + (útočník: terén provincie, řeka −20 %, plánování armády), nejméně 0,1;
+- `obrana` (`guard`) = 1 + terén praporů + velitel + zkušenosti + zásobování + (obránce: zakopání +4 % za stupeň, útok z více směrů), nejméně 0,25; zásah se jí **dělí**;
+- `uhnutí` = 0,9 · `def` / (`def` + 2 · `brk` útočníka + 60): obránce uhne podílu zásahů, průraz fronty `brk` tuto obranu přemáhá;
+- `pancíř`: poměr průrazu a pancíře cíle přes prahy 1,00 / 0,75 / 0,50 dává násobky 1,0 / 0,8 / 0,65 / 0,5; pod 0,5 se navíc zásah půlí, naopak útočník s pancířem nad průrazem cíle má +30 %;
+- `síla` = podíl zbylé síly divize (nejméně 10 %), `kostka` = 0,55 až 1,45 z `rng`.
+Zásah ubírá **organizaci** (`K_ORG`, rychle) a **sílu** (`K_HP`, pomalu); část ztracené síly jsou skutečné ztráty (`EQUIP_LOSS`), zbytek ranění (`CASUALTY_BACK` se vrací do zásoby lidské síly).
+Divize s `org ≤ 0`: obránce ustoupí do sousední vlastní provincie bez nepřítele co nejdál od útočníků (organizace klesne na 10 %, 18 h nesmí útočit, ztratí 3 % síly), nemá-li kam, je zničen; útočník se zastaví a 36 h nesmí útočit (`hold`). Pod 0,1 % síly divize zaniká.
+Bitva končí, když jedna strana nemá bojovníky. Vítězní útočníci dostanou postup 60 % do provincie. Zkušenosti divizí rostou v boji, velitelé dostávají zkušenosti za každou divizi v bitvě (maršál 30 %).
+
+### Zásobování (`supply.js`)
+Zdroje: hlavní město (`SUP_CAPITAL`) a **uzly** železnice (`world.raw.hubs`); uzel spojený železnicí s hlavním městem přes vlastní území dostane podíl jeho toku (`SUP_HUB` × podíl dorazivší po železnici, na každém spoji se ztrácí `SUP_RAIL_DROP` / úroveň spoje),
+a každý vlastní uzel má aspoň slabý místní tok `SUP_LOCAL` (kolonie, obklíčení). Tok se šíří Dijkstrou po vlastních provinciích a každou zeslabí (terén, řeka, vzdálenost; infrastruktura srážku zmírňuje).
+`supplyFlow(ctrl, o)` → `Float32Array` toku po provinciích (mezipaměť podle množiny provincií země); `tok × SUP_CAPACITY` = zásoby za hodinu v provincii, tok kolem 3 je dobré zásobování.
+Denně (`dailySupply`) dostane každá divize `sup = min(1, kapacita / spotřeba všech jednotek v provincii)`. `sg` (72 h) je zásoba v batohu: při `sup < 1` ubývá o 24 h denně, při plném zásobování se plní o 48 h denně.
+Po vyčerpání batohu (`lack = 1 − sup`): slabší útok a obrana, nižší strop organizace (až 35 %), pomalejší pohyb, ztráta síly (terénní únava). Zásobování **hlídá i rozmístění**: počáteční posádky vznikají jen tam, kde divize dostane zásoby.
+Infrastruktura provincie = základ ze světa (`geo(w).infra`: terén, železnice, velká města) + vylepšení státu (M19, `infraOf`).
+
+### Doplňování a výcvik (`daily.js`, `training.js`, `upkeep.js`)
+Denně doplní divize mimo boj a se zásobováním ≥ 50 % (`REINF_PER_DAY` = 5 % maxima, léčení rot ho zvyšuje) část `hp` ze skladu (spotřebuje úměrně lidskou sílu a výzbroj). Organizace se obnovuje hodinově (nad 80 % pomaleji, pod 25 % rychleji, infrastruktura a velitel ji ovlivňují). Zakopání roste o 1 stupeň za den na místě (ženisté zrychlují).
+`recruit(state, tplId, prov, count ≤ 20)` odečte lidskou sílu a výzbroj hned (všechno, nebo nic), položky `QItem` s `done = tick + dny výcviku · 24` se mění v divize v `p` (nemá-li ji země už pod kontrolou, v nejbližší vlastní provincii nebo v hlavním městě); výcvik jde zrušit s plným vrácením.
+Měsíčně (1. dne) roste zásoba lidské síly (`MAN_GROWTH_MONTH` obyvatel). Sklady od M19 doplňuje výroba (§ 4b).
+
+### Velitelé, armády, plány (`leaders.js`, `plans.js`)
+Velitel dává bonusy podle dovedností (útok, obrana, plánování, logistika) a rysů (`TRAITS`); bonusy armády = její generál + 50 % bonusů polního maršála její skupiny (`armyMods`). Úroveň velitele = součet dovedností − 3; zkušenosti na další úroveň = `60 × aktuální úroveň` (lineárně), po dosažení se náhodně zvýší jedna dovednost (max. 9).
+Armáda s plánem *útoku* (`front` s cíli) hromadí plánování (+2 % denně až do stropu `PLAN_CAP` + dovednosti), jinak plánování klesá. **Plánovač** (`plansStep`, denně a hned po zadání plánu) rozdělí divize armády mezi provincie plánu podle důležitosti
+(vítězné body, přístav, uzel, hlavní město, nepřátelé v sousedství; u cílů útoku dvojnásobně) a zadá jim cesty; **každé místo dostane aspoň jednu divizi**, je-li jich dost. Ovládá jen nečinné divize – ruční rozkaz platí, dokud divize nedojde.
+U *Linie fronty* divize útočí na sousední cílové provincie, jakmile to dovolí režim: *Opatrně* čeká na půlku stropu plánování a organizaci 85 %, *Vyváženě* útočí od 65 % organizace, *Zteč* od 35 %. Dobytá cílová provincie přejde z cílů do linie.
+Země bez hráče ve válce (obranná AI, zatím jediná): armády bez vlastního plánu dostanou plán *Hájit oblast* kolem hranic s nepřítelem (`auto`), týdně se přepočítá.
+
+### Války (minimum pro M18)
+`mil.wars` – dvojice zemí. `declareWar(state, aTag, bTag)` / `makePeace(state, aTag, bTag)` (bílý mír: provincie okupované druhou stranou se vracejí držiteli, cizí jednotky se přesunou domů, bitvy mezi stranami se ruší).
+Spojenectví, frakce, cíle války a kapitulace přijdou v M23; tlačítka ve hře (karta oblasti) jsou do té doby **dočasná**.
+
+### Pořadí v `advanceHour` (pevné)
+`tick + 1` → `armyHour`: (po půlnoci) denní krok `dailyStep` = zásobování → doplňování ze skladu → zakopání → plánování armád → zkušenosti velitelů → plánovač (a AI plány) → (1. den měsíce) lidská síla;
+dále každou hodinu výcvik (dokončení) → **pohyb** → **boj** → údržba (organizace, ústup a výdrž, ztráty bez zásob).
+
+### Příkazy (`engine/army/commands.js`, čisté, neplatný vstup = tentýž stav)
+`declareWar`, `makePeace`, `createTemplate`, `editTemplate`, `deleteTemplate`, `recruit`, `cancelRecruit`, `disband` (přeskočí divize v boji), `orderMove(divIds, prov)`, `cancelOrder`,
+`createArmy`, `renameArmy`, `disbandArmy`, `assignDivisions(armyId, divIds)` (0 = vyřadit z armády), `createGroup`, `renameGroup`, `disbandGroup`, `assignArmies(groupId, armyIds)`, `assignCommander(kind: 'army'|'group', id, genId)` (0 = odvolat; skupinu smí vést jen maršál),
+`setPlan(armyId, plan)` (plán se normalizuje: jen pevninské provincie, nejvýš `AREA_MAX` = 300, cíle nesmí být v linii; hned se naplánuje), `clearPlan`, `setPlanMode`. `assignArmies(groupId, …)` s `groupId` 0 vyřadí armády ze skupin. Jména se čistí (`cleanName`, 40 znaků).
+
+### Selektory (`engine/army/selectors.js`)
+`divisionsByProvince(state)` (provincie → pole id; mezipaměť podle `mil.divs`), `divisionCount(state, o)`, `armyTree(state, o)` (skupiny → armády → divize; mezipaměť podle `mil.ver`), `atWar`, `enemiesOf`,
+`divisionView(state, id)` (odvozené statistiky + stav `idle | moving | fighting | retreating | lack`), `templateView`, `templatesOf`, `generalsOf` / `generalPost`, `supplyReach(state, o)`, `frontEdges(state)`,
+`suggestFront(state, armyId)` (návrh linie a cílů podle skutečné fronty kolem divizí armády), `manpowerOf`, `stockOf`, `queueOf`.
+
+### Záměrná zjednodušení proti vzoru
+Žádná letecká a námořní podpora, počasí a noc, pevnosti (M19), doktríny a bojové taktiky, dobrovolníci, zajatci, vyloďování, parašutisté; divize nenesou vlastní počty kusů výzbroje (síla `hp` je nahrazuje);
+velitelé divizí neexistují; pohyb po železnici (strategický přesun) zatím není. Číselné hodnoty jsou vlastní.
+
+## 4b. Průmysl (M19)
+
+Hospodářství podle vzoru HOI4: **státy mají kategorii a stavební sloty**, civilní továrny staví, vojenské továrny vyrábějí výzbroj na **linkách**, výroba spotřebovává **suroviny**, jejich přebytek jde do **obchodu**.
+Čísla jsou naše: data v `src/data/industry/*` (budovy, kategorie, ceny výzbroje a suroviny na kus, počáteční průmysl zemí, obchodní smlouvy na startu), vyvážení vzorců v `src/engine/industry/constants.js` (`IND`).
+Vše se počítá **jednou denně** (o půlnoci, `industryHour` v `advanceHour` hned po armádě). Příkazy nehlídají, komu věc patří vůči hráči – to dělá `ui/actions.js`. Námořní doprava a konvoje zatím nejsou: obchod se surovinami je abstraktní (viz „Zjednodušení“).
+
+### Tvar stavu (`state.ind`, od `GAME_VERSION = 3`)
+```
+ind: {
+  ver,                          // zvyšuje se při změně struktury (stavba dokončena/zrušena, linky, smlouvy) – klíč mezipamětí UI
+  jn,                           // čítač id staveb, linek a smluv (id se nepoužije znovu)
+  st:   [null, {civ, mil, res:{surovina: množství/den}}…],   // podle id státu: továrny a těžba
+  inf:  [0, úroveň 0–3…],       // vylepšení infrastruktury podle id státu (mění se jen při dokončení stavby)
+  cons: [0, podíl 0–1…],        // spotřební zboží podle indexu země (M21: zákony)
+  build: [{id, o, s, k, prog}…],     // fronta staveb: o země, s stát, k 'civ'|'mil'|'inf', prog získané body; pořadí = priorita v rámci země
+  lines: [{id, o, eq, fac, eff, acc, f, out}…],   // linky: druh výzbroje, počet továren, efektivita, nahromaděné kusy 0–1, poměr výkonu (suroviny) a kusů za poslední den
+  trade: [{id, from, to, res, amt, got}…]          // smlouvy: vývozce → dovozce, množství za den a skutečně dodané minulý den
+}
+```
+Pole `st`/`inf` se kopírují jen při dokončení stavby. Továrny a těžba patří vlastníkovi státu; **okupovaný stát** (hlavní provincii drží jiná země) vlastníkovi nevyrábí a jeho těžba jde okupantovi (továrny se nepočítají nikomu).
+
+### Státy a sloty
+`STATE_CATEGORIES` podle obyvatel: osada (≤ 150 tis.) 2 sloty, městečko 4, město 6, velké město 8, velkoměsto 10, metropole 12. Sloty státu = základ kategorie + úroveň infrastruktury (`inf`). Slot zabírá civilní a vojenská továrna (i rozestavěná); infrastruktura ne (nejvýš `INF_MAX` = 3 vylepšení).
+Počáteční továrny se rozdělí D'Hondtem podle váhy státu (obyvatelé, vítězné body; vojenské dávají přednost vítězným bodům), těžba po třech státech (50 / 30 / 20 %, ocel a hliník podle obyvatel, ostatní podle rozlohy). Země má aspoň ocel na základní výrobu (0,9 na vojenskou továrnu).
+
+### Stavby (`day.js`)
+Přísun bodů = (civilní továrny − spotřební zboží − dovoz) × `IC_PER_FAC`. Projekty ve frontě země dostávají body v pořadí fronty, každý nejvýš `cost / days` za den (civilní 800 bodů / 45 dní, vojenská 700 / 45, infrastruktura 500 / 30). Dokončená stavba přidá továrnu nebo úroveň infrastruktury; projekt ve státě, který země ztratila nebo neovládá, zaniká.
+**Infrastruktura:** `infraOf(state)` = základ světa (`geo(w).infra`) + `inf[stát]`, nejvýš 5. Používá ji pohyb, obnova organizace i zásobování (`ctx.infra`, `supplyFlow(ctrl, o, infra)`); bez vylepšení je to přímo `geo(w).infra`.
+
+### Výroba (`day.js`, `core.js`)
+**Spotřební zboží** (`cons` × všechny továrny) ubírá nejdřív civilní, pak vojenské. Zbylé vojenské továrny se rozdělí na **linky** (jeden druh výzbroje, 1–`LINE_MAX_FAC` továren, nejvýš `LINES_MAX` linek na zemi; nedostupné továrny zkracují linky od posledních).
+Kusy za den = `fac × IC_PER_FAC × eff / cost`, krát poměr výkonu `f` podle nejhorší potřebné suroviny (nejméně `RES_FLOOR`). Celé kusy jdou do `mil.stock`, zbytek je v `acc`.
+Efektivita nové linky a po změně druhu výzbroje je `EFF_START`; denně roste o `EFF_GROW` podílu vzdálenosti ke stropu `EFF_CAP`; přidání továren ji zředí úměrně, ubrání ne. Linky na startu mají `EFF_INIT`. Země bez hráče mají výchozí linky podle `DEFAULT_SPLIT` (AI přijde v M24).
+
+### Suroviny a obchod
+Šest surovin (`ocel, hlinik, ropa, wolfram, chrom, guma`); `EQUIP_PROD[výzbroj].res` = suroviny na kus. Poptávka linek se spočítá z nominální výroby; pokrytí `f = min(1, (těžba − vývoz + dovoz) / poptávka)` za surovinu.
+**Smlouva** vývozce → dovozce: vývozce dodá nejvýš svůj přebytek (těžba − vlastní poptávka − už vyvezené, smlouvy v pořadí id); dovozce platí `TRADE_CIV` civilní továrny za dovezenou jednotku. Ve válce mezi stranami se smlouva přeruší (`got = 0`); příkaz ji ani nepřijme. Diplomacii (embarga, vztahy) přidá M23.
+
+### Příkazy (`engine/industry/commands.js`, čisté, neplatný vstup = tentýž stav)
+`build(s, stát, druh)`, `cancelBuild(id)`, `moveBuild(id, posun | -Infinity)`; `addLine(o, výzbroj, továrny)`, `setLineFactories(id, n)` (0 = zrušit), `setLineEquip(id, výzbroj)`, `removeLine(id)`; `addTrade(od, komu, surovina, množství)`, `setTradeAmount(id, množství)`, `cancelTrade(id)`.
+Selektory (`selectors.js`): `industryOf(state, o)` (továrny, spotřební zboží, dostupné a volné vojenské továrny, body stavby, linky s výrobou, toky surovin, stavby, smlouvy), `stateIndustry(state, s)` (kategorie, sloty, budovy, fronta státu), `projectEta`, `infraOf`.
+
+### Zjednodušení proti vzoru
+Žádné konvoje ani námořní doprava (obchod je abstraktní a bez trasy), žádná energie ani zásoby surovin, výzbroj bez úrovní a zastaralosti (M20), žádné stavby pevností ani protiletadlové obrany, přístavy a letiště (letectvo a loďstvo později), žádné poškození budov bombardováním, žádná výměna výzbroje mezi zeměmi. Spotřební zboží se mění až zákony (M21).
+
+## 4c. Výzkum (M20)
+
+Technologie podle vzoru HOI4: **sloty výzkumu**, technologie s předpoklady a **historickým rokem** (výzkum předem je pomalejší), **úrovně výzbroje**, odemykání jednotek a bonusy průmyslu.
+Strom (`src/data/research/techs.js`, ≈ 40 technologií v pěti oborech: Pěchota, Dělostřelectvo, Tanky a motorizace, Podpora a logistika, Průmysl) i čísla jsou naše; vyvážení vzorců je v `src/engine/research/constants.js` (`RES`).
+Počítá se **jednou denně** (`researchHour` v `advanceHour` hned za průmyslem). Příkazy nehlídají, komu věc patří vůči hráči – to dělá `ui/actions.js`.
+
+### Tvar stavu (`state.tech`, `GAME_VERSION = 4`)
+```
+tech: {
+  ver,                                   // zvyšuje se při zadání, zrušení a dokončení výzkumu (klíč mezipamětí UI)
+  own: [null, { done: {id: 1}, slots: [id | 0, …], prog: {id: 0–1} }…]   // podle indexu země; slots = právě zkoumané (0 = prázdný slot), prog = rozpracovaný podíl (zůstává při přepnutí slotu)
+}
+mil.lv: [null, { výzbroj: úroveň 2–4 }…]  // úrovně výzbroje země (chybí = 1); mění je jen dokončený výzkum, čtou je statistiky divizí a výroba
+```
+`done` a `lv[o]` se při změně nahrazují novým objektem (mezipaměti statistik a bonusů se klíčují podle objektu).
+
+### Pravidla
+- **Sloty:** základ podle velikosti země (`SLOTS_TIER`: velmoc 3, regionální mocnost 3, malý stát 2) + technologie *Výzkumná pracoviště* (nejvýš `SLOTS_MAX` = 5).
+- **Rychlost:** `speed = SPEED_BASE × národní násobek × (1 + bonusy výzkumu) × předstih`; předstih = `1 / (1 + AHEAD_PEN × roky_před_historickým_rokem)`. Denně přibude `speed / days` podílu technologie.
+- **Dostupnost:** všechny předpoklady dokončeny, technologie nehotová a není ve dvou slotech.
+- **Dokončení:** `fx.lv` zvedne úroveň výzbroje (`mil.lv`, násobí útok, obranu, průraz a pancíř podle `EQUIP_LEVEL_MULT`; výroba kusu je dražší o `LV_COST` za úroveň); technologie s `id` rovným klíči `unlock` v datech jednotek odemkne prapor, podpůrnou rotu nebo výzbroj; `fx.mod` dává bonusy (`effCap` strop efektivity linek, `build` body stavby, `extract` těžba, `research` rychlost); `fx.slot` přidá slot.
+- **Země bez hráče** (a pozorovatel) si sloty plní samy: ze dostupných technologií s rokem ≤ aktuální rok vyberou deterministicky podle roku, délky a hashe země (AI přijde v M24).
+
+### Příkazy a selektory (`engine/research/`)
+`startResearch(state, o, slot, id)` (obsazený slot se přepíše, rozpracované zůstane), `cancelResearch(state, o, slot)`; `researchOf(state, o)` (sloty s postupem, rychlostí a odhadem, úrovně výzbroje, bonusy), `techList(state, o)` (všechny technologie se stavem `done | active | available | locked`, předstihem a odhadem dnů), `isUnlocked(state, o, klíč)`, `techMods(done)`, `isAvailable`.
+
+### Zjednodušení proti vzoru
+Žádné doktríny, štáby, výzkumné bonusy za nápady a vůdce, sdílení a ukradení technologií, přenos zkušeností z vyzkoušení; úroveň výzbroje se projeví ve všech divizích země okamžitě (bez postupné modernizace skladů). Počet technologií a jejich bonusy jsou záměrně menší.
+
+## 5. Rozhraní
+
+Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
+
+**Mapa** (`ui/map/`):
+- `camera.js` – střed + přiblížení (obrazovkové px na pixel světa), meze, převody, `lerpView`; `MAX_ZOOM = 12`.
+- `geometry.js` – okruhy provincií, obálky, prostorový rastr (64 px) a hledání oblasti pod kurzorem (bbox + bod v mnohoúhelníku), `Path2D` cache.
+- `tiles.js` – čistá logika dlaždic: úroveň z přiblížení (`levelFor`), rozsah dlaždic, `Grid`, `LruCache`.
+- `renderer.js` – **dlaždicová mezipaměť**: svět se vykreslí do dlaždic 512 × 512 zař. px v měřítku 2^úroveň, snímek jen skládá dlaždice (3–8 ms), přidá zvýraznění,
+  značky a popisky bez překrývání (země → státy → města) a rám listu. Změna vlastníků/režimu/ztlumení zvedne `version`, překreslí se jen viditelné dlaždice
+  (při pohybu kamery s rozpočtem 9 ms na snímek, zbytek se dokreslí v dalších; do té doby se použije náhrada z jiné úrovně).
+- `controller.js` – `mapController` (singleton): kamera, animace `flyTo`, `viewForBox` (středění do volné plochy mimo panely – `insets`), pomalý pohyb v menu, smyčka kreslí jen při změně.
+- `colors.js` – osm režimů (klávesy 1–8): politická, terén, státy, regiony, obyvatelé, vítězné body, **zásobování** (provincie hráče podle toku `supplyFlow`: červená → žlutá → zelená, ostatní ztlumené), **průmysl** (barva podle počtu továren ve státě; překreslí se jen při změně `ind.st`); `focus` ztlumí všechny země kromě jedné (výběr země).
+  Okupované provincie (držitel ≠ vlastník) se v politickém režimu a v režimu států kreslí pruhy barvy držitele; změna držitele zneplatní jen dlaždice v okolí provincie (`invalidateProvinces`), v režimu zásobování celou mapu.
+- `labels.js` – kotvy jmen zemí (největší souvislá část) a států.
+- `MapView.jsx` – vazba na DOM: tažení, kolečko, hover/klik (práh 5 px), ResizeObserver, klávesy. Zvýraznění pod myší se při tažení ruší a když se kamera pohne pod nehybnou myší
+  (klávesy, kolečko, přelet), přepočítá se – nejvýš jednou za snímek. `Minimap.jsx` – přehled s výřezem.
+
+Zrnění a ztmavení okrajů mapy je **CSS překryv** (`.map-host::after`), ne kreslení do plátna.
+
+**Armáda v rozhraní** (M18; `ui/army/`, `ui/map/units.js` + `counters.js`). Stav `uiStore`: `selDivs` (vybrané divize, `NONE` = sdílené prázdné pole), `hoverUnits`, `panel` (`null | 'army' | 'recruit'`), `armyFocus`, `open` (rozbalené uzly stromu), `planEdit`, `designer`, `toast`.
+- **Žetony na mapě** (`UnitLayer` v rendereru, kreslí se v obrazovkových pixelech nad dlaždicemi, ne do nich): divize stejné země ve stejné provincii (a se stejným směrem pohybu) tvoří jeden žeton s počtem, značkou převažujícího druhu, pruhy síly a organizace a odznaky stavu (boj, nedostatek zásob, ústup).
+  Divize na pochodu se kreslí mezi provinciemi; při oddálení se blízké žetony stejné země slučují (`clusterCell` je mocnina dvou, shluky se při posunu mapy nemění). Vybrané mají zlatý okraj, nepřátelé červený. Kreslí se jen při změně; vrstva stojí ≈ 3–4 ms při ≈ 500 žetonech.
+  Čistá data (`buildCounters`, `clusterCounters`, `routesOf`, `battlesOf`) jdou testovat bez plátna.
+- **Na mapě dál:** šipky pohybu (vlastní zeleně, vybrané zlatě, útoky červeně), značky bitev s poměrem sil, náhled trasy pod kurzorem při vybraných jednotkách, plán armády (modře držená oblast nebo linie, červeně cíle útoku se šipkami z linie).
+- **Výběr a rozkazy:** klik na žeton vybere divize, Shift přidává a odebírá, dvojklik vybere celou armádu, Shift + tažení vybere obdélníkem; pravé tlačítko = rozkaz (nepřátelská provincie = útok); `X` zastaví, `F` zaměří výběr. Cizí žeton jde vybrat jen k prohlídce.
+- **Boční panel** (`SidePanel`, vpravo, `INSETS.gameDossier` r = 394) se záložkami *Oblast* (karta provincie, země a válek, od M19 i **Průmysl státu** se stavbou), *Armáda* (`V`), *Nábor* (`N`) a *Průmysl* (`I`) a *Výzkum* (`R`; neaktivní záložky ukazují jen ikonu); je vidět, jen když je zvolená záložka nebo označená oblast.
+- **Panel Armáda:** strom skupin armád → armád → divizí (šipkou se sbalí; dvojklik přejmenuje; přetažením se přesouvají divize do armád a armády do skupin), souhrny síly a organizace, velitel (výběr z velitelů země s dovednostmi a rysy), plán (*Hájit oblast*, *Linie fronty*, režim útoku, *Zrušit plán*), rozpuštění.
+- **Lišta úpravy plánu** (`PlanBar`, nahoře uprostřed): nástroje Linie / Cíle útoku, *Použít aktuální frontu* (`suggestFront`), Vymazat, režim útoku, Potvrdit / Zrušit; klik na mapě provincii přidá nebo odebere, Shift + klik celý stát.
+- **Dolní lišta výběru** (`SelectionBar`): síla, organizace, statistiky divize (u více divizí souhrn), armáda a velitel; Nová armáda, Do armády, Zastavit, Zaměřit, Rozpustit (s potvrzením).
+- **Nábor** (`RecruitPanel`): sklady výzbroje a lidská síla, karty šablon s cenou a statistikami (Zařadit, × 5, úprava, smazání), fronta výcviku. **Návrhář šablon** (`TemplateDesigner`, okno): mřížka pluků a praporů 5 × 5, podpůrné roty, živé statistiky a kontrola `validateTemplate`.
+- **Panel Průmysl** (`ui/industry/IndustryPanel.jsx`, M19): souhrn (civilní, vojenské, spotřební zboží, body stavby, volné továrny) a záložky *Stavby* (volba státu a druhu stavby, fronta s odhadem dokončení, přeřazení a zrušení), *Výroba* (sklad, linky s výběrem výzbroje, počtem továren, efektivitou, výrobou za den a pokrytím surovin, nová linka) a *Obchod* (tabulka šesti surovin, formulář nové smlouvy s přebytkem partnera, seznam smluv s dodaným množstvím). Akce (`buildIn`, `newLine`, `newTrade` …) kontrolují vlastnictví hráče a při neúspěchu napíšou důvod.
+- **Panel Výzkum** (`ui/research/ResearchPanel.jsx`, M20): souhrn (rychlost, počet hotových, úrovně výzbroje), sloty se zkoumanou technologií, postupem a odhadem dnů (přerušení zachová postup), filtr oborů a karty technologií (rok, délka, účinky a odemykané jednotky, stav Hotovo / Zkoumá se / K dispozici / Zamčeno s chybějícími předpoklady, předstih a odhad). Návrhář šablon, panel Nábor a panel Průmysl respektují odemčené jednotky a výzbroj hráče a statistiky počítají s jeho úrovněmi výzbroje.
+- Panely, tooltip a seznamy se při běhu času nepřekreslují každou herní hodinu: používají `useGameSlow(selektor, ms)` (nejvýš jedno překreslení za `ms`).
+
+**Pravidla UI:** selektory `useGame`/`useUi` vracejí stabilní hodnoty (primitiva nebo existující objekty); stav obrazovek je v `uiStore`, ne ve hře; plátno se překresluje jen při změně;
+změny stavu, UI a kamery dělají společně funkce v `actions.js`.
+
+**Klávesy:** tažení / WASD / šipky = posun; kolečko, Q/E, PageUp/PageDown = přiblížení; Home = celá mapa; mezerník = pauza; + − = rychlost; 1–8 = mapové režimy;
+V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, X = zastavit vybrané divize, F = zaměřit výběr; F1 nebo ? = ovládání.
+Esc zavírá postupně: nápověda → herní nabídka → návrhář šablon → úprava plánu → výběr jednotek → boční panel / označená oblast → (nic nezbývá) herní nabídka.
+
+**Vzhled:** „mapový stůl“ – inkoustové plochy (`--ink-0…3`), mosazné linky (`--brass`), krémový papír (`--paper`) pro nadpisy; písma Jost (nadpisy) a Barlow Semi Condensed (text),
+oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlastní jednoduché vrstvy (`data/countries.js`), bez státních znaků a bez symbolů extremistických režimů.
+
+## 6. Odchylky od vzoru (záměrné zjednodušení)
+
+- Mapa je vlastní, menší než světová: Evropa, Středomoří, severní Afrika, Blízký východ po 63,6° V; 2895 provincií místo desítek tisíc.
+- Stát je jednotka vlastnictví (jako ve vzoru) s kategorií a sloty staveb podle obyvatel (M19); sloty jsou společné pro civilní a vojenské továrny, bez dalších budov.
+- Mimo hrací plochu neexistují hráčské země (Asie, Amerika) – zůstávají „prázdnou pevninou“; jejich vliv bude zastoupen událostmi a obchodem.
+- Pro každou větší funkci platí „hotová a zahrabaná“: radši menší a funkční než vše napůl.
+
+## 7. Ověření
+
+- `npm test` – **271 testů v 15 souborech**: svět (struktura, sousednosti, geometrie, regiony, slavná města), stav a příkazy, kamera/geometrie/barvy/popisky, dlaždice a vykreslovač (s falešným plátnem), akce rozhraní, formátování,
+  `check-build.mjs` (oprava cest `src\main.jsx` a `src%2Fmain.jsx`, ochrana proti cestám mimo kořen a přepsání, chybějící soubor, velikost písmen, odkazy z `index.html`, čitelná zpráva) a **armáda** (`army-*.test.js`, pomůcky v `armyKit.js`):
+  - `army-setup` (15): počáteční rozmístění všech zemí (platné odkazy, žádný velitel dvakrát, odpovídá `NATIONAL`, divize ve stavu zásobování, deterministické, čistý JSON), statistiky divize, kontrola šablon;
+  - `army-commands` (30): šablony, nábor a zrušení výcviku, rozpuštění, rozkazy (doba pochodu), armády, skupiny, velitelé, plány (Linie fronty, Opatrně, Hájit oblast, ruční rozkaz, obranná AI), čistota příkazů;
+  - `army-combat` (20): trvání a ztráty boje, převaha, ústup a zničení, obsazení, terén, řeka, zakopání, zkušenosti, tanky, zásobování, šířka fronty a záloha, směry útoku, determinismus a čistota (JSON, dělení kroků);
+  - `army-war-supply` (16): války (symetrie, mír, AI plány), hledání cest (neutrální a nepřátelské území, průlivy), tok zásobování a jeho mezipaměť, denní krok batohu;
+  - `army-system` (6): 45 dní velké války drží invarianty, je deterministická a nezávisí na dělení kroků, výcvik a doplňování za války, měsíční lidská síla;
+  - `industry` (28): počáteční rozmístění továren a těžby (sloty, součty, deterministické), stavby (sloty, fronta, dokončení, infrastruktura), výroba (sklad, efektivita, linky, nedostatek surovin, ztráta továren), suroviny a obchod (přebytek, válka, okupace), vliv infrastruktury na zásobování, čistota a invarianty;
+  - `industry-ui` (9): akce hráče (vlastnictví, sloty, fronta, linky, smlouvy, pozorovatel), režim mapy Průmysl a přebarvení vykreslovače;
+  - `research` (23): data technologií (předpoklady, cykly, zámky jednotek), sloty, dostupnost a příkazy, průběh a předstih, rychlost, úrovně výzbroje ve statistikách, odemykání šablon a linek, bonusy průmyslu, AI zemí, čistota a determinismus;
+  - `research-ui` (6): akce hráče (sloty, hlášky, pozorovatel), návrhář s odemčenými prapory, herní smyčka;
+  - `army-ui` (42): souhrny a texty, návrhář šablon, žetony na mapě (slučování, pochod, shlukování, cesty, bitvy), akce výběru a rozkazů, plány, armády a skupiny, nábor a návrhář, selektory (`divisionCount`, `suggestFront`), režim Zásobování, okupace a vrstva jednotek ve vykreslovači (falešné plátno).
+- `npm run build` – musí projít bez chyb, i na čisté kopii bez `node_modules`, při Node 22 i 24 a také v nasazení s poškozenými cestami (kopie, kde jsou všechny soubory ze složek v kořeni pod názvy `src\main.jsx` …).
+  Hotový `dist/` (plochý) se ověřuje smoke testem z kořene i z podsložky.
+- `tools/smoke.mjs` – prohlížečová kontrola (Playwright, `npm i -D playwright` a `npx playwright install chromium`): menu → výběr země → hra, klik na provincii, běh času, přepnutí režimů,
+  zvýraznění pod myší (po posunu kamery a při tažení), měření snímku a **armáda**: žetony na mapě, bublina nad žetonem, výběr, pravé tlačítko (pochod), Nová armáda, panel Armáda (strom, klávesa V),
+  vyhlášení války z karty oblasti, plán fronty (návrh, potvrzení), šest herních dnů, režim Zásobování (7), nábor, návrhář šablon, čas kreslení vrstvy žetonů, řetěz Esc, bez chyb v konzoli;
+  **45 kontrol** (od M19 i panel Průmysl: stavba, linky, obchod, režim 8, tři herní dny; od M20 panel Výzkum: sloty, obory, 80 dní) při 1920 × 1080 i 1366 × 768; snímky ukládá do `tools/preview/smoke-*.png`.
+- Výkon (`__e1936.map.renderer.stats`, headless Chromium bez GPU): CPU čas vrstvy žetonů ≈ 3–4 ms na snímek při ≈ 500 žetonech (399 viditelných po shlukování při přiblížení 1); každý žeton se kreslí vektorově,
+  při výrazně větším počtu divizí (AI v M24) se vyplatí sprite mezipaměť žetonů. Při rychlosti 5 s otevřeným panelem Armáda běží smyčka na 60 snímků/s (medián 16,7 ms, 95. percentil ≈ 26 ms).
+- Ruční kontrola vždy při 1920 × 1080 a 1366 × 768.
+
+## 8. Plán milníků
+
+| # | Obsah | Stav |
+|---|---|---|
+| **M17** | **Svět**: generátor, formát, engine (stav, čas, vlastnictví), mapa (dlaždice, popisky, režimy), menu, výběr země, HUD, minimapa | **hotovo** |
+| **M18** | **Armáda**: divize a šablony, výzbroj, generálové, armády a skupiny armád, plány a rozkazy, zásobování, boj (šířka fronty, terén, organizace), minimální stav války a počáteční rozmístění všech zemí; rozhraní: žetony, výběr, panel Armáda, nábor, návrhář šablon, mapa zásobování | **hotovo** |
+| **M19** | **Průmysl**: kategorie států a sloty, civilní/vojenské továrny, fronta staveb, výrobní linky, suroviny a obchod, spotřební zboží, infrastruktura; rozhraní: panel Průmysl, karta státu, mapový režim 8. Konvoje a námořní doprava zatím ne (obchod je abstraktní) | **hotovo** |
+| **M20** | **Výzkum**: 39 technologií v pěti oborech, sloty, předstih před historickým rokem, úrovně výzbroje, odemykání jednotek a výzbroje, bonusy průmyslu a výzkumu, výzkum AI zemí; rozhraní: panel Výzkum | **hotovo** |
+| M21 | **Politika**: stabilita, podpora války, politická moc, poradci, zákony, ideologie | |
+| M22 | **Focusy a události**: stromy národních cílů, události, rozhodnutí, politické cesty | |
+| M23 | **Diplomacie**: vztahy, války, spojenectví a bloky, kapitulace, okupace a odboj | |
+| M24 | **AI** zemí (stejné příkazy jako hráč), obtížnosti | |
+| později | letectvo, loďstvo a konvoje, špionáž, vyvolání zákonů, uložené hry | |
+
+Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
