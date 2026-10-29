@@ -370,3 +370,10 @@ kbd {
 .mm-list .icon { color: var(--text-3); }
 .mm-list button.on .icon { color: var(--brass-hi); }
 @media (max-width: 1499px) { .mm { left: 14px; bottom: auto; top: calc(var(--top-h) + 56px); flex-direction: column-reverse; } }
+
+/* Upozornění pod lištou nabídek (M49) */
+.alerts { position: absolute; left: 14px; top: calc(var(--top-h) + 56px); z-index: 8; display: flex; flex-direction: column; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.alert { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--rule-hi); background: rgba(15, 24, 33, 0.94); color: var(--brass-hi); cursor: pointer; }
+.alert.info { color: var(--text-1, #dde); }
+.alert:hover { background: var(--ink-3); }
+.alert:focus-visible { outline: 2px solid var(--brass); }

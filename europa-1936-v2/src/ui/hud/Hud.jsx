@@ -24,6 +24,7 @@ import { DecisionsPanel } from '../decisions/DecisionsPanel.jsx';
 import { DoctrinePanel } from '../doctrine/DoctrinePanel.jsx';
 import { AirPanel } from '../air/AirPanel.jsx';
 import { MenuBar } from './MenuBar.jsx';
+import { Alerts } from './Alerts.jsx';
 import { Console } from './Console.jsx';
 import { Toast } from '../common/Toast.jsx';
 import { Minimap } from '../map/Minimap.jsx';
@@ -58,6 +59,7 @@ export function Hud() {
       {panel === 'decisions' && <DecisionsPanel />}
       {panel === 'spy' && <SpyPanel />}
       <MenuBar />
+      <Alerts />
       <Console />
       <div className="top-mid" style={{ right }}><PlanBar /></div>
       <div className="bottom-mid" style={{ right }}>
