@@ -4,6 +4,7 @@ import { I } from './constants.js';
 import { logAddMany } from '../log.js';
 import { BUILDINGS, isShip, isAir } from '../../data/industry/index.js';
 import { modsOf } from '../research/core.js';
+import { convoysOf, tradeFactor } from '../nav/convoy.js';
 import { polModsOf, outMult, consOf } from '../politics/core.js';
 import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
 
@@ -27,6 +28,7 @@ export function industryDay(state) {
 
   // 2) obchod: vývozce dodá nejvýš svůj přebytek (těžba − vlastní poptávka − už vyvezené); válka smlouvu přeruší
   const sold = Array.from({ length: nO }, () => ({}));
+  const convCache = new Map();
   const trade = ind.trade.map((d) => {
     let got = 0;
     if (!wars.has(warKey(d.from, d.to))) {
@@ -34,6 +36,10 @@ export function industryDay(state) {
       got = Math.max(0, Math.min(d.amt, have));
       got = Math.round(got * 1000) / 1000;
       sold[d.from][d.res] = (sold[d.from][d.res] || 0) + got;
+      if (state.nav) {
+        if (!convCache.has(d.to)) convCache.set(d.to, convoysOf(state, d.to));
+        got = Math.round(got * tradeFactor(state, d, convCache.get(d.to)) * 1000) / 1000;   // M31: konvoje a nájezdy
+      }
     }
     return got === d.got ? d : { ...d, got };
   });

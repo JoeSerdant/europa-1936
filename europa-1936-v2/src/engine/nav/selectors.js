@@ -1,7 +1,8 @@
 // Dotazy na námořnictvo pro rozhraní a AI (čisté, bez změn stavu).
 import { getWorld } from '../world.js';
 import { SHIPS, SHIP_IDS } from '../../data/navy/index.js';
-import { powerOf, fleetSpeed, transportsOf, homeSea, seaBlocked } from './core.js';
+import { powerOf, fleetSpeed, homeSea, seaBlocked } from './core.js';
+import { transportsOf } from './convoy.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
 

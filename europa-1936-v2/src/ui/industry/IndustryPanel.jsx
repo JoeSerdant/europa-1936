@@ -3,7 +3,7 @@ import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import {
   getWorld, industryOf, stateIndustry, projectEta, allCountries, countryName, slotsUsed, slotsOf, atWar,
-  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, isUnlocked,
+  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, isUnlocked, tradeStatus, convoysOf,
 } from '../../engine/index.js';
 import {
   playerIdx, closeSide, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel,
@@ -269,6 +269,8 @@ function TradeForm({ state, me }) {
 }
 
 function TradeTab({ state, me, sum }) {
+  const ts = useMemo(() => new Map(tradeStatus(state, me).map((x) => [x.d.id, x])), [state.ind.trade, state.nav, state.ctrl, state.mil.wars, me]);
+  const cv = convoysOf(state, me);
   return (
     <div className="prod-cols">
       <div className="prod-left">
@@ -276,6 +278,7 @@ function TradeTab({ state, me, sum }) {
         <ResTable sum={sum} />
       </div>
       <aside className="prod-right">
+      <section className="ind-new" aria-label="Konvoje"><div className="sec-head"><h3>Konvoje</h3><span className="muted">transportní lodě dovozce</span></div><p className="muted">Smlouvy přes moře potřebují konvoje: {cv.need} potřeba · {cv.avail} lodí k dispozici{cv.need > cv.avail ? ' – nedostatek zmenšuje dodávky' : ''}. Nepřátelské lodě na trase konvoje ničí, vlastní válečné lodě je kryjí.</p></section>
       <TradeForm state={state} me={me} />
       <div className="sec-head"><h3>Smlouvy{sum.trade.length ? ` (${sum.trade.length})` : ''}</h3></div>
       {!sum.trade.length ? <p className="empty">Žádné smlouvy. Chybějící suroviny koupíte od zemí s přebytkem.</p> : (
@@ -295,7 +298,7 @@ function TradeTab({ state, me, sum }) {
                   <button className="icon-btn sm" onClick={() => changeTrade(d.id, d.amt + 1)} disabled={d.amt + 1 > IND.TRADE_AMT_MAX} aria-label="Přidat množství" title="+1"><Icon name="plus" size={14} /></button>
                   <button className="icon-btn sm" onClick={() => dropTrade(d.id)} aria-label="Zrušit smlouvu" title="Zrušit smlouvu"><Icon name="close" size={14} /></button>
                 </div>
-                <span className={`muted ind-got ${cut ? 'lack' : ''}`}>{war ? 'přerušeno válkou' : `dodáno ${fmtNum(d.got, 1)} z ${fmtNum(d.amt, 1)}`}</span>
+                <span className={`muted ind-got ${cut ? 'lack' : ''}`}>{war ? 'přerušeno válkou' : `dodáno ${fmtNum(d.got, 1)} z ${fmtNum(d.amt, 1)}`}{ts.get(d.id) && ts.get(d.id).route.sea ? ` · po moři, ${ts.get(d.id).need} ${ts.get(d.id).need === 1 ? 'konvoj' : 'konvojů'}${ts.get(d.id).risk > 0.005 ? `, riziko ${Math.round(ts.get(d.id).risk * 100)} %` : ''}` : ' · po souši'}</span>
               </li>
             );
           })}

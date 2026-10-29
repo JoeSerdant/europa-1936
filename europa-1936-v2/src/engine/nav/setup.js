@@ -17,5 +17,5 @@ export function createNav(w, state) {
     if (any && home) fleets.push({ o, nm: 'Hlavní flotila', p: home.sea, ships, c: {}, mx: powerOf(ships).hp, to: 0, path: [], prog: 0 });
     else for (const s in ships) pool[o][s] += ships[s];
   }
-  return { ver: 0, fn: fleets.length - 1, fleets, pool, sail: [] };
+  return { ver: 0, fn: fleets.length - 1, fleets, pool, sail: [], cv: new Array(n).fill(0) };
 }

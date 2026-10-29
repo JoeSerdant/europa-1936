@@ -50,7 +50,7 @@ export function LogisticsPanel() {
       <div className="lg-use">
         <span title="Podíl využitých vojenských továren"><i>Vojenské továrny</i><span className="bar prog"><i style={{ width: `${milUse * 100}%` }} /></span><b>{pct(milUse)}</b></span>
         <span title="Podíl využitých loděnic"><i>Loděnice</i><span className="bar prog"><i style={{ width: `${dockUse * 100}%` }} /></span><b>{sum.dok ? pct(dockUse) : '–'}</b></span>
-        <span title="Volné / všechny transportní lodě"><i>Transporty</i><b>{tr.free}/{tr.total}</b></span>
+        <span title="Volné / všechny transportní lodě; konvoje obchodu zabírají lodě"><i>Transporty</i><b>{tr.free}/{tr.total}</b><i>{tr.convoys} konvojů</i></span>
       </div>
     )}>
       <div className="prod-body">

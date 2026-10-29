@@ -5,7 +5,8 @@ import { SHIP_IDS } from '../../data/navy/index.js';
 import { cleanName } from '../army/commands.js';
 import { atWar } from '../army/war.js';
 import { NAV } from './constants.js';
-import { homeSea, powerOf, seaRoute, seaBlocked, transportsOf, coastSeasOf, isSeaLabel } from './core.js';
+import { homeSea, powerOf, seaRoute, seaBlocked, coastSeasOf, isSeaLabel } from './core.js';
+import { transportsOf } from './convoy.js';
 
 const patch = (state, p) => ({ ...state, nav: { ...state.nav, ...p, ver: state.nav.ver + 1 } });
 const ok = (state, o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length && !!state.nav.pool[o];
