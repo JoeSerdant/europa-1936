@@ -35,6 +35,8 @@ const put = (tag, kind, p, extra) => {
   return id;
 };
 const game = () => gameStore.getState();
+/** Hotové ospravedlnění války hráče (Německo) proti zemi `tag` – od M23 se nejdřív ospravedlňuje. */
+const justified = (tag) => { const g = game(); gameStore.setState({ ...g, dip: { ...g.dip, just: [...g.dip.just, { a: GER, b: idx(tag), ready: 0 }] } }); };
 const ui = () => uiStore.getState();
 const capital = W.owners[GER].cap;
 
@@ -303,6 +305,7 @@ describe('výběr a rozkazy (akce)', () => {
     expect(ui().toast).not.toBeNull();
     expect(ui().planEdit).not.toBeNull();
     expect(A.planSuggest()).toBe(false);                             // bez války není nepřítel
+    justified('POL');
     A.declareWarOn('POL');
     expect(A.planSuggest()).toBe(true);
     expect(ui().planEdit.line).toContain(border.from);
@@ -387,10 +390,12 @@ describe('výběr a rozkazy (akce)', () => {
 
   it('válka a mír z rozhraní: jen za hráče, dvakrát nic; pozorovatel nemůže', () => {
     expect(A.declareWarOn('GER')).toBe(false);                       // sám sobě ne
+    expect(A.declareWarOn('POL')).toBe(false);                       // bez ospravedlnění ne
+    justified('POL');
     expect(A.declareWarOn('POL')).toBe(true);
     expect(atWar(game(), 'GER', 'POL')).toBe(true);
     expect(A.declareWarOn('POL')).toBe(false);
-    expect(A.makePeaceWith('FRA')).toBe(false);
+    expect(A.makePeaceWith('ITA')).toBe(false);                      // s Itálií nejsou ve válce (s Francií ano: blok Polska se zapojil)
     expect(A.makePeaceWith('POL')).toBe(true);
     expect(atWar(game(), 'GER', 'POL')).toBe(false);
     A.startGame(null);

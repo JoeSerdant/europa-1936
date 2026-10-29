@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { getWorld, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
-import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn } from '../actions.js';
+import { getWorld, diplomacyOf, DIP, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
+import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, justifyOn } from '../actions.js';
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
 const KIND_NOTE = ['', 'přes řeku', 'průliv'];
@@ -86,10 +86,10 @@ function StateIndustry({ s }) {
   );
 }
 
-/** Vztah hráče k vlastníkovi oblasti: vyhlášení války a bílý mír (obojí na dvojí klik, aby se nestalo omylem). */
+/** Vztah hráče k vlastníkovi oblasti: ospravedlnění, vyhlášení války a bílý mír (vyhlášení a mír na dvojí klik, aby se nestalo omylem). */
 function WarSection({ idx, name }) {
-  const me = useGame((s) => (s.player ? getWorld().ownerIdx[s.player] : 0));
-  const wars = useGame((s) => s.mil.wars);
+  const state = useGameSlow((s) => s, 600);
+  const me = playerIdx(state);
   const [armed, setArmed] = useState(false);
   useEffect(() => { setArmed(false); }, [idx, me]);
   useEffect(() => {
@@ -98,22 +98,30 @@ function WarSection({ idx, name }) {
     return () => clearTimeout(t);
   }, [armed]);
   if (!me || me === idx) return null;
-  const tag = getWorld().owners[idx].tag;
-  const war = wars.some(([a, b]) => (a === me && b === idx) || (a === idx && b === me));
-  const confirm = () => { setArmed(false); if (war) makePeaceWith(tag); else declareWarOn(tag); };
+  const c = diplomacyOf(state, me).list.find((x) => x.o === idx);
+  if (!c) return null;
+  const tag = c.tag;
+  const confirm = () => { setArmed(false); if (c.war) makePeaceWith(tag); else declareWarOn(tag); };
   return (
     <section className="war-sec">
       <h3>Vztah k zemi {name}</h3>
-      <p className={war ? 'war-state on' : 'war-state'}>{war ? 'Jste ve válce.' : 'Jste v míru.'}</p>
-      {armed ? (
-        <div className="confirm-row">
-          <button className={`sbtn ${war ? '' : 'danger'}`} onClick={confirm} autoFocus>{war ? 'Ano, uzavřít bílý mír' : 'Ano, vyhlásit válku'}</button>
-          <button className="sbtn" onClick={() => setArmed(false)}>Zpět</button>
-        </div>
+      <p className={c.war ? 'war-state on' : 'war-state'}>{c.war ? 'Jste ve válce.' : c.ally ? 'Jste ve stejném bloku.' : c.capitulated ? 'Země kapitulovala.' : 'Jste v míru.'} Vztah {c.rel > 0 ? '+' : ''}{c.rel}.</p>
+      {c.war || c.canDeclare ? (
+        armed ? (
+          <div className="confirm-row">
+            <button className={`sbtn ${c.war ? '' : 'danger'}`} onClick={confirm} autoFocus>{c.war ? 'Ano, navrhnout bílý mír' : 'Ano, vyhlásit válku'}</button>
+            <button className="sbtn" onClick={() => setArmed(false)}>Zpět</button>
+          </div>
+        ) : (
+          <button className={`sbtn ${c.war ? '' : 'danger'}`} disabled={c.war && !!c.peaceBlock} title={c.war ? c.peaceBlock || undefined : 'Zapojí se i členové bloků'} onClick={() => setArmed(true)}>{c.war ? 'Navrhnout bílý mír' : 'Vyhlásit válku'}</button>
+        )
+      ) : c.ally || c.capitulated ? null : c.just ? (
+        <p className="muted">Ospravedlňuje se: zbývá {c.just.left} d.</p>
       ) : (
-        <button className={`sbtn ${war ? '' : 'danger'}`} onClick={() => setArmed(true)}>{war ? 'Uzavřít bílý mír' : 'Vyhlásit válku'}</button>
+        <button className="sbtn" disabled={!c.canJustify} title={c.justifyBlock || undefined} onClick={() => justifyOn(tag)}>Ospravedlnit válku ({DIP.JUST_PP} PM)</button>
       )}
-      {war && armed && <p className="muted">Okupované provincie se vrátí původním držitelům a cizí jednotky odejdou domů.</p>}
+      {c.war && armed && <p className="muted">Okupované provincie se vrátí původním držitelům a cizí jednotky odejdou domů.</p>}
+      {c.war && c.peaceBlock && !armed && <p className="pol-block">{c.peaceBlock}</p>}
     </section>
   );
 }

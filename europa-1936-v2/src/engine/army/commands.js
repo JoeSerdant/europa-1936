@@ -16,7 +16,7 @@ const ownerIdx = (tag) => getWorld().ownerIdx[tag] || 0;
 const bump = (mil, patch) => ({ ...mil, ...patch, ver: mil.ver + 1 });
 
 /** Spustí `fn` nad pracovním kontextem; nic se nezměnilo → tentýž stav. */
-function withCtx(state, fn) {
+export function withCtx(state, fn) {
   const ctx = openCtx(state);
   fn(ctx);
   return closeCtx(ctx);
@@ -34,7 +34,7 @@ const tplOf = (mil, id) => (isId(id) && id < mil.tpl.length ? mil.tpl[id] : null
 
 // ============================================================ války
 /** Po míru: zruší bitvy bez nepřátel a odešle cizí jednotky domů. */
-function settleAfterPeace(ctx, a, b) {
+export function settleAfterPeace(ctx, a, b) {
   for (const bt of ctx.battles.slice()) {
     const valid = bt.att.some((x) => ctx.divs[x] && bt.dep.some((y) => ctx.divs[y] && atWar(ctx.mil, ctx.divs[x].o, ctx.divs[y].o)));
     if (valid) continue;

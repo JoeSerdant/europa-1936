@@ -6,6 +6,7 @@ import {
   createArmy, renameArmy, disbandArmy, assignDivisions, createGroup, renameGroup, disbandGroup, assignArmies, assignCommander,
   setPlan, clearPlan, setPlanMode, suggestFront,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
+  justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, warBlock, peaceBlock, inviteBlock, justReady,
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
@@ -282,21 +283,57 @@ export function contextClick(l) {
 }
 
 // ============================================================ války
+/** Ospravedlní válku proti zemi `tag` (stojí politickou moc a čas). */
+export function justifyOn(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = warBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  if (!run(justifyWar, me, t)) { toast('Ospravedlnění nejde zahájit (chybí politická moc, nebo už jich běží příliš mnoho).'); return false; }
+  toast(`Ospravedlňujete válku: ${countryName(tag)}.`);
+  return true;
+}
+
+/** Vyhlásí válku zemi `tag` (vyžaduje hotové ospravedlnění); zapojí se bloky. */
 export function declareWarOn(tag) {
-  const s = gameStore.getState();
-  if (!s.player || !tag || tag === s.player) return false;
-  if (!run(declareWar, s.player, tag)) return false;
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t || me === t) return false;
+  if (!justReady(s, me, t)) { toast('Válka není ospravedlněná – nejdřív ji ospravedlněte (diplomacie, D).'); return false; }
+  if (!run(startWar, me, t)) return false;
   toast(`Vyhlásili jste válku: ${countryName(tag)}.`);
   return true;
 }
 
+/** Navrhne bílý mír; protivník ho odmítne, když vyhrává. */
 export function makePeaceWith(tag) {
-  const s = gameStore.getState();
-  if (!s.player || !tag || tag === s.player) return false;
-  if (!run(makePeace, s.player, tag)) return false;
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t || me === t) return false;
+  const why = peaceBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  if (!run(proposePeace, me, t)) return false;
   toast(`Uzavřen bílý mír: ${countryName(tag)}.`);
   return true;
 }
+
+/** Založí blok hráče. */
+export function foundBloc(name) {
+  const me = playerIdx();
+  if (!me) return false;
+  if (!run(createFaction, me, name)) { toast('Blok nejde založit (chybí politická moc nebo už v bloku jste).'); return false; }
+  toast('Blok založen.');
+  return true;
+}
+/** Pozve zemi do bloku hráče; pozvaný přijme podle vztahů. */
+export function inviteBloc(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = inviteBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  if (!run(inviteToFaction, me, t)) return false;
+  toast(`${countryName(tag)} přijala pozvání do bloku.`);
+  return true;
+}
+export const leaveBloc = () => { const me = playerIdx(); return !!me && run(leaveFaction, me); };
 
 // ============================================================ armády a skupiny
 export function newArmy(fromSelection = true) {

@@ -3,7 +3,7 @@
 Velká strategie ve stylu **Hearts of Iron IV**, odehrávající se v lednu 1936 na mapě Evropy, Středomoří, severní Afriky a Blízkého východu.
 Nová hra od základů: vlastní kód, vlastní mapa (generovaná z veřejných geodat Natural Earth), vlastní texty a grafika.
 
-**Stav: milník M22 – Národní cíle a události.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
+**Stav: milník M23 – Diplomacie.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
 minimapa a panel s údaji o oblasti (M17) a **pozemní armáda**: divize ze šablon (vlastní návrhář), výzbroj a lidská síla, výcvik, velitelé, armády a skupiny armád, plány (Hájit oblast, Linie fronty),
 rozkazy, zásobování, boj s šířkou fronty, terénem a organizací a počáteční rozmístění všech zemí. Války se zatím vyhlašují z karty oblasti (dočasně).
 A od M19 **průmysl**: státy se sloty podle velikosti, civilní a vojenské továrny, fronta staveb, výrobní linky výzbroje s efektivitou, suroviny (ocel, hliník, ropa, wolfram, chrom, guma), obchodní smlouvy, spotřební zboží a vylepšování infrastruktury (zlepšuje pochod i zásobování). Výroba plní sklady výzbroje, ze kterých se nabírají divize.
@@ -15,7 +15,7 @@ Rozhodnutí a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, �
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 312 testů
+npm test           # 336 testů
 npm run build      # kontrola vstupů (check-build.mjs) + produkční build do dist/
 ```
 
@@ -48,7 +48,7 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 | označit provincii nebo moře | klik |
 | pauza, rychlost | mezerník, + a − |
 | mapové režimy | 1–8 (politická, terén, státy, regiony, obyvatelé, vítězné body, zásobování, průmysl) |
-| panel Armáda, Nábor, Průmysl, Výzkum, Politika, Cíle | V, N, I, R, P, C |
+| panel Armáda, Nábor, Průmysl, Výzkum, Politika, Cíle, Diplomacie | V, N, I, R, P, C, D |
 | vybrat jednotky | klik na žeton (Shift přidává, dvojklik = celá armáda), Shift + tažení = obdélník |
 | rozkaz | pravé tlačítko na mapě (nepřátelská provincie = útok), X = zastavit, F = zaměřit výběr |
 | zavřít okno, zrušit výběr, nabídka | Esc |
@@ -88,6 +88,12 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 1. Panel **Cíle** (C): každá země má strom cílů (obecný, velmoci a vybrané země vlastní). Plní se jeden cíl, nejčastěji 35–45 dní; dá okamžitou odměnu (továrny, infrastruktura, technologie, politická moc, zákony …) a někdy trvalý bonus. Některé cíle se vylučují.
 2. **Události** přicházejí podle situace (válka, stabilita, zákony, datum) a náhody. Hra se při nich pozastaví a musíš zvolit řešení; každá volba má jiné následky.
 3. Země bez hráče si cíle i volby v událostech vybírají samy.
+
+### Jak na diplomacii
+
+1. Panel **Diplomacie** (D): seznam zemí se vztahem. **Válku nejdřív ospravedlni** (25 PM, 30 dní), pak ji vyhlásíš; zapojí se členové bloků obou stran.
+2. **Bílý mír** protivník přijme, když nevyhrává. Země kapituluje, když nepřátelé drží většinu jejích bodů (nebo její hlavní město a třetinu bodů); okupované státy připadnou okupantům.
+3. **Blok** můžeš založit (50 PM) a zvát do něj země s dobrými vztahy.
 
 ## Dokumentace
 

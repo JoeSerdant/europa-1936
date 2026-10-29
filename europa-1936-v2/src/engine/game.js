@@ -7,8 +7,9 @@ import { createInd } from './industry/setup.js';
 import { createTech } from './research/setup.js';
 import { createPol } from './politics/setup.js';
 import { createNat } from './nat/setup.js';
+import { createDip } from './dip/setup.js';
 
-export const GAME_VERSION = 6;
+export const GAME_VERSION = 7;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -39,5 +40,6 @@ export function createGame({ player = null, seed = 1936 } = {}) {
     tech: createTech(w),   // M20: výzkum (viz SPEC § 4c)
     pol: createPol(w),     // M21: politika (viz SPEC § 4d)
     nat: createNat(w),     // M22: národní cíle a události (viz SPEC § 4e)
+    dip: createDip(w),     // M23: diplomacie (viz SPEC § 4f)
   };
 }
