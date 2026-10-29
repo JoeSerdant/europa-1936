@@ -9,7 +9,7 @@ const ROWS = [
   ['Výběr jednotek', ['klik na žeton', 'Shift + tažení', 'dvojklik = celá armáda']],
   ['Rozkaz jednotkám (pohyb, útok)', ['pravé tlačítko myši']],
   ['Zastavit vybrané / zaměřit výběr', ['X', 'F']],
-  ['Panel Armáda / Nábor / Průmysl / Výzkum / Politika / Cíle / Diplomacie / Zprávy', ['V', 'N', 'I', 'R', 'P', 'C', 'D', 'L']],
+  ['Panel Armáda / Nábor / Průmysl / Výzkum / Politika / Cíle / Diplomacie / Zprávy / Námořnictvo', ['V', 'N', 'I', 'R', 'P', 'C', 'D', 'L', 'M']],
   ['Přehled zemí', ['O']],
   ['Zrušit výběr, zavřít okno', ['Esc']],
   ['Pauza', ['mezerník']],

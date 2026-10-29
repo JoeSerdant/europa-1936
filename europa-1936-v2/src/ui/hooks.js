@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, playerIdx, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
@@ -45,7 +45,7 @@ export function useGameLoop(active) {
 const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;
 
 /**
- * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, C = Cíle, D = Diplomacie, L = Zprávy, O = Přehled zemí, X = zastavit vybrané divize,
+ * Klávesové zkratky: mezerník = pauza, + − = rychlost, 1–8 = mapové režimy, V = panel Armáda, N = Nábor, I = Průmysl, R = Výzkum, P = Politika, C = Cíle, D = Diplomacie, L = Zprávy, M = Námořnictvo, O = Přehled zemí, X = zastavit vybrané divize,
  * F = zaměřit výběr, Esc = zrušit/zavřít (nabídka → návrhář → úprava plánu → výběr jednotek → panel), F1 nebo ? = nápověda.
  */
 export function useHotkeys() {
@@ -67,6 +67,7 @@ export function useHotkeys() {
           else if (ui.designer) closeDesigner();
           else if (ui.planEdit) cancelPlanEdit();
           else if (ui.selDivs.length) clearSelection();
+          else if (ui.fleetSel) selectFleet(0);
           else if (ui.selected || ui.panel) closeSide();
           else setMenuOpen(true);
         }
@@ -87,6 +88,7 @@ export function useHotkeys() {
       else if (k === 'c') togglePanel('nat');
       else if (k === 'd') togglePanel('dip');
       else if (k === 'l') togglePanel('log');
+      else if (k === 'm') togglePanel('navy');
       else if (k === 'o') { if (ui.overview) closeOverview(); else openOverview(); }
       else if (k === 'x') stopSelected();
       else if (k === 'f') focusSelection();

@@ -10,9 +10,9 @@ const sameIds = (a, b) => (a === b) || (!!a && !!b && a.length === b.length && a
  * S vrstvou jednotek (`units`): klik na žeton = výběr (Shift přidává, dvojklik = celá armáda), Shift + tažení = výběr obdélníkem, pravé tlačítko = rozkaz.
  * Kreslení řídí MapController mimo React; tady jen vazba na DOM (velikost, myš, klávesy) a na úložiště.
  * `interactive` = posun/zoom/výběr; `onPick(label, mods)` se volá při kliknutí na mapu, `onCounter(counter, mods)` na žeton,
- * `onBox(ids, mods)` po výběru obdélníkem, `onContext(label)` při kliknutí pravým tlačítkem.
+ * `onFleet(žeton flotily, mods)` na námořní žeton, `onBox(ids, mods)` po výběru obdélníkem, `onContext(label)` při kliknutí pravým tlačítkem.
  */
-export function MapView({ interactive = true, onPick, onCounter, onBox, onContext, units = false, cursor = 'grab' }) {
+export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox, onContext, units = false, cursor = 'grab' }) {
   const canvasRef = useRef(null);
   const hostRef = useRef(null);
   const boxRef = useRef(null);
@@ -20,6 +20,8 @@ export function MapView({ interactive = true, onPick, onCounter, onBox, onContex
   pickRef.current = onPick;
   const counterRef = useRef(onCounter);
   counterRef.current = onCounter;
+  const fleetRef = useRef(onFleet);
+  fleetRef.current = onFleet;
   const boxCbRef = useRef(onBox);
   boxCbRef.current = onBox;
   const contextRef = useRef(onContext);
@@ -123,7 +125,10 @@ export function MapView({ interactive = true, onPick, onCounter, onBox, onContex
       if (!click) return;
       if (d.button === 0) {
         const c = unitsRef.current ? mc.pickCounter(sx, sy) : null;
-        if (c && counterRef.current) {
+        const ft = !c && unitsRef.current && fleetRef.current ? mc.pickFleet(sx, sy) : null;
+        if (ft) {
+          fleetRef.current(ft, { shift: e.shiftKey });
+        } else if (c && counterRef.current) {
           const now = performance.now();
           const dbl = lastClick.key === c.key && now - lastClick.t < 380;
           lastClick = { t: dbl ? 0 : now, key: c.key };

@@ -3,7 +3,7 @@
 Velká strategie ve stylu **Hearts of Iron IV**, odehrávající se v lednu 1936 na mapě Evropy, Středomoří, severní Afriky a Blízkého východu.
 Nová hra od základů: vlastní kód, vlastní mapa (generovaná z veřejných geodat Natural Earth), vlastní texty a grafika.
 
-**Stav: milník M26 – Zprávy a přehled zemí.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
+**Stav: milník M27 – Námořnictvo a přeprava přes moře.** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
 minimapa a panel s údaji o oblasti (M17) a **pozemní armáda**: divize ze šablon (vlastní návrhář), výzbroj a lidská síla, výcvik, velitelé, armády a skupiny armád, plány (Hájit oblast, Linie fronty),
 rozkazy, zásobování, boj s šířkou fronty, terénem a organizací a počáteční rozmístění všech zemí. Války se zatím vyhlašují z karty oblasti (dočasně).
 A od M19 **průmysl**: státy se sloty podle velikosti, civilní a vojenské továrny, fronta staveb, výrobní linky výzbroje s efektivitou, suroviny (ocel, hliník, ropa, wolfram, chrom, guma), obchodní smlouvy, spotřební zboží a vylepšování infrastruktury (zlepšuje pochod i zásobování). Výroba plní sklady výzbroje, ze kterých se nabírají divize.
@@ -15,7 +15,7 @@ Rozhodnutí a diplomacie přicházejí v dalších milnících (viz `SPEC.md`, �
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 371 testů
+npm test           # 399 testů
 npm run build      # kontrola vstupů (check-build.mjs) + produkční build do dist/
 ```
 
@@ -53,6 +53,7 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 | rozkaz | pravé tlačítko na mapě (nepřátelská provincie = útok), X = zastavit, F = zaměřit výběr |
 | rychlé uložení / načtení | F6 / F9 |
 | panel Zprávy, přehled zemí | L, O |
+| panel Námořnictvo | M |
 | zavřít okno, zrušit výběr, nabídka | Esc |
 | nápověda | F1 nebo ? |
 
@@ -106,6 +107,10 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 ### Uložené hry
 
 Nabídka (Esc) → **Uložit hru** / **Načíst hru**, nebo **Načíst hru** v hlavním menu. K dispozici je pět ručních slotů, **rychlé uložení** (F6, načtení F9) a **automatické uložení** jednou za herní měsíc. Uložené hry žijí v úložišti prohlížeče (`localStorage`) a platí jen pro stejnou verzi hry.
+
+### Jak na námořnictvo
+
+Panel **Námořnictvo** (M): sestav flotilu z lodí v zásobě (torpédoborce, křižníky, bitevní lodě, ponorky), pošli ji pravým tlačítkem na mořskou oblast. Lodě se vyrábějí v panelu Průmysl na lodních linkách a potřebují **loděnice**. Divizi přepravíš tak, že ji vybereš a pravým tlačítkem klikneš na pobřežní provincii za mořem; každá zabere jednu transportní loď. Flotily se na moři střetávají s nepřítelem a poškozené lodě se stahují.
 
 ### Zprávy a přehled
 

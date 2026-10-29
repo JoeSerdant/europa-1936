@@ -2,10 +2,10 @@
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { logAddMany } from '../log.js';
-import { BUILDINGS } from '../../data/industry/index.js';
+import { BUILDINGS, isShip } from '../../data/industry/index.js';
 import { modsOf } from '../research/core.js';
 import { polModsOf, outMult, consOf } from '../politics/core.js';
-import { tallyOwners, factoryUse, trimLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
+import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
 
 const warKey = (a, b) => (a < b ? a * 1000 + b : b * 1000 + a);
 
@@ -21,7 +21,7 @@ export function industryDay(state) {
   const use = new Array(nO), dem = new Array(nO);
   for (let o = 1; o < nO; o++) {
     use[o] = factoryUse(tally[o], consOf(state, o));
-    linesBy[o] = trimLines(linesBy[o], use[o].milAvail);
+    linesBy[o] = trimAllLines(linesBy[o], use[o].milAvail, tally[o].dok);
     dem[o] = demandOf(linesBy[o], state.mil.lv[o]);
   }
 
@@ -40,6 +40,7 @@ export function industryDay(state) {
 
   // 3) výroba, růst efektivity a stavby po zemích
   let stock = state.mil.stock, stockOwn = false;
+  let navPool = state.nav ? state.nav.pool : null, poolOwn = false;
   const lines = [];
   const progress = new Map();   // id stavby → nový postup
   const done = [];              // dokončené stavby
@@ -57,7 +58,10 @@ export function industryDay(state) {
       let acc = l.acc + lineRate(l, lvo) * f * out;
       const whole = Math.floor(acc);
       acc -= whole;
-      if (whole > 0) {
+      if (whole > 0 && isShip(l.eq) && navPool) {
+        if (!poolOwn) { navPool = navPool.slice(); poolOwn = true; }
+        navPool[o] = { ...navPool[o], [l.eq]: (navPool[o][l.eq] || 0) + whole };
+      } else if (whole > 0) {
         if (!stockOwn) { stock = stock.slice(); stockOwn = true; }
         stock[o] = { ...stock[o], [l.eq]: (stock[o][l.eq] || 0) + whole };
       }
@@ -87,12 +91,13 @@ export function industryDay(state) {
       inf[b.s] = Math.min(I.INF_MAX, inf[b.s] + 1);
     } else {
       if (!stOwn) { st = st.slice(); stOwn = true; }
-      st[b.s] = { ...st[b.s], [b.k]: st[b.s][b.k] + 1 };
+      st[b.s] = { ...st[b.s], [b.k]: (st[b.s][b.k] || 0) + 1 };
     }
   }
   const build = ind.build.filter((b) => !doneIds.has(b.id) && !dropped.has(b.id)).map((b) => (progress.has(b.id) ? { ...b, prog: progress.get(b.id) } : b));
   const next = { ...ind, st, inf, build, lines, trade, ver: ind.ver + (done.length || dropped.size ? 1 : 0) };
   const mil = stockOwn ? { ...state.mil, stock } : state.mil;
   const player = state.player ? w.ownerIdx[state.player] : 0;
-  return logAddMany({ ...state, mil, ind: next }, done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k })));
+  const nav = poolOwn ? { ...state.nav, pool: navPool, ver: state.nav.ver + 1 } : state.nav;
+  return logAddMany({ ...state, mil, nav, ind: next }, done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k })));
 }

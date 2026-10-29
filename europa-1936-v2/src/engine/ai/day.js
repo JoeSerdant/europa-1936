@@ -5,6 +5,7 @@ import { playerOf } from './core.js';
 import { aiIndustry } from './industry.js';
 import { aiArmy, aiOffense, scanArmies } from './army.js';
 import { aiDiplomacy } from './diplomacy.js';
+import { aiNavy } from './navy.js';
 
 export function aiDay(state) {
   const w = getWorld();
@@ -15,6 +16,7 @@ export function aiDay(state) {
     if (o === player || state.dip.cap[o]) continue;
     state = aiIndustry(state, o);
     state = aiArmy(state, o, scan);
+    state = aiNavy(state, o);
     if (weekly) state = aiOffense(state, o);
     state = aiDiplomacy(state, o);
   }

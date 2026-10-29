@@ -7,6 +7,7 @@ import {
   setPlan, clearPlan, setPlanMode, suggestFront,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
   justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, warBlock, peaceBlock, inviteBlock, justReady,
+  formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, orderSail, sailBlock, navyOf, SHIPS,
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
@@ -31,7 +32,7 @@ export function applyInsets() {
   mc.setInsets(u.selected || u.panel ? INSETS.gameDossier : INSETS.game);
 }
 
-const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, toast: null };
+const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, fleetSel: 0, toast: null };
 
 /** Nastavení AI zemí pro novou hru (obrazovka výběru země). */
 export const setAiOptions = (patch) => setUi(patch);
@@ -236,7 +237,14 @@ export function orderSelected(prov) {
   if (!ids.length || !getWorld().isLand(prov)) return false;
   if (!run(orderMove, ids, prov)) {
     if (ids.every((id) => s.mil.divs[id].p === prov)) return false;
-    toast('Tam se jednotky nedostanou (moře, průliv nebo cizí neutrální území).');
+    // po souši to nejde: zkusit lodní přepravu (M27)
+    const why = sailBlock(s, ids, prov);
+    if (!why) {
+      if (run(orderSail, ids, prov)) { toast('Divize vyplouvají na moře.'); pruneSelection(); return true; }
+      toast('Trasu přes moře se nepodařilo najít (blokáda nebo příliš daleko).');
+      return false;
+    }
+    toast(`Tam se jednotky nedostanou po souši. Lodí: ${why}`);
     return false;
   }
   return true;
@@ -283,7 +291,9 @@ export function mapClick(l, { shift = false } = {}) {
 /** Pravé tlačítko na mapě: rozkaz vybraným vlastním divizím (pohyb, v nepřátelské provincii útok). */
 export function contextClick(l) {
   const u = uiStore.getState();
-  if (u.planEdit || !u.selDivs.length || !l) return false;
+  if (u.planEdit || !l) return false;
+  if (u.fleetSel && getWorld().isSea(l)) return orderFleetTo(l);
+  if (!u.selDivs.length) return false;
   return orderSelected(l);
 }
 
@@ -667,4 +677,48 @@ export function selectCountryCapital(o) {
   const cap = getWorld().owners[o].cap;
   setUi({ overview: false });
   if (uiStore.getState().screen === 'game') selectLabel(cap, true);
+}
+
+// ============================================================ námořnictvo (M27)
+const ownFleet = (s, id) => { const f = s.nav.fleets[id]; return f && f.o === playerIdx(s) ? f : null; };
+
+/** Klik na námořní žeton: vlastní flotila se vybere (opakovaný klik přepíná mezi flotilami v oblasti), cizí se jen popíše. */
+export function clickFleet(t) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  const own = t.o === me;
+  if (!own) { toast(`Cizí flotila: ${t.n} lodí, ${getWorld().owners[t.o].name}.`); return; }
+  const cur = uiStore.getState().fleetSel;
+  const i = t.ids.indexOf(cur);
+  const next = t.ids[(i + 1) % t.ids.length];
+  setUi({ fleetSel: next, selDivs: NONE, panel: 'navy' });
+  applyInsets();
+}
+export const selectFleet = (id) => setUi({ fleetSel: id });
+
+/** Pošle vybranou vlastní flotilu do mořské oblasti `label`. */
+export function orderFleetTo(label) {
+  const s = gameStore.getState();
+  const id = uiStore.getState().fleetSel;
+  if (!ownFleet(s, id)) return false;
+  if (!run(orderFleet, id, label)) { toast('Flotila se tam nedostane (už tam je, nebo cesta neexistuje).'); return false; }
+  return true;
+}
+export const stopSelectedFleet = () => { const id = uiStore.getState().fleetSel; return ownFleet(gameStore.getState(), id) ? run(stopFleet, id) : false; };
+export function disbandSelectedFleet() {
+  const id = uiStore.getState().fleetSel;
+  if (!ownFleet(gameStore.getState(), id)) return false;
+  if (!run(disbandFleet, id)) { toast('Flotilu jde rozpustit jen v domovském přístavu.'); return false; }
+  setUi({ fleetSel: 0 });
+  return true;
+}
+export const renameSelectedFleet = (nm) => { const id = uiStore.getState().fleetSel; return ownFleet(gameStore.getState(), id) ? run(renameFleet, id, nm) : false; };
+
+/** Sestaví flotilu hráče z lodí v rezervě. */
+export function newFleet(ships, nm = '') {
+  const me = playerIdx();
+  if (!me) return false;
+  const before = gameStore.getState().nav.fn;
+  if (!run(formFleet, me, ships, nm)) { toast('Flotilu nejde sestavit (nejsou lodě, příliš mnoho flotil nebo chybí přístav).'); return false; }
+  setUi({ fleetSel: before + 1 });
+  return true;
 }

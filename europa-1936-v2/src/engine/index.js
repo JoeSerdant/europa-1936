@@ -3,6 +3,7 @@ export * from './game.js';
 export * from './save.js';
 export * from './log.js';
 export { countryTable } from './overview.js';
+export * from './nav/index.js';
 export * from './commands.js';
 export * from './tick.js';
 export * from './selectors.js';
