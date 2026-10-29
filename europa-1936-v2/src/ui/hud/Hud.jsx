@@ -7,6 +7,7 @@ import { SidePanel } from '../army/SidePanel.jsx';
 import { SelectionBar } from '../army/SelectionBar.jsx';
 import { PlanBar } from '../army/PlanBar.jsx';
 import { TemplateDesigner } from '../army/TemplateDesigner.jsx';
+import { EventDialog } from '../nat/EventDialog.jsx';
 import { Toast } from '../common/Toast.jsx';
 import { Minimap } from '../map/Minimap.jsx';
 import { mapController as mc } from '../map/controller.js';
@@ -35,6 +36,7 @@ export function Hud() {
       </div>
       <GameMenu />
       <TemplateDesigner />
+      <EventDialog />
     </>
   );
 }

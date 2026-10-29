@@ -1,6 +1,6 @@
 // Automatická kontrola hry v prohlížeči (Playwright): menu → výběr země → hra, klik na provincii, běh času, režimy, nabídka, výkon snímku
 // a armáda (žetony, výběr a rozkazy, panel Armáda, válka, plán fronty, šest dní hry, mapa zásobování, nábor, návrhář šablon, řetěz Esc)
-// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta).
+// a průmysl (panel Průmysl, stavba, linky, obchod, režim mapy 8, tři dny hry) a výzkum (panel Výzkum, sloty, obory, 80 dní) a politika (panel Politika, zákony, poradci, horní lišta) a národní cíle a události (panel Cíle, dialog události).
 // Spuštění:  npm run dev  (nebo npm run build && npm run preview)  a pak  node tools/smoke.mjs [šířka výška]
 //   URL=http://localhost:4173 node tools/smoke.mjs 1366 768
 // Potřebuje balíček playwright (npm i -D playwright && npx playwright install chromium). Snímky: tools/preview/smoke-*.png.
@@ -111,6 +111,8 @@ try {
 
   // ------------------------------------------------------------------------------------------------ armáda (M18)
   const E = (fn, arg) => page.evaluate(fn, arg);
+  // události hráče (M22) pozastaví hru a blokují klávesy: po každém skoku v čase je vyřídíme první volbou
+  const clearEvents = async () => { for (let i = 0; i < 6 && (await page.locator('.event-dialog').count()); i++) { await page.locator('.event-dialog .ev-opt').first().click(); await page.waitForTimeout(150); } };
   const ui = () => E(() => { const u = window.__e1936.uiStore.getState(); return { panel: u.panel, selDivs: u.selDivs, planEdit: !!u.planEdit, designer: !!u.designer, armyFocus: u.armyFocus, selected: u.selected }; });
   /** Souřadnice stránky bodu uvnitř provincie `p` nejblíž těžišti, ověřeno přes pick a mimo žetony (ty by klik zachytily). */
   const provinceXY = (p) => E((p) => {
@@ -240,6 +242,7 @@ try {
   await page.waitForTimeout(600);
   check('šest herních dnů s plánem fronty: armáda postupuje nebo bojuje', sim.hours === 144 && sim.moved + sim.battles > 0, `${sim.moved} z ${sim.total} divizí se přesunulo, bitev ${sim.battles}`);
   await shot('after-6-days');
+  await clearEvents();
 
   // mapový režim Zásobování (klávesa 7)
   await page.keyboard.press('7');
@@ -309,6 +312,7 @@ try {
     return { prog: s1.ind.build.filter((b) => b.o === GER).reduce((a, b) => a + b.prog, 0), made: mine.reduce((a, l) => a + l.out, 0), eff: mine.every((l, i) => l.eff > s0.ind.lines.find((x) => x.id === l.id).eff) };
   });
   check('tři herní dny: stavba postoupila, linky vyrábějí a jejich efektivita roste', ind3.prog > 0 && ind3.made > 0 && ind3.eff, `body staveb ${Math.round(ind3.prog)}, kusů za poslední den ${ind3.made}`);
+  await clearEvents();
   await page.keyboard.press('i');
   await page.waitForTimeout(150);
 
@@ -334,6 +338,7 @@ try {
     return { done: Object.keys(s1.tech.own[GER].done), ai: Object.keys(s1.tech.own[engine.getWorld().ownerIdx.FRA].done).length, lv: s1.mil.lv[GER] };
   });
   check('80 dní: zadaná technologie je hotová, AI země také zkoumají', tech3.done.length >= 1 && tech3.ai >= 1, `hotovo ${tech3.done.join(', ')}, FRA ${tech3.ai}`);
+  await clearEvents();
   await page.waitForTimeout(700);
   check('hotové technologie jsou v seznamu označené', (await page.locator('.tech-card.done').count()) >= 1);
   await page.keyboard.press('r');
@@ -354,6 +359,27 @@ try {
   check('zákon a poradce se zadají a zaplatí politickou mocí', pol1.eco === 'early' && pol1.sci === 'akademik' && pol1.pp < 400, `${pol1.eco}, ${pol1.sci}, zbývá ${pol1.pp}`);
   await shot('politics');
   await page.keyboard.press('p');
+  await page.waitForTimeout(150);
+
+  // národní cíle a události (M22): panel Cíle (C), zahájení cíle, událost hráče s dialogem
+  await page.keyboard.press('c');
+  await page.waitForSelector('.nat-panel', { timeout: 3000 });
+  check('klávesa C otevře panel Cíle se stromem cílů', (await ui()).panel === 'nat' && (await page.locator('.focus-card').count()) >= 8 && (await page.locator('.focus-card.available').count()) >= 1);
+  await page.locator('.focus-card.available').first().getByRole('button', { name: 'Zahájit' }).click();
+  await page.waitForSelector('.nat-panel .rs-slot:not(.empty)', { timeout: 3000 });
+  check('„Zahájit“ spustí plnění cíle', (await page.locator('.focus-card.active').count()) === 1);
+  await shot('nat');
+  await E(() => { const { gameStore, engine } = window.__e1936; const s = engine.applyFx(gameStore.getState(), engine.getWorld().ownerIdx.GER, [{ t: 'event', id: 'harvest', days: 1 }]); gameStore.setState(engine.advance({ ...s, paused: false }, 48)); });
+  await page.waitForSelector('.event-dialog', { timeout: 3000 });
+  check('událost hráče otevře dialog a pozastaví hru', (await page.locator('.event-dialog .ev-opt').count()) >= 1 && (await E(() => window.__e1936.gameStore.getState().paused)));
+  await shot('event');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  check('dialog události se nedá zavřít klávesou Esc', (await page.locator('.event-dialog').count()) === 1);
+  await page.locator('.event-dialog .ev-opt').first().click();
+  await page.waitForTimeout(250);
+  check('volba události dialog zavře', (await page.locator('.event-dialog').count()) === 0);
+  await page.keyboard.press('c');
   await page.waitForTimeout(150);
 
   // výkon vrstvy žetonů (čas příkazů v jednom snímku)

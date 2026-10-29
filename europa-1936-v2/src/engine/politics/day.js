@@ -4,7 +4,7 @@ import { LAWS, LAW_CATS, ADVISORS, ADV_SLOT_IDS, ADVISOR_IDS } from '../../data/
 import { hasWar } from '../army/war.js';
 import { tallyOwners } from '../industry/core.js';
 import { POL } from './constants.js';
-import { polMods, lawBlock } from './core.js';
+import { polModsOf, lawBlock } from './core.js';
 import { polBase } from './setup.js';
 
 const step = (v, target, d) => (v < target ? Math.min(target, v + d) : Math.max(target, v - d));
@@ -12,7 +12,7 @@ const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
 /** Cíle stability a podpory války země. */
 export function targetsOf(state, o, own, occ) {
-  const b = polBase(getWorld().owners[o].tag), m = polMods(own);
+  const b = polBase(getWorld().owners[o].tag), m = polModsOf(state, o);
   const stab = clamp01(b.stab + m.stab - Math.min(POL.OCC_MAX, occ * POL.OCC_STAB));
   const ws = clamp01(b.ws + m.ws + (hasWar(state.mil, o) ? POL.WAR_WS : 0));
   return { stab, ws };

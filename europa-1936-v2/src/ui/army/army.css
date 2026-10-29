@@ -60,7 +60,7 @@
 .side.tall { height: calc(100% - var(--top-h) - 32px); }
 .side-tabs { display: flex; align-items: stretch; flex: none; padding-left: 4px; border-bottom: 1px solid var(--rule); }
 .side-tabs .tab {
-  display: flex; align-items: center; gap: 6px; padding: 13px 9px 11px; min-width: 0;
+  display: flex; align-items: center; gap: 6px; padding: 13px 8px 11px; min-width: 0;
   border: 0; border-bottom: 3px solid transparent; background: transparent;
   color: var(--text-3); font: 600 14.5px/1 var(--display); letter-spacing: 0.03em;
 }

@@ -6,6 +6,7 @@ import {
   createArmy, renameArmy, disbandArmy, assignDivisions, createGroup, renameGroup, disbandGroup, assignArmies, assignCommander,
   setPlan, clearPlan, setPlanMode, suggestFront,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
+  startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
@@ -565,3 +566,22 @@ export function hireAdv(slot, id) {
   return ok;
 }
 export const dismissAdv = (slot) => { const me = playerIdx(); return !!me && run(fireAdvisor, me, slot); };
+
+// ============================================================ národní cíle a události (M22)
+/** Zahájí plnění cíle hráče; nahradí rozpracovaný cíl. */
+export function pickFocus(id) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me) return false;
+  const cur = s.nat.own[me].cur;
+  if (cur && cur.id !== id) { if (!run(cancelFocus, me)) return false; }
+  const ok = run(startFocus, me, id);
+  if (!ok) toast('Tento cíl zatím nejde zahájit.');
+  else toast(`Cíl „${FOCUS_BY_ID[id].n}“ se plní.`);
+  return ok;
+}
+export const abortFocus = () => { const me = playerIdx(); return !!me && run(cancelFocus, me); };
+/** Rozhodne událost hráče volbou `choice`. */
+export function decideEvent(id, choice) {
+  const me = playerIdx();
+  return !!me && run(chooseEvent, me, id, choice);
+}

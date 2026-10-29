@@ -3,7 +3,7 @@ import { getWorld } from '../world.js';
 import { LAWS, LAW_CATS, LAW_CAT_IDS, ADVISORS, ADV_SLOTS, ADV_SLOT_IDS, ADVISOR_IDS } from '../../data/politics/index.js';
 import { tallyOwners } from '../industry/core.js';
 import { POL } from './constants.js';
-import { polMods, lawBlock, stabMult, outMult, manMult, consOf } from './core.js';
+import { polModsOf, lawBlock, stabMult, outMult, manMult, consOf } from './core.js';
 import { targetsOf } from './day.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
@@ -14,7 +14,7 @@ export function politicsOf(state, o) {
   const own = state.pol.own[o];
   const t = targetsOf(state, o, own, tallyOwners(state)[o].occ);
   return {
-    o, stab: own.stab, ws: own.ws, pp: own.pp, income: POL.PP_BASE, target: t, mods: polMods(own),
+    o, stab: own.stab, ws: own.ws, pp: own.pp, income: POL.PP_BASE, target: t, mods: polModsOf(state, o),
     out: outMult(state, o), man: manMult(state, o), cons: consOf(state, o), stabMult: stabMult(own.stab),
     laws: LAW_CAT_IDS.map((cat) => ({
       cat, n: LAW_CATS[cat].n, current: own.laws[cat],
