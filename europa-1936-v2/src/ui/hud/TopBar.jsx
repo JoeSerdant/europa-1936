@@ -3,7 +3,7 @@ import { gameStore, useGame } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { COUNTRIES } from '../../data/countries.js';
-import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf } from '../../engine/index.js';
+import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension } from '../../engine/index.js';
 import { setHelp, setMenuOpen, openOverview } from '../actions.js';
 import { fmtInt, fmtPop } from '../format.js';
 
@@ -33,9 +33,11 @@ function Clock() {
   );
 }
 
+const getWorldIdx = (s) => getWorld().ownerIdx[s.player];
+
 function Stat({ icon, label, value, opt = false }) {
   return (
-    <div className={`stat ${opt ? 'opt' : ''}`} title={label}>
+    <div className={`stat ${opt === 'wide' ? 'opt wide' : opt ? 'opt' : ''}`} title={label}>
       <Icon name={icon} size={18} />
       <span><i>{label}</i><b>{value}</b></span>
     </div>
@@ -52,6 +54,16 @@ export function TopBar() {
   const stab = useGame((s) => (s.player ? Math.round(s.pol.own[getWorld().ownerIdx[s.player]].stab * 100) : 0));
   const ws = useGame((s) => (s.player ? Math.round(s.pol.own[getWorld().ownerIdx[s.player]].ws * 100) : 0));
   const pp = useGame((s) => (s.player ? Math.floor(s.pol.own[getWorld().ownerIdx[s.player]].pp) : 0));
+  const ind = useGame((s) => s.ind);
+  const ctrl = useGame((s) => s.ctrl);
+  const fac = useMemo(() => {
+    const s = gameStore.getState();
+    if (!s.player) return null;
+    const x = industryOf(s, s.player);
+    return `${x.civ} / ${x.mil} / ${x.dok}`;
+  }, [tag, owner, ind, ctrl]);
+  const convoys = useGame((s) => (s.player ? transportsOf(s, getWorldIdx(s)).free : 0));
+  const tension = useGame((s) => Math.round(worldTension(s) * 100));
   return (
     <header className="topbar">
       <div className="tb-country">
@@ -65,14 +77,17 @@ export function TopBar() {
       <div className="tb-right">
         {stats && (
           <div className="stats">
-            <Stat icon="population" label="Obyvatelé" value={fmtPop(stats.pop)} opt />
-            <Stat icon="provinces" label="Provincie" value={fmtInt(stats.provinces)} opt />
+            <Stat icon="population" label="Obyvatelé" value={fmtPop(stats.pop)} opt="wide" />
+            <Stat icon="provinces" label="Provincie" value={fmtInt(stats.provinces)} opt="wide" />
             <Stat icon="victory" label="Vítězné body" value={fmtInt(stats.vp)} />
             <Stat icon="army" label="Divize" value={fmtInt(divisions)} />
             <Stat icon="recruit" label="Lidská síla" value={fmtPop(manpower / 1000)} />
             <Stat icon="shield" label="Stabilita" value={`${stab} %`} opt />
             <Stat icon="swords" label="Podpora války" value={`${ws} %`} opt />
             <Stat icon="general" label="Politická moc" value={fmtInt(pp)} />
+            <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} opt />
+            <Stat icon="navy" label="Volné transporty" value={fmtInt(convoys)} opt />
+            <Stat icon="regions" label="Napětí ve světě" value={`${tension} %`} opt />
           </div>
         )}
         <button className="icon-btn" onClick={openOverview} aria-label="Přehled zemí" title="Přehled zemí (O)"><Icon name="population" /></button>

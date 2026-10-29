@@ -2,15 +2,17 @@ import { useUi } from '../store.js';
 import { setHelp } from '../actions.js';
 
 const ROWS = [
-  ['Posun mapy', ['tažení myší', 'W A S D', 'šipky']],
-  ['Přiblížení', ['kolečko myši', 'Q / E', 'PageDown / PageUp']],
+  ['Posun mapy', ['tažení myší', 'šipky']],
+  ['Přiblížení', ['kolečko myši', 'PageDown / PageUp']],
   ['Celá mapa', ['Home']],
   ['Označení oblasti', ['klik na provincii nebo moře']],
   ['Výběr jednotek', ['klik na žeton', 'Shift + tažení', 'dvojklik = celá armáda']],
   ['Rozkaz jednotkám (pohyb, útok)', ['pravé tlačítko myši']],
   ['Zastavit vybrané / zaměřit výběr', ['X', 'F']],
-  ['Panel Armáda / Nábor / Průmysl / Výzkum / Politika / Cíle / Diplomacie / Zprávy / Námořnictvo', ['V', 'N', 'I', 'R', 'P', 'C', 'D', 'L', 'M']],
+  ['Okna jako v HOI4: Vláda / Výzkum / Diplomacie / Obchod / Stavby / Výroba / Nábor / Logistika', ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I']],
+  ['Panel Armáda / Cíle / Zprávy / Námořnictvo', ['V', 'C', 'L', 'M']],
   ['Přehled zemí', ['O']],
+  ['Konzole s cheaty (help = seznam příkazů)', ['~', 'F2']],
   ['Zrušit výběr, zavřít okno', ['Esc']],
   ['Pauza', ['mezerník']],
   ['Rychlost hry', ['+', '−']],

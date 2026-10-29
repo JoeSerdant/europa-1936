@@ -25,3 +25,9 @@ export function countryTable(state) {
   rows.sort((a, b) => b.vp - a.vp || a.name.localeCompare(b.name, 'cs'));
   return rows;
 }
+
+/** Napětí ve světě 0–1 (jako indikátor v horní liště): roste s časem, válkami a rozpracovanými ospravedlněními. Čistá funkce stavu. */
+export function worldTension(state) {
+  const years = state.tick / (24 * 365);
+  return Math.min(1, 0.04 + 0.08 * years + 0.05 * state.mil.wars.length + 0.01 * state.dip.just.length);
+}

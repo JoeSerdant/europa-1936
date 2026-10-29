@@ -23,6 +23,8 @@ const ICONS = {
   dip: 'M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6zM8 12.5l2.7 2.7L16.5 9',
   log: 'M5 4h14v16H5zM8.5 9h7M8.5 12.5h7M8.5 16h4',
   navy: 'M3 15h18l-3 4H6zM12 4v7M9 8h6M6 11h12v4M17 5l3 2-3 2',
+  build: 'M3 20h18M6 20V9l6-5 6 5v11M10 20v-6h4v6M9 11h6',
+  trade: 'M4 8h14l-3.5-3.5M20 16H6l3.5 3.5M12 11v2',
   chevron: 'M8 10l4 4 4-4',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',

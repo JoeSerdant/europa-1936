@@ -6,7 +6,7 @@ import { ArmyPanel } from './ArmyPanel.jsx';
 import { LogPanel } from '../log/LogPanel.jsx';
 import { NavyPanel } from '../navy/NavyPanel.jsx';
 
-export const FULL = ['industry', 'recruit', 'research', 'politics', 'nat', 'dip'];   // okna přes celou obrazovku (vykresluje je Hud)
+export const FULL = ['industry', 'recruit', 'research', 'politics', 'nat', 'dip', 'logistics'];   // okna přes celou obrazovku (vykresluje je Hud)
 const TABS = [
   { id: null, name: 'Oblast', icon: 'provinces' },
   { id: 'army', name: 'Armáda', icon: 'army', key: 'V' },

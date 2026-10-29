@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  runCheat, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { mapController as mc } from './map/controller.js';
@@ -32,7 +32,7 @@ export function applyInsets() {
   mc.setInsets(u.selected || u.panel ? INSETS.gameDossier : INSETS.game);
 }
 
-const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, fleetSel: 0, toast: null };
+const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, fleetSel: 0, console: false, toast: null };
 
 /** Nastavení AI zemí pro novou hru (obrazovka výběru země). */
 export const setAiOptions = (patch) => setUi(patch);
@@ -118,6 +118,13 @@ export function openPanel(name) {
   if (uiStore.getState().screen !== 'game') return;
   setUi({ panel: name });
   applyInsets();
+}
+/** Otevře okno Průmysl na dané záložce (build = Stavby, prod = Výroba, trade = Obchod); stejné tlačítko okno zavře. */
+export function toggleIndustry(tab) {
+  const u = uiStore.getState();
+  if (u.panel === 'industry' && u.indTab === tab) { openPanel(null); return; }
+  setUi({ indTab: tab });
+  openPanel('industry');
 }
 export function togglePanel(name) {
   const u = uiStore.getState();
@@ -723,4 +730,18 @@ export function newFleet(ships, nm = '') {
   if (!run(formFleet, me, ships, nm)) { toast('Flotilu nejde sestavit (nejsou lodě, příliš mnoho flotil nebo chybí přístav).'); return false; }
   setUi({ fleetSel: before + 1 });
   return true;
+}
+
+// ============================================================ konzole (cheaty)
+export const toggleConsole = () => setUi({ console: !uiStore.getState().console });
+export const closeConsole = () => setUi({ console: false });
+/** Provede příkaz konzole nad živým stavem a vrátí hlášku. */
+export function runConsole(text) {
+  const s = gameStore.getState();
+  const r = runCheat(s, text);
+  if (r.state !== s) {
+    gameStore.setState(r.state);
+    if (r.state.player !== s.player) setUi({ selected: 0, panel: null, selDivs: NONE, fleetSel: 0 });
+  }
+  return r.msg;
 }
