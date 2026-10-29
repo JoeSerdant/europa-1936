@@ -4,7 +4,7 @@ import { TECHS, TECH_IDS } from '../../data/research/index.js';
 import { polModsOf } from '../politics/core.js';
 import { aiMult } from '../ai/core.js';
 import { logAddMany } from '../log.js';
-import { isAvailable, slotCount, speedOfDone, progressPerDay, yearOf } from './core.js';
+import { isAvailable, slotCount, speedOfDone, progressPerDay, yearOf, shareBonus } from './core.js';
 
 const hash = (o, id) => { let h = o * 2654435761; for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619); return (h >>> 0) % 50; };
 
@@ -51,7 +51,7 @@ export function researchDay(state) {
       for (let i = 0; i < slots.length; i++) {
         const id = slots[i];
         if (!id) continue;
-        const p = (prog[id] || 0) + progressPerDay(speed, state.tick, id);
+        const p = (prog[id] || 0) + progressPerDay(speed * (1 + shareBonus(state, o, id)), state.tick, id);
         if (p < 1) { prog[id] = p; continue; }
         if (done === cur.done) done = { ...done };
         done[id] = 1;

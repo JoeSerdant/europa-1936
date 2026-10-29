@@ -56,6 +56,16 @@ export const aheadFactor = (tick, id) => 1 / (1 + RES.AHEAD_PEN * yearsAhead(tic
 
 /** Denní postup technologie `id` (podíl 0–1) při dané rychlosti země. */
 export const progressPerDay = (speed, tick, id) => (speed * aheadFactor(tick, id)) / TECHS[id].days;
-export const dailyProgress = (state, o, id) => progressPerDay(baseSpeed(state, o), state.tick, id);
+/** Sdílení technologií v bloku (M51): počet členů bloku země `o`, kteří techniku `id` už mají a smějí ji sdílet (ne kapitulovaní, ne loutky). */
+export function sharersOf(state, o, id) {
+  const f = state.dip.facs[state.dip.fac[o]];
+  if (!f) return 0;
+  let n = 0;
+  for (const m of f.mem) if (m !== o && !state.dip.cap[m] && !state.dip.sub[m] && state.tech.own[m]?.done[id]) n++;
+  return n;
+}
+/** Násobek bonusu sdílení technologií `id` pro zemi `o` (0 až `SHARE_MAX`). */
+export const shareBonus = (state, o, id) => Math.min(RES.SHARE_MAX, RES.SHARE_PER * sharersOf(state, o, id));
+export const dailyProgress = (state, o, id) => progressPerDay(baseSpeed(state, o) * (1 + shareBonus(state, o, id)), state.tick, id);
 
 export { TECHS, TECH_IDS };

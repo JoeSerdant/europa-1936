@@ -2,13 +2,13 @@
 import { getWorld } from '../world.js';
 import { TECHS, TECH_IDS } from '../../data/research/index.js';
 import { RES } from './constants.js';
-import { isAvailable, slotCount, baseSpeed, aheadFactor, yearsAhead, modsOf, speedOfDone } from './core.js';
+import { isAvailable, slotCount, baseSpeed, shareBonus, aheadFactor, yearsAhead, modsOf, speedOfDone } from './core.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
 
 /** Odhad dnů do dokončení technologie při současné rychlosti a zbývajícím postupu. */
 function etaDays(state, o, id, prog) {
-  const rate = (baseSpeed(state, o) * aheadFactor(state.tick, id)) / TECHS[id].days;
+  const rate = (baseSpeed(state, o) * (1 + shareBonus(state, o, id)) * aheadFactor(state.tick, id)) / TECHS[id].days;
   return rate > 0 ? Math.ceil((1 - prog) / rate) : -1;
 }
 
@@ -20,7 +20,7 @@ export function researchOf(state, o) {
   const slots = [];
   for (let i = 0; i < total; i++) {
     const id = own.slots[i] || 0;
-    slots.push(id ? { slot: i, id, tech: TECHS[id], p: own.prog[id] || 0, eta: etaDays(state, o, id, own.prog[id] || 0), ahead: yearsAhead(state.tick, id) } : { slot: i, id: 0 });
+    slots.push(id ? { slot: i, id, tech: TECHS[id], p: own.prog[id] || 0, eta: etaDays(state, o, id, own.prog[id] || 0), ahead: yearsAhead(state.tick, id), share: shareBonus(state, o, id) } : { slot: i, id: 0 });
   }
   return {
     o, slots, speed: baseSpeed(state, o), mods: modsOf(state, o), levels: state.mil.lv[o] || {},
@@ -40,7 +40,7 @@ export function techList(state, o) {
     const t = TECHS[id];
     const status = own.done[id] ? 'done' : active.has(id) ? 'active' : isAvailable(own, id) ? 'available' : 'locked';
     const p = own.prog[id] || 0;
-    return { id, ...t, status, p, ahead: yearsAhead(state.tick, id), eta: status === 'done' ? 0 : etaDays(state, o, id, p), missing: t.req.filter((r) => !own.done[r]) };
+    return { id, ...t, status, p, ahead: yearsAhead(state.tick, id), share: status === 'done' ? 0 : shareBonus(state, o, id), eta: status === 'done' ? 0 : etaDays(state, o, id, p), missing: t.req.filter((r) => !own.done[r]) };
   });
 }
 
