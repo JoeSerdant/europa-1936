@@ -44,7 +44,7 @@ export function stateIndustry(state, s) {
   const w = getWorld();
   const cat = categoryOf(w.states[s].p);
   return {
-    s, cat, civ: e.civ, mil: e.mil, dok: e.dok || 0, port: w.states[s].v.some((p) => w.portLevel[p] > 0), inf: ind.inf[s] || 0, afb: e.afb || 0, res: e.res,
+    s, cat, civ: e.civ, mil: e.mil, dok: e.dok || 0, port: w.states[s].v.some((p) => w.portLevel[p] > 0), inf: ind.inf[s] || 0, afb: e.afb || 0, radar: e.radar || 0, res: e.res,
     slots: slotsOf(ind, s), used: slotsUsed(ind, s),
     queued: ind.build.filter((b) => b.s === s),
   };

@@ -564,6 +564,10 @@ Bez nového stavu a bez nového příkazu: krok `a`→`b` mezi dvěma provinciem
 
 `engine/alerts.js`: `alertsOf(state, o)` je čistá funkce stavu (nic se neukládá) a vrací seznam `{ id, panel, tab?, tone, text }`: čekající událost, volný výzkumný slot, neplněný národní cíl, politická moc od `ALERT.PP_HIGH` (150), prázdná stavební fronta při volných civilních továrnách, `ALERT.MIL_IDLE` (2) a více vojenských továren bez zakázky. Kapitulovaná nebo neplatná země nemá nic. UI: `ui/hud/Alerts.jsx` kreslí pod lištou nabídek svislou řadu tlačítek, klik otevře příslušné okno (nebo záložku Průmyslu); při otevřeném okně přes celou obrazovku se řada schová. Test: `test/alerts.test.js`.
 
+## 4zb. Radar (M50)
+
+Stavba `radar` (`BUILDINGS.radar`, mimo stavební sloty, nejvýš 3 úrovně, cena 300 b. za 35 dnů) zvyšuje `ind.st[s].radar` jako letiště `afb`; bez změny tvaru stavu. V `air/day.js` se k síle nepřátelských hlídek (`foesPatrol`) nad státem `s` přičítá `radarOf(ind, s) × AIR.RADAR_K` (30 = zhruba 5 stíhaček na úroveň), když stát patří zemi ve válce s letcem; tím klesá krytí (`cover`) a roste ztrátovost i slábne bombardování a podpora boje nad tím státem. Vlastní letadla nad vlastním státem radar nijak nepoškozuje. AI (`ai/air.js`, `radarState`) ve válce nebo s aspoň 40 letadly staví po jednom radaru ve státech s letištěm do úrovně 2. UI: tlačítko stavby ve Průmyslu i na kartě státu je generické (z `BUILDING_IDS`), na kartě státu řádek Radar. Test: `test/radar.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -754,6 +758,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M47** | **Půjčka a pronájem**: posílání výzbroje spojencům a loutkám, AI to dělá také | **hotovo** |
 | **M48** | **Záruky nezávislosti**: zaručitel se přidá do války za napadenou zemi, historické záruky AI na jaře 1939 | **hotovo** |
 | **M49** | **Upozornění**: zahálející sloty, továrny a politická moc jako ikony pod lištou nabídek | **hotovo** |
+| **M50** | **Radar**: nová stavba, obrana státu proti nepřátelskému letectvu, AI radary staví | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

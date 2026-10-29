@@ -8,7 +8,7 @@ import { slotsOf, slotsUsed } from '../industry/core.js';
 import { I } from '../industry/constants.js';
 import { hasWar, enemiesOf } from '../army/war.js';
 import { formWing, setMission } from '../air/commands.js';
-import { basesOf, afbOf, stateKm } from '../air/core.js';
+import { basesOf, afbOf, radarOf, stateKm } from '../air/core.js';
 import { frontEdges } from '../army/selectors.js';
 import { AIR } from '../air/constants.js';
 import { AI } from './constants.js';
@@ -23,6 +23,19 @@ function baseState(state, o) {
     if (lvl >= AIR.BASE_MAX || state.ind.build.some((b) => b.s === s && b.k === 'afb')) continue;
     const vp = w.states[s].v.reduce((a, p) => a + w.vp[p], 0);
     const k = vp * 10 + (lvl ? 5 : 0) + w.states[s].p / 1000;
+    if (k > bk) { bk = k; best = s; }
+  }
+  return best;
+}
+
+/** Stát země `o`, kde se hodí radar (M50): už má letiště a radar < 2, nejvíc vítězných bodů; 0 = žádný. */
+function radarState(state, o) {
+  const w = getWorld();
+  let best = 0, bk = -1;
+  for (let s = 1; s < w.states.length; s++) {
+    if (state.stateOwner[s] !== o || state.ctrl[w.states[s].cap] !== o || !afbOf(state.ind, s) || radarOf(state.ind, s) >= 2) continue;
+    if (state.ind.build.some((b) => b.s === s && b.k === 'radar')) continue;
+    const k = w.states[s].v.reduce((a, p) => a + w.vp[p], 0) * 10 + afbOf(state.ind, s);
     if (k > bk) { bk = k; best = s; }
   }
   return best;
@@ -71,6 +84,11 @@ export function aiAir(state, o) {
   if (total + 20 > cap && !queued && sum.build.length < AI.QUEUE && sum.civ > 0) {
     const s = baseState(state, o);
     if (s) state = build(state, s, 'afb');
+  }
+  // radar: ve válce nebo s aspoň 40 letadly, jeden po druhém
+  if ((war || total >= 40) && !sum.build.some((b) => b.k === 'radar') && sum.build.length < AI.QUEUE && sum.civ > 0) {
+    const s = radarState(state, o);
+    if (s) state = build(state, s, 'radar');
   }
   // linky: podíl vojenských továren na letadla; po jedné továrně za den ubere největší pozemní lince
   sum = industryOf(state, o);

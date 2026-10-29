@@ -7,6 +7,8 @@ const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
 
 /** Úroveň letiště státu. */
 export const afbOf = (ind, s) => (ind.st[s] && ind.st[s].afb) || 0;
+/** Úroveň radaru státu (M50). */
+export const radarOf = (ind, s) => (ind.st[s] && ind.st[s].radar) || 0;
 export const capacityOf = (ind, s) => afbOf(ind, s) * AIR.PER_LEVEL;
 
 /** Střed státu (souřadnice hlavní provincie). */
