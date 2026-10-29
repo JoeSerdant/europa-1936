@@ -347,18 +347,30 @@ try {
   await page.waitForTimeout(150);
 
   // hlavní lišta nabídek a Logistika (M29)
-  check('lišta nabídek má 14 tlačítek', (await page.locator('.menubar button').count()) === 14);
+  check('lišta nabídek má 15 tlačítek', (await page.locator('.menubar button').count()) === 15);
   await page.keyboard.press('i');
   await page.waitForSelector('.logistics-panel', { timeout: 3000 });
   check('klávesa I otevře Logistiku s tabulkou výzbroje a surovin', (await ui()).panel === 'logistics' && (await page.locator('.lg-table tbody tr').count()) >= 4 && (await page.locator('.lg-res li').count()) === 6);
   await shot('logistics');
+  await page.keyboard.press('j');
+  await page.waitForSelector('.decisions-panel .dec-card', { timeout: 3000 });
+  const ppBefore = await E(() => window.__e1936.gameStore.getState().pol.own[window.__e1936.engine.getWorld().ownerIdx.GER].pp);
+  check('klávesa J otevře Rozhodnutí s kartami po kategoriích', (await ui()).panel === 'decisions' && (await page.locator('.dec-col').count()) >= 3 && (await page.locator('.dec-card').count()) >= 12);
+  await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(), o = engine.getWorld().ownerIdx.GER; gameStore.setState({ ...s, pol: { ...s.pol, own: s.pol.own.map((x, i) => (i === o ? { ...x, pp: 400 } : x)) } }); });
+  await page.waitForTimeout(1000);
+  await page.locator('.dec-card.ready .sbtn').first().click();
+  await page.waitForTimeout(500);
+  const ppAfter = await E(() => window.__e1936.gameStore.getState().pol.own[window.__e1936.engine.getWorld().ownerIdx.GER].pp);
+  check('použití rozhodnutí zaplatí politickou moc', ppAfter < 400 && ppBefore >= 0, `${ppBefore} → 400 → ${ppAfter}`);
+  await shot('decisions');
+  await page.keyboard.press('j');
   await page.keyboard.press('k');
   await page.waitForSelector('.doctrine-panel .doc-branch', { timeout: 3000 });
   check('klávesa K otevře doktríny: 3 větve a 27 stupňů', (await ui()).panel === 'doctrine' && (await page.locator('.doc-branch').count()) === 3 && (await page.locator('.doc-level').count()) === 27);
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); gameStore.setState(engine.addXp(s, engine.getWorld().ownerIdx.GER, 'land', 100)); });
   await page.waitForTimeout(1000);
   await page.locator('.doc-level.available .sbtn').first().click();
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(1000);
   check('přijetí doktríny: stupeň je přijat a směr větve zamčen', (await page.locator('.doc-level.done').count()) === 1 && (await page.locator('.doc-track.excluded').count()) >= 2);
   await shot('doctrine');
   await page.keyboard.press('k');

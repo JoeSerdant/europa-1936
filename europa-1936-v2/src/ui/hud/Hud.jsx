@@ -17,6 +17,7 @@ import { PoliticsPanel } from '../politics/PoliticsPanel.jsx';
 import { NatPanel } from '../nat/NatPanel.jsx';
 import { DiplomacyPanel } from '../dip/DiplomacyPanel.jsx';
 import { LogisticsPanel } from '../logistics/LogisticsPanel.jsx';
+import { DecisionsPanel } from '../decisions/DecisionsPanel.jsx';
 import { DoctrinePanel } from '../doctrine/DoctrinePanel.jsx';
 import { AirPanel } from '../air/AirPanel.jsx';
 import { MenuBar } from './MenuBar.jsx';
@@ -51,6 +52,7 @@ export function Hud() {
       {panel === 'logistics' && <LogisticsPanel />}
       {panel === 'air' && <AirPanel />}
       {panel === 'doctrine' && <DoctrinePanel />}
+      {panel === 'decisions' && <DecisionsPanel />}
       <MenuBar />
       <Console />
       <div className="top-mid" style={{ right }}><PlanBar /></div>

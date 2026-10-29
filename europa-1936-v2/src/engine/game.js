@@ -13,7 +13,7 @@ import { createNav } from './nav/setup.js';
 import { createAir } from './air/setup.js';
 import { createDoc } from './doc/setup.js';
 
-export const GAME_VERSION = 14;
+export const GAME_VERSION = 15;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 

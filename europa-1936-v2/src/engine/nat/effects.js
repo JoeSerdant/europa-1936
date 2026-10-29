@@ -8,6 +8,7 @@ import { slotsOf, slotsUsed } from '../industry/core.js';
 import { grantTech } from '../research/commands.js';
 import { isAvailable } from '../research/core.js';
 import { countryStats } from '../selectors.js';
+import { addXp } from '../doc/commands.js';
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const touch = (state, o, fn) => {
@@ -89,6 +90,7 @@ function applyOne(state, o, e) {
       stock[o] = { ...stock[o], [e.eq]: (stock[o][e.eq] || 0) + e.n };
       return { ...state, mil: { ...state.mil, stock } };
     }
+    case 'xp': return addXp(state, o, e.b, e.n);
     case 'flag': return touch(state, o, (own) => ({ ...own, flags: { ...own.flags, [e.id]: 1 } }));
     case 'event': return touch(state, o, (own) => ({ ...own, sched: [...own.sched, { id: e.id, at: state.tick + e.days * 24 }] }));
     default: return state;
