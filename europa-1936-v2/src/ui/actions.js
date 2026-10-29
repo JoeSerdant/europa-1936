@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { play } from './sound.js';
@@ -776,3 +776,6 @@ export const ackGameEnd = () => run(ackEnd);
 export const hireSpy = () => !!playerIdx() && run(hireAgent, playerIdx());
 export const beginOp = (k, t) => { const ok = !!playerIdx() && run(startOp, playerIdx(), k, t); if (ok) toast('Operace zahájena.'); return ok; };
 export const abortOp = (id) => !!playerIdx() && run(cancelOp, playerIdx(), id);
+
+// ============================================================ pevnosti (M42)
+export const buildFortHere = (p) => { const me = playerIdx(); const ok = !!me && run(buildFort, p); if (ok) toast('Pevnost: stavba zadána.'); return ok; };

@@ -16,7 +16,7 @@ import { createOcc } from './occ/setup.js';
 import { applyScenario } from './scenario.js';
 import { createSpy } from './spy/setup.js';
 
-export const GAME_VERSION = 18;
+export const GAME_VERSION = 19;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 

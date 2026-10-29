@@ -47,6 +47,8 @@ function profile(ctx, id, role, info) {
     if (army) a += army.pl;
   } else {
     f += C.DIG_BONUS * d.dig * (1 + 0.1 * st.eng);
+    const fl = ctx.state.ind && ctx.state.ind.fort ? ctx.state.ind.fort[info.p] : 0;   // M42: pevnost v provincii
+    if (fl) f += C.FORT_DEF * fl;
     if (info.dirs > 1) f += C.MULTIDIR_DEF * (1 - 1 / info.dirs);
   }
   const side = att ? info.attSide : info.depSide;

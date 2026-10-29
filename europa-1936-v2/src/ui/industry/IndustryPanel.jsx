@@ -62,7 +62,7 @@ function NewBuild({ state, sel, info }) {
       <div className="sec-head"><h3>{stateName(sel)}</h3><span className="muted">{info.cat.n}</span></div>
       <p className="muted">Sloty {info.used}/{info.slots} · továrny {info.civ} civ. + {info.mil} vojen. · infrastruktura +{info.inf}</p>
       <div className="ind-btns bld-btns">
-        {BUILDING_IDS.filter((k) => k !== 'dok' || info.port).map((k) => (
+        {BUILDING_IDS.filter((k) => !BUILDINGS[k].province && (k !== 'dok' || info.port)).map((k) => (
           <button key={k} className="sbtn bld" onClick={() => buildIn(sel, k)} title={`${BUILDINGS[k].info} Cena ${BUILDINGS[k].cost} bodů, nejdřív za ${BUILDINGS[k].days} dní.`}>
             <Icon name="plus" size={14} />{BUILDINGS[k].n}<small>{BUILDINGS[k].cost} b.</small>
           </button>
