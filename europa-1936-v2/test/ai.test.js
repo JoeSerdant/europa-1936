@@ -104,14 +104,14 @@ describe('diplomacie AI', () => {
     expect(atWar(later, 'ENG', 'SOV')).toBe(false);
     expect(Object.keys(later.dip.since)).toHaveLength(0);
   });
-  it('historický plán: Itálie ospravedlní a napadne Albánii v okně plánu; bez `hist` ne', () => {
-    const start = { tick: 24 * 990 };
+  it('historický plán: SSSR ospravedlní a napadne Finsko v okně plánu; bez `hist` ne', () => {
+    const start = { tick: 24 * 1395 };
     const a = day({ ...base(), ...start }, 75);
-    expect(atWar(a, 'ITA', 'ALB')).toBe(true);
+    expect(atWar(a, 'SOV', 'FIN')).toBe(true);
     const off = day({ ...createGame({ player: 'GER', aiLevel: 2, hist: false }), ...start }, 75);
-    expect(atWar(off, 'ITA', 'ALB')).toBe(false);
+    expect(atWar(off, 'SOV', 'FIN')).toBe(false);
     const before = day({ ...base(), tick: 24 * 100 }, 75);
-    expect(atWar(before, 'ITA', 'ALB')).toBe(false);          // před oknem se nic neděje
+    expect(atWar(before, 'SOV', 'FIN')).toBe(false);          // před oknem se nic neděje
     expect(HIST_WARS.every((p) => W.ownerIdx[p.tag] && W.ownerIdx[p.target])).toBe(true);
     void ALB; void justifyWar; void startWar;
   });

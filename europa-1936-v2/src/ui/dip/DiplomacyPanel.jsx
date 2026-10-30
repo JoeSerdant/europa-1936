@@ -3,7 +3,7 @@ import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS } from '../../engine/index.js';
-import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, demandFrom, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -64,6 +64,7 @@ function Row({ c, me }) {
               ? <button className="sbtn" onClick={() => revokeGuaranteeFor(c.tag)} title="Zrušit záruku nezávislosti">Zrušit záruku</button>
               : <button className="sbtn" disabled={!!c.garBlock} onClick={() => guaranteeFor(c.tag)} title={c.garBlock || `Zaručit nezávislost (${DIP.GAR_PP} PM): napadne-li ji někdo, přidáte se do války`}>Zaručit nezávislost</button>}
             <button className="sbtn" disabled={!!c.inviteBlock} onClick={() => inviteBloc(c.tag)} title={c.inviteBlock || 'Pozvat do bloku'}>Pozvat do bloku</button>
+            {!c.war && c.demands.map((dm) => <button key={dm.id} className="sbtn danger" disabled={!!dm.block} onClick={() => demandFrom(c.tag, dm.id)} title={dm.block || `Ultimátum (${DIP.ULT_PP} PM): ${dm.kind === 'annex' ? 'připojení země' : 'odstoupení území'}. Cíl ustoupí při přesile ${dm.need}× (máte ${fmtNum(dm.have, 1)}×); jinak získáte záminku k válce.`}>Ultimátum: {dm.n}</button>)}
             {!c.war && !c.access && <button className="sbtn" disabled={!!c.accBlock} onClick={() => requestAccessFrom(c.tag)} title={c.accBlock || `Požádat o průchod vašich armád jejím územím (${DIP.ACC_PP} PM)`}>Požádat o přístup</button>}
             {!c.war && (c.accMine
               ? <button className="sbtn" onClick={() => revokeAccessFrom(c.tag)} title="Odvolat jejím armádám průchod vaším územím">Odvolat přístup</button>

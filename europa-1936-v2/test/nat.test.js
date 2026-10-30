@@ -10,7 +10,7 @@ const idx = (t) => W.ownerIdx[t];
 const GER = idx('GER'), FRA = idx('FRA'), SOV = idx('SOV'), CZE = idx('CZE'), POL = idx('POL'), SWE = idx('SWE');
 const day = (s, n = 1) => advance(s, 24 * n);
 const give = (s, o, ids) => { const own = s.nat.own.slice(); const done = { ...own[o].done }; ids.forEach((i) => { done[i] = 1; }); own[o] = { ...own[o], done }; return { ...s, nat: { ...s.nat, own } }; };
-const FX_TYPES = new Set(['pp', 'stab', 'ws', 'law', 'adv', 'factory', 'infra', 'boost', 'boostslot', 'tech', 'man', 'stock', 'flag', 'event', 'xp']);
+const FX_TYPES = new Set(['pp', 'stab', 'ws', 'law', 'adv', 'factory', 'infra', 'boost', 'boostslot', 'tech', 'man', 'stock', 'flag', 'event', 'xp', 'ult']);
 
 describe('data', () => {
   it('stromy: unikátní id, existující předpoklady a vylučující cíle, jedinečné polohy, platné účinky', () => {

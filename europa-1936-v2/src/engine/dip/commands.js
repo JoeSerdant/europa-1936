@@ -41,14 +41,17 @@ export function justifyWar(state, a, b, goal = 'conquest') {
 /** Má `a` hotové ospravedlnění proti `b`? */
 export const justReady = (state, a, b) => state.dip.just.some((j) => j.a === a && j.b === b && j.ready <= state.tick && state.tick - j.ready <= DIP.JUST_KEEP * 24);
 
-/** Vyhlásí válku `a` proti `b` (vyžaduje hotové ospravedlnění). Členové bloků se zapojí: všichni členové bloku útočníka válčí se všemi členy bloku obránce. */
-export function startWar(state, a, b) {
-  if (warBlock(state, a, b) || !justReady(state, a, b)) return state;
+/**
+ * Vyhlásí válku `a` proti `b` (vyžaduje hotové ospravedlnění). Členové bloků se zapojí: všichni členové bloku útočníka válčí se všemi členy bloku obránce.
+ * `free` (M68, oportunistická válka) = bez ospravedlnění; proti cíli samotnému (jeho blok ani zaručitelé se nepřidají), útočníkův blok se přidá.
+ */
+export function startWar(state, a, b, free = false) {
+  if (warBlock(state, a, b) || (!free && !justReady(state, a, b))) return state;
   const attackers = campOf(state, a).filter((x) => !hasCapitulated(state, x));
-  let defenders = campOf(state, b).filter((x) => !hasCapitulated(state, x));
-  const guard = joiningGuarantors(state, b, attackers);   // M48: zaručitelé obránce se přidají i s bloky
+  let defenders = (free ? [b] : campOf(state, b)).filter((x) => !hasCapitulated(state, x));
+  const guard = free ? [] : joiningGuarantors(state, b, attackers);   // M48: zaručitelé obránce se přidají i s bloky
   for (const g of guard) for (const x of campOf(state, g)) if (!hasCapitulated(state, x) && !attackers.includes(x) && !defenders.includes(x)) defenders = [...defenders, x];
-  let s = breakGuarantees(state, b, attackers);
+  let s = free ? state : breakGuarantees(state, b, attackers);
   const since = { ...state.dip.since };
   for (const x of attackers) for (const y of defenders) {
     if (x === y || atWar(s.mil, x, y)) continue;

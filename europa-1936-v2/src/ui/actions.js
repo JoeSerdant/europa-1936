@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { play } from './sound.js';
@@ -856,6 +856,20 @@ export function grantAccessTo(tag) {
 }
 /** Odvolá zemi `tag` přístup k vašemu území (cizí armády odejdou domů). */
 export const revokeAccessFrom = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(revokeAccess, me, t); };
+
+// ============================================================ ultimáta (M68)
+/** Vznese historický požadavek `id` vůči zemi `tag`; cíl odpoví hned. */
+export function demandFrom(tag, id) {
+  const s = gameStore.getState(), me = playerIdx(s), w = getWorld(), t = w.ownerIdx[tag], d = DEMAND_BY_ID[id];
+  if (!me || !t || !d || d.tag !== w.owners[me].tag || d.target !== tag) return false;
+  const spec = demandSpec(s, d, t);
+  const why = demandBlock(s, me, t, spec);
+  if (why) { toast(why); return false; }
+  if (!run(demand, me, t, spec)) return false;
+  const u = gameStore.getState().dip.ult.find((x) => x.id === id && x.a === me && x.b === t);
+  toast(u && u.ok === 1 ? `${countryName(tag)} požadavek přijala.` : `${countryName(tag)} požadavek odmítla – válku můžete vyhlásit hned.`);
+  return true;
+}
 
 // ============================================================ půjčka a pronájem (M47)
 export function lendTo(tag, eq) {

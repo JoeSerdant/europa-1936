@@ -28,5 +28,4 @@ export const START_FACTIONS = [
   { nm: 'Francouzský systém', ldr: 'FRA', mem: ['FRA', 'POL', 'BEL'] },
   { nm: 'Balkánská dohoda', ldr: 'TUR', mem: ['TUR', 'GRE'] },
   { nm: 'Pobaltská dohoda', ldr: 'LAT', mem: ['LAT', 'EST', 'LIT'] },
-  { nm: 'Severská spolupráce', ldr: 'SWE', mem: ['SWE', 'NOR', 'DEN'] },
 ];

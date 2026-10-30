@@ -8,6 +8,8 @@ import { overlordOf, autonomyOf, autonomyLevel, autonomyBlock } from './subjects
 import { lendFriend } from './lend.js';
 import { guarantees, guaranteeBlock } from './guarantee.js';
 import { hasAccess, grants, accessBlock, grantBlock } from './access.js';
+import { demandSpec, demandBlock, demandForce } from './demand.js';
+import { HIST_DEMANDS } from '../../data/dip/demands.js';
 import { warBlock, justReady, peaceBlock, inviteBlock } from './commands.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
@@ -17,6 +19,7 @@ export function diplomacyOf(state, o) {
   o = idxOf(o);
   const w = getWorld();
   const fac = factionOf(state, o);
+  const myTag = w.owners[o].tag, day = state.tick / 24;
   const list = [];
   for (let t = 1; t < w.owners.length; t++) {
     if (t === o) continue;
@@ -34,6 +37,10 @@ export function diplomacyOf(state, o) {
       garMine: guarantees(state, o, t), garTheirs: guarantees(state, t, o), garBlock: guaranteeBlock(state, o, t),
       access: hasAccess(state.dip, o, t), accGiven: hasAccess(state.dip, t, o),   // M67: smíte na jejich území / smějí na vaše
       accDeal: grants(state, t, o), accMine: grants(state, o, t), accBlock: accessBlock(state, o, t), giveBlock: grantBlock(state, o, t),
+      demands: HIST_DEMANDS.filter((d) => d.tag === myTag && d.target === w.owners[t].tag && day >= d.from).map((d) => {   // M68: ultimáta, která smí hráč vznést
+        const f = demandForce(state, o, t);
+        return { id: d.id, n: d.n, kind: d.kind, need: d.ratio, have: f.theirs ? f.mine / f.theirs : 99, block: demandBlock(state, o, t, demandSpec(state, d, t)) };
+      }),
       friend: lendFriend(state, o, t) && !hasCapitulated(state, t) && !war,
       peaceBlock: war ? peaceBlock(state, o, t) : 'Nejste ve válce.',
       inviteBlock: fac ? inviteBlock(state, o, t) : 'Nejste v žádném bloku.',

@@ -51,6 +51,9 @@ export const AI = {
   AREA_MAX: 120,                    // nejvíc provincií v obranném plánu armády
   SUP_POST_MIN: 0.35,               // provincie s nižším tokem zásobování armáda neobsazuje (unese necelou divizi; M66)
   SUP_TARGET_MIN: 0.6,              // cíl útoku musí po dobytí udržet aspoň tento tok (zhruba jedna divize)
+  BUSY_SHARE: 0.5,                  // země je válkou zaměstnaná, když protivníci mají aspoň tolik jejích sil (M68)
+  FROZEN_DAYS: 200,                 // válka bez styku s nepřítelem starší než tolik dní se ukončí i vítězem
+  JACKAL_SHARE: 0.35,               // oportunistická válka (M68): podíl bodů cíle, který už drží jeho nepřátelé
   PEACE_POSTS: 8,                   // domácích postů na armádu v míru
   PEACE_POSTS_MIN: 12,
   PEACE_SPREAD: 40,                 // příplatek (pixely) za každý už přidělený post – rozloží posty mezi armády
