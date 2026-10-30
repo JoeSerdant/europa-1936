@@ -33,7 +33,7 @@ export function applyInsets() {
   mc.setInsets(u.selected || u.panel ? INSETS.gameDossier : INSETS.game);
 }
 
-const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, fleetSel: 0, console: false, toast: null };
+const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, fleetSel: 0, console: false, toast: null, popups: [] };
 
 /** Nastavení AI zemí pro novou hru (obrazovka výběru země). */
 export const setAiOptions = (patch) => setUi(patch);
@@ -89,6 +89,23 @@ export function ownerTagAt(l) {
 }
 
 // ============================================================ pomocné
+let popupSeq = 0;
+const popupTimers = new Map();
+/** Vyskakovací karta oznámení; mizí sama po `POPUP_MS`, kromě „sticky“ (války), které zavře hráč. Nejvýš `POPUP_MAX` karet najednou. */
+export const POPUP_MS = 14000, POPUP_MAX = 4;
+export function pushPopup(card) {
+  const id = ++popupSeq;
+  const list = [...uiStore.getState().popups, { ...card, id }];
+  while (list.length > POPUP_MAX) { const old = list.shift(); clearTimeout(popupTimers.get(old.id)); popupTimers.delete(old.id); }
+  setUi({ popups: list });
+  if (!card.sticky) popupTimers.set(id, setTimeout(() => closePopup(id), POPUP_MS));
+  play(card.tone === 'bad' ? 'alert' : 'notify');
+  return id;
+}
+export function closePopup(id) {
+  clearTimeout(popupTimers.get(id)); popupTimers.delete(id);
+  setUi({ popups: uiStore.getState().popups.filter((p) => p.id !== id) });
+}
 let toastSeq = 0, toastTimer = 0;
 /** Krátké oznámení dole uprostřed (zmizí samo). */
 export function toast(text) {

@@ -8,6 +8,7 @@ import { SelectionBar } from '../army/SelectionBar.jsx';
 import { PlanBar } from '../army/PlanBar.jsx';
 import { TemplateDesigner } from '../army/TemplateDesigner.jsx';
 import { EventDialog } from '../nat/EventDialog.jsx';
+import { Popups } from './Popups.jsx';
 import { Tutorial } from '../tutorial/Tutorial.jsx';
 import { EndDialog } from './EndDialog.jsx';
 import { ConferenceDialog } from '../nat/ConferenceDialog.jsx';
@@ -68,6 +69,7 @@ export function Hud() {
         {fresh && <div className="panel hint" role="status">Čas stojí. Spusťte ho <kbd>mezerníkem</kbd> nebo tlačítkem v horní liště.</div>}
         <SelectionBar />
       </div>
+      <Popups />
       <GameMenu />
       <TemplateDesigner />
       <EventDialog />

@@ -106,7 +106,7 @@ describe('texty záznamů', () => {
     expect(logImportant({ k: 'war', a: ITA, b: FRA }, GER)).toBe(false);
     expect(logImportant({ k: 'cap', o: CZE }, GER)).toBe(true);
     expect(logImportant({ k: 'tech', o: GER, x: 'spoj' }, GER)).toBe(true);
-    expect(logImportant({ k: 'built', o: GER, x: 'civ' }, GER)).toBe(false);
+    expect(logImportant({ k: 'built', o: GER, x: 'civ' }, GER)).toBe(true);
   });
 });
 

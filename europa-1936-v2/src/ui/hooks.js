@@ -3,11 +3,12 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, pushPopup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
 import { logLine, logImportant } from './logText.js';
+import { popupFor } from './popups.js';
 
 const AUTOSAVE_HOURS = 24 * 30;   // automatické uložení jednou za herní měsíc
 
@@ -31,10 +32,12 @@ export function useGameLoop(active) {
         if (cur.log !== prev.log) {
           const me = playerIdx(cur);
           const fresh = cur.log.items.filter((e) => e.id > prev.log.n && logImportant(e, me));
-          if (fresh.length) toast(logLine(fresh[fresh.length - 1], me).text);
+          const rest = [];
+          for (const e of fresh) { const card = popupFor(e, me); if (card) pushPopup(card); else rest.push(e); }
+          if (rest.length) toast(logLine(rest[rest.length - 1], me).text);
         }
         if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) writeSave('auto', cur, new Date().toLocaleString('cs-CZ'));
-        if (after !== before) for (let o = 1; o < after.length; o++) if (after[o] && !before[o]) toast(`${getWorld().owners[o].name} kapitulovala.`);
+        void before; void after;
       }
     };
     raf = requestAnimationFrame(frame);
