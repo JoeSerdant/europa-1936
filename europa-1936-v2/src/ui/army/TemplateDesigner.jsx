@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useUi, useGame } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { BATTALIONS, SUPPORT, GRID, EQUIP, deriveStats, validateTemplate, isUnlocked } from '../../engine/index.js';
+import { BATTALIONS, SUPPORT, GRID, EQUIP, EQUIP_PROD, deriveStats, validateTemplate, isUnlocked } from '../../engine/index.js';
 import { playerIdx, closeDesigner, updateDraft, saveDesigner } from '../actions.js';
 import { fmtInt, fmtNum, fmtDays } from '../format.js';
-import { placeBattalion, removeBattalion, toggleSupport, setName } from './designer.js';
+import { placeBattalion, removeBattalion, toggleSupport, setName, prodCost, compareStats } from './designer.js';
 import { ClsIcon } from './parts.jsx';
 import { CLS_NAMES } from './helpers.js';
 
@@ -56,6 +56,8 @@ export function TemplateDesigner() {
   const lv = game.mil.lv[me] || null;
   const open = (def) => isUnlocked(game, me, def.unlock);
   const stats = useMemo(() => (draft && draft.reg.length ? deriveStats(draft, lv) : null), [draft, lv]);
+  const saved = useMemo(() => (dz && dz.tplId && game.mil.tpl[dz.tplId] ? deriveStats(game.mil.tpl[dz.tplId], lv) : null), [dz && dz.tplId, game.mil.tpl, lv]);
+  const diff = useMemo(() => (stats && saved ? compareStats(stats, saved, EQUIP_PROD) : []), [stats, saved]);
   const problem = useMemo(() => (draft ? validateTemplate(draft, open) : null), [draft, game.tech]);
   if (!dz) return null;
 
@@ -123,6 +125,12 @@ export function TemplateDesigner() {
                     <div><dt>Výcvik</dt><dd>{fmtDays(stats.days)}</dd></div>
                   </dl>
                   <div className="tpl-cost">{Object.entries(stats.need).map(([e, n]) => <span key={e} className="cost" title={EQUIP[e].n}>{EQUIP[e].ab} {fmtInt(n)}</span>)}</div>
+                  <p className="dz-prodcost" title="Součet výrobních bodů výzbroje jedné divize">Odhad výrobních nákladů: <b>{fmtInt(Math.round(prodCost(stats, EQUIP_PROD)))}</b> výrobních bodů</p>
+                  {diff.length > 0 && (
+                    <ul className="dz-diff" aria-label="Změny proti uložené šabloně">
+                      {diff.map((d) => <li key={d.k} className={d.better > 0 ? 'up' : d.better < 0 ? 'down' : ''}>{d.name} {d.delta > 0 ? '+' : '−'}{fmtNum(Math.abs(d.delta), Math.abs(d.delta) < 10 ? 2 : 0)}</li>)}
+                    </ul>
+                  )}
                 </>
               ) : <p className="muted">Položte aspoň jeden prapor.</p>}
             </div>

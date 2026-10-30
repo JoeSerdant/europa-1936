@@ -620,6 +620,10 @@ Okno Letectvo má nad seznamem křídel filtr: dlaždice podle typu letounu (sou
 
 Bitvy na mapě se kreslí zakřivenými šípy útoku (`drawAttackArrow` v `ui/map/units.js`): obrys, tělo a hrot, zkrácené před středem provincie; šířka roste s počtem útočících divizí na jeden směr. Značka bitvy je klikací (`UnitLayer.pickBattle`, `mapController.pickBattle`, `MapView` prop `onBattle`) a otevře okno bitvy (M61). Kreslení zůstává ve vrstvě jednotek (pravidlo 13), bez změny stavu. Test: `test/attackarrow.test.js`.
 
+## 4zp. Návrhář divizí: náklady a srovnání (M64)
+
+Návrhář šablon (`ui/army/TemplateDesigner.jsx`) ukazuje odhad výrobních nákladů jedné divize (`prodCost`: součet `EQUIP_PROD.cost` × kusů výzbroje na divizi) a při úpravě existující šablony seznam změn proti uložené verzi (`compareStats`: síla, organizace, útok, obrana, průraz, pancíř, rychlost, šířka, lidská síla, zásoby, výcvik, náklady; zelená = zlepšení, červená = zhoršení). Čisté funkce jsou v `ui/army/designer.js`. Bez změny stavu. Test: `test/designer-compare.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -824,6 +828,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M61** | **Okno bitvy**: okno s oběma stranami, veliteli, divizemi (fronta / záloha) a pruhem převahy | **hotovo** |
 | **M62** | **Filtr letectva**: filtr křídel podle typu a mise se souhrnem letadel | **hotovo** |
 | **M63** | **Šípy útoku a klikací bitvy**: zakřivené šípy útoku s hrotem a klik na značku bitvy otevře okno bitvy | **hotovo** |
+| **M64** | **Návrhář divizí: náklady a srovnání**: odhad výrobních nákladů a srovnání návrhu s uloženou šablonou | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
