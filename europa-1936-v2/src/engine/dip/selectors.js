@@ -2,7 +2,7 @@
 import { getWorld } from '../world.js';
 import { DIP } from './constants.js';
 import { WARGOALS, WARGOAL_IDS } from '../../data/dip/wargoals.js';
-import { relOf, factionOf, sameFaction, warScore, vpHeld, hasCapitulated } from './core.js';
+import { relOf, factionOf, sameFaction, warScore, vpHeld, hasCapitulated, isDormant } from './core.js';
 import { atWar } from '../army/war.js';
 import { overlordOf, autonomyOf, autonomyLevel, autonomyBlock } from './subjects.js';
 import { lendFriend } from './lend.js';
@@ -22,7 +22,7 @@ export function diplomacyOf(state, o) {
   const myTag = w.owners[o].tag, day = state.tick / 24;
   const list = [];
   for (let t = 1; t < w.owners.length; t++) {
-    if (t === o) continue;
+    if (t === o || isDormant(state, t)) continue;
     const war = atWar(state.mil, o, t);
     const j = state.dip.just.find((x) => x.a === o && x.b === t);
     const wb = warBlock(state, o, t);

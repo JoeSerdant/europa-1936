@@ -68,6 +68,7 @@ export function startWar(state, a, b, free = false) {
 /** Zdůvodnění, proč druhá strana bílý mír odmítne (český text), nebo null. */
 export function peaceBlock(state, a, b) {
   if (!ok(a) || !ok(b) || a === b || !atWar(state.mil, a, b)) return 'Nejste ve válce.';
+  if (state.dip.goal[`${a}>${b}`] === 'civil' || state.dip.goal[`${b}>${a}`] === 'civil') return 'V občanské válce se mír neuzavírá – rozhodne se na bojišti.';   // M69
   if (warScore(state, b, a) >= DIP.PEACE_SCORE) return 'Protivník vyhrává a bílý mír odmítá.';
   const oa = state.dip.sub[a], ob = state.dip.sub[b];   // M66: loutka vede války pána, vlastní mír neuzavře (jinak by ji pán hned zase vtáhl do války)
   if ((oa && atWar(state.mil, oa, b)) || (ob && atWar(state.mil, ob, a))) return 'Loutka vede válku svého pána a vlastní mír neuzavře.';

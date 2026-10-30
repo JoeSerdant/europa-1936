@@ -253,6 +253,7 @@ describe('historické události (M44)', () => {
 describe('národní cíle pro všechny země (M57)', () => {
   it('každá země má vlastní strom aspoň o šesti cílech s kořenem a rozumnou délkou', () => {
     for (let o = 1; o < W.owners.length; o++) {
+      if (W.owners[o].dyn) continue;   // rezervní země používají obecný strom
       const tag = W.owners[o].tag, t = FOCUS_TREES[tag];
       expect(t, tag).toBeTruthy();
       expect(t.length, tag).toBeGreaterThanOrEqual(6);

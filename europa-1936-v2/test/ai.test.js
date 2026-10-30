@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createGame, getWorld, advance, advanceHour, declareWar, atWar, industryOf, divisionCount, targetDivs, scanArmies, aiMult, AI, HIST_WARS, outMult, researchOf,
-  startWar, justifyWar, startFocus, factionOf, sameFaction, HIST_FACTIONS, GAME_VERSION,
+  startWar, justifyWar, startFocus, factionOf, sameFaction, HIST_FACTIONS, GAME_VERSION, isCivilWar,
 } from '../src/engine/index.js';
 
 const W = getWorld();
@@ -123,9 +123,9 @@ describe('diplomacie AI', () => {
     const off = day({ ...createGame({ player: 'SWE', aiLevel: 2, hist: false }), tick: 24 * 265 }, 60);
     expect(factionOf(off, GER)).toBeNull();
   });
-  it('v míru za první rok AI nezačne žádnou válku (okna plánů jsou později)', () => {
+  it('v míru za první rok AI nezačne žádnou válku (okna plánů jsou později); jediná válka je španělská občanská (M69)', () => {
     const a = day(base(), 365);
-    expect(a.mil.wars).toHaveLength(0);
+    expect(a.mil.wars.filter(([x, y]) => !isCivilWar(a, x, y))).toHaveLength(0);
   });
 });
 

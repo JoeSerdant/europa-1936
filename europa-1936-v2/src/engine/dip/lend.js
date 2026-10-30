@@ -6,12 +6,20 @@ import { logAdd } from '../log.js';
 import { sameFaction, hasCapitulated, setRel } from './core.js';
 import { overlordOf } from './subjects.js';
 import { DIP } from './constants.js';
+import { HIST_AID } from '../../data/dip/civil.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 
-/** Je `to` přítel, kterému smí `from` posílat výzbroj? (stejný blok, vlastní loutka nebo pán loutky) */
+/** Smí `from` pomáhat zemi `to` v občanské válce? (historická pomoc stranám, M69; jen se zapnutým příznakem `ai.hist`) */
+const aidPair = (state, from, to) => {
+  if (!state.ai || !state.ai.hist) return false;
+  const w = getWorld(), day = state.tick / 24;
+  return HIST_AID.some((a) => w.ownerIdx[a.from] === from && w.ownerIdx[a.to] === to && day >= a.start && day <= a.end);
+};
+
+/** Je `to` přítel, kterému smí `from` posílat výzbroj? (stejný blok, vlastní loutka nebo pán loutky, nebo historická pomoc v občanské válce) */
 export const lendFriend = (state, from, to) => ok(from) && ok(to) && from !== to
-  && (sameFaction(state, from, to) || overlordOf(state, to) === from || overlordOf(state, from) === to);
+  && (sameFaction(state, from, to) || overlordOf(state, to) === from || overlordOf(state, from) === to || aidPair(state, from, to));
 
 /** Nejvíc kusů druhu `eq`, které země `from` smí poslat najednou (podíl `LEND_MAX` skladu, zbytek si nechá). */
 export const lendMax = (state, from, eq) => {

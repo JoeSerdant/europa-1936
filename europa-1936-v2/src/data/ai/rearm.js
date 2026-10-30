@@ -5,6 +5,14 @@ export const REARM = {
   GER: 2.4, ENG: 2.5, FRA: 1.3, ITA: 1.35, SOV: 2.0, POL: 1.35, CZE: 1.3, SPR: 1.2, HUN: 1.8, ROM: 1.4, YUG: 1.3, BUL: 1.4, TUR: 1.3,
   FIN: 1.5, SWE: 1.4, default: 1.25,
 };
+/** Základní sestava divizí rezervních zemí (M69), které nemají výchozí armádu v datech zemí: AI podle ní určuje cílový počet a složení. */
+export const DYN_DIVS = {
+  NSP: { pesi: 17, hory: 2, kav: 2 },
+  VIC: { pesi: 12, kav: 2 },
+  SLO: { pesi: 6, hory: 1 },
+  CRO: { pesi: 8, hory: 2 },
+};
+
 /** Podíl celkového růstu do září 1939 (den hry → 0–1): zpočátku pomalu, před válkou rychle. */
 export const REARM_CURVE = [[0, 0], [365, 0.12], [730, 0.38], [1095, 0.74], [1340, 1]];
 export const REARM_END = 1340;          // den, ke kterému je růst dokončen (1. 9. 1939)

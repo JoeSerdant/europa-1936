@@ -36,7 +36,8 @@ describe('počáteční stav', () => {
       expect(d.diff).toBeGreaterThanOrEqual(1);
       expect(d.diff).toBeLessThanOrEqual(5);
     }
-    expect(Object.keys(COUNTRIES).length).toBe(allCountries().length);
+    expect(Object.keys(COUNTRIES).filter((t) => !COUNTRIES[t].dyn).length).toBe(allCountries().length);   // rezervní země (M69) mají popis, ale ve výběru nejsou
+    for (const t of Object.keys(COUNTRIES)) if (COUNTRIES[t].dyn) { expect(W.ownerIdx[t], t).toBeTruthy(); expect(COUNTRIES[t].flag.length).toBeGreaterThan(0); }
   });
 });
 

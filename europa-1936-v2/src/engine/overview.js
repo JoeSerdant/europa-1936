@@ -4,7 +4,7 @@ import { countryStats } from './selectors.js';
 import { divisionCount } from './army/selectors.js';
 import { hasWar } from './army/war.js';
 import { tallyOwners } from './industry/core.js';
-import { factionOf } from './dip/core.js';
+import { factionOf, isDormant } from './dip/core.js';
 
 /** Řádky přehledu seřazené podle vítězných bodů (sestupně), při shodě podle názvu: { o, tag, name, vp, pop, divs, civ, mil, stab, ws, war, cap, faction, player }. */
 export function countryTable(state) {
@@ -14,7 +14,7 @@ export function countryTable(state) {
   for (let o = 1; o < w.owners.length; o++) {
     const tag = w.owners[o].tag;
     const st = countryStats(state, tag);
-    if (!st) continue;
+    if (!st || isDormant(state, o)) continue;
     const p = state.pol.own[o];
     const f = factionOf(state, o);
     rows.push({

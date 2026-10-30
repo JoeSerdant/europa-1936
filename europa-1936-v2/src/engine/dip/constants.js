@@ -30,6 +30,7 @@ export const DIP = {
   PEACE_SCORE: 0.1,       // druhá strana přijme bílý mír, když její válečné skóre je menší
   CAP_SHARE: 0.6,         // kapitulace: podíl vítězných bodů držený nepřáteli
   CAP_CAPITAL_SHARE: 0.35,// totéž při ztraceném hlavním městě
+  CIVIL_CAP_SHARE: 0.7,   // občanská válka (M69): strana kapituluje, až když protivník drží tolik jejích vítězných bodů (pád hlavního města nestačí)
   CAP_STAB: 0.25,         // ztráta stability po kapitulaci
   FAC_PP: 50,             // cena založení bloku
   FAC_MAX_MEM: 12,        // největší blok

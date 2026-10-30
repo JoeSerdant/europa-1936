@@ -48,8 +48,8 @@ export function countryStats(state, tag) {
   });
 }
 
-/** Seznam všech zemí (statický): { tag, idx, name, color, capital }. */
+/** Seznam všech zemí (statický, bez rezervních zemí, které vznikají za hry): { tag, idx, name, color, capital }. */
 export function allCountries() {
   const w = getWorld();
-  return w.owners.map((o, i) => (o ? { tag: o.tag, idx: i, name: o.name, color: o.color, capital: o.cap } : null)).filter(Boolean);
+  return w.owners.map((o, i) => (o && !o.dyn ? { tag: o.tag, idx: i, name: o.name, color: o.color, capital: o.cap } : null)).filter(Boolean);
 }
