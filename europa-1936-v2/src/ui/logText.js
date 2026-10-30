@@ -50,5 +50,5 @@ export function logLine(e, me = 0) {
 /** Je záznam důležitý natolik, aby se ohlásil oznámením? (válka a kapitulace se zemí hráče nebo cizí kapitulace, dokončený výzkum a cíl hráče) */
 export function logImportant(e, me) {
   if (e.k === 'war') return e.a === me || e.b === me;
-  return e.k === 'cap' || e.k === 'tech' || e.k === 'focus' || e.k === 'sunk' || e.k === 'landing';
+  return e.k === 'cap' || e.k === 'tech' || e.k === 'focus' || e.k === 'sunk' || e.k === 'landing' || e.k === 'built' || e.k === 'doctrine' || e.k === 'free';
 }

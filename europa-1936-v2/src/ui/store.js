@@ -35,6 +35,7 @@ export const uiStore = createStore({
   indTab: 'build',         // záložka panelu Průmysl: 'build' | 'prod' | 'trade' (M19)
   console: false,          // konzole s cheaty (M29)
   toast: null,             // krátké oznámení: { id, text }
+  popups: [],              // vyskakovací karty oznámení (M58): { id, kind, icon, tone, title, text, lines, sticky }
 });
 
 const same = Object.is;

@@ -485,6 +485,14 @@ try {
   await page.keyboard.press('c');
   await page.waitForTimeout(150);
 
+  // vyskakovací oznámení (M58): karta se zobrazí a zavře klikem
+  await E(() => { window.__e1936.uiStore.setState({ ...window.__e1936.uiStore.getState(), popups: [{ id: 9001, kind: 'focus', icon: 'flag', tone: 'good', title: 'Národní cíl splněn', text: 'Zkouška', lines: ['1× civilní továrna', 'výroba +3 %'], sticky: true }] }); });
+  await page.waitForSelector('.popup', { timeout: 3000 });
+  check('vyskakovací karta ukáže název, text a účinky', /národní cíl/i.test(await page.locator('.popup h4').innerText()) && (await page.locator('.popup li').count()) === 2);
+  await shot('popup');
+  await page.locator('.popup').click();
+  await page.waitForTimeout(150);
+  check('klik na kartu ji zavře', (await page.locator('.popup').count()) === 0);
   // diplomacie (M23): panel Diplomacie (D), seznam zemí, rozbalení řádku, blok
   await page.keyboard.press('d');
   await page.waitForSelector('.dip-panel', { timeout: 3000 });
@@ -501,7 +509,7 @@ try {
   await page.waitForTimeout(150);
 
   // upozornění (M49): na začátku hry je aspoň jedno (volný výzkumný slot) a klik otevře příslušné okno
-  check('pod lištou nabídek jsou upozornění', (await page.locator('.alerts .alert').count()) >= 1);
+  check('vedle lišty nabídek jsou upozornění s tooltipem', (await page.locator('.alerts .alert').count()) >= 1 && (await page.locator('.alerts .alert-tip').first().innerText()).length > 5);
   await page.locator('.alerts .alert').first().click();
   check('klik na upozornění otevře okno a skryje upozornění', (await E(() => window.__e1936.uiStore.getState().panel)) != null && (await page.locator('.alerts').count()) === 0);
   await page.keyboard.press('Escape');
