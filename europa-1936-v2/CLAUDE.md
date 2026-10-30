@@ -71,3 +71,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 56. Časová osa výzkumu (§ 4zl v `SPEC.md`): poloha technologie je jen výsledek `layoutOf` (rok = sloupec); nová technologie s rokem mimo 1936–1943 vyžaduje úpravu `Y0`/`maxYear` v `layout.js`.
 57. Okno bitvy (§ 4zm v `SPEC.md`): údaje pro okno bitvy se berou jen z `battleView`; nový údaj o bitvě = pole v `battleView` + test v `test/battleview.test.js`.
 58. Filtr letectva (§ 4zn v `SPEC.md`): filtr je jen stav komponenty `AirPanel`, nikdy ne herního stavu; nový typ letounu se v dlaždicích objeví sám z `PLANE_IDS`.
+59. Šípy a značky (§ 4zo v `SPEC.md`): kreslení šípů a hit-testy značek patří jen do `UnitLayer`; klik na mapu se předává přes props `MapView`, nikdy ne přímo z rendereru do úložiště.

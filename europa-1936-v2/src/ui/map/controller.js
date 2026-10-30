@@ -130,6 +130,7 @@ export class MapController {
     this.renderer.units.setFleetSel(id); this.dirty = true;
   }
   /** Žeton flotily pod bodem obrazovky nebo null. */
+  pickBattle(sx, sy) { return this.renderer && this.renderer.showUnits ? this.renderer.units.pickBattle(sx, sy) : 0; }
   pickFleet(sx, sy) { return this.renderer && this.renderer.showUnits ? this.renderer.units.pickFleet(sx, sy) : null; }
   /** Žeton pod bodem obrazovky (po posledním snímku) nebo null. */
   pickCounter(sx, sy) { return this.renderer && this.renderer.showUnits ? this.renderer.units.pick(sx, sy) : null; }

@@ -9,7 +9,7 @@ import { Tooltip } from './ui/hud/Tooltip.jsx';
 import { Help } from './ui/common/Help.jsx';
 import { SaveDialog } from './ui/saves/SaveDialog.jsx';
 import { useGameLoop, useHotkeys } from './ui/hooks.js';
-import { mapClick, contextClick, clickCounter, clickFleet, boxSelect, pickCountry, ownerTagAt } from './ui/actions.js';
+import { openBattle, mapClick, contextClick, clickCounter, clickFleet, boxSelect, pickCountry, ownerTagAt } from './ui/actions.js';
 
 /** Kořen aplikace: jedno trvalé plátno mapy a nad ním obrazovka podle `screen` (menu / výběr země / hra). */
 export default function App() {
@@ -34,7 +34,7 @@ export default function App() {
 
   return (
     <div className={`app screen-${screen}`}>
-      <MapView interactive={screen !== 'menu'} units={inGame} onPick={onPick} onCounter={inGame ? clickCounter : undefined} onFleet={inGame ? clickFleet : undefined} onBox={inGame ? boxSelect : undefined} onContext={inGame ? contextClick : undefined} />
+      <MapView interactive={screen !== 'menu'} units={inGame} onPick={onPick} onCounter={inGame ? clickCounter : undefined} onFleet={inGame ? clickFleet : undefined} onBox={inGame ? boxSelect : undefined} onContext={inGame ? contextClick : undefined} onBattle={inGame ? openBattle : undefined} />
       {screen === 'menu' && <MainMenu />}
       {screen === 'select' && <CountrySelect />}
       {screen === 'game' && <Hud />}
