@@ -4,6 +4,7 @@ import { Icon } from '../common/Icon.jsx';
 import { researchOf, techList, CATS, CAT_IDS, TECHS, EQUIP, fxLines, BATTALIONS, SUPPORT } from '../../engine/index.js';
 import { playerIdx, closeSide, researchTech, stopResearch, setTechCat } from '../actions.js';
 import { fmtDays, fmtNum } from '../format.js';
+import { layoutOf, COLW, NODEW, NODEH, ROWH, Y0 } from './layout.js';
 
 const pct = (v) => `${Math.round(Math.max(0, Math.min(1, v)) * 100)} %`;
 const STATUS = { done: 'Hotovo', active: 'Zkoumá se', available: 'K dispozici', locked: 'Zamčeno' };
@@ -29,57 +30,63 @@ function Slot({ s }) {
   );
 }
 
-function TechCard({ t }) {
+const LV_NAMES = { pusky: 'Pušky', dela: 'Děla', pdela: 'PT děla', auta: 'Auta', vozy: 'Vozidla', ltanky: 'Lehké tanky', mtanky: 'Střední tanky', htanky: 'Těžké tanky', podpora: 'Podpora' };
+
+const maxYear = Math.max(...Object.values(TECHS).map((t) => t.year));
+
+function Node({ t, x, y }) {
   const fx = fxLines(t.id).concat(unlocks(t.id).map((n) => `Odemyká: ${n}`));
   const can = t.status === 'available';
   return (
-    <article className={`tech-card ${t.status}`} aria-label={t.n}>
-      <header>
-        <b>{t.n}</b>
-        <span className="muted">{t.year} · {fmtDays(t.days)}</span>
-      </header>
-      {fx.length > 0 ? <ul className="tech-fx">{fx.map((x) => <li key={x}>{x}</li>)}</ul> : null}
-      <p className="muted">{t.info}</p>
-      <footer>
-        <span className={`tech-st ${t.status}`}>{STATUS[t.status]}{t.status === 'active' ? ` ${pct(t.p)}` : ''}</span>
-        {t.status === 'locked' ? <span className="muted">Chybí: {t.missing.map((r) => TECHS[r].n).join(', ')}</span> : null}
-        {can ? (
-          <>
-            <span className="muted">{t.p > 0 ? `rozpracováno ${pct(t.p)} · ` : ''}{t.ahead > 0 ? `předstih ${fmtNum(t.ahead, 1)} r. · ` : ''}{t.share > 0 ? `sdílení +${Math.round(t.share * 100)} % · ` : ''}asi {fmtDays(t.eta)}</span>
-            <button className="sbtn primary" onClick={() => researchTech(t.id)}>Zkoumat</button>
-          </>
-        ) : null}
-      </footer>
+    <article className={`tech-card tn ${t.status}`} style={{ left: x, top: y, width: NODEW, height: NODEH }} aria-label={`${t.n} – ${STATUS[t.status]}`} tabIndex={0}>
+      <b title={t.n}>{t.n}</b>
+      <span className="tn-line">
+        <span className={`tech-st ${t.status}`}>{STATUS[t.status]}{t.status === 'active' ? ` ${pct(t.p)}` : t.p > 0 && can ? ` · ${pct(t.p)}` : ''}</span>
+        {can ? <button className="sbtn primary" onClick={() => researchTech(t.id)} aria-label={`Zkoumat ${t.n}`}>Zkoumat</button> : null}
+      </span>
+      {t.status === 'active' || (can && t.p > 0) ? <span className="bar prog"><i style={{ width: `${(t.p * 100).toFixed(1)}%` }} /></span> : null}
+      <div className="tn-pop" role="tooltip">
+        <header><b>{t.n}</b><span className="muted">{t.year} · {fmtDays(t.days)}</span></header>
+        {fx.length > 0 ? <ul className="tech-fx">{fx.map((q) => <li key={q}>{q}</li>)}</ul> : null}
+        <p className="muted">{t.info}</p>
+        {t.status === 'locked' ? <p className="muted">Chybí: {t.missing.map((r) => TECHS[r].n).join(', ')}</p> : null}
+        {can ? <p className="muted">{t.ahead > 0 ? `předstih ${fmtNum(t.ahead, 1)} r. · ` : ''}{t.share > 0 ? `sdílení +${Math.round(t.share * 100)} % · ` : ''}asi {fmtDays(t.eta)}</p> : null}
+      </div>
     </article>
   );
 }
 
-const LV_NAMES = { pusky: 'Pušky', dela: 'Děla', pdela: 'PT děla', auta: 'Auta', vozy: 'Vozidla', ltanky: 'Lehké tanky', mtanky: 'Střední tanky', htanky: 'Těžké tanky', podpora: 'Podpora' };
-
-/** Hloubka technologie ve stromu = nejdelší řetěz předpokladů (sloupec zleva doprava). */
-function depthOf(id, memo = {}) {
-  if (memo[id] !== undefined) return memo[id];
-  const req = TECHS[id].req;
-  return (memo[id] = req.length ? 1 + Math.max(...req.map((r) => depthOf(r, memo))) : 0);
-}
-
-/** Jeden obor jako strom: sloupce podle hloubky, ve sloupci technologie řazené podle roku. */
+/** Jeden obor jako časová osa: sloupce = roky, dráhy = větve, čáry vedou od předpokladu k technologii (podobně jako v HOI4). */
 function Tree({ cat, items }) {
-  const memo = {};
-  const cols = [];
-  for (const t of items) { const d = depthOf(t.id, memo); (cols[d] = cols[d] || []).push(t); }
+  const { pos, lanes } = useMemo(() => layoutOf(items), [items]);
+  const cols = maxYear - Y0 + 1;
+  const W = cols * COLW, H = Math.max(1, lanes) * ROWH;
+  const at = (id) => ({ x: pos[id].col * COLW, y: pos[id].lane * ROWH });
+  const byId = Object.fromEntries(items.map((t) => [t.id, t]));
+  const links = [];
+  for (const t of items) for (const r of t.req) if (byId[r]) {
+    const a = at(r), b = at(t.id);
+    const x1 = a.x + NODEW, y1 = a.y + NODEH / 2, x2 = b.x, y2 = b.y + NODEH / 2, mx = x2 - (COLW - NODEW) / 2;
+    links.push({ k: `${r}>${t.id}`, d: `M${x1},${y1} H${mx} V${y2} H${x2}`, done: byId[r].status === 'done', on: byId[t.id].status === 'active' || byId[t.id].status === 'available' });
+  }
   return (
     <section className="tech-tree" aria-label={CATS[cat].n}>
       <h3>{CATS[cat].n}</h3>
-      <div className="tt-cols">
-        {cols.map((c, i) => c && (
-          <div className="tt-col" key={i}>
-            {c.sort((a, b) => a.year - b.year || a.days - b.days).map((t) => <TechCard key={t.id} t={t} />)}
-          </div>
-        ))}
+      <div className="tl-canvas" style={{ width: W, height: H }}>
+        <div className="tl-years" aria-hidden="true" style={{ height: H }}>{Array.from({ length: cols }, (_, i) => <i key={i} style={{ left: i * COLW, width: COLW }} />)}</div>
+        <svg className="tl-links" width={W} height={H} aria-hidden="true">
+          {links.map((l) => <path key={l.k} d={l.d} className={`${l.done ? 'done' : ''} ${l.on ? 'on' : ''}`} />)}
+        </svg>
+        {items.map((t) => { const q = at(t.id); return <Node key={t.id} t={t} x={q.x} y={q.y} />; })}
       </div>
     </section>
   );
+}
+
+/** Pásek s roky nad stromy (stejná šířka sloupců jako ve stromech). */
+function YearBar() {
+  const cols = maxYear - Y0 + 1;
+  return <div className="tl-yearbar" style={{ width: cols * COLW }} aria-hidden="true">{Array.from({ length: cols }, (_, i) => <span key={i} style={{ width: COLW }}>{Y0 + i}</span>)}</div>;
 }
 
 /** Celoobrazovkové okno Výzkum (klávesa R): sloty nahoře, stromy oborů po sloupcích podle návaznosti. */
@@ -111,6 +118,7 @@ export function ResearchPanel() {
         {r.slots.map((s) => <Slot key={s.slot} s={s} />)}
       </section>
       <div className="prod-body tech-body">
+        <YearBar />
         {cats.map((c) => <Tree key={c} cat={c} items={list.filter((t) => t.cat === c)} />)}
       </div>
     </div>
