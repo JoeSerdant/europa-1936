@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, pushPopup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, pushPopup, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
@@ -54,8 +54,15 @@ const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e
 export function useHotkeys() {
   useEffect(() => {
     const onKey = (e) => {
-      if (isTyping(e) || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (isTyping(e) || e.ctrlKey || e.metaKey) return;
       const ui = uiStore.getState();
+      const dg = /^Digit([1-9])$/.exec(e.code || '');
+      if (dg && ui.screen === 'game' && !ui.helpOpen && !ui.menuOpen && !ui.saveDialog && (e.altKey || e.shiftKey)) {   // M59: skupiny jednotek
+        e.preventDefault();
+        if (e.altKey) saveUnitGroup(Number(dg[1])); else recallUnitGroup(Number(dg[1]));
+        return;
+      }
+      if (e.altKey) return;
       if (e.key === 'F1' || e.key === '?') { e.preventDefault(); setHelp(!ui.helpOpen); return; }
       if (ui.saveDialog) { if (e.key === 'Escape') closeSaveDialog(); return; }
       if (ui.overview && e.key === 'Escape') { closeOverview(); return; }

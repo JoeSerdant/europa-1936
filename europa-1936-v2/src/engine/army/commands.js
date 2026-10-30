@@ -200,8 +200,9 @@ const isDefending = (mil, d, id) => {
   return !!b && b.dep.includes(id);
 };
 
-/** Pošle divize do provincie `prov` (nejkratší průchozí cesta). Nepřátelská provincie = útok. Divize, které se nedostanou nikam, se přeskočí. */
-export function orderMove(state, divIds, prov) {
+/** Pošle divize do provincie `prov` (nejkratší průchozí cesta). Nepřátelská provincie = útok. Divize, které se nedostanou nikam, se přeskočí.
+ *  S `append` se cesta připojí za dosavadní rozkaz (fronta rozkazů, Shift + pravé tlačítko). */
+export function orderMove(state, divIds, prov, append = false) {
   const mil = state.mil, w = getWorld();
   if (!Number.isInteger(prov) || !w.isLand(prov)) return state;
   const paths = new Map();
@@ -209,12 +210,16 @@ export function orderMove(state, divIds, prov) {
   for (const id of uniq(divIds)) {
     const d = divOf(mil, id);
     if (!d || d.p === prov || isDefending(mil, d, id)) continue;
-    const key = `${d.o}:${d.p}`;
-    if (!paths.has(key)) paths.set(key, findPath(mil, state.ctrl, d.o, d.p, prov));
-    const path = paths.get(key);
-    if (!path) continue;
+    const queued = append && d.path.length > 0;
+    const from = queued ? d.path[d.path.length - 1] : d.p;
+    if (from === prov) continue;
+    const key = `${d.o}:${from}`;
+    if (!paths.has(key)) paths.set(key, findPath(mil, state.ctrl, d.o, from, prov));
+    const seg = paths.get(key);
+    if (!seg) continue;
+    const path = queued ? d.path.concat(seg) : seg;
     if (!divs) divs = mil.divs.slice();
-    divs[id] = { ...d, path, prog: d.path[0] === path[0] ? d.prog : 0 };
+    divs[id] = { ...d, path, prog: queued || d.path[0] === path[0] ? d.prog : 0 };
   }
   return divs ? { ...state, mil: { ...mil, divs } } : state;
 }

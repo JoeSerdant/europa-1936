@@ -600,6 +600,10 @@ Každá z 35 zemí má vlastní strom národních cílů (`data/nat/focuses_more
 
 Upozornění (`engine/alerts.js`) mají `n` (počet) a `lines` (podrobnosti) a přibyla dvě: divize bez armády (`divs`, otevře panel Armáda) a dostupná rozhodnutí (`decisions`). `ui/hud/Alerts.jsx` je kreslí jako vodorovnou řadu vedle lišty nabídek: ikona s počtem, po najetí tooltip s podrobnostmi, klik otevře okno, pravé tlačítko upozornění odloží do změny počtu. Důležité záznamy deníku hráče (`focus`, `tech`, `built`, `doctrine`, válka hráče, kapitulace, osamostatnění loutky) se v `useGameLoop` (`ui/hooks.js`) přes `popupFor` (`ui/popups.js`) změní na vyskakovací karty (`ui.popups`, `pushPopup`/`closePopup` v `ui/actions.js`, vykresluje `ui/hud/Popups.jsx`): název, text a seznam účinků cíle. Karty mizí po `POPUP_MS` (14 s), válka a kapitulace hráče zůstávají do zavření; nejvýš `POPUP_MAX` (4) najednou. Ostatní důležité záznamy zůstávají krátkým oznámením. Test: `test/popups.test.js`.
 
+## 4zk. Ovládání ve stylu HOI4 (M59)
+
+Ovládání mapy a jednotek podle HOI4 (jen mechanika, vlastní kód): **fronta rozkazů** – Shift + pravé tlačítko připojí další bod trasy za dosavadní rozkaz (`orderMove(state, ids, prov, append)`: `findPath` z posledního bodu cesty; `contextClick(label, { shift })`); **skupiny jednotek** – Alt + 1–9 uloží vybrané divize, Shift + 1–9 je vyvolá, druhé stisknutí do 0,6 s zaměří kameru (`saveUnitGroup`/`recallUnitGroup` v `ui/actions.js`, skupiny žijí jen v rozhraní a vyřazené divize ze skupiny vypadnou); **posun mapy** – střední tlačítko (tažení jakýmkoli tlačítkem posouvá) a okraj obrazovky (kurzor v pásu 4 px u levého, pravého a dolního okraje mapy; volba „Posun okrajem“ v nabídce, uložená v `localStorage` přes `ui/edge.js`). Nápověda (F1) je doplněna. Mapové režimy zůstávají na číslicích bez modifikátorů. Test: `test/controls.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -799,6 +803,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M56** | **Válečné cíle**: tři válečné cíle s různou cenou a výsledkem mírové konference | **hotovo** |
 | **M57** | **Národní cíle všech zemí**: vlastní stromy cílů pro všech 35 zemí, rozšíření velmocí o letectvo, námořnictvo a zpravodajství | **hotovo** |
 | **M58** | **Oznámení a vyskakovací okna**: upozornění jako ikony s tooltipem a vyskakovací karty (cíl splněn, výzkum, stavba, válka) | **hotovo** |
+| **M59** | **Ovládání ve stylu HOI4**: fronta rozkazů, skupiny jednotek, posun středním tlačítkem a okrajem obrazovky | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

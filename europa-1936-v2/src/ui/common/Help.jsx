@@ -2,12 +2,14 @@ import { useUi } from '../store.js';
 import { setHelp } from '../actions.js';
 
 const ROWS = [
-  ['Posun mapy', ['tažení myší', 'šipky']],
+  ['Posun mapy', ['tažení myší', 'střední tlačítko', 'šipky', 'okraj obrazovky']],
   ['Přiblížení', ['kolečko myši', 'PageDown / PageUp']],
   ['Celá mapa', ['Home']],
   ['Označení oblasti', ['klik na provincii nebo moře']],
   ['Výběr jednotek', ['klik na žeton', 'Shift + tažení', 'dvojklik = celá armáda']],
   ['Rozkaz jednotkám (pohyb, útok)', ['pravé tlačítko myši']],
+  ['Fronta rozkazů (další bod trasy)', ['Shift + pravé tlačítko']],
+  ['Skupiny jednotek: uložit / vyvolat (dvakrát = zaměřit)', ['Alt + 1–9', 'Shift + 1–9']],
   ['Zastavit vybrané / zaměřit výběr', ['X', 'F']],
   ['Okna jako v HOI4: Vláda / Výzkum / Diplomacie / Obchod / Stavby / Výroba / Nábor / Logistika', ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I']],
   ['Armáda / Letectvo / Doktríny / Rozhodnutí / Zpravodajství / Cíle / Zprávy / Námořnictvo', ['V', 'A', 'K', 'J', 'G', 'C', 'L', 'M']],

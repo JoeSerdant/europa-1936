@@ -160,6 +160,29 @@ export function setSelection(ids) {
 }
 export const clearSelection = () => setSelection(NONE);
 
+// ---- skupiny jednotek (M59): Alt + 1–9 uloží výběr, Shift + 1–9 ho vyvolá (druhé stisknutí zaměří kameru); skupiny žijí jen v rozhraní
+const groupSlots = {};
+export const unitGroups = () => groupSlots;
+export function saveUnitGroup(n) {
+  const ids = ownSelected();
+  if (!ids.length) { toast('Nejdřív vyberte jednotky.'); return false; }
+  groupSlots[n] = ids.slice();
+  toast(`Skupina ${n}: ${ids.length} ${ids.length === 1 ? 'divize' : ids.length < 5 ? 'divize' : 'divizí'}.`);
+  return true;
+}
+let lastGroup = { n: 0, t: 0 };
+export function recallUnitGroup(n) {
+  const s = gameStore.getState();
+  const ids = (groupSlots[n] || []).filter((id) => s.mil.divs[id] && s.mil.divs[id].o === playerIdx(s));
+  if (!ids.length) { toast(`Skupina ${n} je prázdná.`); return false; }
+  groupSlots[n] = ids;
+  const again = lastGroup.n === n && performance.now() - lastGroup.t < 600;
+  lastGroup = { n, t: performance.now() };
+  setSelection(ids);
+  if (again) focusSelection();
+  return true;
+}
+
 /** Vlastní vybrané divize (existující, patřící hráči). */
 export function ownSelected(s = gameStore.getState(), sel = uiStore.getState().selDivs) {
   const me = playerIdx(s);
@@ -259,12 +282,13 @@ export function focusSelection() {
 
 // ============================================================ rozkazy
 /** Pošle vybrané vlastní divize do provincie (nepřátelská provincie = útok). */
-export function orderSelected(prov) {
+export function orderSelected(prov, { queue = false } = {}) {
   const s = gameStore.getState();
   const ids = ownSelected(s);
   if (!ids.length || !getWorld().isLand(prov)) return false;
-  if (!run(orderMove, ids, prov)) {
-    if (ids.every((id) => s.mil.divs[id].p === prov)) return false;
+  if (!run(orderMove, ids, prov, queue)) {
+    if (ids.every((id) => s.mil.divs[id].p === prov || (queue && s.mil.divs[id].path.includes(prov)))) return false;
+    if (queue) { toast('Další bod trasy se nepodařilo najít.'); return false; }
     // po souši to nejde: zkusit lodní přepravu (M27)
     const why = sailBlock(s, ids, prov);
     if (!why) {
@@ -317,12 +341,12 @@ export function mapClick(l, { shift = false } = {}) {
 }
 
 /** Pravé tlačítko na mapě: rozkaz vybraným vlastním divizím (pohyb, v nepřátelské provincii útok). */
-export function contextClick(l) {
+export function contextClick(l, { shift = false } = {}) {
   const u = uiStore.getState();
   if (u.planEdit || !l) return false;
   if (u.fleetSel && getWorld().isSea(l)) return orderFleetTo(l);
   if (!u.selDivs.length) return false;
-  return orderSelected(l);
+  return orderSelected(l, { queue: shift });
 }
 
 // ============================================================ války

@@ -1,5 +1,6 @@
 // Úložiště UI: herní stav (gameStore) a stav rozhraní (uiStore) + háčky pro React. Selektory musí vracet stabilní hodnoty
 // (primitiva nebo existující objekty), jinak by se komponenty překreslovaly donekonečna.
+import { edgeScrollOn } from './edge.js';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createStore, createGame } from '../engine/index.js';
 
@@ -35,6 +36,7 @@ export const uiStore = createStore({
   indTab: 'build',         // záložka panelu Průmysl: 'build' | 'prod' | 'trade' (M19)
   console: false,          // konzole s cheaty (M29)
   toast: null,             // krátké oznámení: { id, text }
+  edgeScroll: edgeScrollOn(), // posun mapy okrajem obrazovky (M59)
   popups: [],              // vyskakovací karty oznámení (M58): { id, kind, icon, tone, title, text, lines, sticky }
 });
 

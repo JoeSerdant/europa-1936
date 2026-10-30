@@ -88,6 +88,7 @@ export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox,
       host.setPointerCapture(e.pointerId);
       const [sx, sy] = pos(e);
       const box = e.button === 0 && e.shiftKey && unitsRef.current ? { x0: sx, y0: sy } : null;
+      if (e.button === 1) e.preventDefault();
       drag = { x: e.clientX, y: e.clientY, moved: 0, button: e.button, box };
       if (!box) host.classList.add('dragging');
     };
@@ -138,7 +139,7 @@ export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox,
           if (pickRef.current) pickRef.current(mc.pick(sx, sy), { shift: e.shiftKey });
         }
       } else if (d.button === 2 && contextRef.current) {
-        contextRef.current(mc.pick(sx, sy));
+        contextRef.current(mc.pick(sx, sy), { shift: e.shiftKey });
       }
     };
     const onLeave = () => {
@@ -184,6 +185,19 @@ export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox,
       if (held.has('up')) dy += v; if (held.has('down')) dy -= v;
       if (dx || dy) mc.pan(dx, dy);
     };
+    // posun okrajem obrazovky (M59): kurzor v úzkém pásu u kraje mapy; vypnutelné v nabídce
+    const EDGE = 4;
+    const edgeLoop = (t) => {
+      edgeRaf = requestAnimationFrame(edgeLoop);
+      const dt = Math.min(50, t - edgeT); edgeT = t;
+      if (!lastPos || drag || !interactiveRef.current || uiStore.getState().edgeScroll === false || uiStore.getState().screen !== 'game') return;
+      const [x, y] = lastPos, w = host.clientWidth, h = host.clientHeight;
+      const v = 0.7 * dt;
+      const dx = x <= EDGE ? v : x >= w - EDGE ? -v : 0, dy = y >= h - EDGE ? -v : 0;
+      if (dx || dy) mc.pan(dx, dy);
+    };
+    let edgeRaf = requestAnimationFrame(edgeLoop), edgeT = 0;
+    host.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
     raf = requestAnimationFrame(loop);
     const KEYS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
     const ZOOM_IN = new Set(['PageUp']), ZOOM_OUT = new Set(['PageDown']);
@@ -206,6 +220,7 @@ export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox,
 
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(edgeRaf);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', onBlur);
