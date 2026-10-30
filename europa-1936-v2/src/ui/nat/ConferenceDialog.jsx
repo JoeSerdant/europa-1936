@@ -3,8 +3,9 @@ import { useGame } from '../store.js';
 import { play } from '../sound.js';
 import { getWorld } from '../../engine/index.js';
 import { Flag } from '../common/Flag.jsx';
-import { playerIdx, conferencePuppet, conferenceAnnex, conferenceSkip, conferenceTake, conferenceTribute } from '../actions.js';
+import { playerIdx, conferencePuppet, conferenceAnnex, conferenceRelease, conferenceSkip, conferenceTake, conferenceTribute } from '../actions.js';
 import { COUNTRIES } from '../../data/countries.js';
+import { RELEASES } from '../../data/dip/releases.js';
 
 /** Mírová konference: po kapitulaci hráčova protivníka rozhodne hráč o jeho zbylých státech. */
 export function ConferenceDialog() {
@@ -25,6 +26,7 @@ export function ConferenceDialog() {
         <div className="conf-opts">
           {(item.g || 'conquest') === 'conquest' && <>
             <button className="btn primary" onClick={() => conferencePuppet(item.id)}><b>Loutkový stát</b><span>Země zůstane, bude plnit vaše války a denně vám dá část lidské síly a politické moci. Později ji můžete anektovat.</span></button>
+            {item.rel ? <button className="btn" onClick={() => conferenceRelease(item.id)}><b>Uvolnit národ: {w.owners[w.ownerIdx[RELEASES[loser.tag].tag]].name}</b><span>Z části států vznikne nová loutka a zbytek anektujete.</span></button> : null}
             <button className="btn" onClick={() => conferenceAnnex(item.id)}><b>Anektovat</b><span>Zbylé státy připadnou vám a země zanikne.</span></button>
           </>}
           {item.g === 'border' && <button className="btn primary" onClick={() => conferenceTake(item.id)}><b>Převzít státy</b><span>Převezmete až 3 nejcennější zbylé státy, země zůstane samostatná.</span></button>}

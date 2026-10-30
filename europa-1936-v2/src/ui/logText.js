@@ -42,6 +42,7 @@ export function logLine(e, me = 0) {
     case 'ult': return { icon: 'dip', tone: e.y ? 'info' : 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} předložila ultimátum zemi ${nm(e.b)} (${DEMAND_BY_ID[e.x]?.n || e.x}): ${e.y ? 'požadavek byl přijat.' : 'požadavek byl odmítnut.'}` };
     case 'ultq': return { icon: 'dip', tone: 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} předložila ultimátum zemi ${nm(e.b)} (${DEMAND_BY_ID[e.x]?.n || e.x}).` };
     case 'civil': return { icon: 'swords', tone: 'bad', world: true, mine: e.o === me || e.x === me, text: e.y ? `V zemi ${nm(e.o)} vypukla občanská válka: povstalci vyhlásili stát ${nm(e.x)}.` : `Od země ${nm(e.o)} se oddělil stát ${nm(e.x)}.` };
+    case 'release': return { icon: 'flag', tone: 'info', world: true, mine: e.o === me || e.y === me, text: `${nm(e.o)} z území poražené země ${nm(e.y)} vytvořila loutkový stát ${nm(e.x)}.` };
     case 'access': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} dovoluje armádám země ${nm(e.b)} průchod svým územím.` };
     case 'accend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} odvolala přístup armádám země ${nm(e.b)}.` };
     case 'garend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} už nezaručuje nezávislost země ${nm(e.b)}.` };

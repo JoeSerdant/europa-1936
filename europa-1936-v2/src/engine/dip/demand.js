@@ -12,6 +12,7 @@ import { DIP } from './constants.js';
 import { campOf, hasCapitulated, sameFaction, setRel } from './core.js';
 import { joiningGuarantors } from './guarantee.js';
 import { annexRump } from './subjects.js';
+import { releaseBlock, releaseNation } from '../civil/index.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 const patch = (state, p) => ({ ...state, dip: { ...state.dip, ...p, ver: state.dip.ver + 1 } });
@@ -100,7 +101,11 @@ const setPol = (state, o, fn) => {
 
 /** Cíl požadavek přijal: území se převede, vztah klesne, vláda cíle ztratí stabilitu, požadující získá podporu války. */
 function grantDemand(state, a, b, spec) {
-  let s = spec.kind === 'annex' ? annexRump(retire(state, b), a, b) : spec.states.length ? cede(state, a, b, spec.states) : state;
+  let s = state;
+  if (spec.kind === 'annex') {
+    if ((DEMAND_BY_ID[spec.id] || {}).release && releaseBlock(s, a, b) === null) s = releaseNation(s, a, b);   // M70: Slovensko vznikne jako loutka žadatele
+    s = annexRump(retire(s, b), a, b);
+  } else if (spec.states.length) s = cede(s, a, b, spec.states);
   s = patch(s, { rel: setRel(s.dip.rel, b, a, DIP.ULT_REL) });
   s = setPol(s, b, (p) => ({ stab: Math.max(0.05, p.stab - DIP.ULT_STAB) }));
   s = setPol(s, a, (p) => ({ ws: Math.min(1, p.ws + DIP.ULT_WS) }));
