@@ -67,3 +67,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 52. Válečné cíle (§ 4zh v `SPEC.md`): nový cíl = položka v `data/dip/wargoals.js` (`opts`) + volba v `subjects.js` (`conf…`) a tlačítko v `ConferenceDialog` + test; cenu a dobu čti vždy z `WARGOALS`, ne z `DIP.JUST_*`.
 53. Národní cíle všech zemí (§ 4zi v `SPEC.md`): nový strom nebo cíl patří do `data/nat/focuses_more.js` (id začíná tagem země), účinky jen z typů v `applyOne`; test v `test/nat.test.js` hlídá strom pro každou zemi.
 54. Oznámení (§ 4zj v `SPEC.md`): nová vyskakovací karta = větev v `ui/popups.js` `popupFor` (+ záznam v `logImportant`) a test v `test/popups.test.js`; karty se vytvářejí jen přes `pushPopup`.
+55. Ovládání (§ 4zk v `SPEC.md`): klávesy jednotek s modifikátory (Alt/Shift + číslice) jsou jen v `useHotkeys`, myš v `MapView`; nový způsob ovládání = řádek v `Help.jsx` + test v `test/controls.test.js`; stav ovládání (skupiny) nepatří do enginu.
