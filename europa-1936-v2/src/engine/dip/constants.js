@@ -1,5 +1,13 @@
 // Vyvážení diplomacie (M23): všechna čísla na jednom místě. Čas ve dnech.
 export const DIP = {
+  ULT_PP: 15,             // ultimátum (M68): cena v politické moci
+  ULT_COOLDOWN: 60,       // dní, po které jedna dvojice nevznese další ultimátum
+  ULT_RATIO: 2,           // přesila, kterou cíl vyžaduje u ultimáta mimo historický seznam
+  ULT_WEAK_STAB: 0.3,     // vláda cíle s nižší stabilitou povolí snáze
+  ULT_WEAK_MULT: 0.7,
+  ULT_REL: -25,           // změna vztahu cíle k požadujícímu po přijetí (po odmítnutí polovina)
+  ULT_STAB: 0.06,         // ztráta stability vlády, která ustoupila
+  ULT_WS: 0.03,           // změna podpory války (požadující při úspěchu, cíl při odmítnutí)
   ACC_PP: 10,             // žádost o vojenský přístup: cena v politické moci (M67)
   ACC_REL: 20,            // nejmenší vztah, při kterém země dovolí cizí armádě průchod (jinak jen se zárukou)
   ACC_REL_GAIN: 5,        // zlepšení vztahu za dohodu o přístupu (odvolání o totéž zhorší)

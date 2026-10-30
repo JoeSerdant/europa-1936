@@ -5,6 +5,7 @@ import { SPY_OPS } from '../data/spy/ops.js';
 import { DOCTRINES } from '../data/doc/doctrines.js';
 import { FOCUS_BY_ID } from '../data/nat/focuses.js';
 import { EVENT_BY_ID } from '../data/nat/events.js';
+import { DEMAND_BY_ID } from '../data/dip/demands.js';
 import { PLANES } from '../data/air/planes.js';
 import { ACE_NAMES } from '../engine/air/constants.js';
 import { EQUIP } from '../data/army/index.js';
@@ -38,6 +39,8 @@ export function logLine(e, me = 0) {
     case 'event': return { icon: 'politics', tone: 'info', world: false, mine: true, text: `Událost: ${EVENT_BY_ID[e.x]?.n || e.x}.` };
     case 'lend': return { icon: 'trade', tone: 'good', world: false, mine: e.a === me || e.b === me, text: `${nm(e.a)} posílá zemi ${nm(e.b)} výzbroj: ${EQUIP[e.x]?.n || e.x} × ${e.y}.` };
     case 'gar': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} zaručuje nezávislost země ${nm(e.b)}.` };
+    case 'ult': return { icon: 'dip', tone: e.y ? 'info' : 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} předložila ultimátum zemi ${nm(e.b)} (${DEMAND_BY_ID[e.x]?.n || e.x}): ${e.y ? 'požadavek byl přijat.' : 'požadavek byl odmítnut.'}` };
+    case 'ultq': return { icon: 'dip', tone: 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} předložila ultimátum zemi ${nm(e.b)} (${DEMAND_BY_ID[e.x]?.n || e.x}).` };
     case 'access': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} dovoluje armádám země ${nm(e.b)} průchod svým územím.` };
     case 'accend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} odvolala přístup armádám země ${nm(e.b)}.` };
     case 'garend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} už nezaručuje nezávislost země ${nm(e.b)}.` };

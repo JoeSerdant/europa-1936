@@ -1,10 +1,16 @@
 // Historické události (M44): příběhové události velmocí a sousedů ve stylu doby. Vlastní texty bez skutečných osob. Tvar jako v events.js.
+import { HIST_DEMANDS } from '../dip/demands.js';
 const E = (id, n, text, cond, opts, extra = {}) => ({ id, n, text, cond, opts, mtth: 1, cool: 0, ...extra });
 const stab = (v) => ({ t: 'stab', v });
 const ws = (v) => ({ t: 'ws', v });
 const pp = (v) => ({ t: 'pp', v });
 const flag = (id) => ({ t: 'flag', id });
 const fac = (k, n = 1) => ({ t: 'factory', k, n });
+
+const ULT_TEXT = {
+  annex: 'Mocný soused předložil ultimátum: vaše země se má vzdát samostatnosti a připojit se k němu. Jeho armády stojí u hranic a jeho vláda je rozhodnutá. Odmítnutí znamená válku.',
+  cede: 'Mocný soused předložil ultimátum: požaduje odstoupení pohraničního území. Jeho armády stojí u hranic a jeho vláda je rozhodnutá. Odmítnutí znamená válku.',
+};
 
 export const HIST_EVENTS = [
   // ---- Německo ----
@@ -100,4 +106,11 @@ export const HIST_EVENTS = [
     { n: 'Zahájit sbírku.', fx: [pp(45), { t: 'factory', k: 'mil', n: 1 }, stab(-0.02)], ai: 2 },
     { n: 'Vyhnout se dalšímu zatížení.', fx: [stab(0.02)], ai: 1 },
   ], { mtth: 220, cool: 300 }),
+
+  // ---- ultimáta (M68): událost vznikne jen naplánováním z `dip/demand.js`, když požadavek směřuje na hráče ----
+  ...HIST_DEMANDS.map((d) => E(`ult_${d.id}`, `Ultimátum: ${d.n}`, ULT_TEXT[d.kind], { from: 999999 }, [
+    { n: d.kind === 'annex' ? 'Přijmout a odevzdat zemi.' : 'Přijmout požadavek a odevzdat území.', fx: [{ t: 'ult', id: d.id, ok: 1 }], ai: 1 },
+    { n: 'Odmítnout; hrozí válka.', fx: [{ t: 'ult', id: d.id, ok: 0 }], ai: 0 },
+  ], { cool: 99999 })),
 ];
+

@@ -8,6 +8,8 @@ const MOD = { stab: 'stabilita', ws: 'podpora války', cons: 'spotřební zbož�
 const sign = (v) => (v > 0 ? '+' : '−');
 const pct = (v) => `${sign(v)}${Math.round(Math.abs(v) * 1000) / 10} %`;
 
+const e_ult = (fx) => (fx.ok ? 'Požadavek se přijímá, území se odevzdá.' : 'Požadavek se odmítá, hrozí válka.');
+
 export function fxText(fx) {
   switch (fx.t) {
     case 'pp': return `Politická moc ${fx.v > 0 ? '+' : '−'}${Math.abs(fx.v)}`;
@@ -23,6 +25,7 @@ export function fxText(fx) {
     case 'man': return `Lidská síla +${Math.round(fx.v * 1000) / 10} % obyvatel`;
     case 'stock': return `${EQUIP[fx.eq].n} +${fx.n}`;
     case 'xp': return `Zkušenosti (${{ land: 'armáda', air: 'letectvo', sea: 'námořnictvo' }[fx.b]}) +${fx.n}`;
+    case 'ult': return e_ult(fx);
     case 'flag': return null;
     case 'event': return null;
     default: return null;

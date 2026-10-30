@@ -37,6 +37,9 @@ export function popupFor(e, me) {
       return null;
     case 'cap':
       return e.o === me ? { kind: 'cap', icon: 'flag', tone: 'bad', title: 'Kapitulace', text: 'Vaše země kapitulovala.', lines: [], sticky: true } : { kind: 'cap', icon: 'flag', tone: 'info', title: 'Kapitulace', text: `${nm(e.o)} kapitulovala.`, lines: [] };
+    case 'ult':
+      if (e.a === me) return { kind: 'ult', icon: 'dip', tone: e.y ? 'good' : 'bad', title: e.y ? 'Ultimátum přijato' : 'Ultimátum odmítnuto', text: e.y ? `${nm(e.b)} ustoupila vašemu požadavku.` : `${nm(e.b)} odmítla váš požadavek. Máte hotové ospravedlnění války.`, lines: [], sticky: !e.y };
+      return null;
     case 'free': return { kind: 'free', icon: 'flag', tone: 'info', title: 'Loutka se osamostatnila', text: `${nm(e.x)} už není loutkou země ${nm(e.o)}.`, lines: [] };
     default: return null;
   }
