@@ -41,3 +41,26 @@ export function toggleSupport(draft, type) {
 }
 
 export const setName = (draft, nm) => (draft.nm === nm ? draft : { ...copy(draft), nm });
+
+/** Odhad výrobních nákladů jedné divize: součet výrobních bodů výzbroje podle `need` (kusů na divizi). */
+export function prodCost(stats, prod) {
+  let c = 0;
+  for (const e in stats.need) c += (stats.need[e] || 0) * (prod[e] ? prod[e].cost : 0);
+  return c;
+}
+
+/** Rozdíly návrhu proti uložené šabloně: [{ k, name, delta, better }] jen pro změněné údaje (kladné `better` = zlepšení). */
+export function compareStats(draft, saved, prod) {
+  const rows = [
+    ['hp', 'Síla', 1], ['org', 'Organizace', 1], ['soft', 'Měkký útok', 1], ['hard', 'Tvrdý útok', 1], ['def', 'Obrana', 1], ['brk', 'Průraz', 1],
+    ['armor', 'Pancíř', 1], ['speed', 'Rychlost', 1], ['width', 'Šířka', 0], ['men', 'Lidská síla', -1], ['sup', 'Zásoby za hodinu', -1], ['days', 'Výcvik', -1],
+  ];
+  const out = [];
+  for (const [k, name, sign] of rows) {
+    const d = (draft[k] || 0) - (saved[k] || 0);
+    if (Math.abs(d) > 1e-6) out.push({ k, name, delta: d, better: sign * d > 0 ? 1 : sign === 0 ? 0 : -1 });
+  }
+  const dc = prodCost(draft, prod) - prodCost(saved, prod);
+  if (Math.abs(dc) > 1e-6) out.push({ k: 'cost', name: 'Výrobní náklady', delta: dc, better: dc < 0 ? 1 : -1 });
+  return out;
+}

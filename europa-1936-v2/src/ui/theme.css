@@ -418,3 +418,11 @@ kbd {
 .bt-units li.front { box-shadow: inset 3px 0 0 var(--brass); }
 .bt-units .meters { display: flex; flex-direction: column; gap: 2px; }
 .prov-battle .kv { margin-bottom: 6px; }
+
+/* Návrhář divizí: náklady a srovnání (M64) */
+.dz-prodcost { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
+.dz-prodcost b { color: var(--brass-hi); }
+.dz-diff { display: flex; flex-wrap: wrap; gap: 4px 6px; list-style: none; margin: 6px 0 0; padding: 0; font-size: 12.5px; }
+.dz-diff li { padding: 1px 7px; background: var(--ink-3); color: var(--text-2); }
+.dz-diff li.up { color: #8fd36a; }
+.dz-diff li.down { color: #e8715a; }
