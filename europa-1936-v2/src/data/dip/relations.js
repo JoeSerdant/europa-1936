@@ -19,6 +19,7 @@ export const PAIR_REL = [
   ['POL', 'SOV', -20], ['POL', 'LIT', -40], ['POL', 'LAT', 10], ['POL', 'ROM', 20],
   ['LAT', 'EST', 40], ['LAT', 'LIT', 30], ['EST', 'LIT', 30], ['EST', 'FIN', 30], ['SOV', 'FIN', -20], ['SOV', 'LAT', -10], ['SOV', 'EST', -10],
   ['NSP', 'GER', 50], ['NSP', 'ITA', 50], ['NSP', 'SOV', -50], ['NSP', 'ENG', -10], ['NSP', 'FRA', -20], ['NSP', 'POR', 30], ['SPR', 'SOV', 25], ['SPR', 'GER', -40], ['SPR', 'ITA', -40],
+  ['SLO', 'GER', 40], ['SLO', 'CZE', -30], ['SLO', 'POL', -20], ['CRO', 'GER', 30], ['CRO', 'ITA', 30], ['CRO', 'YUG', -40], ['VIC', 'GER', -10], ['VIC', 'ENG', -30],
   ['SWE', 'NOR', 40], ['SWE', 'DEN', 40], ['SWE', 'FIN', 30], ['NOR', 'DEN', 40],
   ['SPR', 'POR', -10], ['SAU', 'IRQ', 10], ['EGY', 'ENG', 10], ['IRQ', 'ENG', 20], ['PER', 'SOV', -10], ['PER', 'ENG', -10], ['PER', 'TUR', 20], ['PER', 'IRQ', 10], ['TUR', 'IRQ', 10],
 ];

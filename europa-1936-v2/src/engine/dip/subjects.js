@@ -8,6 +8,7 @@ import { COUNTRIES } from '../../data/countries.js';
 import { logAdd } from '../log.js';
 import { WARGOALS } from '../../data/dip/wargoals.js';
 import { setRel } from './core.js';
+import { releaseBlock, releaseNation } from '../civil/index.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 const tagOf = (o) => getWorld().owners[o].tag;
@@ -113,7 +114,11 @@ export function conference(state, loser, by) {
   const w = getWorld(), player = state.player ? w.ownerIdx[state.player] : 0;
   if (victor === player) {
     const id = state.dip.conf.reduce((a, c) => Math.max(a, c.id), 0) + 1;
-    return patch(state, { conf: [...state.dip.conf, { id, loser, victor, g: state.dip.goal[`${victor}>${loser}`] || 'conquest' }] });
+    return patch(state, { conf: [...state.dip.conf, { id, loser, victor, g: state.dip.goal[`${victor}>${loser}`] || 'conquest', rel: releaseBlock(state, victor, loser) === null ? 1 : 0 }] });
+  }
+  if (releaseBlock(state, victor, loser) === null) {   // M70: AI vítěz z poražené země uvolní národ (Vichy, Slovensko, Chorvatsko) jako svou loutku
+    state = releaseNation(state, victor, loser);
+    if (!statesOf(state, loser).length) return state;
   }
   const tier = COUNTRIES[tagOf(loser)]?.tier ?? 3;
   return statesOf(state, loser).length >= 3 || tier <= 2 ? makePuppet(state, victor, loser) : annexRump(state, victor, loser);
@@ -126,6 +131,15 @@ export function confPuppet(state, id) {
   if (!c) return state;
   if (c.g && c.g !== 'conquest') return state;
   const n = makePuppet(state, c.victor, c.loser);
+  return patch(n, { conf: without(n, id) });
+}
+/** Uvolnění národu: z poražené země vznikne loutka vítěze (Vichy, Slovensko, Chorvatsko), zbytek vítěz anektuje. */
+export function confRelease(state, id) {
+  const c = confOf(state, id);
+  if (!c || (c.g && c.g !== 'conquest')) return state;
+  let n = releaseNation(state, c.victor, c.loser);
+  if (n === state) return state;
+  if (statesOf(n, c.loser).length) n = annexRump(n, c.victor, c.loser);
   return patch(n, { conf: without(n, id) });
 }
 export function confAnnex(state, id) {

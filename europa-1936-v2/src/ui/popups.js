@@ -40,6 +40,8 @@ export function popupFor(e, me) {
     case 'civil':
       if (e.o === me) return { kind: 'civil', icon: 'swords', tone: 'bad', title: 'Občanská válka', text: `Část armády a území se postavily proti vládě. Povstalci vyhlásili stát ${nm(e.x)}.`, lines: ['Mír nelze uzavřít – rozhodne se na bojišti.'], sticky: true };
       return null;
+    case 'release':
+      return e.y === me ? { kind: 'release', icon: 'flag', tone: 'bad', title: 'Vznik nového státu', text: `${nm(e.o)} z vašich států vytvořila loutku ${nm(e.x)}.`, lines: [], sticky: true } : null;
     case 'ult':
       if (e.a === me) return { kind: 'ult', icon: 'dip', tone: e.y ? 'good' : 'bad', title: e.y ? 'Ultimátum přijato' : 'Ultimátum odmítnuto', text: e.y ? `${nm(e.b)} ustoupila vašemu požadavku.` : `${nm(e.b)} odmítla váš požadavek. Máte hotové ospravedlnění války.`, lines: [], sticky: !e.y };
       return null;
