@@ -108,6 +108,33 @@ export const battlesOf = (game) => game.mil.battles.map((b) => ({ id: b.id, p: b
 import { buildAirMarks, drawAirBadge, MISSION_COLOR } from './air.js';
 import { buildFleetTokens, buildFleetRoutes, drawFleetToken, FLEET } from './fleets.js';
 
+/** Zakřivený šíp útoku (M63): obrys, tělo a hrot; konec se zkrátí, aby hrot nezakryl střed provincie. Souřadnice ve světě, `px` = 1 / zoom. */
+export function drawAttackArrow(ctx, fx, fy, tx, ty, w, px, color) {
+  const dx = tx - fx, dy = ty - fy, len = Math.hypot(dx, dy);
+  if (len < 1e-6) return;
+  const ux = dx / len, uy = dy / len;
+  const head = Math.min(len * 0.45, w * 4.2);
+  const ex = tx - ux * Math.min(len * 0.3, w * 1.6), ey = ty - uy * Math.min(len * 0.3, w * 1.6);   // špička šípu
+  const bend = len * 0.12;
+  const cx = (fx + ex) / 2 - uy * bend, cy = (fy + ey) / 2 + ux * bend;
+  // směr na konci křivky (z řídicího bodu ke špičce)
+  const hx = ex - cx, hy = ey - cy, hl = Math.hypot(hx, hy) || 1, hux = hx / hl, huy = hy / hl;
+  const bx = ex - hux * head, by = ey - huy * head;   // začátek hrotu
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const pass of [0, 1]) {
+    ctx.strokeStyle = ctx.fillStyle = pass === 0 ? 'rgba(6,10,14,0.85)' : color;
+    const grow = pass === 0 ? 2.2 * px : 0;
+    ctx.lineWidth = w + grow * 2;
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(cx, cy, bx, by); ctx.stroke();
+    const hw = w * 1.55 + grow;
+    ctx.beginPath();
+    ctx.moveTo(ex + hux * grow, ey + huy * grow);
+    ctx.lineTo(bx - huy * hw, by + hux * hw);
+    ctx.lineTo(bx + huy * hw, by - hux * hw);
+    ctx.closePath(); ctx.fill();
+  }
+}
+
 export class UnitLayer {
   constructor(world) {
     this.world = world;
@@ -248,14 +275,8 @@ export class UnitLayer {
     for (const b of this.battles) {
       const tx = g.cx[b.p], ty = g.cy[b.p];
       if (tx < vx0 - 40 || tx > vx1 + 40 || ty < vy0 - 40 || ty > vy1 + 40) continue;
-      ctx.fillStyle = '#ff5a38';
-      for (const f of b.from) {
-        const fx = g.cx[f], fy = g.cy[f];
-        ctx.lineWidth = 6 * px; ctx.strokeStyle = 'rgba(6,10,14,0.8)';
-        ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty); ctx.stroke();
-        ctx.lineWidth = 3.4 * px; ctx.strokeStyle = '#ff5a38';
-        ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty); ctx.stroke();
-      }
+      const w = (3.2 + 1.6 * Math.sqrt(b.att / Math.max(1, b.from.length))) * px;   // šířka šípu roste s počtem útočících divizí na směr
+      for (const f of b.from) drawAttackArrow(ctx, g.cx[f], g.cy[f], tx, ty, w, px, '#ff5a38');
     }
 
     if (route && route.nodes && route.nodes.length > 1) {
@@ -311,6 +332,7 @@ export class UnitLayer {
     const list = this.clustered(cam.zoom);
     const g = this.g;
     // značky bitev
+    this.battleHits = [];
     for (const b of this.battles) {
       const bx = g.cx[b.p], by = g.cy[b.p];
       if (bx < vx0 - mx || bx > vx1 + mx || by < vy0 - my || by > vy1 + my) continue;
@@ -366,6 +388,8 @@ export class UnitLayer {
 
   drawBattleMark(ctx, sx, sy, s, b) {
     const r = 9 * Math.max(0.8, s);
+    const cy0 = sy - COUNTER.H * s * 0.95 - r * 0.2;
+    this.battleHits.push({ x0: sx - r - 3, x1: sx + r + 3, y0: cy0 - r - 3, y1: cy0 + r + 8, id: b.id });
     ctx.save();
     ctx.translate(sx, sy - COUNTER.H * s * 0.95 - r * 0.2);
     ctx.fillStyle = 'rgba(20,6,4,0.88)'; ctx.strokeStyle = '#ff6a47'; ctx.lineWidth = 2;
@@ -378,6 +402,13 @@ export class UnitLayer {
     ctx.fillStyle = '#4c9ae0'; ctx.fillRect(-bw / 2, r + 3, bw, bh);
     ctx.fillStyle = '#ff6a47'; ctx.fillRect(-bw / 2, r + 3, bw * clamp(b.adv, 0, 1), bh);
     ctx.restore();
+  }
+
+  /** Id bitvy, jejíž značka je pod bodem obrazovky, nebo 0 (M63). */
+  pickBattle(sx, sy) {
+    const hs = this.battleHits || [];
+    for (let i = hs.length - 1; i >= 0; i--) { const h = hs[i]; if (sx >= h.x0 && sx <= h.x1 && sy >= h.y0 && sy <= h.y1) return h.id; }
+    return 0;
   }
 
   /** Žeton flotily pod bodem obrazovky, nebo null. */

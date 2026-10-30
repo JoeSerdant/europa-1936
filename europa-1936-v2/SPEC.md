@@ -616,6 +616,10 @@ Selektor `battleView(state, id)` (`engine/army/selectors.js`) vrací provincii, 
 
 Okno Letectvo má nad seznamem křídel filtr: dlaždice podle typu letounu (součet v křídlech i v rezervě, počet křídel; klik filtruje, druhý klik ruší) a tlačítka misí (Všechny, Na základně, Hlídky, Podpora boje, Bombardování). Nadpis seznamu ukazuje zobrazená z celkového počtu křídel. Jen rozhraní, bez změny stavu.
 
+## 4zo. Šípy útoku a klikací bitvy (M63)
+
+Bitvy na mapě se kreslí zakřivenými šípy útoku (`drawAttackArrow` v `ui/map/units.js`): obrys, tělo a hrot, zkrácené před středem provincie; šířka roste s počtem útočících divizí na jeden směr. Značka bitvy je klikací (`UnitLayer.pickBattle`, `mapController.pickBattle`, `MapView` prop `onBattle`) a otevře okno bitvy (M61). Kreslení zůstává ve vrstvě jednotek (pravidlo 13), bez změny stavu. Test: `test/attackarrow.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -819,6 +823,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M60** | **Strom výzkumu jako časová osa**: horizontální časová osa s čárami návazností a podrobnostmi po najetí | **hotovo** |
 | **M61** | **Okno bitvy**: okno s oběma stranami, veliteli, divizemi (fronta / záloha) a pruhem převahy | **hotovo** |
 | **M62** | **Filtr letectva**: filtr křídel podle typu a mise se souhrnem letadel | **hotovo** |
+| **M63** | **Šípy útoku a klikací bitvy**: zakřivené šípy útoku s hrotem a klik na značku bitvy otevře okno bitvy | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

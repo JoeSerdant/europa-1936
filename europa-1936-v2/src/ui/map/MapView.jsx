@@ -12,7 +12,7 @@ const sameIds = (a, b) => (a === b) || (!!a && !!b && a.length === b.length && a
  * `interactive` = posun/zoom/výběr; `onPick(label, mods)` se volá při kliknutí na mapu, `onCounter(counter, mods)` na žeton,
  * `onFleet(žeton flotily, mods)` na námořní žeton, `onBox(ids, mods)` po výběru obdélníkem, `onContext(label)` při kliknutí pravým tlačítkem.
  */
-export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox, onContext, units = false, cursor = 'grab' }) {
+export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox, onContext, onBattle, units = false, cursor = 'grab' }) {
   const canvasRef = useRef(null);
   const hostRef = useRef(null);
   const boxRef = useRef(null);
@@ -24,6 +24,8 @@ export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox,
   fleetRef.current = onFleet;
   const boxCbRef = useRef(onBox);
   boxCbRef.current = onBox;
+  const battleRef = useRef(onBattle);
+  battleRef.current = onBattle;
   const contextRef = useRef(onContext);
   contextRef.current = onContext;
   const interactiveRef = useRef(interactive);
@@ -127,7 +129,10 @@ export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox,
       if (d.button === 0) {
         const c = unitsRef.current ? mc.pickCounter(sx, sy) : null;
         const ft = !c && unitsRef.current && fleetRef.current ? mc.pickFleet(sx, sy) : null;
-        if (ft) {
+        const bt = !c && !ft && unitsRef.current && battleRef.current ? mc.pickBattle(sx, sy) : 0;
+        if (bt) {
+          battleRef.current(bt);
+        } else if (ft) {
           fleetRef.current(ft, { shift: e.shiftKey });
         } else if (c && counterRef.current) {
           const now = performance.now();
