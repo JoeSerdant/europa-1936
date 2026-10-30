@@ -604,6 +604,10 @@ Upozornění (`engine/alerts.js`) mají `n` (počet) a `lines` (podrobnosti) a p
 
 Ovládání mapy a jednotek podle HOI4 (jen mechanika, vlastní kód): **fronta rozkazů** – Shift + pravé tlačítko připojí další bod trasy za dosavadní rozkaz (`orderMove(state, ids, prov, append)`: `findPath` z posledního bodu cesty; `contextClick(label, { shift })`); **skupiny jednotek** – Alt + 1–9 uloží vybrané divize, Shift + 1–9 je vyvolá, druhé stisknutí do 0,6 s zaměří kameru (`saveUnitGroup`/`recallUnitGroup` v `ui/actions.js`, skupiny žijí jen v rozhraní a vyřazené divize ze skupiny vypadnou); **posun mapy** – střední tlačítko (tažení jakýmkoli tlačítkem posouvá) a okraj obrazovky (kurzor v pásu 4 px u levého, pravého a dolního okraje mapy; volba „Posun okrajem“ v nabídce, uložená v `localStorage` přes `ui/edge.js`). Nápověda (F1) je doplněna. Mapové režimy zůstávají na číslicích bez modifikátorů. Test: `test/controls.test.js`.
 
+## 4zl. Strom výzkumu jako časová osa (M60)
+
+Okno Výzkum kreslí každý obor jako časovou osu (`ui/research/ResearchPanel.jsx`, rozložení v čisté funkci `ui/research/layout.js`): sloupec = rok technologie (1936–1943, lepicí pásek s roky nahoře), dráha = větev (technologie zdědí dráhu prvního předpokladu, je-li ve sloupci volná). Nodes jsou kompaktní karty (název, stav, tlačítko Zkoumat, ukazatel postupu), podrobnosti (účinky, odemykané jednotky, předstih, sdílení, chybějící předpoklady) se ukážou po najetí. Ortogonální čáry vedou od předpokladu k technologii a barvou rozlišují hotové a probíhající větve. Bez změny stavu. Test: `test/techtimeline.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -804,6 +808,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M57** | **Národní cíle všech zemí**: vlastní stromy cílů pro všech 35 zemí, rozšíření velmocí o letectvo, námořnictvo a zpravodajství | **hotovo** |
 | **M58** | **Oznámení a vyskakovací okna**: upozornění jako ikony s tooltipem a vyskakovací karty (cíl splněn, výzkum, stavba, válka) | **hotovo** |
 | **M59** | **Ovládání ve stylu HOI4**: fronta rozkazů, skupiny jednotek, posun středním tlačítkem a okrajem obrazovky | **hotovo** |
+| **M60** | **Strom výzkumu jako časová osa**: horizontální časová osa s čárami návazností a podrobnostmi po najetí | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
