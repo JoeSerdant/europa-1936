@@ -3,7 +3,7 @@ import { getWorld } from '../world.js';
 import { NATIONAL } from '../../data/army/national.js';
 import { TPL_KINDS, TPL_KIND_IDS } from '../../data/army/templates.js';
 import { COUNTRIES } from '../../data/countries.js';
-import { rearmFactor } from '../../data/ai/rearm.js';
+import { rearmFactor, DYN_DIVS } from '../../data/ai/rearm.js';
 import { countryStats } from '../selectors.js';
 import { deriveStats } from '../army/stats.js';
 import { C as ARMY } from '../army/constants.js';
@@ -31,7 +31,8 @@ export function scanArmies(state) {
   return out;
 }
 
-const initialDivs = (tag) => Object.values(NATIONAL[tag]?.divs || {}).reduce((a, b) => a + b, 0);
+const divsOf = (tag) => NATIONAL[tag]?.divs || DYN_DIVS[tag] || {};
+const initialDivs = (tag) => Object.values(divsOf(tag)).reduce((a, b) => a + b, 0);
 
 const basePop = new WeakMap();   // svět → počet obyvatel zemí podle počátečního vlastnictví
 function startPop(o) {
@@ -62,7 +63,7 @@ export function targetDivs(state, o) {
 /** Žádané složení armády podle druhů šablon (podíly, součet 1): výchozí sestava země, velmoci a regionální mocnosti se postupně motorizují. */
 export function desiredMix(state, o) {
   const tag = getWorld().owners[o].tag;
-  const base = NATIONAL[tag]?.divs || {};
+  const base = divsOf(tag);
   const total = Object.values(base).reduce((a, b) => a + b, 0) || 1;
   const mix = {};
   for (const k in base) mix[k] = base[k] / total;

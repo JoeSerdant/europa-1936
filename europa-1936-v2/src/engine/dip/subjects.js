@@ -109,6 +109,7 @@ export function conference(state, loser, by) {
   let victor = 0, best = 0;
   for (const k of Object.keys(by).map(Number).sort((a, b) => a - b)) if (by[k] > best) { best = by[k]; victor = k; }
   if (!victor || !statesOf(state, loser).length || state.dip.cap[victor]) return state;
+  if (state.dip.goal[`${victor}>${loser}`] === 'civil' || state.dip.goal[`${loser}>${victor}`] === 'civil') return annexRump(state, victor, loser);   // M69: občanskou válku vítěz dokončí sjednocením
   const w = getWorld(), player = state.player ? w.ownerIdx[state.player] : 0;
   if (victor === player) {
     const id = state.dip.conf.reduce((a, c) => Math.max(a, c.id), 0) + 1;

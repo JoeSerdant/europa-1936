@@ -64,4 +64,6 @@ export function warScore(state, a, b) {
 }
 
 export const hasCapitulated = (state, o) => !!state.dip.cap[o];
+/** Rezervní země (M69), která ještě nevznikla nebo zanikla: nemá se ukazovat v seznamech ani nic dělat. */
+export const isDormant = (state, o) => !!getWorld().owners[o].dyn && !!state.dip.cap[o];
 export { enemiesOf, atWar };

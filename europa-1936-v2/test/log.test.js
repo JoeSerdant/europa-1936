@@ -75,7 +75,7 @@ describe('zápisy ze systémů', () => {
   });
   it('pozorovatel nemá osobní záznamy, jen světové', () => {
     const o = day(createGame({ player: null, aiLevel: 2 }), 200);
-    expect(o.log.items.every((e) => ['war', 'peace', 'cap', 'faction', 'join'].includes(e.k))).toBe(true);
+    expect(o.log.items.every((e) => ['war', 'peace', 'cap', 'faction', 'join', 'civil', 'lend'].includes(e.k))).toBe(true);   // španělská občanská válka a pomoc stranám (M69) jsou světové události
   });
   it('stav s deníkem pokračuje deterministicky a zůstává čistý JSON', () => {
     const s = startFocus(s0, GER, 'ger_plan');
@@ -114,7 +114,7 @@ describe('přehled zemí', () => {
   it('seřazeno podle vítězných bodů, každá země jednou, příznaky hráče, války a kapitulace', () => {
     const s = createGame({ player: 'GER' });
     const t = countryTable(s);
-    expect(t).toHaveLength(W.owners.length - 1);
+    expect(t).toHaveLength(W.owners.filter((o) => o && !o.dyn).length);   // rezervní země se nevypisují, dokud nevzniknou
     for (let i = 1; i < t.length; i++) expect(t[i - 1].vp).toBeGreaterThanOrEqual(t[i].vp);
     expect(new Set(t.map((r) => r.o)).size).toBe(t.length);
     expect(t.find((r) => r.tag === 'GER')).toMatchObject({ player: true, war: false, cap: false, faction: null });

@@ -39,7 +39,7 @@ describe('data a začátek', () => {
     expect(sameFaction(s, ROM, YUG)).toBe(true);
     expect(sameFaction(s, ROM, GER)).toBe(false);
     expect(campOf(s, GER)).toEqual([GER]);
-    expect(s.dip.cap.every((x) => x === 0)).toBe(true);
+    expect(s.dip.cap.every((x, o) => x === (o && W.owners[o].dyn ? 1 : 0))).toBe(true);   // kapitulovaná je jen rezervní (zatím neexistující) země
   });
   it('vztahy: symetrické, v mezích, historické úpravy a ideologie', () => {
     expect(relOf(s, FRA, ENG)).toBe(relOf(s, ENG, FRA));
@@ -208,7 +208,7 @@ describe('přehled a determinismus', () => {
   const s0 = createGame({ player: 'GER' });
   it('diplomacyOf: všechny ostatní země se stavem a důvody', () => {
     const d = diplomacyOf(s0, 'GER');
-    expect(d.list).toHaveLength(W.owners.length - 2);
+    expect(d.list).toHaveLength(W.owners.filter((o) => o && !o.dyn).length - 1);   // bez rezervních zemí, které ještě nevznikly
     expect(d.faction).toBeNull();
     expect(d.canFound).toBe(false);
     const pol = d.list.find((x) => x.o === POL);

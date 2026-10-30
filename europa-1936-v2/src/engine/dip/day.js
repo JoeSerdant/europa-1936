@@ -1,19 +1,25 @@
 // Denní krok diplomacie (M23): kapitulace zemí, zapomínání změn vztahů v míru, vypršení ospravedlnění.
 import { getWorld } from '../world.js';
-import { hasWar } from '../army/war.js';
+import { hasWar, enemiesOf } from '../army/war.js';
 import { DIP } from './constants.js';
 import { vpHeld } from './core.js';
 import { capitulate } from './capitulate.js';
 import { subjectsDay } from './subjects.js';
 import { accessDay } from './access.js';
+import { civilDay, isCivilWar } from '../civil/index.js';
 
 export function dipDay(state) {
   const w = getWorld();
+  state = civilDay(state);   // M69: historické občanské války
   state = subjectsDay(state);
   // kapitulace
   for (let o = 1; o < w.owners.length; o++) {
     if (state.dip.cap[o] || !hasWar(state.mil, o)) continue;
     const h = vpHeld(state, o);
+    if (enemiesOf(state.mil, o).some((e) => isCivilWar(state, o, e))) {   // M69: občanskou válku neukončí pád hlavního města, až držení většiny země
+      if (h.total && h.share >= DIP.CIVIL_CAP_SHARE) state = capitulate(state, o);
+      continue;
+    }
     if (h.total && (h.share >= DIP.CAP_SHARE || (h.capHeld && h.share >= DIP.CAP_CAPITAL_SHARE))) state = capitulate(state, o);
   }
   // vypršelá ospravedlnění

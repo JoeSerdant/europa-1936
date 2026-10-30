@@ -25,7 +25,7 @@ describe('svět: počty a struktura', () => {
     expect(W.L).toBeGreaterThan(2500);
     expect(W.S).toBeGreaterThan(300);
     expect(W.states.length - 1).toBeGreaterThan(400);
-    expect(W.owners.length - 1).toBe(35);
+    expect(W.owners.filter((o) => o && !o.dyn).length).toBe(35);   // země ze souboru; rezervní země (M69) přibývají za nimi
     expect(W.nLabel).toBe(1 + W.L + W.S + W.K);
   });
   it('každá pevninská provincie má jméno, stát téhož vlastníka a kladnou plochu', () => {
@@ -55,7 +55,7 @@ describe('svět: počty a struktura', () => {
     for (let i = 1; i < W.owners.length; i++) {
       const o = W.owners[i];
       expect(o.cap, o.tag).toBeGreaterThan(0);
-      expect(W.provOwner0[o.cap], o.tag).toBe(i);
+      if (!o.dyn) expect(W.provOwner0[o.cap], o.tag).toBe(i);   // rezervní země nemá na začátku žádné území (hlavní město je v cizí zemi)
     }
   });
   it('počty obyvatel dávají smysl', () => {

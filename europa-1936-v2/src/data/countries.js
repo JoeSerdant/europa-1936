@@ -193,6 +193,27 @@ export const COUNTRIES = {
     blurb: 'Pouštní království s rostoucím významem ropy. Slabá armáda a vzdálenosti jsou jeho ochranou.',
     flag: [['r', '#006c35', 0, 0, 30, 20], ['r', '#f2f2f2', 6, 6, 18, 1.4], ['r', '#f2f2f2', 8, 9, 14, 1.4], ['r', '#f2f2f2', 6, 14, 18, 1]],
   },
+  // ---- rezervní země (M69): nemají žádné státy, dokud nevzniknou za hry (občanská válka, uvolnění národů); ve výběru země se nenabízejí ----
+  NSP: {
+    dyn: true, leader: 'Francisco Franco', government: 'Vojenské povstání', ideology: 'fascism', tier: 2, diff: 4,
+    blurb: 'Povstalecká část španělské armády a konzervativní venkov. Tvrdé vedení, podpora z Berlína a Říma a boj o každé město.',
+    flag: [['r', '#b3342e', 0, 0, 30, 5], ['r', '#e5b73b', 0, 5, 30, 10], ['r', '#b3342e', 0, 15, 30, 5]],
+  },
+  VIC: {
+    dyn: true, leader: 'Philippe Pétain', government: 'Autoritářský stát', ideology: 'neutrality', tier: 2, diff: 5,
+    blurb: 'Zbytek poražené Francie bez okupované severní poloviny. Opatrná spolupráce s vítězem a tichý odpor na venkově.',
+    flag: V3('#46629a', '#e8e6df', '#b8504f'),
+  },
+  SLO: {
+    dyn: true, leader: 'Jozef Tiso', government: 'Klerikální stát', ideology: 'fascism', tier: 3, diff: 5,
+    blurb: 'Malý stát na horním Dunaji, který vznikl z rozpadu většího souseda a žije z přízně silného patrona.',
+    flag: H3('#f2f2f2', '#0b4ea2', '#ee1c25'),
+  },
+  CRO: {
+    dyn: true, leader: 'Ante Pavelić', government: 'Autoritářský stát', ideology: 'fascism', tier: 3, diff: 5,
+    blurb: 'Nově vzniklý stát na troskách Jugoslávie. Slabá správa, vnitřní spory a závislost na patronech.',
+    flag: H3('#c8102e', '#f2f2f2', '#1f4fa0'),
+  },
   OMA: {
     leader: 'Said bin Taimur', government: 'Sultanát', ideology: 'neutrality', tier: 3, diff: 4,
     blurb: 'Sultanát na kraji Arábie v dlouhé závislosti na Británii. Pobřeží, hory a především klid.',
