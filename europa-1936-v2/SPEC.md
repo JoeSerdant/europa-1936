@@ -624,6 +624,10 @@ Bitvy na mapě se kreslí zakřivenými šípy útoku (`drawAttackArrow` v `ui/m
 
 Návrhář šablon (`ui/army/TemplateDesigner.jsx`) ukazuje odhad výrobních nákladů jedné divize (`prodCost`: součet `EQUIP_PROD.cost` × kusů výzbroje na divizi) a při úpravě existující šablony seznam změn proti uložené verzi (`compareStats`: síla, organizace, útok, obrana, průraz, pancíř, rychlost, šířka, lidská síla, zásoby, výcvik, náklady; zelená = zlepšení, červená = zhoršení). Čisté funkce jsou v `ui/army/designer.js`. Bez změny stavu. Test: `test/designer-compare.test.js`.
 
+## 4zq. Zbrojení AI (M65)
+
+Cílový počet divizí AI země (`ai/army.js targetDivs`) už není pevný vzorec, ale historická křivka zbrojení (`data/ai/rearm.js`): násobek počtu divizí z ledna 1936 (`REARM`: GER 2,4, ENG 2,5, SOV 2,0, ITA 1,35 …, ostatní 1,25), který se do září 1939 (den 1340) dosáhne po křivce `REARM_CURVE` (pomalu, před válkou rychle) a potom roste dál o 12 % ročně; násobí se změnou velikosti země (`sizeFactor` = (obyvatelé / počáteční obyvatelé)^0,75, 0,35–2,5, tedy země, která vzrostla, zbrojí víc), válkou a obtížností. Nábor vybírá druh šablony s největším schodkem proti žádanému složení (`desiredMix`: sestava země, velmoci se časem motorizují o `AI.MOTOR_SHIFT`; `tplOfKind` mapuje druhy na šablony země) a zkouší je od největšího schodku, dokud se některou nepodaří vyzbrojit a obsadit; počet divizí ve výcviku roste s cílem (`AI.TRAIN_DIV`). Výroba AI se rozděluje podle potřeby (`ai/industry.js demandSplit`): výrobní body úměrné tomu, kolik výzbroje žádané složení potřebuje na jednu divizi (kusy × cena), upravené podle zásoby (hodně ve skladu = méně, málo = více) a smíchané (`AI.DEMAND_BLEND`) s pevným rozdělením. Mezera k cílovému počtu divizí zvyšuje podíl nových vojenských továren (`armyPressure`, `AI.MIL_PRESSURE`). Bez změny stavu. Test: `test/ai-rearm.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -829,6 +833,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M62** | **Filtr letectva**: filtr křídel podle typu a mise se souhrnem letadel | **hotovo** |
 | **M63** | **Šípy útoku a klikací bitvy**: zakřivené šípy útoku s hrotem a klik na značku bitvy otevře okno bitvy | **hotovo** |
 | **M64** | **Návrhář divizí: náklady a srovnání**: odhad výrobních nákladů a srovnání návrhu s uloženou šablonou | **hotovo** |
+| **M65** | **Zbrojení AI**: historická křivka zbrojení, složení armády podle potřeby a výroba výzbroje podle schodku | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

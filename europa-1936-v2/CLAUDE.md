@@ -73,3 +73,4 @@ Nová hra ve stylu Hearts of Iron IV (React + Canvas), **vlastní kód, mapa, te
 58. Filtr letectva (§ 4zn v `SPEC.md`): filtr je jen stav komponenty `AirPanel`, nikdy ne herního stavu; nový typ letounu se v dlaždicích objeví sám z `PLANE_IDS`.
 59. Šípy a značky (§ 4zo v `SPEC.md`): kreslení šípů a hit-testy značek patří jen do `UnitLayer`; klik na mapu se předává přes props `MapView`, nikdy ne přímo z rendereru do úložiště.
 60. Návrhář (§ 4zp v `SPEC.md`): náklady a srovnání se počítají jen v `ui/army/designer.js` (`prodCost`, `compareStats`); nový ukazatel šablony = řádek v `compareStats` + test.
+61. Zbrojení AI (§ 4zq v `SPEC.md`): cílový počet divizí čti jen přes `targetDivs` (křivka v `data/ai/rearm.js`), výrobu přes `demandSplit`; nová země s vlastním tempem = položka v `REARM`; AI nesmí obejít `recruit` (výzbroj a lidská síla).

@@ -1,6 +1,11 @@
 // AI: armáda (M24). Používá stejné příkazy jako hráč: recruit, createArmy, assignDivisions, assignCommander, setPlan.
 import { getWorld } from '../world.js';
 import { NATIONAL } from '../../data/army/national.js';
+import { TPL_KINDS, TPL_KIND_IDS } from '../../data/army/templates.js';
+import { COUNTRIES } from '../../data/countries.js';
+import { rearmFactor } from '../../data/ai/rearm.js';
+import { countryStats } from '../selectors.js';
+import { deriveStats } from '../army/stats.js';
 import { C as ARMY } from '../army/constants.js';
 import { hasWar, enemiesOf, nearestControlled } from '../army/war.js';
 import { recruit, createArmy, assignDivisions, assignCommander, setPlan } from '../army/commands.js';
@@ -28,12 +33,57 @@ export function scanArmies(state) {
 
 const initialDivs = (tag) => Object.values(NATIONAL[tag]?.divs || {}).reduce((a, b) => a + b, 0);
 
-/** Cílový počet divizí země v daném čase. */
+const basePop = new WeakMap();   // svět → počet obyvatel zemí podle počátečního vlastnictví
+function startPop(o) {
+  const w = getWorld();
+  let m = basePop.get(w);
+  if (!m) {
+    m = new Float64Array(w.owners.length);
+    for (let p = 1; p <= w.L; p++) m[w.provOwner0[p]] += w.pop[p];
+    basePop.set(w, m);
+  }
+  return m[o] || 0;
+}
+
+/** Násobek velikosti armády podle změny území: zemi, která vzrostla (nebo zmenšila), se cílový počet divizí upraví (0,35–2,5). */
+export function sizeFactor(state, o) {
+  const tag = getWorld().owners[o].tag, st = countryStats(state, tag), p0 = startPop(o);
+  if (!st || !p0) return 1;
+  return Math.min(2.5, Math.max(0.35, Math.pow(st.pop / p0, 0.75)));
+}
+
+/** Cílový počet divizí země v daném čase: historická křivka zbrojení × změna velikosti země × válka × obtížnost. */
 export function targetDivs(state, o) {
   const tag = getWorld().owners[o].tag;
-  const years = state.tick / 8766;
   const war = hasWar(state.mil, o) ? AI.WAR_MULT : 1;
-  return Math.round(initialDivs(tag) * (1 + AI.BASE_BONUS + AI.GROWTH_YEAR * years) * war * (AI.LEVEL_MULT[state.ai?.level ?? 2] || 1));
+  return Math.round(initialDivs(tag) * (AI.BASE_BONUS + rearmFactor(tag, state.tick / 24)) * sizeFactor(state, o) * war * (AI.LEVEL_MULT[state.ai?.level ?? 2] || 1));
+}
+
+/** Žádané složení armády podle druhů šablon (podíly, součet 1): výchozí sestava země, velmoci a regionální mocnosti se postupně motorizují. */
+export function desiredMix(state, o) {
+  const tag = getWorld().owners[o].tag;
+  const base = NATIONAL[tag]?.divs || {};
+  const total = Object.values(base).reduce((a, b) => a + b, 0) || 1;
+  const mix = {};
+  for (const k in base) mix[k] = base[k] / total;
+  const tier = COUNTRIES[tag]?.tier ?? 3;
+  if (tier <= 2 && mix.pesi) {
+    const shift = Math.min(mix.pesi * 0.5, AI.MOTOR_SHIFT * Math.min(1, state.tick / 24 / AI.MOTOR_DAYS));
+    if (mix.tank || tag === 'GER' || tag === 'SOV' || tag === 'FRA' || tag === 'ENG') { mix.pesi -= shift; mix.tank = (mix.tank || 0) + shift * 0.6; mix.motor = (mix.motor || 0) + shift * 0.4; }
+  }
+  return mix;
+}
+
+/** Druh šablony → id šablony země (nebo 0, když ji země nemá). */
+export function tplOfKind(state, o) {
+  const out = {};
+  for (let id = 1; id < state.mil.tpl.length; id++) {
+    const t = state.mil.tpl[id];
+    if (!t || t.o !== o) continue;
+    const k = TPL_KIND_IDS.find((x) => TPL_KINDS[x].short === t.short);
+    if (k && !out[k]) out[k] = id;
+  }
+  return out;
 }
 
 function recruitSite(state, o) {
@@ -47,16 +97,26 @@ export function aiArmy(state, o, scan) {
   const w = getWorld(), tag = w.owners[o].tag;
   const war = hasWar(state.mil, o);
   const sc = scan[o];
-  // výcvik nových divizí
+  // výcvik nových divizí: šablona s největším schodkem proti žádanému složení, které země zvládne vyzbrojit a obsadit
   const queued = state.mil.queue.reduce((a, q) => a + (q.o === o ? 1 : 0), 0);
-  if (sc.count && queued < AI.TRAIN_MAX && sc.count + queued < targetDivs(state, o)) {
-    let best = 0, bn = 0;
-    for (const [t, n] of sc.tpl) if (n > bn || (n === bn && t < best)) { best = t; bn = n; }
+  const target = targetDivs(state, o);
+  const trainMax = Math.max(AI.TRAIN_MAX, Math.ceil(target / AI.TRAIN_DIV));
+  if (sc.count && queued < trainMax && sc.count + queued < target) {
     const site = recruitSite(state, o);
-    if (best && site) {
-      for (let n = Math.min(war ? AI.RECRUIT_BATCH_WAR : AI.RECRUIT_BATCH, AI.TRAIN_MAX - queued); n >= 1; n--) {
-        const next = recruit(state, best, site, n);
-        if (next !== state) { state = next; break; }
+    if (site) {
+      const kinds = tplOfKind(state, o), mix = desiredMix(state, o);
+      const have = {};
+      for (const [t, n] of sc.tpl) { const k = Object.keys(kinds).find((x) => kinds[x] === t); if (k) have[k] = (have[k] || 0) + n; }
+      const order = Object.keys(kinds).sort((a, b) => ((mix[b] || 0) - (have[b] || 0) / sc.count) - ((mix[a] || 0) - (have[a] || 0) / sc.count) || (a < b ? -1 : 1));
+      const gap = target - sc.count - queued;
+      const batch = Math.min(war ? AI.RECRUIT_BATCH_WAR : AI.RECRUIT_BATCH + (gap > 8 ? 1 : 0), trainMax - queued);
+      let done = false;
+      for (const k of order) {
+        for (let n = batch; n >= 1 && !done; n--) {
+          const next = recruit(state, kinds[k], site, n);
+          if (next !== state) { state = next; done = true; }
+        }
+        if (done) break;
       }
     }
   }
