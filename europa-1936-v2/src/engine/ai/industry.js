@@ -1,6 +1,8 @@
 // AI: průmysl (M24). Používá stejné příkazy jako hráč: build, addLine, setLineFactories.
 import { getWorld } from '../world.js';
-import { DEFAULT_SPLIT } from '../../data/industry/index.js';
+import { DEFAULT_SPLIT, EQUIP_PROD } from '../../data/industry/index.js';
+import { deriveStats } from '../army/stats.js';
+import { desiredMix, tplOfKind, targetDivs } from './army.js';
 import { EQUIP } from '../../data/army/equipment.js';
 import { hasWar } from '../army/war.js';
 import { build, addLine, setLineFactories } from '../industry/commands.js';
@@ -11,6 +13,45 @@ import { isUnlocked } from '../research/core.js';
 import { AI } from './constants.js';
 
 const WAR_SPLIT = { pusky: 0.4, dela: 0.2, auta: 0.15, podpora: 0.1, pdela: 0.06, ltanky: 0.05, vozy: 0.04 };
+
+/**
+ * Rozdělení výroby podle potřeby (M65): výrobní body na výzbroj úměrné tomu, kolik jí žádané složení armády potřebuje na jednu divizi (kusy × cena),
+ * aby se divize dokončovaly vyváženě; druh, kterého je ve skladu dost, dostane míň, druh, kterého je málo, víc. Vrací { výzbroj → podíl } (součet 1).
+ */
+export function demandSplit(state, o, war) {
+  const mix = desiredMix(state, o), kinds = tplOfKind(state, o), lv = state.mil.lv[o] || null;
+  const need = {};
+  for (const k in mix) {
+    const t = kinds[k] && state.mil.tpl[kinds[k]];
+    if (!t) continue;
+    const st = deriveStats(t, lv);
+    for (const e in st.need) need[e] = (need[e] || 0) + mix[k] * st.need[e];
+  }
+  const base = war ? WAR_SPLIT : DEFAULT_SPLIT;
+  const stock = state.mil.stock[o] || {};
+  const w = {};
+  let sum = 0;
+  for (const e in need) {
+    const cost = EQUIP_PROD[e] ? EQUIP_PROD[e].cost : 1;
+    const cover = (stock[e] || 0) / (need[e] * AI.STOCK_DIVS);
+    const f = cover > 2 ? 0.25 : cover > 1 ? 0.6 : cover < 0.3 ? 1.6 : 1;
+    w[e] = need[e] * cost * f;
+    sum += w[e];
+  }
+  const out = {};
+  const bs = Object.values(base).reduce((a, b) => a + b, 0) || 1;
+  for (const e in base) out[e] = (1 - AI.DEMAND_BLEND) * base[e] / bs;
+  if (sum > 0) for (const e in w) out[e] = (out[e] || 0) + AI.DEMAND_BLEND * w[e] / sum;
+  return out;
+}
+
+/** Tlak zbrojení 0–1: jak daleko je armáda od cílového počtu divizí (mezera / max(5, 30 % cíle)). */
+export function armyPressure(state, o) {
+  let n = 0;
+  for (let i = 1; i < state.mil.divs.length; i++) { const d = state.mil.divs[i]; if (d && d.o === o) n++; }
+  const t = targetDivs(state, o);
+  return Math.max(0, Math.min(1, (t - n - state.mil.queue.filter((q) => q.o === o).length) / Math.max(5, t * 0.3)));
+}
 
 /** Stát země `o` s volným slotem (hlavní stát první, jinak nejvíc volných slotů); 0 = žádný. */
 function freeState(state, o) {
@@ -45,7 +86,7 @@ export function aiIndustry(state, o) {
   if (sum.build.length < AI.QUEUE && sum.civ + sum.mil > 0) {
     const queuedMil = sum.build.filter((b) => b.k === 'mil').length, queuedCiv = sum.build.filter((b) => b.k === 'civ').length;
     const milNow = sum.mil + queuedMil, total = sum.civ + sum.mil + queuedMil + queuedCiv;
-    const share = war ? AI.MIL_SHARE_WAR : AI.MIL_SHARE;
+    const share = (war ? AI.MIL_SHARE_WAR : AI.MIL_SHARE) + AI.MIL_PRESSURE * armyPressure(state, o);   // zbrojení: s mezerou k cílovému počtu divizí roste podíl vojenských továren
     const kind = sum.civ + queuedCiv === 0 || milNow / Math.max(1, total) < share ? (sum.civ + queuedCiv === 0 ? 'civ' : 'mil') : 'civ';
     const s = freeState(state, o);
     const next = s ? build(state, s, kind) : (() => { const i = infraState(state, o); return i ? build(state, i, 'inf') : state; })();
@@ -55,7 +96,7 @@ export function aiIndustry(state, o) {
   // linky: volné továrny dostanou výrobu podle nedostatku zásob
   sum = industryOf(state, o);
   let free = Math.min(10, sum.milFree);
-  const split = war ? WAR_SPLIT : DEFAULT_SPLIT;
+  const split = demandSplit(state, o, war);
   while (free > 0) {
     const eqs = Object.keys(split).filter((e) => isUnlocked(state, o, EQUIP[e].unlock));
     const cur = industryOf(state, o);

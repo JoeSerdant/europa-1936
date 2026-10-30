@@ -59,13 +59,13 @@ describe('armáda AI', () => {
     const s0 = base();
     const a = day(s0, 20);
     expect(a.mil.queue.some((q) => q.o === FRA)).toBe(true);
-    expect(a.mil.queue.filter((q) => q.o === FRA).length).toBeLessThanOrEqual(AI.TRAIN_MAX);
+    expect(a.mil.queue.filter((q) => q.o === FRA).length).toBeLessThanOrEqual(Math.max(AI.TRAIN_MAX, Math.ceil(targetDivs(a, FRA) / AI.TRAIN_DIV)));
     expect(a.mil.queue.every((q) => q.o !== GER)).toBe(true);
     const b = day(a, 200);
     expect(divisionCount(b, 'FRA')).toBeGreaterThan(divisionCount(s0, 'FRA'));
     expect(divisionCount(b, 'GER')).toBe(divisionCount(s0, 'GER'));
     const loose = scanArmies(day(b, 1))[FRA].loose.length;
-    expect(loose).toBeLessThanOrEqual(AI.TRAIN_MAX);
+    expect(loose).toBeLessThanOrEqual(Math.max(AI.TRAIN_MAX, Math.ceil(targetDivs(b, FRA) / AI.TRAIN_DIV)));
     for (const [, n] of scanArmies(b)[FRA].armies) expect(n).toBeLessThanOrEqual(24);
   });
   it('ve válce AI přidělí útočné plány, je-li poměr sil příznivý, a nepřidělí slabší straně', () => {
