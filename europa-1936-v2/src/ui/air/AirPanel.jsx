@@ -87,6 +87,10 @@ export function AirPanel() {
   const state = useGameSlow((s) => s, 600);
   const me = playerIdx(state);
   const a = useMemo(() => (me ? airOf(state, me) : null), [state.air, state.stateOwner, state.ctrl, state.ind, state.tech, me]);
+  const types = useMemo(() => (a ? PLANE_IDS.filter((t) => a.types.includes(t) || a.pool[t] || a.wings.some((w) => w.t === t)).map((t) => ({ t, wings: a.wings.filter((w) => w.t === t).reduce((n, w) => n + w.n, 0), nw: a.wings.filter((w) => w.t === t).length, pool: a.pool[t] || 0 })) : []), [a]);
+  const [ft, setFt] = useState('');
+  const [fm, setFm] = useState('');
+  const shown = a ? a.wings.filter((w) => (!ft || w.t === ft) && (!fm || (fm === 'none' ? !w.m : w.m === fm))) : [];
   if (!me) return <div className="prod-screen air-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádné letectvo.</p></div></div>;
   return (
     <Screen cls="air-panel" title="Letectvo" icon="air" head={(
@@ -99,8 +103,17 @@ export function AirPanel() {
       <div className="prod-body">
         <div className="prod-cols">
           <div className="prod-left">
-            <div className="sec-head"><h3>Letecká křídla ({a.wings.length})</h3><span className="muted">mise se vyhodnocují o půlnoci</span></div>
-            {!a.wings.length ? <p className="empty">Žádná křídla. Sestavte je vpravo z rezervy letadel.</p> : a.wings.map((wg) => <Wing key={wg.id} wg={wg} state={state} />)}
+            <div className="sec-head"><h3>Letecká křídla ({shown.length}{shown.length !== a.wings.length ? ` z ${a.wings.length}` : ''})</h3><span className="muted">mise se vyhodnocují o půlnoci</span></div>
+            <div className="air-filter" role="group" aria-label="Filtr křídel">
+              {types.map((x) => (
+                <button key={x.t} className={`af-tile ${ft === x.t ? 'on' : ''}`} aria-pressed={ft === x.t} onClick={() => setFt(ft === x.t ? '' : x.t)} title={`${PLANES[x.t].n}: v křídlech ${fmtInt(x.wings)}, v rezervě ${fmtInt(x.pool)}`}>
+                  <Tile t={x.t} size={30} /><b>{fmtInt(x.wings + x.pool)}</b><i>{x.nw} kř.</i>
+                </button>
+              ))}
+              <span className="af-sep" aria-hidden="true" />
+              {[['', 'Všechny mise'], ['none', 'Na základně'], ...Object.entries(MISSIONS)].map(([k, n]) => <button key={k || 'all'} className={`chip-btn ${fm === k ? 'on' : ''}`} aria-pressed={fm === k} onClick={() => setFm(k)}>{n}</button>)}
+            </div>
+            {!a.wings.length ? <p className="empty">Žádná křídla. Sestavte je vpravo z rezervy letadel.</p> : !shown.length ? <p className="empty">Filtru neodpovídá žádné křídlo.</p> : shown.map((wg) => <Wing key={wg.id} wg={wg} state={state} />)}
           </div>
           <aside className="prod-right">
             <NewWing a={a} />

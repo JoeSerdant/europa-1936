@@ -392,6 +392,10 @@ try {
   await page.keyboard.press('a');
   await page.waitForSelector('.air-panel .air-wing', { timeout: 3000 });
   check('klávesa A otevře Letectvo s křídly a letišti', (await ui()).panel === 'air' && (await page.locator('.air-wing').count()) >= 3 && (await page.locator('.air-bases li').count()) >= 1);
+  const wingsAll = await page.locator('.air-wing').count();
+  await page.locator('.af-tile').first().click();
+  const wingsOne = await page.locator('.air-wing').count();
+  check('filtr typů letadel zúží seznam křídel a druhý klik ho vrátí', wingsOne >= 1 && wingsOne < wingsAll && (await page.locator('.af-tile').first().click(), (await page.locator('.air-wing').count()) === wingsAll), `${wingsOne}/${wingsAll}`);
   const wingBit = page.locator('.air-wing', { hasText: 'Bitevní letoun' }).first();
   await wingBit.getByLabel('Mise').selectOption('cas');
   await page.waitForTimeout(1000);
