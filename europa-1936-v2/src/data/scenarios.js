@@ -30,7 +30,7 @@ export const SCENARIOS = {
       { nm: 'Osa Berlín–Řím', ldr: 'GER', mem: ['GER', 'ITA'] },
       { nm: 'Spojenci', ldr: 'ENG', mem: ['ENG', 'FRA', 'POL'] },
     ],
-    wars: [['GER', 'POL'], ['ENG', 'GER'], ['FRA', 'GER']],
+    wars: [['GER', 'POL', 'att'], ['ENG', 'GER'], ['FRA', 'GER']],   // třetí položka „att“ = útočník
     pp: 150,
   },
 };

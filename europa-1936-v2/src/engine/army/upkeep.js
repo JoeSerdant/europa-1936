@@ -27,7 +27,7 @@ export function upkeepStep(ctx) {
       if (org < cap) org = Math.min(cap, org + st.org * C.ORG_REGEN * f);
     }
     if (org > cap) org = Math.max(cap, org - st.org * 0.02);
-    const attr = lack > 0 ? C.SUP_ATTRITION * st.hp * lack * (1 + 10 * TERRAIN_RULES[w.terrain[d.p]].attr) * (1 + weatherAt(ctx.tick, d.p).cold) : 0;
+    const attr = lack > 0 ? C.SUP_ATTRITION * st.hp * lack * (1 + C.SUP_ATTR_TERRAIN * TERRAIN_RULES[w.terrain[d.p]].attr) * (1 + weatherAt(ctx.tick, d.p).cold) : 0;
     const needsEdit = org !== d.org || d.rt > 0 || d.hold > 0 || attr > 0;
     if (!needsEdit) continue;
     if (attr > 0 && d.hp - attr <= st.hp * C.DEATH_HP) {

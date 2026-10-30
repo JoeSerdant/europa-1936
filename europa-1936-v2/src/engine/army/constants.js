@@ -102,7 +102,8 @@ export const C = {
   SUP_ATK_DEF: -0.35,
   SUP_DEF_DEF: -0.2,
   SUP_SPEED: -0.8,          // pomalejší pohyb při úplném nedostatku
-  SUP_ATTRITION: 0.0008,    // ztráta síly za hodinu (podíl maxima) při úplném nedostatku
+  SUP_ATTRITION: 0.0005,    // ztráta síly za hodinu (podíl maxima) při úplném nedostatku (M66: zmírněno, divize dřív umíraly hladem za týdny)
+  SUP_ATTR_TERRAIN: 4,      // násobek terénní složky úbytku (dřív 10)
 
   // ---- doplňování, lidská síla ----
   REINF_PER_DAY: 0.05,      // podíl maximální síly, který se denně doplní

@@ -43,7 +43,7 @@ export function findPath(mil, ctrl, o, from, to, opts = {}) {
   if (from === to || !w.isLand(from) || !w.isLand(to)) return null;
   if (!canEnter(mil, o, ctrl[to])) return null;
   const maxH = opts.maxHours ?? Infinity;
-  const dist = new Float32Array(w.L + 1).fill(Infinity);
+  const dist = new Float64Array(w.L + 1).fill(Infinity);   // Float32 by zaokrouhlením uložených vzdáleností pod klíč haldy přeskočil uzly (dlouhé cesty se nenašly)
   const prev = new Int32Array(w.L + 1);
   const heap = new Heap();
   dist[from] = 0;

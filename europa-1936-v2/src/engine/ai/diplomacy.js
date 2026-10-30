@@ -1,7 +1,7 @@
 // AI: diplomacie (M24). Používá stejné příkazy jako hráč: proposePeace, justifyWar, startWar.
 import { getWorld } from '../world.js';
 import { HIST_WARS, HIST_FACTIONS, HIST_GUARANTEES } from '../../data/ai/plans.js';
-import { hasWar, enemiesOf } from '../army/war.js';
+import { hasWar, enemiesOf, atWar } from '../army/war.js';
 import { divisionCount } from '../army/selectors.js';
 import { justifyWar, startWar, proposePeace, justReady, warBlock, createFaction, inviteToFaction } from '../dip/commands.js';
 import { subjectsOf, autonomyOf, tightenControl } from '../dip/subjects.js';
@@ -16,12 +16,18 @@ export function aiDiplomacy(state, o) {
   // mír, když prohrává
   if (hasWar(state.mil, o)) {
     const p = state.pol.own[o];
-    const tired = p.stab < AI.PEACE_STAB || p.ws < AI.PEACE_WS;
+    const weary = p.stab < AI.PEACE_STAB || p.ws < AI.PEACE_WS;
     for (const e of enemiesOf(state.mil, o)) {
       if (e === playerOf(state)) continue;   // hráči AI mír nevnucuje: ten navrhuje sám
+      if (state.dip.sub[e] && atWar(state.mil, state.dip.sub[e], o)) continue;   // loutka vede válku pána
       const since = state.dip.since[pairKey(o, e)];
-      const stalled = since != null && (state.tick - since) / 24 >= AI.STALEMATE_DAYS && Math.abs(warScore(state, o, e)) < AI.STALEMATE_SCORE;
-      if (tired || stalled) state = proposePeace(state, o, e);
+      const days = since != null ? (state.tick - since) / 24 : Infinity;
+      const score = warScore(state, o, e);
+      const stalled = days >= AI.STALEMATE_DAYS && Math.abs(score) < AI.STALEMATE_SCORE;
+      const losing = score < -AI.PEACE_LOSING;
+      // unavená země žádá o mír, jen když prohrává (nebo válka trvá dlouho); na začátku války se neodevzdává (M66)
+      const want = (weary && (losing || days >= AI.PEACE_MIN_DAYS)) || stalled || (losing && days >= AI.PEACE_MIN_DAYS && score < -AI.PEACE_LOSING * 2);
+      if (want && score <= AI.PEACE_WINNING) state = proposePeace(state, o, e);   // vítěz o bílý mír nežádá
     }
   }
   // historické bloky: založení a zvaní členů

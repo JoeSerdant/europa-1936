@@ -29,6 +29,13 @@ export function supplyFlow(ctrl, o, infra = geo().infra) {
   return reach;
 }
 
+/** Úbytek toku zásobování při kroku z provincie `p` do sousední `q` (terén cíle, řeka, vzdálenost; infrastruktura srážku zmírňuje). */
+export function flowDrop(w, g, infra, p, q, kind) {
+  const t = TERRAIN_RULES[w.terrain[q]];
+  const dist = Math.max(0.5, Math.min(1.6, g.distKm(p, q) / C.PROV_KM));
+  return (t.flow * (1 - C.SUP_INFRA_RELIEF * infra[q] / 5) + (kind === 1 ? RIVER.flow : 0)) * dist;
+}
+
 function computeReach(ctrl, o, w, infra) {
   const g = geo(w), adj = adjacency(w);
   const L = w.L;
@@ -39,7 +46,7 @@ function computeReach(ctrl, o, w, infra) {
   // A) železniční síť z hlavního města: podíl síly uzlu, který k němu dorazí (0–1)
   const rail = new Float32Array(L + 1);
   if (capitalHeld) {
-    const dist = new Float32Array(L + 1).fill(Infinity);
+    const dist = new Float64Array(L + 1).fill(Infinity);   // Float64: zaokrouhlení pod klíč haldy by přeskočilo uzly
     const heap = new Heap();
     dist[cap] = 0; heap.push(0, cap);
     while (heap.size) {
@@ -72,10 +79,7 @@ function computeReach(ctrl, o, w, infra) {
     for (const e of adj[p]) {
       const q = e.to;
       if (ctrl[q] !== o || e.kind === 2) continue;
-      const t = TERRAIN_RULES[w.terrain[q]];
-      const dist = Math.max(0.5, Math.min(1.6, g.distKm(p, q) / C.PROV_KM));
-      const pen = (t.flow * (1 - C.SUP_INFRA_RELIEF * infra[q] / 5) + (e.kind === 1 ? RIVER.flow : 0)) * dist;
-      push(q, v - pen);
+      push(q, v - flowDrop(w, g, infra, p, q, e.kind));
     }
   }
   return reach;
