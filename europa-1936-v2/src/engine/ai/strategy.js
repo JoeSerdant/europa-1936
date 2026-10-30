@@ -5,6 +5,7 @@ import { geo, adjacency } from '../army/geo.js';
 import { enemiesOf } from '../army/war.js';
 import { setPlan } from '../army/commands.js';
 import { supplyFlow, flowDrop } from '../army/supply.js';
+import { friendsOf } from '../dip/accessCore.js';
 import { C } from '../army/constants.js';
 import { needOf } from '../occ/day.js';
 import { campOf } from '../dip/core.js';
@@ -111,13 +112,14 @@ export function theatersOf(state, o, foes) {
  */
 export function supplyView(state, o) {
   const w = getWorld(), g = geo(w), adj = adjacency(w);
-  const reach = supplyFlow(state.ctrl, o);
+  const friends = friendsOf(state.dip, o), fset = new Set(friends);
+  const reach = supplyFlow(state.ctrl, o, undefined, friends);
   return {
     reach,
     post: (p) => reach[p] >= AI.SUP_POST_MIN,
     target: (tp) => {
       let best = g.hub[tp] ? C.SUP_LOCAL : 0;
-      for (const e of adj[tp]) if (e.kind !== 2 && state.ctrl[e.to] === o) best = Math.max(best, reach[e.to] - flowDrop(w, g, g.infra, e.to, tp, e.kind));
+      for (const e of adj[tp]) if (e.kind !== 2 && (state.ctrl[e.to] === o || fset.has(state.ctrl[e.to]))) best = Math.max(best, reach[e.to] - flowDrop(w, g, g.infra, e.to, tp, e.kind));
       return best >= AI.SUP_TARGET_MIN;
     },
   };
@@ -157,13 +159,13 @@ export function isAggressor(state, o, foes) {
   return false;
 }
 
-/** Domácí posty v míru: hlavní město, uzly, přístavy, vítězné body a okupovaná území; armády si je rozdělí podle vzdálenosti. */
-function homePosts(state, o, count) {
+/** Domácí posty v míru: hlavní město, uzly, přístavy, vítězné body a okupovaná území (jen provincie, kde divize dostane zásoby); armády si je rozdělí. */
+function homePosts(state, o, count, view) {
   const w = getWorld(), g = geo(w), adj = adjacency(w);
   const cap = w.owners[o].cap;
   const scored = [];
   for (let p = 1; p <= w.L; p++) {
-    if (state.ctrl[p] !== o) continue;
+    if (state.ctrl[p] !== o || view.reach[p] < AI.SUP_TARGET_MIN) continue;
     const s = w.provState[p];
     let sc = w.vp[p] * 0.6 + (g.hub[p] ? 2 : 0) + (w.portLevel[p] ? 1 : 0) + (p === cap ? 6 : 0);
     if (state.stateOwner[s] !== o) sc += 1 + Math.min(3, needOf(s) * 0.5);   // okupované území potřebuje garnizonu
@@ -178,19 +180,24 @@ function homePosts(state, o, count) {
 export function aiPeaceDeploy(state, o, armies) {
   if (!armies.length) return state;
   const g = geo(getWorld());
-  const posts = homePosts(state, o, Math.max(AI.PEACE_POSTS_MIN, armies.length * AI.PEACE_POSTS));
+  const posts = homePosts(state, o, Math.max(AI.PEACE_POSTS_MIN, armies.length * AI.PEACE_POSTS), supplyView(state, o));
   if (!posts.length) return state;
   const area = armies.map(() => []);
-  for (const p of posts) {
+  // post, který už je v plánu právě jedné armády, jí zůstane (stabilita, žádné hromadění více armád v jedné provincii); ostatní podle vzdálenosti
+  const holders = new Map();
+  armies.forEach((a, i) => {
+    const cur = state.mil.armies[a.id].plan;
+    if (cur && cur.k === 'area') for (const p of cur.area) holders.set(p, holders.has(p) ? -1 : i);
+  });
+  const rest = [];
+  for (const p of posts) { const h = holders.get(p); if (h >= 0) area[h].push(p); else rest.push(p); }
+  for (const p of rest) {
     let best = 0, bd = Infinity;
     armies.forEach((a, i) => { const dd = Math.hypot(g.cx[p] - a.x, g.cy[p] - a.y) + area[i].length * AI.PEACE_SPREAD; if (dd < bd) { bd = dd; best = i; } });
     area[best].push(p);
   }
   armies.forEach((a, i) => {
-    if (!area[i].length) return;
-    const cur = state.mil.armies[a.id].plan;
-    const settled = cur && cur.k === 'area' && cur.area.every((p) => state.ctrl[p] === o);   // dosavadní mírový plán platí, dokud všechny posty drží
-    if (!settled) state = plan(state, a.id, { k: 'area', area: area[i].sort((p, q) => p - q) });
+    if (area[i].length) state = plan(state, a.id, { k: 'area', area: area[i].sort((p, q) => p - q) });
   });
   return state;
 }

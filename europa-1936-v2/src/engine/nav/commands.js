@@ -4,6 +4,7 @@ import { getWorld } from '../world.js';
 import { SHIP_IDS } from '../../data/navy/index.js';
 import { cleanName } from '../army/commands.js';
 import { atWar } from '../army/war.js';
+import { hasAccess } from '../dip/accessCore.js';
 import { NAV } from './constants.js';
 import { homeSea, powerOf, seaRoute, seaBlocked, coastSeasOf, isSeaLabel } from './core.js';
 import { transportsOf } from './convoy.js';
@@ -98,7 +99,7 @@ export function sailBlock(state, divIds, dest) {
   if (!coast.length) return 'Cíl není na pobřeží.';
   const c = state.ctrl[dest];
   if (c !== o) {
-    if (!atWar(mil, o, c)) return 'Na cizí neutrální území se vylodit nelze.';
+    if (!atWar(mil, o, c) && !hasAccess(state.dip, o, c)) return 'Na cizí neutrální území se vylodit nelze.';   // M67: přístav spojence ano
     for (const d of mil.divs) if (d && d.p === dest && atWar(mil, o, d.o)) return 'Cíl hájí nepřátelské divize – vylodění jen na nehájenou provincii.';
   }
   for (const id of divIds) {

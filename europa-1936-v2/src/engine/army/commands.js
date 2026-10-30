@@ -6,7 +6,7 @@ import { C } from './constants.js';
 import { openCtx, closeCtx, editDiv, relocate, removeDiv, removeBattle, addMan, editStock } from './ctx.js';
 import { deriveStats, validateTemplate } from './stats.js';
 import { atWar, addWar, nearestControlled } from './war.js';
-import { findPath } from './paths.js';
+import { findPath, canEnter } from './paths.js';
 import { statsOf } from './unit.js';
 import { PLAN_MODES, AREA_MAX, planNow, aiNow } from './plans.js';
 
@@ -44,15 +44,26 @@ export function settleAfterPeace(ctx, a, b) {
   for (let id = 1; id < ctx.divs.length; id++) {
     const d = ctx.divs[id];
     if (!d || (d.o !== a && d.o !== b)) continue;
-    const c = ctx.ctrl[d.p];
-    if (c === d.o || atWar(ctx.mil, d.o, c)) continue;
-    const home = nearestControlled(ctx.ctrl, d.o, d.p);
-    if (!home) { removeDiv(ctx, id); continue; }
-    // přesun domů (bez bitev): divize se jen objeví v nejbližší vlastní provincii
-    relocate(ctx, id, home);
-    const e = editDiv(ctx, id);
-    e.path = []; e.prog = 0; e.b = 0; e.dig = 0;
+    sendHome(ctx, id);
   }
+}
+
+/** Divize na území, kam nesmí (po míru, po konci přístupu, rozpuštěném bloku): objeví se v nejbližší vlastní provincii, bez vlastního území zanikne. */
+function sendHome(ctx, id) {
+  const d = ctx.divs[id];
+  if (canEnter(ctx.mil, d.o, ctx.ctrl[d.p], ctx.state.dip)) return false;
+  const home = nearestControlled(ctx.ctrl, d.o, d.p);
+  if (!home) { removeDiv(ctx, id); return true; }
+  // přesun domů (bez bitev): divize se jen objeví v nejbližší vlastní provincii
+  relocate(ctx, id, home);
+  const e = editDiv(ctx, id);
+  e.path = []; e.prog = 0; e.b = 0; e.dig = 0;
+  return true;
+}
+
+/** Úklid po změně diplomacie (M67): jednotky, které na cizím území už nemají právo být, odejdou domů. Bez cizinců nic nemění. */
+export function evictStrangers(ctx) {
+  for (let id = 1; id < ctx.divs.length; id++) if (ctx.divs[id]) sendHome(ctx, id);
 }
 
 /** Vyhlásí válku. Obranná AI obou stran dostane hned plány „Hájit oblast“. */
@@ -214,7 +225,7 @@ export function orderMove(state, divIds, prov, append = false) {
     const from = queued ? d.path[d.path.length - 1] : d.p;
     if (from === prov) continue;
     const key = `${d.o}:${from}`;
-    if (!paths.has(key)) paths.set(key, findPath(mil, state.ctrl, d.o, from, prov));
+    if (!paths.has(key)) paths.set(key, findPath(mil, state.ctrl, d.o, from, prov, { dip: state.dip }));
     const seg = paths.get(key);
     if (!seg) continue;
     const path = queued ? d.path.concat(seg) : seg;

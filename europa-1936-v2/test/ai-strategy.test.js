@@ -187,3 +187,23 @@ describe('přidělení armád a zásobování', () => {
     expect(AI.SUP_POST_MIN).toBeGreaterThan(0);
   });
 });
+
+describe('spojenecké území (M67)', () => {
+  const LAT = idx('LAT'), LIT = idx('LIT');
+  it('divadla AI se tvoří jen z vlastních hranic: fronta spojence z ní armády nestahuje', () => {
+    // SSSR s loutkou Lotyšskem: lotyšská hranice s Litvou není divadlem SSSR
+    const s0 = warAs(base(), SOV, LIT);
+    const sub = s0.dip.sub.slice(); sub[LAT] = SOV;
+    const s1 = { ...s0, dip: { ...s0.dip, sub, ver: s0.dip.ver + 1 } };
+    for (const t of theatersOf(s1, SOV, new Set([LIT]))) for (const p of t.posts) expect(s1.ctrl[p]).toBe(SOV);
+  });
+  it('s přístupem se zásobování AI šíří přes území spojence (supplyView.reach)', () => {
+    const s0 = base();
+    const sub = s0.dip.sub.slice(); sub[LAT] = SOV;
+    const s1 = { ...s0, dip: { ...s0.dip, sub, ver: s0.dip.ver + 1 } };
+    const a = supplyView(s0, SOV).reach, b = supplyView(s1, SOV).reach;
+    let na = 0, nb = 0;
+    for (let p = 1; p <= W.L; p++) { if (a[p] > 0) na++; if (b[p] > 0) nb++; }
+    expect(nb).toBeGreaterThan(na);
+  });
+});

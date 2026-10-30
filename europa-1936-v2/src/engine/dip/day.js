@@ -5,6 +5,7 @@ import { DIP } from './constants.js';
 import { vpHeld } from './core.js';
 import { capitulate } from './capitulate.js';
 import { subjectsDay } from './subjects.js';
+import { accessDay } from './access.js';
 
 export function dipDay(state) {
   const w = getWorld();
@@ -27,6 +28,6 @@ export function dipDay(state) {
     const v = rel[k], nv = Math.abs(v) <= DIP.REL_FORGET ? 0 : v - Math.sign(v) * DIP.REL_FORGET;
     if (nv !== v) { if (!relCopy) { rel = { ...rel }; relCopy = true; } if (nv === 0) delete rel[k]; else rel[k] = nv; }
   }
-  if (just === state.dip.just && rel === state.dip.rel) return state;
-  return { ...state, dip: { ...state.dip, just, rel } };
+  if (just !== state.dip.just || rel !== state.dip.rel) state = { ...state, dip: { ...state.dip, just, rel } };
+  return accessDay(state);   // M67: dohody s kapitulovanými a válečnými protivníky zaniknou, cizinci bez práva na cizím území odejdou domů
 }

@@ -8,23 +8,34 @@ import { TERRAIN_RULES, RIVER } from '../../data/army/terrain.js';
 import { Heap } from './heap.js';
 import { editDiv } from './ctx.js';
 import { statsOf, modsOf } from './unit.js';
+import { friendsOf } from '../dip/accessCore.js';
 
 const cache = new Map();   // země → { sig, reach }
 
-/** Podpis množiny provincií, které země ovládá (počet, součet, součet čtverců, xor) – kvůli mezipaměti. */
-function signature(ctrl, o, L) {
+/** Podpis množiny provincií, které země (a její přátelé) ovládá (počet, součet, součet čtverců, xor) a seznamu přátel – kvůli mezipaměti. */
+function signature(ctrl, o, L, friends) {
   let n = 0, s = 0, q = 0, x = 0;
+  if (friends && friends.length) {
+    const mine = new Uint8Array(ctrl.length ? Math.max(o, ...friends) + 1 : 0);
+    mine[o] = 1; for (const f of friends) mine[f] = 1;
+    for (let p = 1; p <= L; p++) { const c = ctrl[p]; if (c < mine.length && mine[c]) { n++; s += p; q += p * p; x ^= (p * 2654435761 >>> 0) ^ c; } }
+    return `${n}:${s}:${q}:${x}:${friends.join(',')}`;
+  }
   for (let p = 1; p <= L; p++) if (ctrl[p] === o) { n++; s += p; q += p * p; x ^= p * 2654435761 >>> 0; }
   return `${n}:${s}:${q}:${x}`;
 }
 
-/** Tok zásobování po provinciích pro zemi `o` (selektor `supplyReach(state, o)` ho zabaluje) (Float32Array, index = provincie; 0 = bez zásob). */
-export function supplyFlow(ctrl, o, infra = geo().infra) {
+/**
+ * Tok zásobování po provinciích pro zemi `o` (selektor `supplyReach(state, o)` ho zabaluje) (Float32Array, index = provincie; 0 = bez zásob).
+ * `friends` (M67) = země, na jejichž území smí `o` vstoupit; jejich provincie jsou součástí sítě (tok se do nich šíří), zdrojem toku zůstává hlavní město a uzly `o`.
+ */
+export function supplyFlow(ctrl, o, infra = geo().infra, friends = null) {
   const w = getWorld();
-  const sig = signature(ctrl, o, w.L);
+  const fr = friends && friends.length ? friends : null;
+  const sig = signature(ctrl, o, w.L, fr);
   const hit = cache.get(o);
   if (hit && hit.sig === sig && hit.L === w.L && hit.infra === infra) return hit.reach;
-  const reach = computeReach(ctrl, o, w, infra);
+  const reach = computeReach(ctrl, o, w, infra, fr);
   cache.set(o, { sig, reach, L: w.L, infra });
   return reach;
 }
@@ -36,7 +47,9 @@ export function flowDrop(w, g, infra, p, q, kind) {
   return (t.flow * (1 - C.SUP_INFRA_RELIEF * infra[q] / 5) + (kind === 1 ? RIVER.flow : 0)) * dist;
 }
 
-function computeReach(ctrl, o, w, infra) {
+function computeReach(ctrl, o, w, infra, friends) {
+  const fset = friends ? new Set(friends) : null;
+  const mine = (c) => c === o || (fset !== null && fset.has(c));   // vlastní nebo přátelské území
   const g = geo(w), adj = adjacency(w);
   const L = w.L;
   const reach = new Float32Array(L + 1);
@@ -54,7 +67,7 @@ function computeReach(ctrl, o, w, infra) {
       if (d > dist[p]) continue;
       for (let k = w.rails.start[p]; k < w.rails.start[p + 1]; k++) {
         const q = w.rails.to[k];
-        if (ctrl[q] !== o) continue;
+        if (!mine(ctrl[q])) continue;
         const nd = d + C.SUP_RAIL_DROP / w.rails.level[k];
         if (nd < dist[q] && nd < 1) { dist[q] = nd; heap.push(nd, q); }
       }
@@ -78,7 +91,7 @@ function computeReach(ctrl, o, w, infra) {
     if (v < reach[p]) continue;
     for (const e of adj[p]) {
       const q = e.to;
-      if (ctrl[q] !== o || e.kind === 2) continue;
+      if (!mine(ctrl[q]) || e.kind === 2) continue;
       push(q, v - flowDrop(w, g, infra, p, q, e.kind));
     }
   }
@@ -102,7 +115,7 @@ export function dailySupply(ctx) {
     const d = ctx.divs[id];
     if (!d) continue;
     let reach = reachOf.get(d.o);
-    if (!reach) { reach = supplyFlow(ctx.ctrl, d.o); reachOf.set(d.o, reach); }
+    if (!reach) { reach = supplyFlow(ctx.ctrl, d.o, undefined, ctx.state.dip ? friendsOf(ctx.state.dip, d.o) : null); reachOf.set(d.o, reach); }
     const cap = reach[d.p] * C.SUP_CAPACITY;
     const n = need.get(key(d.o, d.p)) || 0;
     const ratio = n <= 0 ? 1 : Math.min(1, cap / n);
