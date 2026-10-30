@@ -38,6 +38,8 @@ export function logLine(e, me = 0) {
     case 'event': return { icon: 'politics', tone: 'info', world: false, mine: true, text: `Událost: ${EVENT_BY_ID[e.x]?.n || e.x}.` };
     case 'lend': return { icon: 'trade', tone: 'good', world: false, mine: e.a === me || e.b === me, text: `${nm(e.a)} posílá zemi ${nm(e.b)} výzbroj: ${EQUIP[e.x]?.n || e.x} × ${e.y}.` };
     case 'gar': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} zaručuje nezávislost země ${nm(e.b)}.` };
+    case 'access': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} dovoluje armádám země ${nm(e.b)} průchod svým územím.` };
+    case 'accend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} odvolala přístup armádám země ${nm(e.b)}.` };
     case 'garend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} už nezaručuje nezávislost země ${nm(e.b)}.` };
     case 'ace': return { icon: 'air', tone: 'good', world: false, mine: true, text: `Křídlo ${PLANES[e.x]?.n || e.x}: ${ACE_NAMES[e.y] || 'eso'} se vyznamenal ve vzdušném boji.` };
     case 'free': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.x].name} se osamostatnila a přestala být loutkou země ${w.owners[e.o].name}.` };

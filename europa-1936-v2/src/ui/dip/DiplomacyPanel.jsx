@@ -3,7 +3,7 @@ import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS } from '../../engine/index.js';
-import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -31,6 +31,7 @@ function Row({ c, me }) {
   if (c.garMine) flags.push(['ally', 'vaše záruka']);
   else if (c.garTheirs) flags.push(['ally', 'zaručuje vás']);
   if (c.ally) flags.push(['ally', 'spojenec']);
+  if (c.accDeal) flags.push(['ally', 'přístup']);
   if (c.mine) flags.push(['ally', 'vaše loutka']);
   else if (c.overlord) flags.push(['cap', 'loutka']);
   if (c.capitulated) flags.push(['cap', 'kapitulovala']);
@@ -63,8 +64,13 @@ function Row({ c, me }) {
               ? <button className="sbtn" onClick={() => revokeGuaranteeFor(c.tag)} title="Zrušit záruku nezávislosti">Zrušit záruku</button>
               : <button className="sbtn" disabled={!!c.garBlock} onClick={() => guaranteeFor(c.tag)} title={c.garBlock || `Zaručit nezávislost (${DIP.GAR_PP} PM): napadne-li ji někdo, přidáte se do války`}>Zaručit nezávislost</button>}
             <button className="sbtn" disabled={!!c.inviteBlock} onClick={() => inviteBloc(c.tag)} title={c.inviteBlock || 'Pozvat do bloku'}>Pozvat do bloku</button>
+            {!c.war && !c.access && <button className="sbtn" disabled={!!c.accBlock} onClick={() => requestAccessFrom(c.tag)} title={c.accBlock || `Požádat o průchod vašich armád jejím územím (${DIP.ACC_PP} PM)`}>Požádat o přístup</button>}
+            {!c.war && (c.accMine
+              ? <button className="sbtn" onClick={() => revokeAccessFrom(c.tag)} title="Odvolat jejím armádám průchod vaším územím">Odvolat přístup</button>
+              : !c.accGiven && <button className="sbtn" disabled={!!c.giveBlock} onClick={() => grantAccessTo(c.tag)} title={c.giveBlock || 'Dovolit jejím armádám průchod vaším územím (zdarma)'}>Dát přístup</button>)}
             <button className="sbtn" onClick={() => selectLabel(getWorld().owners[c.o].cap, true)} title="Ukázat hlavní město"><Icon name="target" size={14} />Ukázat</button>
           </div>
+          {!c.war && (c.access || c.accGiven) ? <p className="muted dip-access">Vojenský přístup: {c.access ? 'smíte projít jejich územím' : 'jejich armády nesmí na vaše území'}{c.access && c.accGiven ? ' · ' : ''}{c.accGiven ? (c.access ? 'smějí projít vaším' : 'smějí projít vaším územím') : ''}</p> : null}
           {c.friend ? <Lend c={c} me={me} /> : null}
           {c.war ? <p className="muted">Válečné skóre: {c.score > 0 ? '+' : ''}{fmtNum(c.score * 100, 0)} %</p> : null}
           {!c.war && !c.canDeclare && c.justifyBlock ? <p className="pol-block">{c.justifyBlock}</p> : null}

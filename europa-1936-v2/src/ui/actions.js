@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { play } from './sound.js';
@@ -323,7 +323,7 @@ export function routePreview(to) {
   if (!ids.length || !to || !getWorld().isLand(to)) return null;
   const d = s.mil.divs[ids[0]];
   if (!d || d.p === to) return null;
-  const path = findPath(s.mil, s.ctrl, d.o, d.p, to);
+  const path = findPath(s.mil, s.ctrl, d.o, d.p, to, { dip: s.dip });
   if (!path) return null;
   return { nodes: [d.p, ...path], attack: s.ctrl[to] !== d.o };
 }
@@ -834,6 +834,28 @@ export function guaranteeFor(tag) {
   return true;
 }
 export const revokeGuaranteeFor = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(revokeGuarantee, me, t); };
+
+// ============================================================ vojenský přístup (M67)
+/** Požádá zemi `tag` o průchod armád jejím územím. */
+export function requestAccessFrom(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = accessBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  if (!run(requestAccess, me, t)) return false;
+  toast(`${countryName(tag)} dovoluje vašim armádám průchod.`);
+  return true;
+}
+/** Dovolí zemi `tag` průchod armád vaším územím. */
+export function grantAccessTo(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = grantBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  return run(grantAccess, me, t);
+}
+/** Odvolá zemi `tag` přístup k vašemu území (cizí armády odejdou domů). */
+export const revokeAccessFrom = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(revokeAccess, me, t); };
 
 // ============================================================ půjčka a pronájem (M47)
 export function lendTo(tag, eq) {

@@ -231,6 +231,7 @@ function fightOne(ctx, bid) {
   resolveBreaks(ctx, b, att, dep);
   const r = refreshSides(ctx, b);
   if (!r.att.length || !r.dep.length) endBattle(ctx, b, r.att, r.dep, r.att.length > 0 && !r.dep.length);
+  else { b.att = r.att; b.dep = r.dep; }   // ustoupivší divize z bitvy odejdou hned (dřív zůstaly v seznamu do další hodiny a `syncEngaged` je znovu označil)
 }
 
 /** Ukončí bitvu: vítězní útočníci dostanou půlku cesty do provincie, všem se uvolní stav „v boji“. */

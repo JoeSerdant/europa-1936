@@ -7,6 +7,7 @@ import { atWar } from '../army/war.js';
 import { overlordOf, autonomyOf, autonomyLevel, autonomyBlock } from './subjects.js';
 import { lendFriend } from './lend.js';
 import { guarantees, guaranteeBlock } from './guarantee.js';
+import { hasAccess, grants, accessBlock, grantBlock } from './access.js';
 import { warBlock, justReady, peaceBlock, inviteBlock } from './commands.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
@@ -31,6 +32,8 @@ export function diplomacyOf(state, o) {
       canDeclare: !wb && justReady(state, o, t),
       goals: WARGOAL_IDS.map((g) => ({ id: g, n: WARGOALS[g].n, pp: WARGOALS[g].pp, days: WARGOALS[g].days, info: WARGOALS[g].info, block: wb || (j ? 'Už se ospravedlňuje.' : state.dip.just.filter((x) => x.a === o).length >= DIP.JUST_MAX ? 'Příliš mnoho ospravedlnění.' : state.pol.own[o].pp < WARGOALS[g].pp ? `Chybí politická moc (${Math.ceil(WARGOALS[g].pp - state.pol.own[o].pp)}).` : null) })),
       garMine: guarantees(state, o, t), garTheirs: guarantees(state, t, o), garBlock: guaranteeBlock(state, o, t),
+      access: hasAccess(state.dip, o, t), accGiven: hasAccess(state.dip, t, o),   // M67: smíte na jejich území / smějí na vaše
+      accDeal: grants(state, t, o), accMine: grants(state, o, t), accBlock: accessBlock(state, o, t), giveBlock: grantBlock(state, o, t),
       friend: lendFriend(state, o, t) && !hasCapitulated(state, t) && !war,
       peaceBlock: war ? peaceBlock(state, o, t) : 'Nejste ve válce.',
       inviteBlock: fac ? inviteBlock(state, o, t) : 'Nejste v žádném bloku.',

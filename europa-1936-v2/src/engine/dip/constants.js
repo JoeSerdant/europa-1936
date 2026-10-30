@@ -1,5 +1,8 @@
 // Vyvážení diplomacie (M23): všechna čísla na jednom místě. Čas ve dnech.
 export const DIP = {
+  ACC_PP: 10,             // žádost o vojenský přístup: cena v politické moci (M67)
+  ACC_REL: 20,            // nejmenší vztah, při kterém země dovolí cizí armádě průchod (jinak jen se zárukou)
+  ACC_REL_GAIN: 5,        // zlepšení vztahu za dohodu o přístupu (odvolání o totéž zhorší)
   WAR_LOCK_DAYS: 120,     // útočník nepřijme bílý mír v prvních tolika dnech války (M66)
   WAR_LOCK_SCORE: 0.15,   // ledaže prohrává o víc než tuto hodnotu válečného skóre
   GAR_PP: 10,             // záruka nezávislosti: cena v politické moci

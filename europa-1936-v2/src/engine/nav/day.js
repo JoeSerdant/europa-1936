@@ -2,6 +2,7 @@
 import { getWorld } from '../world.js';
 import { SHIPS, SHIP_IDS } from '../../data/navy/index.js';
 import { atWar } from '../army/war.js';
+import { hasAccess } from '../dip/accessCore.js';
 import { sameFaction } from '../dip/core.js';
 import { logAddMany } from '../log.js';
 import { NAV } from './constants.js';
@@ -44,11 +45,12 @@ function arrivals(state) {
     const enemyThere = divs.some((x) => x && x.p === s.to && atWar(state.mil, s.o, x.o));
     let place = s.to, landed = true;
     if (state.ctrl[s.to] !== s.o) {
-      if (enemyThere || !atWar(state.mil, s.o, state.ctrl[s.to])) { place = state.ctrl[s.from] === s.o ? s.from : s.to; landed = false; }
-      else {
+      const c = state.ctrl[s.to], foe = atWar(state.mil, s.o, c);
+      if (enemyThere || !(foe || hasAccess(state.dip, s.o, c))) { place = state.ctrl[s.from] === s.o ? s.from : s.to; landed = false; }
+      else if (foe) {
         if (!ctrlCopy) { ctrl = ctrl.slice(); ctrlCopy = true; }
         ctrl[s.to] = s.o; ownerVer++;
-      }
+      }   // u spojence se přistane bez záboru (M67)
     }
     const port = w.portLevel[place] > 0;
     divs[s.id] = { ...d, p: place, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0, org: d.org * (landed && !port ? NAV.LAND_ORG : 1) };

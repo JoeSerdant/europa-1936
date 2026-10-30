@@ -15,6 +15,8 @@ import { findPath } from './paths.js';
 import { adjKind } from './paths.js';
 import { editDiv, editArmy } from './ctx.js';
 import { statsOf, modsOf } from './unit.js';
+import { friendsOf } from '../dip/accessCore.js';
+import { supplyFlow } from './supply.js';
 
 export const PLAN_MODES = ['careful', 'balanced', 'rush'];
 export const MODE_NAMES = { careful: 'Opatrně', balanced: 'Vyváženě', rush: 'Zteče' };
@@ -42,6 +44,24 @@ export function quotas(total, weights) {
   return q;
 }
 
+/**
+ * Omezí podíly divizí na posty kapacitou zásobování (M67): post unese jen tolik divizí, kolik uživí jeho tok; přebytek jde na posty s volnou kapacitou
+ * (podle vah), a když nikde není místo, rozdělí se podle vah (hladovění nelze obejít). `caps` = nejvýš divizí na post (aspoň 1).
+ */
+export function capQuotas(q, caps, wt) {
+  const out = q.slice();
+  let excess = 0;
+  for (let i = 0; i < out.length; i++) if (out[i] > caps[i]) { excess += out[i] - caps[i]; out[i] = caps[i]; }
+  while (excess > 0) {
+    let best = -1;
+    for (let i = 0; i < out.length; i++) if (out[i] < caps[i] && (best < 0 || wt[i] > wt[best])) best = i;
+    if (best < 0) break;
+    out[best]++; excess--;
+  }
+  if (excess > 0) { const extra = quotas(excess, wt); for (let i = 0; i < out.length; i++) out[i] += extra[i]; }
+  return out;
+}
+
 /** Mapa armáda → seřazená pole id divizí (jednou za běh). */
 export function divisionsByArmy(ctx) {
   const m = new Map();
@@ -59,7 +79,7 @@ function makePathCache(ctx) {
   return (o, from, to) => {
     const key = `${o}:${from}:${to}`;
     if (cache.has(key)) return cache.get(key);
-    const path = findPath(ctx.mil, ctx.ctrl, o, from, to);
+    const path = findPath(ctx.mil, ctx.ctrl, o, from, to, { dip: ctx.state.dip });
     cache.set(key, path);
     return path;
   };
@@ -75,10 +95,19 @@ function sendTo(ctx, id, path) {
 }
 
 /** Provincie, v nichž má plán držet divize (jen ty, které země ještě ovládá). */
+/** Tok zásobování země `o` pro plánovač (jednou za běh kontextu; přátelské území se počítá do sítě). */
+function supplyOf(ctx, o) {
+  if (!ctx.supMemo) ctx.supMemo = new Map();
+  let r = ctx.supMemo.get(o);
+  if (!r) { r = supplyFlow(ctx.ctrl, o, undefined, ctx.state.dip ? friendsOf(ctx.state.dip, o) : null); ctx.supMemo.set(o, r); }
+  return r;
+}
+
 function postsOf(ctx, army) {
   const plan = army.plan;
   const list = plan.k === 'area' ? plan.area : plan.line;
-  return list.filter((p) => ctx.ctrl[p] === army.o);
+  const friends = ctx.state.dip ? new Set(friendsOf(ctx.state.dip, army.o)) : null;   // M67: posty smějí být i na území spojenců
+  return list.filter((p) => ctx.ctrl[p] === army.o || (friends !== null && friends.has(ctx.ctrl[p])));
 }
 
 /** Naplánuje jednu armádu. `byArmy` = divisionsByArmy(ctx), `pathOf` = mezipaměť cest. */
@@ -113,7 +142,14 @@ export function planArmy(ctx, armyId, byArmy, pathOf) {
       return s;
     });
     // každý post aspoň jednu divizi, pokud jich je dost; zbytek podle důležitosti
-    const q = ids.length >= posts.length ? quotas(ids.length - posts.length, wt).map((x) => x + 1) : quotas(ids.length, wt);
+    let q = ids.length >= posts.length ? quotas(ids.length - posts.length, wt).map((x) => x + 1) : quotas(ids.length, wt);
+    if (ids.length > posts.length) {   // zásobování: post unese jen tolik divizí, kolik uživí (M67)
+      let use = 0;
+      for (const id of ids) use += statsOf(ctx.mil, ctx.divs[id]).sup;
+      use = Math.max(0.1, use / ids.length);
+      const reach = supplyOf(ctx, o);
+      q = capQuotas(q, posts.map((p) => Math.max(1, Math.floor((reach[p] * C.SUP_CAPACITY) / use + 0.25))), wt);
+    }
     const want = new Map(posts.map((p, i) => [p, q[i]]));
     const have = new Map();
     const free = [];

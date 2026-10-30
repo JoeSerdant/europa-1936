@@ -5,6 +5,7 @@ import { C } from './constants.js';
 import { geo, adjacency } from './geo.js';
 import { TERRAIN_RULES, RIVER } from '../../data/army/terrain.js';
 import { atWar } from './war.js';
+import { hasAccess } from '../dip/accessCore.js';
 import { Heap } from './heap.js';
 
 /** Hodiny, za které pěšák (rychlost 4) přejde z `a` do sousední `b` po rovině × terén cíle × řeka. */
@@ -28,20 +29,21 @@ export function stepHoursFor(w, ctrl, o, a, b, kind) {
   return L ? h / (1 + C.RAIL_SPEED * L) : h;
 }
 
-/** Smí divize země `o` vstoupit do provincie s kontrolou `c`? Vlastní nebo nepřátelská ano, cizí neutrální ne. */
-export const canEnter = (mil, o, c) => c === o || atWar(mil, o, c);
+/** Smí divize země `o` vstoupit do provincie s kontrolou `c`? Vlastní nebo nepřátelská ano, cizí neutrální ne; s `dip` (M67) i území spojenců a se souhlasem. */
+export const canEnter = (mil, o, c, dip) => c === o || atWar(mil, o, c) || (!!dip && hasAccess(dip, o, c));
 
 /**
  * Nejkratší cesta z `from` do `to` jako pole provincií (bez výchozí). Vrací null, když neexistuje.
  * @param {object} mil stav armády (kvůli válkám)
  * @param {number[]} ctrl kdo která provincie ovládá
  * @param {number} o  země, která se pohybuje
- * @param {object} [opts] { maxHours }
+ * @param {object} [opts] { maxHours, dip } (`dip` = diplomacie: přes území spojenců a loutek se smí procházet)
  */
 export function findPath(mil, ctrl, o, from, to, opts = {}) {
   const w = getWorld(), adj = adjacency(w);
   if (from === to || !w.isLand(from) || !w.isLand(to)) return null;
-  if (!canEnter(mil, o, ctrl[to])) return null;
+  const dip = opts.dip;
+  if (!canEnter(mil, o, ctrl[to], dip)) return null;
   const maxH = opts.maxHours ?? Infinity;
   const dist = new Float64Array(w.L + 1).fill(Infinity);   // Float32 by zaokrouhlením uložených vzdáleností pod klíč haldy přeskočil uzly (dlouhé cesty se nenašly)
   const prev = new Int32Array(w.L + 1);
@@ -55,7 +57,7 @@ export function findPath(mil, ctrl, o, from, to, opts = {}) {
     for (const e of adj[p]) {
       const q = e.to;
       if (e.kind === 2) continue;
-      if (!canEnter(mil, o, ctrl[q])) continue;
+      if (!canEnter(mil, o, ctrl[q], dip)) continue;
       const nd = d + stepHoursFor(w, ctrl, o, p, q, e.kind);
       if (nd < dist[q] && nd <= maxH) { dist[q] = nd; prev[q] = p; heap.push(nd, q); }
     }

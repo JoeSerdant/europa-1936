@@ -55,7 +55,7 @@ export function movementStep(ctx) {
     if (!d0 || d0.path.length === 0 || d0.b !== 0) continue;
     const next = d0.path[0];
     const e = adj[d0.p].find((x) => x.to === next);
-    if (!e || e.kind === 2 || !canEnter(mil, d0.o, ctx.ctrl[next])) { clearOrder(ctx, id); continue; }
+    if (!e || e.kind === 2 || !canEnter(mil, d0.o, ctx.ctrl[next], ctx.state.dip)) { clearOrder(ctx, id); continue; }
     const at = atMap(ctx).get(next);
     const foes = at ? at.filter((x) => atWar(mil, d0.o, ctx.divs[x].o)) : [];
     const st = statsOf(mil, d0);
