@@ -37,6 +37,7 @@ export const uiStore = createStore({
   console: false,          // konzole s cheaty (M29)
   toast: null,             // krátké oznámení: { id, text }
   edgeScroll: edgeScrollOn(), // posun mapy okrajem obrazovky (M59)
+  battle: 0,               // otevřené okno bitvy (id bitvy, 0 = zavřené; M61)
   popups: [],              // vyskakovací karty oznámení (M58): { id, kind, icon, tone, title, text, lines, sticky }
 });
 

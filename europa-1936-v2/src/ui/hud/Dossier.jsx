@@ -3,7 +3,7 @@ import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
-import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, buildFortHere, justifyOn, selectFleet } from '../actions.js';
+import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, buildFortHere, justifyOn, selectFleet, openBattle } from '../actions.js';
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
 const KIND_NOTE = ['', 'přes řeku', 'průliv'];
@@ -108,6 +108,19 @@ function ProvinceFort({ p }) {
   );
 }
 
+/** Probíhající bitva v provincii: krátký souhrn a tlačítko do okna bitvy (M61). */
+function ProvinceBattle({ p }) {
+  const b = useGameSlow((g) => g.mil.battles.find((x) => x && x.p === p) || null, 700);
+  if (!b) return null;
+  return (
+    <section className="prov-battle">
+      <h3>Bitva</h3>
+      <dl className="kv"><Row label="Útočníci / obránci">{b.att.length} / {b.dep.length} divizí</Row><Row label="Trvá">{Math.floor(b.hrs / 24)} d {b.hrs % 24} h</Row></dl>
+      <div className="ind-btns"><button className="sbtn" onClick={() => openBattle(b.id)}><Icon name="swords" size={14} />Okno bitvy</button></div>
+    </section>
+  );
+}
+
 /** Okupace státu: odboj, poddajnost a garnizona (jen když je stát okupovaný). */
 function StateOccupation({ s }) {
   const state = useGameSlow((g) => g, 800);
@@ -202,6 +215,7 @@ function LandDossier({ p, owner, ctrl }) {
           <Row label="Železnice">{rail ? `úroveň ${rail} z 5` : 'žádná'}</Row>
           <Row label="Počasí">{weather.label}, {Math.round(weather.t)} °C</Row>
         </dl>
+        <ProvinceBattle p={p} />
         <ProvinceFort p={p} />
         <ProvinceUnits p={p} />
         <WarSection idx={owner[o.s]} name={own.name} />

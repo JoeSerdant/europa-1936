@@ -395,3 +395,26 @@ kbd {
 .popup li::before { content: '• '; color: var(--brass); }
 @keyframes popup-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .popup { animation: none; } }
+
+/* Okno bitvy (M61) */
+.battle-dialog { width: min(1100px, 94vw); max-height: 88vh; display: flex; flex-direction: column; }
+.bt-mid { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 16px 12px; }
+.bt-adv { position: relative; width: min(560px, 90%); height: 22px; background: rgba(200, 71, 47, 0.45); border: 1px solid var(--rule-hi); }
+.bt-adv i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(79, 140, 200, 0.75); }
+.bt-adv b { position: absolute; inset: 0; display: grid; place-items: center; font: 700 13px/1 var(--display); color: #fff; }
+.bt-adv u { position: absolute; left: 50%; top: -3px; bottom: -3px; border-left: 2px solid var(--brass-hi); }
+.bt-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 16px 16px; min-height: 0; overflow: auto; }
+.bt-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; border-top: 3px solid var(--rule-hi); background: rgba(15, 24, 33, 0.6); padding: 10px 12px; }
+.bt-side.att { border-top-color: #4f8cc8; }
+.bt-side.dep { border-top-color: #c8472f; }
+.bt-side header { display: flex; align-items: center; gap: 10px; }
+.bt-side h3 { margin: 0; font: 600 16px/1.1 var(--display); letter-spacing: 0.05em; text-transform: uppercase; color: var(--brass-hi); }
+.bt-cmd { display: flex; align-items: baseline; gap: 10px; margin: 0; }
+.bt-tot { display: flex; gap: 14px; flex-wrap: wrap; }
+.bt-tot span { display: flex; flex-direction: column; font-size: 12px; color: var(--text-3); }
+.bt-tot b { font: 600 15px/1.2 var(--display); color: var(--text-1, #eef); }
+.bt-units { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; max-height: 38vh; overflow: auto; }
+.bt-units li { display: grid; grid-template-columns: 30px 1fr 90px 52px; align-items: center; gap: 8px; padding: 3px 6px; background: rgba(8, 12, 17, 0.5); font-size: 13px; }
+.bt-units li.front { box-shadow: inset 3px 0 0 var(--brass); }
+.bt-units .meters { display: flex; flex-direction: column; gap: 2px; }
+.prov-battle .kv { margin-bottom: 6px; }

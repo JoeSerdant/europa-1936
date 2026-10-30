@@ -493,6 +493,13 @@ try {
   await page.locator('.popup').click();
   await page.waitForTimeout(150);
   check('klik na kartu ji zavře', (await page.locator('.popup').count()) === 0);
+  // okno bitvy (M61): otevře se podle id, neexistující bitva se ohlásí a Esc ho zavře
+  await E(() => { window.__e1936.uiStore.setState({ ...window.__e1936.uiStore.getState(), battle: 99999 }); });
+  await page.waitForSelector('.battle-dialog', { timeout: 3000 });
+  check('okno bitvy ohlásí skončenou bitvu', /skončila/i.test(await page.locator('.battle-dialog').innerText()));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  check('Esc zavře okno bitvy', (await page.locator('.battle-dialog').count()) === 0);
   // diplomacie (M23): panel Diplomacie (D), seznam zemí, rozbalení řádku, blok
   await page.keyboard.press('d');
   await page.waitForSelector('.dip-panel', { timeout: 3000 });
