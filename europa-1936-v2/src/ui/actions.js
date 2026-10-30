@@ -33,7 +33,7 @@ export function applyInsets() {
   mc.setInsets(u.selected || u.panel ? INSETS.gameDossier : INSETS.game);
 }
 
-const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, fleetSel: 0, console: false, toast: null, popups: [] };
+const FRESH_UI = { selected: 0, hover: 0, mode: 'political', menuOpen: false, selDivs: NONE, hoverUnits: null, panel: null, armyFocus: 0, open: {}, planEdit: null, designer: null, indTab: 'build', techCat: 'all', saveDialog: null, saveMsg: '', overview: false, fleetSel: 0, console: false, toast: null, popups: [], battle: 0 };
 
 /** Nastavení AI zemí pro novou hru (obrazovka výběru země). */
 export const setAiOptions = (patch) => setUi(patch);
@@ -723,6 +723,8 @@ export const quickSave = () => (uiStore.getState().screen === 'game' ? saveGame(
 export const quickLoad = () => loadGame('quick');
 
 // ============================================================ přehled zemí (M26)
+export const openBattle = (id) => setUi({ battle: id });
+export const closeBattle = () => setUi({ battle: 0 });
 export const openOverview = () => setUi({ overview: true });
 export const closeOverview = () => setUi({ overview: false });
 /** Zavře přehled a ukáže hlavní město země `o` (označí provincii a přeletí kamerou). */

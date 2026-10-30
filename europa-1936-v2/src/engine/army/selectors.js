@@ -245,3 +245,22 @@ export function suggestFront(state, armyId, depth = 8, limit = 80) {
 export const manpowerOf = (state, o) => state.mil.man[idxOf(o)] || 0;
 export const stockOf = (state, o) => state.mil.stock[idxOf(o)] || null;
 export const queueOf = (state, o) => state.mil.queue.filter((q) => q.o === idxOf(o));
+
+/** Podrobnosti bitvy pro okno bitvy (M61): provincie, terén, trvání, postup útočníků a obě strany s veliteli a divizemi (`front` = bojuje na frontě). Neexistující bitva = null. */
+export function battleView(state, id) {
+  const mil = state.mil, b = mil.battles.find((x) => x && x.id === id);
+  if (!b) return null;
+  const w = getWorld();
+  const side = (ids, front) => {
+    const units = ids.map((d) => { const v = divisionView(state, d); return v ? { ...v, front: front.includes(d) } : null; }).filter(Boolean);
+    const first = units.find((u) => u.army && mil.armies[u.army] && mil.armies[u.army].cmd);
+    const cmd = first ? mil.gens[mil.armies[first.army].cmd] || null : null;
+    const o = units.length ? units[0].o : 0;
+    return {
+      o, cmd, units,
+      hp: units.reduce((a, u) => a + u.hp, 0), hpMax: units.reduce((a, u) => a + u.hpMax, 0),
+      org: units.length ? units.reduce((a, u) => a + u.orgPct, 0) / units.length : 0,
+    };
+  };
+  return { id, p: b.p, terrain: w.terrain[b.p], hrs: b.hrs, adv: b.adv, att: side(b.att, b.fa || []), dep: side(b.dep, b.fd || []) };
+}

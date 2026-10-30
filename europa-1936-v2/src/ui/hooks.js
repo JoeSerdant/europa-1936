@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, pushPopup, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, pushPopup, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
@@ -66,6 +66,7 @@ export function useHotkeys() {
       if (e.key === 'F1' || e.key === '?') { e.preventDefault(); setHelp(!ui.helpOpen); return; }
       if (ui.saveDialog) { if (e.key === 'Escape') closeSaveDialog(); return; }
       if (ui.overview && e.key === 'Escape') { closeOverview(); return; }
+      if (ui.battle && e.key === 'Escape') { closeBattle(); return; }
       if (e.key === 'F2' || e.key === '`' || e.key === '~' || e.code === 'Backquote') { e.preventDefault(); if (uiStore.getState().screen === 'game') toggleConsole(); return; }
       if (ui.console && e.key === 'Escape') { closeConsole(); return; }
       if (e.key === 'F6') { e.preventDefault(); quickSave(); return; }
