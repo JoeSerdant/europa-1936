@@ -1,10 +1,10 @@
 // Historické sklony AI k válce (M24). Nejsou to scénáře: válka vznikne, jen když jsou splněny podmínky (ospravedlnění, stabilita, poměr sil).
 //  from/until  okno ve dnech hry (0 = 1. 1. 1936)   ratio  nejmenší poměr divizí útočníkova bloku k obráncovu bloku
 export const HIST_WARS = [
-  { tag: 'GER', target: 'CZE', from: 900, until: 1500, ratio: 0.5 },
+  { tag: 'GER', target: 'CZE', from: 900, until: 1500, ratio: 0.9 },
   { tag: 'GER', target: 'POL', from: 1200, until: 2000, ratio: 0.5 },
-  { tag: 'ITA', target: 'ALB', from: 1000, until: 1800, ratio: 0.5 },
-  { tag: 'ITA', target: 'GRE', from: 1500, until: 2200, ratio: 0.7 },
+  { tag: 'ITA', target: 'ALB', from: 1000, until: 1800, ratio: 1.0 },
+  { tag: 'ITA', target: 'GRE', from: 1500, until: 2200, ratio: 1.0 },
   { tag: 'SOV', target: 'FIN', from: 1350, until: 1900, ratio: 0.8 },
   { tag: 'SOV', target: 'EST', from: 1500, until: 2100, ratio: 0.6 },
   { tag: 'SOV', target: 'LAT', from: 1500, until: 2100, ratio: 0.6 },

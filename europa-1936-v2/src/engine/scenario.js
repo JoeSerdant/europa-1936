@@ -14,6 +14,7 @@ import { grantTech } from './research/commands.js';
 import { AIR } from './air/constants.js';
 import { PLANE_IDS } from '../data/air/planes.js';
 
+const pairKeyOf = (a, b) => (a < b ? `${a}-${b}` : `${b}-${a}`);
 const growthOf = (sc, tag) => sc.growth[tag] || sc.growth.default;
 
 /** Převede stát `s` na zemi `to`: vlastnictví i kontrola provincií; jednotky původního vlastníka v něm zaniknou. */
@@ -171,7 +172,13 @@ export function applyScenario(state, id) {
     for (const o of mem) fac[o] = facs.length - 1;
   }
   s = { ...s, dip: { ...s.dip, fac, facs, ver: s.dip.ver + 1 } };
-  for (const [a, b] of sc.wars) s = declareWar(s, a, b);
+  const goal = { ...s.dip.goal }, since = { ...s.dip.since };
+  for (const [a, b, att] of sc.wars) {
+    s = declareWar(s, a, b);
+    since[pairKeyOf(w.ownerIdx[a], w.ownerIdx[b])] = sc.tick;
+    if (att === 'att') goal[`${w.ownerIdx[a]}>${w.ownerIdx[b]}`] = 'conquest';   // útočník války (AI se podle toho rozhoduje o útoku, M66)
+  }
+  s = { ...s, dip: { ...s.dip, goal, since, ver: s.dip.ver + 1 } };
   // 4) čas
   return { ...s, tick: sc.tick };
 }

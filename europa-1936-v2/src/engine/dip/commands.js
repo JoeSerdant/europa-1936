@@ -66,6 +66,10 @@ export function startWar(state, a, b) {
 export function peaceBlock(state, a, b) {
   if (!ok(a) || !ok(b) || a === b || !atWar(state.mil, a, b)) return 'Nejste ve válce.';
   if (warScore(state, b, a) >= DIP.PEACE_SCORE) return 'Protivník vyhrává a bílý mír odmítá.';
+  const oa = state.dip.sub[a], ob = state.dip.sub[b];   // M66: loutka vede války pána, vlastní mír neuzavře (jinak by ji pán hned zase vtáhl do války)
+  if ((oa && atWar(state.mil, oa, b)) || (ob && atWar(state.mil, ob, a))) return 'Loutka vede válku svého pána a vlastní mír neuzavře.';
+  const since = state.dip.since[pairKey(a, b)];   // M66: útočník (válka s cílem) nepřijme bílý mír hned po začátku války, dokud neprohrává
+  if (state.dip.goal[`${b}>${a}`] && since != null && (state.tick - since) / 24 < DIP.WAR_LOCK_DAYS && warScore(state, b, a) > -DIP.WAR_LOCK_SCORE) return 'Útočník chce válku dokončit a bílý mír zatím odmítá.';
   return null;
 }
 

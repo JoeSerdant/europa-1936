@@ -71,6 +71,7 @@ describe('armáda AI', () => {
   it('ve válce AI přidělí útočné plány, je-li poměr sil příznivý, a nepřidělí slabší straně', () => {
     // ITA (AI) proti YUG: ITA je silnější
     let w = declareWar(base(), 'ITA', 'YUG');
+    w = { ...w, dip: { ...w.dip, goal: { ...w.dip.goal, [`${ITA}>${YUG}`]: 'conquest' }, since: { [`${Math.min(ITA, YUG)}-${Math.max(ITA, YUG)}`]: 0 } } };   // ITA je útočník a válka právě začala (M66)
     w = day(w, 8);
     const plans = w.mil.armies.filter((a) => a && a.o === ITA && a.plan);
     expect(plans.length).toBeGreaterThan(0);
@@ -91,14 +92,16 @@ describe('diplomacie AI', () => {
     expect(atWar(lost, 'ITA', 'FRA') || lost.dip.cap[ITA] === 1 || lost.dip.sub[ITA] === FRA).toBe(true);   // vítěz mír odmítl (nebo ITA kapitulovala)
   });
   it('vleklá válka bez výsledku skončí bílým mírem', () => {
+    // Británie a SSSR se nedotýkají: žádná fronta, skóre zůstane nulové a po čase AI uzavře bílý mír
+    const ENG = idx('ENG');
     const s = createGame({ player: 'SWE', aiLevel: 2, hist: false });
-    const j = { ...s, dip: { ...s.dip, just: [{ a: GER, b: SOV, ready: 0 }] } };
-    const w = startWar(j, GER, SOV);
-    expect(atWar(w, 'GER', 'SOV')).toBe(true);
-    expect(w.dip.since[`${Math.min(GER, SOV)}-${Math.max(GER, SOV)}`]).toBe(0);
-    expect(atWar(day(w, 100), 'GER', 'SOV')).toBe(true);
+    const j = { ...s, dip: { ...s.dip, just: [{ a: ENG, b: SOV, ready: 0 }] } };
+    const w = startWar(j, ENG, SOV);
+    expect(atWar(w, 'ENG', 'SOV')).toBe(true);
+    expect(w.dip.since[`${Math.min(ENG, SOV)}-${Math.max(ENG, SOV)}`]).toBe(0);
+    expect(atWar(day(w, 100), 'ENG', 'SOV')).toBe(true);
     const later = day(w, AI.STALEMATE_DAYS + 20);
-    expect(atWar(later, 'GER', 'SOV')).toBe(false);
+    expect(atWar(later, 'ENG', 'SOV')).toBe(false);
     expect(Object.keys(later.dip.since)).toHaveLength(0);
   });
   it('historický plán: Itálie ospravedlní a napadne Albánii v okně plánu; bez `hist` ne', () => {
