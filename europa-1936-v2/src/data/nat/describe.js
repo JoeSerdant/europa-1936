@@ -3,6 +3,7 @@ import { LAWS } from '../politics/laws.js';
 import { ADVISORS } from '../politics/advisors.js';
 import { TECHS } from '../research/techs.js';
 import { EQUIP } from '../army/equipment.js';
+import { IDEOLOGIES } from '../countries.js';
 
 const MOD = { stab: 'stabilita', ws: 'podpora války', cons: 'spotřební zboží', build: 'stavby', prod: 'výroba', extract: 'těžba', imp: 'cena dovozu', man: 'lidská síla', research: 'výzkum' };
 const sign = (v) => (v > 0 ? '+' : '−');
@@ -15,6 +16,7 @@ export function fxText(fx) {
     case 'pp': return `Politická moc ${fx.v > 0 ? '+' : '−'}${Math.abs(fx.v)}`;
     case 'stab': return `Stabilita ${pct(fx.v)}`;
     case 'ws': return `Podpora války ${pct(fx.v)}`;
+    case 'party': return `Podpora ${fx.i === 'gov' ? 'vládnoucí strany' : `strany „${IDEOLOGIES[fx.i]?.name || fx.i}“`} ${fx.v > 0 ? '+' : '−'}${Math.abs(fx.v)} b.`;
     case 'law': return `Zákon: ${LAWS[fx.cat][fx.id].n}`;
     case 'adv': return `Poradce: ${ADVISORS[fx.id].n}`;
     case 'factory': return `${fx.n}× ${fx.k === 'civ' ? 'civilní' : 'vojenská'} továrna`;

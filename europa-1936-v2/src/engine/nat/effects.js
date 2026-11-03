@@ -10,6 +10,7 @@ import { isAvailable } from '../research/core.js';
 import { countryStats } from '../selectors.js';
 import { addXp } from '../doc/commands.js';
 import { resolveDemand } from '../dip/demand.js';
+import { pushParty, ideologyOf } from '../politics/parties.js';
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const touch = (state, o, fn) => {
@@ -45,6 +46,7 @@ function applyOne(state, o, e) {
     case 'pp': return setPol(state, o, (p) => ({ pp: Math.max(0, p.pp + e.v) }));
     case 'stab': return setPol(state, o, (p) => ({ stab: clamp01(p.stab + e.v) }));
     case 'ws': return setPol(state, o, (p) => ({ ws: clamp01(p.ws + e.v) }));
+    case 'party': return pushParty(state, o, e.i === 'gov' ? ideologyOf(state, o) : e.i, e.v);   // M72: podpora strany (`i` = ideologie, nebo 'gov' = vládnoucí strana)
     case 'law': return LAWS[e.cat]?.[e.id] ? setPol(state, o, (p) => ({ laws: { ...p.laws, [e.cat]: e.id } })) : state;
     case 'adv': return ADVISORS[e.id] ? setPol(state, o, (p) => ({ adv: { ...p.adv, [e.slot]: e.id } })) : state;
     case 'factory': {

@@ -10,6 +10,7 @@ import { hasCapitulated, isDormant, setRel, pairKey } from '../dip/core.js';
 import { HIST_CIVIL } from '../../data/dip/civil.js';
 import { RELEASES } from '../../data/dip/releases.js';
 import { DIP } from '../dip/constants.js';
+import { startGov } from '../politics/setup.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -84,7 +85,7 @@ export function splitCountry(state, parent, rebel, ids, civil = true, defect = 0
   copyOwn('tech'); copyOwn('doc');
   {
     const own = s.pol.own.slice();
-    own[rebel] = { ...clone(own[parent]), stab: 0.45, ws: 0.6, pp: 40 };
+    own[rebel] = { ...clone(own[parent]), stab: 0.45, ws: 0.6, pp: 40, ...startGov(w.owners[rebel].tag) };   // M72: povstalci mají vlastní vládu i strany
     own[parent] = { ...own[parent], stab: Math.max(0.15, own[parent].stab - 0.12) };
     s = { ...s, pol: { ...s.pol, own } };
   }

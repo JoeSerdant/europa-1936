@@ -9,7 +9,7 @@ import {
   justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, warBlock, peaceBlock, inviteBlock, justReady,
   formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, orderSail, sailBlock, navyOf, SHIPS,
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
-  setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS,
+  setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
@@ -659,6 +659,16 @@ export function changeLaw(cat, id) {
   if (why) { toast(why); return false; }
   const ok = run(setLaw, me, cat, id);
   if (ok) toast(`Zákon „${LAWS[cat][id].n}“ je v platnosti.`);
+  return ok;
+}
+/** Podpoří stranu `ideo` v zemi hráče (M72); při neúspěchu napíše důvod. */
+export function backParty(ideo) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me) return false;
+  const why = supportBlock(s, me, ideo);
+  if (why) { toast(why); return false; }
+  const ok = run(supportParty, me, ideo);
+  if (ok) toast('Podpora strany vzrostla.');
   return ok;
 }
 /** Najme poradce do slotu hráče; při nedostatku politické moci napíše důvod. */

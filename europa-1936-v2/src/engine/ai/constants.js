@@ -75,6 +75,8 @@ export const AI = {
   INV_REINF: 6,                     // základ hodnocení posil držené předmostí
   INV_KM: 1500,                     // srážka za 1 bod: tolik km plavby
   UNREACH: 1e8,                     // vzdálenost „nedosažitelné po souši“ při přidělování armád divadlům
+  PARTY_MARGIN: 15,                 // strany (M72): AI podpoří vládnoucí stranu, když její náskok před nejsilnějším soupeřem klesne pod tolik bodů
+  PARTY_RESERVE: 80,                // a má aspoň tolik politické moci
   PEACE_POSTS: 8,                   // domácích postů na armádu v míru
   PEACE_POSTS_MIN: 12,
   PEACE_SPREAD: 40,                 // příplatek (pixely) za každý už přidělený post – rozloží posty mezi armády

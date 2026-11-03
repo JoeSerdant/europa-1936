@@ -7,6 +7,7 @@ import { atWar, enemiesOf } from '../army/war.js';
 import { DIP } from './constants.js';
 import { WARGOALS } from '../../data/dip/wargoals.js';
 import { logAdd } from '../log.js';
+import { ideologyOf } from '../politics/parties.js';
 import { joiningGuarantors, breakGuarantees } from './guarantee.js';
 import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey } from './core.js';
 
@@ -95,7 +96,7 @@ export function inviteScore(state, o, target) {
   let sc = relOf(state, o, target);
   const e1 = new Set(enemiesOf(state.mil, o));
   if (enemiesOf(state.mil, target).some((x) => e1.has(x))) sc += DIP.INVITE_ENEMY;
-  if (COUNTRIES[tagOf(o)]?.ideology === COUNTRIES[tagOf(target)]?.ideology) sc += DIP.INVITE_IDEO;
+  if (ideologyOf(state, o) === ideologyOf(state, target)) sc += DIP.INVITE_IDEO;
   void tier;
   return sc;
 }

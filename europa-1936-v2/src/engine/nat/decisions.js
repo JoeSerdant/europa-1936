@@ -1,7 +1,7 @@
 // Rozhodnutí (M35): příkaz `takeDecision` a přehled `decisionsOf`. Podmínky jsou data (data/nat/decisions.js), účinky provádí `applyFx`.
 import { getWorld } from '../world.js';
 import { DECISIONS, DECISION_BY_ID, DECISION_CATS } from '../../data/nat/decisions.js';
-import { COUNTRIES } from '../../data/countries.js';
+import { ideologyOf } from '../politics/parties.js';
 import { hasWar } from '../army/war.js';
 import { applyFx } from './effects.js';
 import { fxLinesOf } from '../../data/nat/describe.js';
@@ -14,7 +14,7 @@ export function decisionBlock(state, o, id) {
   if (!d || !Number.isInteger(o) || o < 1 || o >= w.owners.length || state.dip.cap[o]) return 'Rozhodnutí nelze použít.';
   const tag = w.owners[o].tag, c = d.when || {};
   if (c.tag && !c.tag.includes(tag)) return 'Pro tuto zemi není.';
-  if (c.ideo && !c.ideo.includes(COUNTRIES[tag]?.ideology)) return 'Neodpovídá ideologii vlády.';
+  if (c.ideo && !c.ideo.includes(ideologyOf(state, o))) return 'Neodpovídá ideologii vlády.';
   const war = hasWar(state.mil, o);
   if (c.war === true && !war) return 'Jen za války.';
   if (c.war === false && war) return 'Jen v míru.';
