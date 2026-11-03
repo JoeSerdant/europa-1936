@@ -6,6 +6,7 @@ import { BUILDINGS, isShip, isAir } from '../../data/industry/index.js';
 import { modsOf } from '../research/core.js';
 import { convoysOf, tradeFactor } from '../nav/convoy.js';
 import { polModsOf, outMult, consOf } from '../politics/core.js';
+import { fuelDay } from '../fuel/index.js';
 import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
 
 const warKey = (a, b) => (a < b ? a * 1000 + b : b * 1000 + a);
@@ -49,6 +50,7 @@ export function industryDay(state) {
   let navPool = state.nav ? state.nav.pool : null, poolOwn = false;
   let airPool = state.air ? state.air.pool : null, airOwn = false;
   const lines = [];
+  const oil = new Array(nO).fill(0);   // M73: přebytek ropy po výrobě výzbroje (surovina paliva)
   const progress = new Map();   // id stavby → nový postup
   const done = [];              // dokončené stavby
   const dropped = new Set();
@@ -60,6 +62,7 @@ export function industryDay(state) {
     const pm = polModsOf(state, o), out = outMult(state, o);
     const res = resFlows(tally[o], dem[o], trade, o, mods.extract + pm.extract);
     const cap = I.EFF_CAP + mods.effCap;
+    if (res.ropa) oil[o] = res.ropa.ext - res.ropa.exp + res.ropa.imp - res.ropa.dem;
     for (const l of linesBy[o]) {
       const f = lineFactor(l, res);
       let acc = l.acc + lineRate(l, lvo) * f * out;
@@ -112,5 +115,5 @@ export function industryDay(state) {
   const player = state.player ? w.ownerIdx[state.player] : 0;
   const nav = poolOwn ? { ...state.nav, pool: navPool, ver: state.nav.ver + 1 } : state.nav;
   const air = airOwn ? { ...state.air, pool: airPool, ver: state.air.ver + 1 } : state.air;
-  return logAddMany({ ...state, mil, nav, air, ind: next }, done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k, p: b.p })));
+  return logAddMany(fuelDay({ ...state, mil, nav, air, ind: next }, oil, tally), done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k, p: b.p })));
 }

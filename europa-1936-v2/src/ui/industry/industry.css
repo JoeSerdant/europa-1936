@@ -483,3 +483,9 @@ button.st-row:hover { background: var(--ink-3); }
 .af-sep { width: 1px; align-self: stretch; background: var(--rule-hi); margin: 0 4px; }
 .chip-btn { padding: 4px 10px; background: rgba(15, 24, 33, 0.85); border: 1px solid var(--rule); color: var(--text-2); cursor: pointer; font-size: 13px; }
 .chip-btn.on, .chip-btn:hover { border-color: var(--brass); color: var(--brass-hi); }
+.lg-fuel { margin-top: 14px; padding: 8px 12px; background: rgba(22, 34, 45, 0.75); box-shadow: inset 0 0 0 1px var(--rule); }
+.lg-fuel .sec-head { margin: 0 0 6px; }
+.lg-fuel .bar { display: block; height: 6px; background: var(--ink-0); }
+.lg-fuel .bar i { display: block; height: 100%; background: var(--brass-hi); }
+.lg-fuel.bad .bar i { background: var(--red, #e07a6a); }
+.lg-fuel p { margin-top: 6px; font-size: 12.5px; }

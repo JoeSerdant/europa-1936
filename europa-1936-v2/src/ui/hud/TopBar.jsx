@@ -3,7 +3,7 @@ import { gameStore, useGame } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { COUNTRIES } from '../../data/countries.js';
-import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension } from '../../engine/index.js';
+import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension, fuelOf } from '../../engine/index.js';
 import { setHelp, setMenuOpen, openOverview } from '../actions.js';
 import { fmtInt, fmtPop } from '../format.js';
 
@@ -35,9 +35,9 @@ function Clock() {
 
 const getWorldIdx = (s) => getWorld().ownerIdx[s.player];
 
-function Stat({ icon, label, value, opt = false }) {
+function Stat({ icon, label, value, opt = false, hint = '' }) {
   return (
-    <div className={`stat ${opt === 'wide' ? 'opt wide' : opt ? 'opt' : ''}`} title={label}>
+    <div className={`stat ${opt === 'wide' ? 'opt wide' : opt ? 'opt' : ''}`} title={hint || label}>
       <Icon name={icon} size={18} />
       <span><i>{label}</i><b>{value}</b></span>
     </div>
@@ -65,6 +65,8 @@ export function TopBar() {
   }, [tag, owner, ind, ctrl]);
   const convoys = useGame((s) => (s.player ? transportsOf(s, getWorldIdx(s)).free : 0));
   const xp = useGame((s) => { const e = s.player ? s.doc.own[getWorld().ownerIdx[s.player]] : null; return e ? `${Math.floor(e.xp.land)} / ${Math.floor(e.xp.air)} / ${Math.floor(e.xp.sea)}` : ''; });
+  const fuel = useGame((s) => { if (!s.player) return ''; const f = fuelOf(s, getWorldIdx(s)); return `${Math.floor(f.stock)}|${f.gain.toFixed(1)}|${f.use.toFixed(1)}|${f.low ? 1 : 0}`; });
+  const [fuelStock, fuelGain, fuelUse, fuelLow] = fuel ? fuel.split('|') : [];
   const tension = useGame((s) => Math.round(worldTension(s) * 100));
   return (
     <header className="topbar">
@@ -91,6 +93,7 @@ export function TopBar() {
             <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} opt />
             <Stat icon="general" label="Zkušenosti: armáda / letectvo / námořnictvo" value={xp} opt="wide" />
             <Stat icon="navy" label="Volné transporty" value={fmtInt(convoys)} opt />
+            {fuel && <Stat icon="supply" label="Palivo" hint={`Palivo: zásoba ${fuelStock}, výroba ${fuelGain} a spotřeba ${fuelUse} za den${fuelLow === '1' ? ' (nedostatek)' : ''}`} value={fuelStock} opt />}
             <Stat icon="regions" label="Napětí ve světě" value={`${tension} %`} opt />
           </div>
         )}

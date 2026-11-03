@@ -9,6 +9,7 @@
 //  kind  druh výzbroje, kterou prapor „používá“ pro úroveň výzbroje (viz EQUIP_LEVEL_MULT)
 //  unlock  null = k dispozici od začátku, jinak id technologie, která jednotku odemyká (data/research/techs.js)
 //  sym   značka pro žeton na mapě
+//  fuel  spotřeba paliva za den v pohybu nebo v boji (M73; jen motorizované a tankové prapory)
 
 export const BATTALIONS = {
   pesi: {
@@ -34,7 +35,7 @@ export const BATTALIONS = {
     info: 'Vycvičení pro hory a pahorkatiny: tam útočí a brání se lépe a pohybují se rychleji.',
   },
   motor: {
-    n: 'Motorizovaný prapor', ab: 'MOT', sym: 'mot', w: 2, hp: 22, org: 45, men: 1000, days: 80, spd: 8, sup: 0.08,
+    n: 'Motorizovaný prapor', ab: 'MOT', sym: 'mot', w: 2, hp: 22, org: 45, men: 1000, days: 80, spd: 8, sup: 0.08, fuel: 0.03,
     soft: 4.5, hard: 0.9, pierce: 3, def: 15, brk: 3, armor: 0, hardness: 0.1,
     need: { pusky: 90, auta: 35 }, kind: 'pusky',
     terr: { 1: { atk: -0.1, mov: -0.4 }, 3: { atk: -0.05 }, 4: { atk: -0.1, mov: -0.3 }, 6: { atk: -0.1 }, r: { atk: -0.1, mov: -0.1 } },
@@ -42,7 +43,7 @@ export const BATTALIONS = {
     info: 'Pěchota na nákladních autech: dvojnásobná rychlost, ale závislá na silnicích a zásobování.',
   },
   ltank: {
-    n: 'Lehký tankový prapor', ab: 'LTK', sym: 'arm', w: 2, hp: 8, org: 30, men: 450, days: 100, spd: 8, sup: 0.12,
+    n: 'Lehký tankový prapor', ab: 'LTK', sym: 'arm', w: 2, hp: 8, org: 30, men: 450, days: 100, spd: 8, sup: 0.12, fuel: 0.05,
     soft: 10, hard: 7, pierce: 11, def: 3, brk: 17, armor: 9, hardness: 0.5,
     need: { ltanky: 40, podpora: 8 }, kind: 'ltanky',
     terr: { 1: { atk: -0.3, mov: -0.4 }, 2: { atk: -0.1 }, 3: { atk: -0.2 }, 4: { atk: -0.1, mov: -0.1 }, 6: { atk: -0.4, def: -0.1 }, r: { atk: -0.2, mov: -0.2 } },
@@ -51,21 +52,21 @@ export const BATTALIONS = {
   },
   // ---- odemyká výzkum (M20) ----
   mech: {
-    n: 'Mechanizovaný prapor', ab: 'MEC', sym: 'mot', w: 2, hp: 26, org: 50, men: 1000, days: 100, spd: 8, sup: 0.14,
+    n: 'Mechanizovaný prapor', ab: 'MEC', sym: 'mot', w: 2, hp: 26, org: 50, men: 1000, days: 100, spd: 8, sup: 0.14, fuel: 0.05,
     soft: 5, hard: 3.5, pierce: 8, def: 20, brk: 5, armor: 8, hardness: 0.2,
     need: { pusky: 90, vozy: 40 }, kind: 'vozy',
     terr: { 1: { atk: -0.2 }, 3: { atk: -0.05 }, 4: { atk: -0.1 }, 6: { atk: -0.2, def: -0.05 }, r: { atk: -0.2, mov: -0.2 } },
     unlock: 'mech', info: 'Pěchota v obrněných transportérech.',
   },
   mtank: {
-    n: 'Střední tankový prapor', ab: 'STK', sym: 'arm', w: 2, hp: 10, org: 35, men: 500, days: 120, spd: 8, sup: 0.18,
+    n: 'Střední tankový prapor', ab: 'STK', sym: 'arm', w: 2, hp: 10, org: 35, men: 500, days: 120, spd: 8, sup: 0.18, fuel: 0.07,
     soft: 15, hard: 13, pierce: 26, def: 5, brk: 30, armor: 26, hardness: 0.6,
     need: { mtanky: 40, podpora: 8 }, kind: 'mtanky',
     terr: { 1: { atk: -0.3, mov: -0.4 }, 2: { atk: -0.1 }, 3: { atk: -0.2 }, 4: { atk: -0.1, mov: -0.1 }, 6: { atk: -0.4, def: -0.1 }, r: { atk: -0.2, mov: -0.2 } },
     unlock: 'mtank', info: 'Páteř tankových divizí.',
   },
   htank: {
-    n: 'Těžký tankový prapor', ab: 'TTK', sym: 'arm', w: 2, hp: 12, org: 30, men: 550, days: 140, spd: 6, sup: 0.26,
+    n: 'Těžký tankový prapor', ab: 'TTK', sym: 'arm', w: 2, hp: 12, org: 30, men: 550, days: 140, spd: 6, sup: 0.26, fuel: 0.1,
     soft: 18, hard: 18, pierce: 40, def: 8, brk: 28, armor: 42, hardness: 0.7,
     need: { htanky: 30, podpora: 10 }, kind: 'htanky',
     terr: { 1: { atk: -0.4, mov: -0.4 }, 2: { atk: -0.2 }, 3: { atk: -0.3 }, 4: { atk: -0.4, mov: -0.2 }, 6: { atk: -0.5, def: -0.2 }, r: { atk: -0.4, mov: -0.4 } },

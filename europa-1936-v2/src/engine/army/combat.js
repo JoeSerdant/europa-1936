@@ -13,6 +13,7 @@ import { atWar } from './war.js';
 import { adjKind } from './paths.js';
 import { atMap, editDiv, removeDiv, relocate, removeBattle, editBattle, editGen, addMan, addCas, bumpVer, rnd } from './ctx.js';
 import { statsOf, lackOf, modsOf } from './unit.js';
+import { fuelRatio, FUEL } from '../fuel/index.js';
 
 /** Násobek zásahu podle poměru průrazu a pancíře cíle. */
 export function pierceMult(pierce, armor) {
@@ -53,6 +54,7 @@ function profile(ctx, id, role, info) {
     if (info.dirs > 1) f += C.MULTIDIR_DEF * (1 - 1 / info.dirs);
   }
   a -= weatherAt(ctx.tick, info.p).atk;   // M43: počasí v bojové provincii
+  if (st.mech) { const fl = st.mech * (1 - fuelRatio(ctx.state, d.o)); a -= FUEL.ATK * fl; f -= FUEL.DEF * fl; }   // M73: nedostatek paliva
   const side = att ? info.attSide : info.depSide;
   const asup = ctx.state.air && ctx.state.air.sup;   // M30: podpora z letadel (klíč `vlastník:stát`)
   if (asup) a += asup[`${d.o}:${getWorld().provState[d.p]}`] || 0;

@@ -8,6 +8,7 @@ import { logAddMany } from '../log.js';
 import { NAV } from './constants.js';
 import { tradeRoute, routeRisk, needOf } from './convoy.js';
 import { docMods } from '../doc/core.js';
+import { fuelNavMult } from '../fuel/index.js';
 import { seaGraph, seaKm, powerOf, fleetSpeed, seaRoute, homeSeas, seaBlocked } from './core.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
@@ -20,7 +21,7 @@ function moveFleets(state) {
   for (let i = 1; i < fleets.length; i++) {
     const f = fleets[i];
     if (!f || !f.path.length) continue;
-    const spd = fleetSpeed(f.ships);
+    const spd = fleetSpeed(f.ships) * fuelNavMult(state, f.o);
     if (!spd) continue;
     const hours = Math.max(1, seaKm(w, f.p, f.path[0]) / spd);
     let prog = f.prog + 100 / hours, p = f.p, path = f.path;

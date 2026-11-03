@@ -10,6 +10,7 @@ import { atWar } from './war.js';
 import { canEnter, stepHours, railLevel } from './paths.js';
 import { atMap, editDiv, relocate, setCtrl, addBattle, editBattle, battleById } from './ctx.js';
 import { statsOf, lackOf, modsOf } from './unit.js';
+import { fuelRatio, FUEL } from '../fuel/index.js';
 
 export const MIN_ORG_TO_ATTACK = 0.1;   // podíl maxima organizace, pod který divize nezačíná útok
 
@@ -28,6 +29,7 @@ export function moveSpeed(ctx, d, st, next, kind) {
   const share = st.org ? d.org / st.org : 1;
   if (share < C.ORG_SPEED_LOW) mult += C.ORG_SPEED_ZERO * (1 - share / C.ORG_SPEED_LOW);
   mult += C.SUP_SPEED * lackOf(d);
+  if (st.mech) mult -= FUEL.SPEED * st.mech * (1 - fuelRatio(ctx.state, d.o));   // M73: nedostatek paliva
   return st.speed * Math.max(0.1, mult);
 }
 
