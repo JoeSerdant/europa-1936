@@ -17,6 +17,7 @@ import { editDiv, editArmy } from './ctx.js';
 import { statsOf, modsOf } from './unit.js';
 import { friendsOf } from '../dip/accessCore.js';
 import { supplyFlow } from './supply.js';
+import { seaPorts } from '../nav/core.js';
 
 export const PLAN_MODES = ['careful', 'balanced', 'rush'];
 export const MODE_NAMES = { careful: 'Opatrně', balanced: 'Vyváženě', rush: 'Zteče' };
@@ -99,7 +100,7 @@ function sendTo(ctx, id, path) {
 function supplyOf(ctx, o) {
   if (!ctx.supMemo) ctx.supMemo = new Map();
   let r = ctx.supMemo.get(o);
-  if (!r) { r = supplyFlow(ctx.ctrl, o, undefined, ctx.state.dip ? friendsOf(ctx.state.dip, o) : null); ctx.supMemo.set(o, r); }
+  if (!r) { r = supplyFlow(ctx.ctrl, o, undefined, ctx.state.dip ? friendsOf(ctx.state.dip, o) : null, seaPorts(ctx.state, o)); ctx.supMemo.set(o, r); }
   return r;
 }
 

@@ -2,6 +2,7 @@
 import { weatherAt } from '../../engine/weather.js';
 import { TERRAIN } from '../../engine/worldCore.js';
 import { supplyFlow } from '../../engine/army/supply.js';
+import { seaPorts } from '../../engine/nav/core.js';
 import { friendsOf } from '../../engine/dip/accessCore.js';
 import { infraOf } from '../../engine/industry/infra.js';
 
@@ -81,7 +82,7 @@ export function fillColors(world, game, mode, focus = 0) {
   const ownerRgb = world.owners.map((o) => (o ? hexToRgb(o.color) : [128, 128, 128]));
   const terr = TERRAIN_COLORS.map(hexToRgb);
   const me = game && game.player ? world.ownerIdx[game.player] : 0;
-  const reach = mode === 'supply' && me ? supplyFlow(game.ctrl, me, infraOf(game), friendsOf(game.dip, me)) : null;
+  const reach = mode === 'supply' && me ? supplyFlow(game.ctrl, me, infraOf(game), friendsOf(game.dip, me), seaPorts(game, me)) : null;
   for (let p = 1; p <= L; p++) {
     const o = ownerOf(p);
     let c;

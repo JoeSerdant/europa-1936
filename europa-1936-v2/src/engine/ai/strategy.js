@@ -5,20 +5,23 @@ import { geo, adjacency } from '../army/geo.js';
 import { enemiesOf } from '../army/war.js';
 import { setPlan } from '../army/commands.js';
 import { supplyFlow, flowDrop } from '../army/supply.js';
+import { seaPorts } from '../nav/core.js';
 import { friendsOf } from '../dip/accessCore.js';
 import { C } from '../army/constants.js';
 import { needOf } from '../occ/day.js';
 import { campOf } from '../dip/core.js';
 import { aggrOf } from '../../data/ai/personality.js';
+import { landZones } from '../army/zones.js';
+import { stagingArmies, startInvasion } from './invasion.js';
 import { AI } from './constants.js';
 
 /** Armády země s divizemi: [{ id, n, x, y, ds }] (x, y = těžiště v pixelech světa). */
 function armiesOf(state, o) {
   const g = geo(getWorld());
-  const by = new Map();
+  const by = new Map(), staging = stagingArmies(state, o);   // M71: sbor shromážděný k invazi strategie neřídí
   for (let id = 1; id < state.mil.divs.length; id++) {
     const d = state.mil.divs[id];
-    if (!d || d.o !== o || !d.army) continue;
+    if (!d || d.o !== o || !d.army || staging.has(d.army)) continue;
     let a = by.get(d.army);
     if (!a) { a = { id: d.army, n: 0, x: 0, y: 0, ds: [] }; by.set(d.army, a); }
     a.n++; a.x += g.cx[d.p]; a.y += g.cy[d.p]; a.ds.push(id);
@@ -113,7 +116,7 @@ export function theatersOf(state, o, foes) {
 export function supplyView(state, o) {
   const w = getWorld(), g = geo(w), adj = adjacency(w);
   const friends = friendsOf(state.dip, o), fset = new Set(friends);
-  const reach = supplyFlow(state.ctrl, o, undefined, friends);
+  const reach = supplyFlow(state.ctrl, o, undefined, friends, seaPorts(state, o));
   return {
     reach,
     post: (p) => reach[p] >= AI.SUP_POST_MIN,
@@ -217,6 +220,7 @@ export function allocateArmies(theaters, armies, { dist, sticky = new Map(), eng
     let best = 0, bd = Infinity;
     for (const id of free) {
       const d = dist(byId.get(id), theaters[i]) - (sticky.get(id) === i ? AI.STICKY_KM : 0);
+      if (d >= AI.UNREACH / 2) continue;   // M71: armáda za mořem (jiná zóna dosažitelnosti) divadlo nehájí
       if (d < bd || (d === bd && id < best)) { bd = d; best = id; }
     }
     if (best) { free.delete(best); got[i].push(best); }
@@ -287,7 +291,10 @@ export function decideStrategy(state, o) {
   const byId = new Map(armies.map((a) => [a.id, a]));
   const tag = w.owners[o].tag, aggressor = isAggressor(state, o, foes);
   const ratioNeed = (AI.ATTACK_RATIO[level] ?? 1.3) / aggrOf(tag) * (aggressor ? 1 : AI.DEFENDER_MULT);
-  const { got, reserve } = allocateArmies(theaters, armies, { dist: (a, t) => Math.hypot(a.x - t.x, a.y - t.y) * g.kmPerPx, sticky, engaged, ratioNeed });
+  const zones = landZones(state, o);
+  for (const a of armies) a.zone = zones[mil.divs[a.ds[0]].p];
+  for (const t of theaters) t.zone = t.posts.length ? zones[t.posts[0]] : 0;
+  const { got, reserve } = allocateArmies(theaters, armies, { dist: (a, t) => (a.zone && t.zone && a.zone !== t.zone ? AI.UNREACH : Math.hypot(a.x - t.x, a.y - t.y) * g.kmPerPx), sticky, engaged, ratioNeed });
   const have = (i) => got[i].reduce((sum, id) => sum + byId.get(id).n, 0);
 
   // ---- útok, nebo obrana ----
@@ -308,11 +315,18 @@ export function aiStrategy(state, o) {
   const d = decideStrategy(state, o);
   if (!d) {
     const armies = armiesOf(state, o);
-    return armies.length ? aiPeaceDeploy(state, o, armies) : state;
+    if (!armies.length) return state;
+    state = startInvasion(state, o, armies);   // M71: válka přes moře – část armád se shromáždí k invazi
+    return aiPeaceDeploy(state, o, armiesOf(state, o));
   }
   const w = getWorld(), g = geo(w), adj = adjacency(w);
   const { byId, foes, theaters, got, reserve, ratio, attack, view } = d;
-  if (reserve.length) state = aiPeaceDeploy(state, o, reserve.map((id) => byId.get(id)));   // nepotřebné armády zůstanou doma
+  if (reserve.length) {   // nepotřebné armády zůstanou doma (nebo se z nich sestaví invazní sbor, M71)
+    const free = reserve.map((id) => byId.get(id));
+    state = startInvasion(state, o, free);
+    const left = new Set(free.map((a) => a.id));
+    state = aiPeaceDeploy(state, o, armiesOf(state, o).filter((a) => left.has(a.id)));
+  }
   const areaOf = (slice) => {   // obrana: posty a pás zásobovaných vlastních provincií kolem nich
     const belt = new Set(slice);
     for (const p of slice) for (const e of adj[p]) if (e.kind !== 2 && state.ctrl[e.to] === o && view.post(e.to)) belt.add(e.to);

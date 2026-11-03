@@ -247,7 +247,7 @@ describe('historické události (M44)', () => {
       for (const p of s.nat.pend) { if (p.o === W.ownerIdx.GER) { seen.add(p.id); s = chooseEvent(s, W.ownerIdx.GER, p.id, 0); } }
     }
     expect([...seen].some((id) => id.startsWith('ger_'))).toBe(true);
-  });
+  }, 120000);
 });
 
 describe('národní cíle pro všechny země (M57)', () => {

@@ -15,10 +15,10 @@ const base = (extra = {}) => createGame({ player: 'GER', aiLevel: 2, ...extra })
 describe('nastavení', () => {
   it('výchozí engine nemá AI; hra s aiLevel ji zapne; neplatná úroveň se vrátí na vypnuto', () => {
     expect(GAME_VERSION).toBeGreaterThanOrEqual(8);
-    expect(createGame({ player: 'GER' }).ai).toEqual({ level: 0, hist: 1 });
-    expect(base().ai).toEqual({ level: 2, hist: 1 });
+    expect(createGame({ player: 'GER' }).ai).toEqual({ level: 0, hist: 1, inv: [] });
+    expect(base().ai).toEqual({ level: 2, hist: 1, inv: [] });
     expect(createGame({ aiLevel: 7 }).ai.level).toBe(0);
-    expect(createGame({ aiLevel: 3, hist: false }).ai).toEqual({ level: 3, hist: 0 });
+    expect(createGame({ aiLevel: 3, hist: false }).ai).toEqual({ level: 3, hist: 0, inv: [] });
     expect(JSON.parse(JSON.stringify(base().ai))).toEqual(base().ai);
   });
   it('vypnutá AI nic nemění: stav po dni je totožný s hrou bez nastavení AI', () => {

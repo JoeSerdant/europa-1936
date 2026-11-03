@@ -165,7 +165,7 @@ describe('zásobování', () => {
     const o = idx('GER');
     const f1 = supplyFlow(s.ctrl, o);
     expect(supplyFlow(s.ctrl.slice(), o)).toBe(f1);                      // stejný obsah = stejný výsledek
-    expect(supplyReach(s, 'GER')).toBe(f1);
+    expect(supplyReach(s, 'GER')).toEqual(f1);                           // selektor přidává přístavy zásobované po moři (M71), vlastní tok je stejný
     const ctrl = s.ctrl.slice();
     const cap = W.owners[o].cap;
     ctrl[cap] = idx('FRA');

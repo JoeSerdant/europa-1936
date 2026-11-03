@@ -54,6 +54,27 @@ export const AI = {
   BUSY_SHARE: 0.5,                  // země je válkou zaměstnaná, když protivníci mají aspoň tolik jejích sil (M68)
   FROZEN_DAYS: 200,                 // válka bez styku s nepřítelem starší než tolik dní se ukončí i vítězem
   JACKAL_SHARE: 0.35,               // oportunistická válka (M68): podíl bodů cíle, který už drží jeho nepřátelé
+  INV_MIN: 4,                       // námořní invaze (M71): nejméně divizí invazního sboru
+  INV_MAX: 12,                      // nejvíc divizí sboru
+  INV_RATIO: 1.5,                   // sbor musí mít aspoň tolik divizí, kolik nepřátelských stojí poblíž místa vylodění
+  INV_NEAR_KM: 350,                 // poloměr, ve kterém se počítají vlastní divize u předmostí
+  INV_FAR_KM: 900,                  // nepřátelské divize v tomto okolí místa vylodění se počítají s váhou 1 − vzdálenost / tato hodnota
+  INV_STAGE_DAYS: 30,               // nejdéle tolik dní se sbor shromažďuje v přístavu
+  INV_GATHER: 0.75,                 // podíl sboru, který musí stát v přístavech, aby se nalodil
+  INV_COOL_DAYS: 12,                // pauza mezi operacemi země
+  INV_SEA_KM: 2500,                 // nejdelší plavba invaze
+  INV_NAVAL: 1.2,                   // vlastní (s blokem) palebná síla lodí musí být aspoň tolikrát větší než nepřátelská, aby AI zahájila invazi
+  INV_TOTAL_MIN: 20,                // země s menší armádou invazi nepodniká
+  INV_SHARE: 0.3,                   // nejvýš tento podíl všech divizí země jde do jednoho sboru
+  INV_HOLD: 6,                      // předmostí s tolika vlastními divizemi poblíž posily nepotřebuje
+  INV_PORT: 3,                      // hodnocení místa vylodění: za úroveň přístavu
+  INV_HUB: 1.5,                     // za uzel železnice
+  INV_VP: 0.4,                      // za vítězný bod
+  INV_CAP: 1.0,                     // srážka za každých 1000 km od hlavního města nepřítele
+  INV_DEF: 0.8,                     // srážka za nepřátelskou divizi poblíž (u předmostí příplatek za ohrožení)
+  INV_REINF: 6,                     // základ hodnocení posil držené předmostí
+  INV_KM: 1500,                     // srážka za 1 bod: tolik km plavby
+  UNREACH: 1e8,                     // vzdálenost „nedosažitelné po souši“ při přidělování armád divadlům
   PEACE_POSTS: 8,                   // domácích postů na armádu v míru
   PEACE_POSTS_MIN: 12,
   PEACE_SPREAD: 40,                 // příplatek (pixely) za každý už přidělený post – rozloží posty mezi armády
