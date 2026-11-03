@@ -13,6 +13,7 @@ import { aiDecisions } from './decisions.js';
 import { aiSpy } from './spy.js';
 import { aiForts } from './forts.js';
 import { aiStrategy } from './strategy.js';
+import { advanceInvasions } from './invasion.js';
 import { aiCommand } from '../cmd/index.js';
 import { aiLend } from '../dip/lend.js';
 
@@ -40,6 +41,7 @@ export function aiDay(state) {
     state = aiDoctrine(state, o);
     state = aiLend(state, o);
     state = aiCommand(state, o);
+    state = advanceInvasions(state, o);   // M71: shromáždění, nalodění a pauzy námořních invazí
     if (weekly || newWar(state, o)) state = aiStrategy(state, o);   // M66: divadla války, přidělení armád, útok a obrana; v míru domácí rozmístění
     if (!state.dip.sub[o]) state = aiDiplomacy(state, o);   // loutky nevedou vlastní diplomacii (M33)
   }

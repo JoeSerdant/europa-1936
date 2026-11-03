@@ -79,6 +79,18 @@ export function portsOf(state, o) {
   return out;
 }
 
+const portList = new WeakMap();   // svět → všechny provincie s přístavem
+
+/** Přístavy, které země ovládá a ze kterých jde zásobovat po moři (M71): mají aspoň dvě transportní lodě a jejich mořská oblast není zablokovaná nepřítelem. */
+export function seaPorts(state, o) {
+  if (!state.nav || transportsBare(state, o).total < 2) return [];
+  const w = getWorld(), out = [];
+  let all = portList.get(w);
+  if (!all) { all = []; for (let p = 1; p <= w.L; p++) if (w.portLevel[p]) all.push(p); portList.set(w, all); }
+  for (const p of all) if (state.ctrl[p] === o && !seaBlocked(state, o, w.portSea[p])) out.push(p);
+  return out;
+}
+
 /** Domovský přístav země: nejlepší přístav (úroveň, pak blíž hlavnímu městu); { prov, sea } nebo null. */
 export function homeSea(state, o) {
   const w = getWorld();

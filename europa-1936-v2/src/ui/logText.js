@@ -42,6 +42,8 @@ export function logLine(e, me = 0) {
     case 'ult': return { icon: 'dip', tone: e.y ? 'info' : 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} předložila ultimátum zemi ${nm(e.b)} (${DEMAND_BY_ID[e.x]?.n || e.x}): ${e.y ? 'požadavek byl přijat.' : 'požadavek byl odmítnut.'}` };
     case 'ultq': return { icon: 'dip', tone: 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} předložila ultimátum zemi ${nm(e.b)} (${DEMAND_BY_ID[e.x]?.n || e.x}).` };
     case 'civil': return { icon: 'swords', tone: 'bad', world: true, mine: e.o === me || e.x === me, text: e.y ? `V zemi ${nm(e.o)} vypukla občanská válka: povstalci vyhlásili stát ${nm(e.x)}.` : `Od země ${nm(e.o)} se oddělil stát ${nm(e.x)}.` };
+    case 'inv': return { icon: 'army', tone: e.b === me ? 'bad' : 'info', world: true, mine: e.o === me || e.b === me, text: e.a ? `${nm(e.o)} vysílá ${e.y} divizí k vylodění u ${w.provName(e.x)} (${nm(e.b)}).` : `${nm(e.o)} posílá ${e.y} divizí jako posily do předmostí u ${w.provName(e.x)}.` };
+    case 'lands': return { icon: 'army', tone: 'bad', world: false, mine: true, text: `Nepřítel (${nm(e.o)}) se vylodil: ${w.provName(e.x)}.` };
     case 'release': return { icon: 'flag', tone: 'info', world: true, mine: e.o === me || e.y === me, text: `${nm(e.o)} z území poražené země ${nm(e.y)} vytvořila loutkový stát ${nm(e.x)}.` };
     case 'access': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} dovoluje armádám země ${nm(e.b)} průchod svým územím.` };
     case 'accend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} odvolala přístup armádám země ${nm(e.b)}.` };
@@ -57,5 +59,6 @@ export function logLine(e, me = 0) {
 /** Je záznam důležitý natolik, aby se ohlásil oznámením? (válka a kapitulace se zemí hráče nebo cizí kapitulace, dokončený výzkum a cíl hráče) */
 export function logImportant(e, me) {
   if (e.k === 'war') return e.a === me || e.b === me;
-  return e.k === 'cap' || e.k === 'tech' || e.k === 'focus' || e.k === 'sunk' || e.k === 'landing' || e.k === 'built' || e.k === 'doctrine' || e.k === 'free';
+  if (e.k === 'inv') return e.b === me && !!e.a;
+  return e.k === 'cap' || e.k === 'tech' || e.k === 'focus' || e.k === 'sunk' || e.k === 'landing' || e.k === 'lands' || e.k === 'built' || e.k === 'doctrine' || e.k === 'free';
 }

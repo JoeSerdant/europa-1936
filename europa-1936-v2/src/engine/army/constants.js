@@ -93,6 +93,9 @@ export const C = {
   SUP_RAIL_DROP: 0.1,       // srážka toku po železnici na spoj (dělí se úrovní spoje 1–5)
   SUP_INFRA_RELIEF: 0.3,    // o kolik srážku terénu snižuje nejvyšší infrastruktura
   SUP_CAPACITY: 1.25,       // zásoby za hodinu na jeden bod toku
+  SUP_PORT: 0.5,            // tok z přístavu zásobovaného po moři (M71): základ, pro přístav bez pozemního napojení
+  SUP_PORT_LVL: 0.25,       // + tolik za úroveň přístavu
+  SUP_PORT_MAX: 1.6,        // nejvyšší tok z přístavu
   SUP_MIN_FLOW: 0.05,       // pod tímto tokem se zásobování dál nešíří
   SUP_GRACE: 72,            // hodin zásoby v batohu
   SUP_GRACE_REFILL: 2,      // hodin zásoby, které se vrátí za hodinu při plném zásobování

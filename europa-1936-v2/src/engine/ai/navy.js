@@ -11,6 +11,7 @@ import { convoysOf, tradeRoute, needOf, routeRisk } from '../nav/convoy.js';
 import { atWar } from '../army/war.js';
 import { NAV } from '../nav/constants.js';
 import { powerOf } from '../nav/core.js';
+import { reservedFleets } from './invasion.js';
 import { AI } from './constants.js';
 
 /** Stát s přístavem a volným slotem pro loděnici (úroveň přístavu, pak počet volných slotů); 0 = žádný. */
@@ -85,10 +86,10 @@ function aiRaids(state, o) {
     }
   }
   targets.sort((a, b) => b.w - a.w || a.sea - b.sea);
-  const used = new Set();
+  const used = new Set(), held = reservedFleets(state, o);   // M71: krycí flotily invazí na nájezdy nejdou
   for (let i = 1; i < state.nav.fleets.length; i++) {
     const f = state.nav.fleets[i];
-    if (!f || f.o !== o || f.path.length || !powerOf(f.ships).atk) continue;
+    if (!f || f.o !== o || f.path.length || held.has(i) || !powerOf(f.ships).atk) continue;
     const t = targets.find((x) => !used.has(x.sea));
     if (!t) break;
     used.add(t.sea);

@@ -40,6 +40,10 @@ export function popupFor(e, me) {
     case 'civil':
       if (e.o === me) return { kind: 'civil', icon: 'swords', tone: 'bad', title: 'Občanská válka', text: `Část armády a území se postavily proti vládě. Povstalci vyhlásili stát ${nm(e.x)}.`, lines: ['Mír nelze uzavřít – rozhodne se na bojišti.'], sticky: true };
       return null;
+    case 'inv':
+      return e.b === me && e.a ? { kind: 'inv', icon: 'army', tone: 'bad', title: 'Nepřátelská invaze', text: `${nm(e.o)} vysílá ${e.y} divizí k vylodění u ${getWorld().provName(e.x)}.`, lines: ['Přesuňte obranu k pobřeží nebo vyšlete flotilu.'], sticky: true } : null;
+    case 'lands':
+      return e.b === me ? { kind: 'lands', icon: 'army', tone: 'bad', title: 'Vylodění nepřítele', text: `${nm(e.o)} se vylodila: ${getWorld().provName(e.x)}.`, lines: [], sticky: true } : null;
     case 'release':
       return e.y === me ? { kind: 'release', icon: 'flag', tone: 'bad', title: 'Vznik nového státu', text: `${nm(e.o)} z vašich států vytvořila loutku ${nm(e.x)}.`, lines: [], sticky: true } : null;
     case 'ult':

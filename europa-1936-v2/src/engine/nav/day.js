@@ -42,7 +42,7 @@ function arrivals(state) {
   const logs = [];
   for (const s of due) {
     const d = s.div;
-    const enemyThere = divs.some((x) => x && x.p === s.to && atWar(state.mil, s.o, x.o));
+    const enemyThere = divs.some((x) => x && x.p === s.to && atWar(state.mil, s.o, x.o)), prev = state.ctrl[s.to];
     let place = s.to, landed = true;
     if (state.ctrl[s.to] !== s.o) {
       const c = state.ctrl[s.to], foe = atWar(state.mil, s.o, c);
@@ -55,6 +55,7 @@ function arrivals(state) {
     const port = w.portLevel[place] > 0;
     divs[s.id] = { ...d, p: place, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0, org: d.org * (landed && !port ? NAV.LAND_ORG : 1) };
     if (o_isPlayer(s.o, player)) logs.push({ k: 'landing', o: s.o, x: landed ? place : s.from, a: landed ? 1 : 0 });
+    else if (landed && prev !== s.o && prev === player) logs.push({ k: 'lands', o: s.o, x: place, b: prev });   // M71: nepřítel se vylodil na území hráče
   }
   const sail = state.nav.sail.filter((s) => s.arrive > state.tick);
   const out = { ...state, ctrl, ownerVer, mil: { ...state.mil, divs, ver: state.mil.ver + 1 }, nav: { ...state.nav, sail, ver: state.nav.ver + 1 } };
