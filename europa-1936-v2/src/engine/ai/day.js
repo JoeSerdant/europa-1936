@@ -13,6 +13,7 @@ import { aiDecisions } from './decisions.js';
 import { aiSpy } from './spy.js';
 import { aiForts } from './forts.js';
 import { aiStrategy } from './strategy.js';
+import { aiParties } from './parties.js';
 import { advanceInvasions } from './invasion.js';
 import { aiCommand } from '../cmd/index.js';
 import { aiLend } from '../dip/lend.js';
@@ -32,6 +33,7 @@ export function aiDay(state) {
   for (let o = 1; o < w.owners.length; o++) {
     if (o === player || state.dip.cap[o]) continue;
     state = aiDecisions(state, o);
+    state = aiParties(state, o);
     state = aiSpy(state, o);
     state = aiForts(state, o);
     state = aiIndustry(state, o);

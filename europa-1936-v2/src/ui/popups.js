@@ -1,5 +1,6 @@
 // Vyskakovací oznámení hráči (M58): z důležitých záznamů deníku se sestaví karta { kind, icon, tone, title, text, lines, sticky }.
 import { getWorld } from '../engine/world.js';
+import { IDEOLOGIES } from '../data/countries.js';
 import { FOCUS_BY_ID } from '../data/nat/focuses.js';
 import { fxLinesOf, modLines } from '../data/nat/describe.js';
 import { TECHS } from '../data/research/techs.js';
@@ -40,6 +41,8 @@ export function popupFor(e, me) {
     case 'civil':
       if (e.o === me) return { kind: 'civil', icon: 'swords', tone: 'bad', title: 'Občanská válka', text: `Část armády a území se postavily proti vládě. Povstalci vyhlásili stát ${nm(e.x)}.`, lines: ['Mír nelze uzavřít – rozhodne se na bojišti.'], sticky: true };
       return null;
+    case 'gov':
+      return e.o === me ? { kind: 'gov', icon: 'flag', tone: 'bad', title: 'Státní převrat', text: `Vládu převzala strana „${IDEOLOGIES[e.x]?.name || e.x}“. Stabilita klesla a politická moc byla vynulována.`, lines: ['Vztahy s ostatními zeměmi se přepočítávají podle nové ideologie.'], sticky: true } : { kind: 'gov', icon: 'flag', tone: 'info', title: 'Převrat ve světě', text: `V zemi ${nm(e.o)} se ujala moci strana „${IDEOLOGIES[e.x]?.name || e.x}“.`, lines: [] };
     case 'inv':
       return e.b === me && e.a ? { kind: 'inv', icon: 'army', tone: 'bad', title: 'Nepřátelská invaze', text: `${nm(e.o)} vysílá ${e.y} divizí k vylodění u ${getWorld().provName(e.x)}.`, lines: ['Přesuňte obranu k pobřeží nebo vyšlete flotilu.'], sticky: true } : null;
     case 'lands':

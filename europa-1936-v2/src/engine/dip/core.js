@@ -3,6 +3,7 @@ import { getWorld } from '../world.js';
 import { COUNTRIES } from '../../data/countries.js';
 import { IDEO_REL, PAIR_REL } from '../../data/dip/index.js';
 import { atWar, enemiesOf } from '../army/war.js';
+import { ideologyOf, startIdeology, ideoRel } from '../politics/parties.js';
 
 export const pairKey = (a, b) => (a < b ? `${a}-${b}` : `${b}-${a}`);
 const baseCache = new Map();
@@ -25,7 +26,10 @@ export function baseRel(a, b) {
 /** Vztah dvou zemí −100…100 (základ + uložená změna). */
 export function relOf(state, a, b) {
   if (!a || !b || a === b) return 0;
-  return Math.round(Math.max(-100, Math.min(100, baseRel(a, b) + (state.dip.rel[pairKey(a, b)] || 0))));
+  let base = baseRel(a, b);
+  const ga = ideologyOf(state, a), gb = ideologyOf(state, b), sa = startIdeology(a), sb = startIdeology(b);
+  if (ga !== sa || gb !== sb) base = Math.max(-100, Math.min(100, base + ideoRel(ga, gb) - ideoRel(sa, sb)));   // M72: po převratu platí ideologie nové vlády
+  return Math.round(Math.max(-100, Math.min(100, base + (state.dip.rel[pairKey(a, b)] || 0))));
 }
 
 export const factionId = (state, o) => state.dip.fac[o] || 0;

@@ -6,15 +6,25 @@ import { tallyOwners } from '../industry/core.js';
 import { POL } from './constants.js';
 import { polModsOf, lawBlock } from './core.js';
 import { polBase } from './setup.js';
+import { partiesDay, ideologyOf, startIdeology } from './parties.js';
+import { POL_IDEO } from '../../data/politics/national.js';
 
 const step = (v, target, d) => (v < target ? Math.min(target, v + d) : Math.max(target, v - d));
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
+/** Rozdíl základu stability a podpory války nové vlády proti výchozí (0, dokud k převratu nedošlo). */
+function govBase(state, o) {
+  const g = ideologyOf(state, o), s0 = startIdeology(o);
+  if (g === s0) return { stab: 0, ws: 0 };
+  return { stab: (POL_IDEO[g]?.stab ?? 0) - (POL_IDEO[s0]?.stab ?? 0), ws: (POL_IDEO[g]?.ws ?? 0) - (POL_IDEO[s0]?.ws ?? 0) };
+}
+
 /** Cíle stability a podpory války země. */
 export function targetsOf(state, o, own, occ) {
   const b = polBase(getWorld().owners[o].tag), m = polModsOf(state, o);
-  const stab = clamp01(b.stab + m.stab - Math.min(POL.OCC_MAX, occ * POL.OCC_STAB));
-  const ws = clamp01(b.ws + m.ws + (hasWar(state.mil, o) ? POL.WAR_WS : 0));
+  const g = govBase(state, o);   // M72: po převratu platí základ nové vlády
+  const stab = clamp01(b.stab + g.stab + m.stab - Math.min(POL.OCC_MAX, occ * POL.OCC_STAB));
+  const ws = clamp01(b.ws + g.ws + m.ws + (hasWar(state.mil, o) ? POL.WAR_WS : 0));
   return { stab, ws };
 }
 
@@ -54,6 +64,6 @@ export function politicsDay(state) {
       arr[o] = { ...next, stab, ws, pp };
     }
   }
-  if (!copy) return state;
-  return { ...state, pol: { ver: state.pol.ver + (structural ? 1 : 0), own: arr } };
+  const s = copy ? { ...state, pol: { ver: state.pol.ver + (structural ? 1 : 0), own: arr } } : state;
+  return partiesDay(s, (o) => hasWar(s.mil, o));   // M72: podpora stran a převraty
 }

@@ -8,6 +8,7 @@ import { applyFx } from '../nat/effects.js';
 import { grantTech } from '../research/commands.js';
 import { TECH_IDS } from '../../data/research/index.js';
 import { logAdd } from '../log.js';
+import { ideologyOf } from '../politics/parties.js';
 
 /** Šance operace země `o` proti `t`. */
 export function chanceOf(state, o, t) {
@@ -37,7 +38,8 @@ function resolve(state, o, op) {
     } else if (op.k === 'steal') {
       const ahead = doneTechs(s, op.t) > doneTechs(s, o);
       s = applyFx(s, o, [{ t: 'boostslot', v: ahead ? SPY.STEAL_BEHIND : SPY.STEAL }]);
-    } else if (op.k === 'unrest') s = applyFx(s, op.t, [{ t: 'stab', v: -SPY.UNREST_STAB }, { t: 'ws', v: -SPY.UNREST_WS }]);
+    } else if (op.k === 'subvert') s = applyFx(s, op.t, [{ t: 'party', i: ideologyOf(s, o), v: SPY.SUBVERT }]);
+    else if (op.k === 'unrest') s = applyFx(s, op.t, [{ t: 'stab', v: -SPY.UNREST_STAB }, { t: 'ws', v: -SPY.UNREST_WS }]);
     log('spy', 1);
   } else {
     const caught = rand01(state.tick, o, `caught${op.id}`) < SPY.CAUGHT;

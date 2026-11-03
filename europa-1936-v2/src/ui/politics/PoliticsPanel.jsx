@@ -2,9 +2,8 @@ import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { politicsOf, focusTree } from '../../engine/index.js';
 import { COUNTRIES, IDEOLOGIES } from '../../data/countries.js';
-import { IDEO_ORDER, ideologySupport } from '../../data/politics/ideology.js';
 import { Flag } from '../common/Flag.jsx';
-import { playerIdx, changeLaw, hireAdv, dismissAdv } from '../actions.js';
+import { playerIdx, changeLaw, hireAdv, dismissAdv, backParty } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -67,7 +66,7 @@ function Advisor({ a }) {
 /** Karta státu vlevo: portrét vůdce (vlastní silueta), vláda, podpora ideologií a „národní duchové“ (platné zákony, poradci, splněné cíle). */
 function LeaderCard({ tag, p, spirits }) {
   const info = COUNTRIES[tag];
-  const sup = ideologySupport(info.ideology, p.stab);
+  const pa = p.parties, gov = IDEOLOGIES[pa.gov];
   return (
     <aside className="leader-card" aria-label="Vůdce a vláda">
       <div className="lc-portrait" aria-hidden="true">
@@ -80,15 +79,17 @@ function LeaderCard({ tag, p, spirits }) {
         <span className="lc-flag"><Flag tag={tag} width={34} /></span>
       </div>
       <h3>{info.leader}</h3>
-      <p className="muted">{info.government}</p>
-      <ul className="lc-ideo" aria-label="Podpora ideologií (odhad)">
-        {IDEO_ORDER.map((k) => (
-          <li key={k} className={k === info.ideology ? 'main' : ''} title={`${IDEOLOGIES[k].name}: ${pct(sup[k])}`}>
-            <i style={{ background: IDEOLOGIES[k].color }} /><span>{IDEOLOGIES[k].name}</span><b>{pct(sup[k])}</b>
-            <span className="bar"><i style={{ width: `${sup[k] * 100}%`, background: IDEOLOGIES[k].color }} /></span>
+      <p className="muted">{pa.gov === info.ideology ? info.government : `Vláda: ${gov.name}`}</p>
+      <ul className="lc-ideo" aria-label="Podpora stran">
+        {pa.rows.map((r) => (
+          <li key={r.id} className={r.gov ? 'main' : ''} title={`${IDEOLOGIES[r.id].name}: ${r.pct.toFixed(1)} %${r.gov ? ' (vládnoucí strana)' : ''}`}>
+            <i style={{ background: IDEOLOGIES[r.id].color }} /><span>{IDEOLOGIES[r.id].name}</span><b>{Math.round(r.pct)} %</b>
+            <button type="button" className="mini" aria-label={`Podpořit stranu ${IDEOLOGIES[r.id].name}`} title={r.block || `Podpořit: ${pa.cost} PM, +${pa.gain} bodů`} disabled={!!r.block} onClick={() => backParty(r.id)}>+</button>
+            <span className="bar"><i style={{ width: `${r.pct}%`, background: IDEOLOGIES[r.id].color }} /></span>
           </li>
         ))}
       </ul>
+      {pa.risk && <p className="lc-warn" role="alert">Hrozí převrat: strana „{IDEOLOGIES[pa.rival].name}“ se blíží vládnoucí straně.</p>}
       <h4>Národní duch</h4>
       <ul className="lc-spirits">
         {spirits.map((x) => <li key={x.k} className={x.kind} title={x.hint}>{x.n}</li>)}
