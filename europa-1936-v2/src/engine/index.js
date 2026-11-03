@@ -23,6 +23,7 @@ export { nextRandom, randomInt, seedToState } from './rng.js';
 export * from './time.js';
 export * from './army/index.js';
 export * from './industry/index.js';
+export { FUEL, fuelOf, fuelRatio, fuelUse, fuelDay, createFuel } from './fuel/index.js';
 export * from './research/index.js';
 export * from './politics/index.js';
 export * from './nat/index.js';

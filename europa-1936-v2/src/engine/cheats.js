@@ -16,6 +16,7 @@ export const CHEAT_HELP = [
   'pp <n> – přidá politickou moc',
   'cp <n> – přidá velitelskou moc',
   'manpower <n> – přidá lidskou sílu',
+  'fuel <n> – přidá palivo do zásoby',
   'stab <0–100>, ws <0–100> – nastaví stabilitu / podporu války',
   'research all | <id> – dokončí všechny / jednu technologii',
   'ic – okamžitě dokončí všechny vaše stavby',
@@ -55,6 +56,13 @@ export function runCheat(state, text) {
       }
       const own = state.pol.own.slice(); own[me] = { ...own[me], [cmd]: Math.min(1, Math.max(0, n / 100)) };
       return { state: { ...state, pol: { ...state.pol, own } }, msg: `${cmd === 'stab' ? 'Stabilita' : 'Podpora války'} ${Math.round(n)} %.` };
+    }
+    case 'fuel': {
+      const err = needMe(), n = num(a);
+      if (err || n === null) return same(state, err || 'Použití: fuel <číslo>');
+      const fuel = state.ind.fuel.slice();
+      fuel[me] = { ...fuel[me], s: Math.max(0, fuel[me].s + n) };
+      return { state: { ...state, ind: { ...state.ind, fuel } }, msg: `Palivo ${n >= 0 ? '+' : ''}${n}.` };
     }
     case 'research': {
       const err = needMe();

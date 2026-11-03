@@ -6,6 +6,7 @@ import { IND_NATIONAL, TRADE_SEED, DEFAULT_SPLIT, RESOURCES } from '../../data/i
 import { NAVY_NATIONAL } from '../../data/navy/ships.js';
 import { I } from './constants.js';
 import { categoryOf } from './core.js';
+import { createFuel } from '../fuel/index.js';
 
 /** D'Hondtovo rozdělení `n` kusů mezi položky podle vah; `cap[i]` = nejvýš kusů na položku. */
 export function apportion(weights, n, cap) {
@@ -31,6 +32,7 @@ export function createInd(w, rng) {
     fort: {},
     cons: new Array(w.owners.length).fill(0),
     build: [], lines: [], trade: [],
+    fuel: createFuel(w),   // M73: zásoby paliva
   };
   let seed = rng;
   const rnd = () => { const [x, n] = nextRandom(seed); seed = n; return x; };

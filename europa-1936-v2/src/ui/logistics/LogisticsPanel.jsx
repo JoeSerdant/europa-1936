@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { Screen } from '../common/Screen.jsx';
-import { industryOf, EQUIP, EQUIP_IDS, RESOURCES, RES_IDS, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, transportsOf, isUnlocked } from '../../engine/index.js';
+import { industryOf, fuelOf, EQUIP, EQUIP_IDS, RESOURCES, RES_IDS, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, transportsOf, isUnlocked } from '../../engine/index.js';
 import { playerIdx } from '../actions.js';
 import { fmtInt, fmtNum } from '../format.js';
 import { EQUIP_GROUPS } from '../../data/industry/groups.js';
@@ -12,6 +12,17 @@ const groupColor = (e) => (EQUIP_GROUPS.find((g) => g.items.includes(e)) || EQUI
 
 function Tile({ ab, color }) {
   return <span className="eq-tile" style={{ '--g': color, width: 38, height: 38 }} aria-hidden="true"><b>{ab}</b></span>;
+}
+
+/** Zásoba paliva (M73): výroba z přebytku ropy, spotřeba motorizovaných divizí, letectva a flotil. */
+function FuelCard({ f }) {
+  return (
+    <div className={`lg-fuel${f.low ? ' bad' : ''}`} title="Palivo vzniká z přebytku ropy a z továren; spotřebují ho motorizované divize, letectvo na misích a flotily v pohybu. Bez něj zpomalují a slábnou.">
+      <div className="sec-head"><h3>Palivo</h3><span className="muted">zásoba {fmtInt(f.stock)} / {fmtInt(f.cap)}</span></div>
+      <span className="bar"><i style={{ width: `${Math.min(100, (f.stock / Math.max(1, f.cap)) * 100)}%` }} /></span>
+      <p className="muted">Výroba {fmtNum(f.gain, 1)} − spotřeba {fmtNum(f.use, 1)} za den{f.days !== Infinity ? ` · vystačí na ${Math.max(0, Math.floor(f.days))} dní` : ''}{f.ratio < 1 ? ` · pokrytí ${pct(f.ratio)}` : ''}</p>
+    </div>
+  );
 }
 
 /** Okno Logistika (I): přehled výzbroje (výroba za den, efektivita, sklad), loděnic, transportů a bilance surovin. */
@@ -86,6 +97,7 @@ export function LogisticsPanel() {
                 );
               })}
             </ul>
+            <FuelCard f={fuelOf(state, me)} />
             <p className="muted">Zelená bilance znamená přebytek, červená nedostatek: linky pak vyrábějí pomaleji. Chybějící suroviny doplníte v okně Obchod (R).</p>
           </aside>
         </div>

@@ -6,6 +6,7 @@ import { focusTree, natOf, pendingEvents } from './nat/selectors.js';
 import { industryOf } from './industry/selectors.js';
 import { hasCapitulated } from './dip/core.js';
 import { decisionsOf } from './nat/decisions.js';
+import { fuelOf } from './fuel/index.js';
 
 export const ALERT = { PP_HIGH: 150, PP_HIGH_LATE: 250, CIV_IDLE: 1, MIL_IDLE: 2 };
 
@@ -28,6 +29,8 @@ export function alertsOf(state, o) {
   let loose = 0;
   for (let d = 1; d < state.mil.divs.length; d++) { const dv = state.mil.divs[d]; if (dv && dv.o === o && !dv.army) loose++; }
   if (loose) out.push({ id: 'divs', panel: 'army', tone: 'warn', n: loose, text: loose === 1 ? 'Jedna divize nemá přidělenou armádu.' : `${loose} divizí nemá přidělenou armádu.`, lines: ['Divize bez armády nemají velitele ani plán. Přiřaďte je v panelu Armáda.'] });
+  const fu = fuelOf(state, o);
+  if (fu.low) out.push({ id: 'fuel', panel: 'logistics', tone: 'warn', n: 1, text: 'Nedostatek paliva: motorizované divize, letectvo a flotily slábnou.', lines: [`Zásoba ${Math.floor(fu.stock)}, výroba ${fu.gain.toFixed(1)} a spotřeba ${fu.use.toFixed(1)} za den.`, 'Zvyšte dovoz ropy (okno Obchod), nebo omezte motorizované jednotky.'] });
   const dec = decisionsOf(state, o).filter((x) => !x.block && !x.used);
   if (dec.length) out.push({ id: 'decisions', panel: 'decisions', tone: 'info', n: dec.length, text: dec.length === 1 ? 'K dispozici je rozhodnutí.' : `K dispozici je ${dec.length} rozhodnutí.`, lines: dec.slice(0, 8).map((x) => x.n) });
   return out;

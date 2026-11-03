@@ -32,14 +32,14 @@ export function deriveStats(tpl, lvl = null) {
   const { line, sup } = templateUnits(tpl);
   const all = line.concat(sup);
   const s = {
-    width: 0, hp: 0, org: 0, men: 0, sup: 0, soft: 0, hard: 0, pierce: 0, def: 0, brk: 0, armor: 0, hardness: 0, speed: 99,
+    width: 0, hp: 0, org: 0, men: 0, sup: 0, fuel: 0, mech: 0, soft: 0, hard: 0, pierce: 0, def: 0, brk: 0, armor: 0, hardness: 0, speed: 99,
     rec: 0, eng: 0, plan: 0, supSave: 0, healing: 0, days: 0, nLine: line.length, nSup: sup.length, need: {}, cls: 'inf', terr: {}, cost: 0,
   };
   let orgW = 0, lineMen = 0, hardW = 0, allMen = 0, pierceMax = 0, pierceW = 0, pierceMen = 0, armorMax = 0, armorW = 0;
   const share = { arm: 0, mot: 0, cav: 0, mtn: 0 };
   for (const u of all) {
     const m = levelMult(lvl, u.kind);
-    s.hp += u.hp; s.men += u.men; s.sup += u.sup;
+    s.hp += u.hp; s.men += u.men; s.sup += u.sup; s.fuel += u.fuel || 0;
     s.soft += u.soft * m; s.hard += u.hard * m; s.def += u.def * m; s.brk += u.brk * m;
     s.rec += u.rec || 0; s.eng += u.eng || 0; s.plan += u.plan || 0; s.supSave += u.supSave || 0; s.healing += u.healing || 0;
     s.days = Math.max(s.days, u.days);
@@ -56,6 +56,7 @@ export function deriveStats(tpl, lvl = null) {
   }
   if (!line.length) s.speed = 0;
   s.org = lineMen ? orgW / lineMen : 0;
+  s.mech = lineMen ? (share.arm + share.mot) / lineMen : 0;   // M73: podíl motorizace (účinek nedostatku paliva)
   s.hardness = allMen ? hardW / allMen : 0;
   s.pierce = pierceMen ? 0.4 * pierceMax + 0.6 * (pierceW / pierceMen) : 0;
   s.armor = lineMen ? 0.4 * armorMax + 0.6 * (armorW / lineMen) : 0;
