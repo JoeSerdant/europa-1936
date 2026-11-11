@@ -11,6 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
+  proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf,
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
@@ -856,6 +857,39 @@ export function requestAccessFrom(tag) {
   if (!run(requestAccess, me, t)) return false;
   toast(`${countryName(tag)} dovoluje vašim armádám průchod.`);
   return true;
+}
+/** Nabídne zemi `tag` pakt o neútočení (M75). */
+export function offerPactTo(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = pactBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  if (!run(proposePact, me, t)) return false;
+  toast(pactOf(gameStore.getState(), me, t) ? `${countryName(tag)} podepsala pakt o neútočení.` : `${countryName(tag)} pakt o neútočení odmítla.`);
+  return true;
+}
+/** Vypoví pakt o neútočení se zemí `tag`. */
+export function breakPactWith(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = breakBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  const okRun = run(breakPact, me, t);
+  if (okRun) toast(`Pakt se zemí ${countryName(tag)} je vypovězen.`);
+  return okRun;
+}
+/** Odpoví na nabídku paktu od země `tag`. */
+export function answerPactFrom(tag, accept) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  return !!me && !!t && run(answerPact, me, t, accept);
+}
+/** Zlepší vztahy se zemí `tag` za politickou moc. */
+export function improveWith(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = improveBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  return run(improveRelations, me, t);
 }
 /** Dovolí zemi `tag` průchod armád vaším územím. */
 export function grantAccessTo(tag) {

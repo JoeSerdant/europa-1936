@@ -41,6 +41,12 @@ export function popupFor(e, me) {
     case 'civil':
       if (e.o === me) return { kind: 'civil', icon: 'swords', tone: 'bad', title: 'Občanská válka', text: `Část armády a území se postavily proti vládě. Povstalci vyhlásili stát ${nm(e.x)}.`, lines: ['Mír nelze uzavřít – rozhodne se na bojišti.'], sticky: true };
       return null;
+    case 'napq':
+      return e.b === me ? { kind: 'napq', icon: 'dip', tone: 'info', title: 'Nabídka paktu', text: `${nm(e.a)} vám nabízí pakt o neútočení.`, lines: ['Odpovězte v okně Diplomacie; nabídka za měsíc vyprší.'], sticky: true } : null;
+    case 'napend':
+      return e.b === me ? { kind: 'napend', icon: 'dip', tone: 'bad', title: 'Pakt vypovězen', text: `${nm(e.a)} vypověděla pakt o neútočení s vaší zemí.`, lines: ['Počítejte s tím, že chystá válku.'], sticky: true } : null;
+    case 'nap':
+      return e.y && (e.a === me || e.b === me) ? { kind: 'nap', icon: 'dip', tone: 'good', title: 'Pakt o neútočení', text: `${nm(e.a)} a ${nm(e.b)} se zavázaly, že na sebe nezaútočí.`, lines: [] } : null;
     case 'gov':
       return e.o === me ? { kind: 'gov', icon: 'flag', tone: 'bad', title: 'Státní převrat', text: `Vládu převzala strana „${IDEOLOGIES[e.x]?.name || e.x}“. Stabilita klesla a politická moc byla vynulována.`, lines: ['Vztahy s ostatními zeměmi se přepočítávají podle nové ideologie.'], sticky: true } : { kind: 'gov', icon: 'flag', tone: 'info', title: 'Převrat ve světě', text: `V zemi ${nm(e.o)} se ujala moci strana „${IDEOLOGIES[e.x]?.name || e.x}“.`, lines: [] };
     case 'inv':

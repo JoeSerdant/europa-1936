@@ -8,6 +8,18 @@ export const DIP = {
   ULT_REL: -25,           // změna vztahu cíle k požadujícímu po přijetí (po odmítnutí polovina)
   ULT_STAB: 0.06,         // ztráta stability vlády, která ustoupila
   ULT_WS: 0.03,           // změna podpory války (požadující při úspěchu, cíl při odmítnutí)
+  NAP_PP: 25,             // pakt o neútočení (M75): cena nabídky v politické moci
+  NAP_REL: 0,             // cíl řízený AI přijme, když jeho vztah k žadateli s přídavky dosáhne této hodnoty
+  NAP_ENEMY: 30,          // přídavek za společného nepřítele
+  NAP_WAR: 15,            // přídavek, když cíl sám válčí (kryje si záda)
+  NAP_GAIN: 15,           // zlepšení vztahu po podpisu
+  NAP_MIN_DAYS: 365,      // dřív než za tolik dní pakt vypovědět nelze
+  NAP_BREAK_STAB: 0.06,   // ztráta stability toho, kdo pakt vypoví
+  NAP_BREAK_REL: -40,     // změna vztahu po vypovězení
+  NAP_OFFER_DAYS: 30,     // nabídka hráči vyprší za tolik dní
+  IMPROVE_PP: 15,         // zlepšení vztahů: cena v politické moci
+  IMPROVE_GAIN: 10,       // o kolik vztah vzroste
+  IMPROVE_MAX: 80,        // nad tento vztah už zlepšovat nejde
   ACC_PP: 10,             // žádost o vojenský přístup: cena v politické moci (M67)
   ACC_REL: 20,            // nejmenší vztah, při kterém země dovolí cizí armádě průchod (jinak jen se zárukou)
   ACC_REL_GAIN: 5,        // zlepšení vztahu za dohodu o přístupu (odvolání o totéž zhorší)

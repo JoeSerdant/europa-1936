@@ -16,3 +16,5 @@ export { demandSpec, demandForce, acceptsDemand, demandBlock, demand, resolveDem
 export { HIST_DEMANDS, DEMAND_BY_ID, HIST_JACKALS } from '../../data/dip/demands.js';
 export { guarantees, guarantorsOf, guaranteedBy, guaranteeBlock, guarantee, revokeGuarantee, joiningGuarantors } from './guarantee.js';
 export { WARGOALS, WARGOAL_IDS } from '../../data/dip/wargoals.js';
+export { pactOf, pactBlock, pactAccepts, proposePact, answerPact, breakBlock, breakPact, voidPacts, pactDay, improveBlock, improveRelations, pactOffers } from './pact.js';
+export { HIST_PACTS } from '../../data/dip/pacts.js';

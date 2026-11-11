@@ -2,7 +2,7 @@
 //  tick     počáteční čas hry (hodiny od 1. 1. 1936)       transfer  státy přecházejí na jiného vlastníka ({ to, states })
 //  dead     země, které zanikly (kapitulované, bez jednotek)  growth   násobky růstu zemí: ind (továrny), mil (vojenské továrny navíc), army, air, navy
 //  xp       nejmenší zkušenost jednotek podle zemí (0–1)
-//  tech     do kterého roku mají země hotové technologie podle velikosti (tier)   factions, wars: bloky a války na začátku
+//  tech     do kterého roku mají země hotové technologie podle velikosti (tier)   factions, wars, pacts: bloky, války a pakty o neútočení na začátku
 export const SCENARIOS = {
   1936: { id: '1936', n: 'Leden 1936', info: 'Klidné předválečné roky. Čas na výstavbu průmyslu, zbrojení a diplomacii.', tick: 0 },
   1939: {
@@ -31,6 +31,7 @@ export const SCENARIOS = {
       { nm: 'Spojenci', ldr: 'ENG', mem: ['ENG', 'FRA', 'POL'] },
     ],
     wars: [['GER', 'POL', 'att'], ['ENG', 'GER'], ['FRA', 'GER']],   // třetí položka „att“ = útočník
+    pacts: [['GER', 'SOV']],   // pakty o neútočení platné na začátku (M75)
     pp: 150,
   },
 };

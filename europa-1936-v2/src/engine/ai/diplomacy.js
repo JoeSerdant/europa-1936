@@ -10,6 +10,8 @@ import { guarantee } from '../dip/guarantee.js';
 import { campOf, hasCapitulated, warScore, pairKey, vpHeld } from '../dip/core.js';
 import { demandSpec, demandBlock, demandForce, demand } from '../dip/demand.js';
 import { adjacency } from '../army/geo.js';
+import { pactOf, pactBlock, proposePact, breakBlock, breakPact } from '../dip/pact.js';
+import { HIST_PACTS } from '../../data/dip/pacts.js';
 import { AI } from './constants.js';
 import { playerOf } from './core.js';
 import { theatersOf } from './strategy.js';
@@ -67,11 +69,25 @@ export function aiDiplomacy(state, o) {
       if (f.mine >= Math.max(1, f.theirs) * d.ratio) return demand(state, o, b, spec);   // jedno ultimátum za den
     }
   }
+  // historické pakty o neútočení (M75)
+  if (state.ai && state.ai.hist) {
+    for (const p of HIST_PACTS) {
+      if (p.tag !== tag || day < p.from || day > p.until) continue;
+      const t = w.ownerIdx[p.target];
+      if (!t || pactOf(state, o, t) || pactBlock(state, o, t, true)) continue;
+      const next = proposePact(state, o, t, true);
+      if (next !== state) return next;
+    }
+  }
   // historické válečné plány (drobná válka s okrajovou zemí další tažení nebrání)
   if (!state.ai || !state.ai.hist || warBusy(state, o) || state.pol.own[o].stab < AI.STAB_MIN) return state;
   for (const plan of HIST_WARS) {
     if (plan.tag !== tag || day < plan.from || day > plan.until) continue;
     const t = w.ownerIdx[plan.target];
+    if (t && pactOf(state, o, t) && !state.dip.goal[`${o}>${t}`]) {   // M75: historický útok přes pakt – nejdřív ho vypovědět (až to půjde)
+      if (breakBlock(state, o, t)) continue;
+      return breakPact(state, o, t);
+    }
     if (!t || hasCapitulated(state, t) || warBlock(state, o, t) || state.dip.goal[`${o}>${t}`]) continue;   // M68: historická válka je jednorázová
     if (justReady(state, o, t)) {
       const mine = campOf(state, o).reduce((a, m) => a + divisionCount(state, m), 0);

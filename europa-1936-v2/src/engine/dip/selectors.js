@@ -10,6 +10,10 @@ import { guarantees, guaranteeBlock } from './guarantee.js';
 import { hasAccess, grants, accessBlock, grantBlock } from './access.js';
 import { demandSpec, demandBlock, demandForce } from './demand.js';
 import { HIST_DEMANDS } from '../../data/dip/demands.js';
+import { pactOf, pactBlock, pactAccepts, breakBlock, improveBlock, pactOffers } from './pact.js';
+
+/** Pakt o neútočení se zemí `t` pro rozhraní: { days (jak dlouho platí), breakBlock } nebo null. */
+const pactView = (state, o, t) => { const p = pactOf(state, o, t); return p ? { days: Math.floor((state.tick - p.t) / 24), breakBlock: breakBlock(state, o, t) } : null; };
 import { warBlock, justReady, peaceBlock, inviteBlock } from './commands.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
@@ -35,6 +39,7 @@ export function diplomacyOf(state, o) {
       canDeclare: !wb && justReady(state, o, t),
       goals: WARGOAL_IDS.map((g) => ({ id: g, n: WARGOALS[g].n, pp: WARGOALS[g].pp, days: WARGOALS[g].days, info: WARGOALS[g].info, block: wb || (j ? 'Už se ospravedlňuje.' : state.dip.just.filter((x) => x.a === o).length >= DIP.JUST_MAX ? 'Příliš mnoho ospravedlnění.' : state.pol.own[o].pp < WARGOALS[g].pp ? `Chybí politická moc (${Math.ceil(WARGOALS[g].pp - state.pol.own[o].pp)}).` : null) })),
       garMine: guarantees(state, o, t), garTheirs: guarantees(state, t, o), garBlock: guaranteeBlock(state, o, t),
+      pact: pactView(state, o, t), pactBlock: pactBlock(state, o, t), pactOdds: pactAccepts(state, o, t).ok, improveBlock: improveBlock(state, o, t),   // M75
       access: hasAccess(state.dip, o, t), accGiven: hasAccess(state.dip, t, o),   // M67: smíte na jejich území / smějí na vaše
       accDeal: grants(state, t, o), accMine: grants(state, o, t), accBlock: accessBlock(state, o, t), giveBlock: grantBlock(state, o, t),
       demands: HIST_DEMANDS.filter((d) => d.tag === myTag && d.target === w.owners[t].tag && day >= d.from).map((d) => {   // M68: ultimáta, která smí hráč vznést
@@ -50,7 +55,7 @@ export function diplomacyOf(state, o) {
       annexBlock: overlordOf(state, t) !== o ? 'Není to vaše loutka.' : state.pol.own[o].pp < DIP.ANNEX_PP ? `Chybí politická moc (${Math.ceil(DIP.ANNEX_PP - state.pol.own[o].pp)}).` : null,
     });
   }
-  return { o, faction: fac, canFound: !fac && !hasCapitulated(state, o) && state.pol.own[o].pp >= DIP.FAC_PP, capitulated: hasCapitulated(state, o), held: vpHeld(state, o), list };
+  return { o, offers: pactOffers(state, o).map((x) => ({ ...x, tag: w.owners[x.a].tag, name: w.owners[x.a].name })), faction: fac, canFound: !fac && !hasCapitulated(state, o) && state.pol.own[o].pp >= DIP.FAC_PP, capitulated: hasCapitulated(state, o), held: vpHeld(state, o), list };
 }
 
 export { relOf, factionOf, warScore, vpHeld };

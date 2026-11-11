@@ -3,7 +3,7 @@ import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS } from '../../engine/index.js';
-import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, demandFrom, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, offerPactTo, breakPactWith, answerPactFrom, improveWith, demandFrom, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -31,6 +31,7 @@ function Row({ c, me }) {
   if (c.garMine) flags.push(['ally', 'vaše záruka']);
   else if (c.garTheirs) flags.push(['ally', 'zaručuje vás']);
   if (c.ally) flags.push(['ally', 'spojenec']);
+  if (c.pact) flags.push(['ally', 'pakt']);
   if (c.accDeal) flags.push(['ally', 'přístup']);
   if (c.mine) flags.push(['ally', 'vaše loutka']);
   else if (c.overlord) flags.push(['cap', 'loutka']);
@@ -65,12 +66,17 @@ function Row({ c, me }) {
               : <button className="sbtn" disabled={!!c.garBlock} onClick={() => guaranteeFor(c.tag)} title={c.garBlock || `Zaručit nezávislost (${DIP.GAR_PP} PM): napadne-li ji někdo, přidáte se do války`}>Zaručit nezávislost</button>}
             <button className="sbtn" disabled={!!c.inviteBlock} onClick={() => inviteBloc(c.tag)} title={c.inviteBlock || 'Pozvat do bloku'}>Pozvat do bloku</button>
             {!c.war && c.demands.map((dm) => <button key={dm.id} className="sbtn danger" disabled={!!dm.block} onClick={() => demandFrom(c.tag, dm.id)} title={dm.block || `Ultimátum (${DIP.ULT_PP} PM): ${dm.kind === 'annex' ? 'připojení země' : 'odstoupení území'}. Cíl ustoupí při přesile ${dm.need}× (máte ${fmtNum(dm.have, 1)}×); jinak získáte záminku k válce.`}>Ultimátum: {dm.n}</button>)}
+            {!c.war && !c.ally && (c.pact
+              ? <button className="sbtn danger" disabled={!!c.pact.breakBlock} onClick={() => breakPactWith(c.tag)} title={c.pact.breakBlock || `Vypovědět pakt o neútočení: stabilita −${Math.round(DIP.NAP_BREAK_STAB * 100)} %, vztah ${DIP.NAP_BREAK_REL}`}>Vypovědět pakt</button>
+              : <button className="sbtn" disabled={!!c.pactBlock} onClick={() => offerPactTo(c.tag)} title={c.pactBlock || `Nabídnout pakt o neútočení (${DIP.NAP_PP} PM): ${c.pactOdds ? 'nejspíš přijme' : 'nejspíš odmítne'}`}>Pakt o neútočení</button>)}
+            {!c.war && <button className="sbtn" disabled={!!c.improveBlock} onClick={() => improveWith(c.tag)} title={c.improveBlock || `Zlepšit vztahy o ${DIP.IMPROVE_GAIN} (${DIP.IMPROVE_PP} PM)`}>Zlepšit vztahy</button>}
             {!c.war && !c.access && <button className="sbtn" disabled={!!c.accBlock} onClick={() => requestAccessFrom(c.tag)} title={c.accBlock || `Požádat o průchod vašich armád jejím územím (${DIP.ACC_PP} PM)`}>Požádat o přístup</button>}
             {!c.war && (c.accMine
               ? <button className="sbtn" onClick={() => revokeAccessFrom(c.tag)} title="Odvolat jejím armádám průchod vaším územím">Odvolat přístup</button>
               : !c.accGiven && <button className="sbtn" disabled={!!c.giveBlock} onClick={() => grantAccessTo(c.tag)} title={c.giveBlock || 'Dovolit jejím armádám průchod vaším územím (zdarma)'}>Dát přístup</button>)}
             <button className="sbtn" onClick={() => selectLabel(getWorld().owners[c.o].cap, true)} title="Ukázat hlavní město"><Icon name="target" size={14} />Ukázat</button>
           </div>
+          {c.pact ? <p className="muted dip-access">Pakt o neútočení platí {c.pact.days} dní.</p> : null}
           {!c.war && (c.access || c.accGiven) ? <p className="muted dip-access">Vojenský přístup: {c.access ? 'smíte projít jejich územím' : 'jejich armády nesmí na vaše území'}{c.access && c.accGiven ? ' · ' : ''}{c.accGiven ? (c.access ? 'smějí projít vaším' : 'smějí projít vaším územím') : ''}</p> : null}
           {c.friend ? <Lend c={c} me={me} /> : null}
           {c.war ? <p className="muted">Válečné skóre: {c.score > 0 ? '+' : ''}{fmtNum(c.score * 100, 0)} %</p> : null}
@@ -99,6 +105,20 @@ export function DiplomacyPanel() {
             <ul className="dip-list">{list.map((c) => <Row key={c.o} c={c} me={me} />)}</ul>
           </div>
           <aside className="prod-right">
+            {d.offers.length > 0 && (
+              <section className="dip-offers" aria-label="Diplomatické nabídky">
+                <div className="sec-head"><h3>Nabídky</h3></div>
+                <ul>
+                  {d.offers.map((x) => (
+                    <li key={x.tag}>
+                      <Flag tag={x.tag} width={22} /><span>{x.name}: pakt o neútočení <i className="muted">(ještě {x.left} dní)</i></span>
+                      <button className="sbtn" onClick={() => answerPactFrom(x.tag, true)}>Přijmout</button>
+                      <button className="sbtn danger" onClick={() => answerPactFrom(x.tag, false)}>Odmítnout</button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             <div className="sec-head"><h3>Váš blok</h3></div>
             <section aria-label="Blok" className="dip-bloc">
               {f ? (

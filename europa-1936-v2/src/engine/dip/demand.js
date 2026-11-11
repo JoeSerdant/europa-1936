@@ -13,6 +13,7 @@ import { campOf, hasCapitulated, sameFaction, setRel } from './core.js';
 import { joiningGuarantors } from './guarantee.js';
 import { annexRump } from './subjects.js';
 import { releaseBlock, releaseNation } from '../civil/index.js';
+import { pactOf } from './pact.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 const patch = (state, p) => ({ ...state, dip: { ...state.dip, ...p, ver: state.dip.ver + 1 } });
@@ -57,6 +58,7 @@ export function demandBlock(state, a, b, spec) {
   if (hasCapitulated(state, a) || hasCapitulated(state, b)) return 'Kapitulovaná země požadavky nevznáší ani nepřijímá.';
   if (atWar(state.mil, a, b)) return 'Ve válce se ultimátum nevznáší.';
   if (sameFaction(state, a, b)) return 'Člen téhož bloku je spojenec.';
+  if (pactOf(state, a, b)) return 'Platí pakt o neútočení.';   // M75
   if (state.dip.sub[a] || state.dip.sub[b]) return 'Loutkový stát požadavky nevznáší ani nepřijímá.';
   if (spec.kind !== 'annex' && !spec.states.length) return 'Země už požadované území nevlastní.';
   if (ultsOf(state).some((u) => u.a === a && u.b === b && (u.id === spec.id || u.ok === 2 || state.tick - u.t < DIP.ULT_COOLDOWN * 24))) return 'Ultimátum nedávno proběhlo.';
