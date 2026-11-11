@@ -10,7 +10,7 @@ const idx = (t) => W.ownerIdx[t];
 const GER = idx('GER'), FRA = idx('FRA'), SOV = idx('SOV'), CZE = idx('CZE'), POL = idx('POL'), SWE = idx('SWE');
 const day = (s, n = 1) => advance(s, 24 * n);
 const give = (s, o, ids) => { const own = s.nat.own.slice(); const done = { ...own[o].done }; ids.forEach((i) => { done[i] = 1; }); own[o] = { ...own[o], done }; return { ...s, nat: { ...s.nat, own } }; };
-const FX_TYPES = new Set(['pp', 'stab', 'ws', 'law', 'adv', 'factory', 'infra', 'boost', 'boostslot', 'tech', 'man', 'stock', 'flag', 'event', 'xp', 'ult']);
+const FX_TYPES = new Set(['pp', 'stab', 'ws', 'law', 'adv', 'factory', 'infra', 'boost', 'boostslot', 'tech', 'man', 'stock', 'flag', 'event', 'xp', 'ult', 'party', 'spirit', 'unspirit']);
 
 describe('data', () => {
   it('stromy: unikátní id, existující předpoklady a vylučující cíle, jedinečné polohy, platné účinky', () => {
@@ -60,7 +60,7 @@ describe('začátek a příkazy', () => {
   it('čistý JSON, verze 6, každá země bez hotového cíle', () => {
     expect(GAME_VERSION).toBeGreaterThanOrEqual(6);
     expect(JSON.parse(JSON.stringify(s0.nat))).toEqual(s0.nat);
-    for (let o = 1; o < W.owners.length; o++) expect(s0.nat.own[o]).toEqual({ done: {}, cur: null, flags: {}, seen: {}, sched: [], dec: {} });
+    for (let o = 1; o < W.owners.length; o++) expect(s0.nat.own[o]).toEqual({ done: {}, cur: null, flags: {}, seen: {}, sched: [], dec: {}, sp: s0.nat.own[o].sp });
     expect(s0.nat.pend).toEqual([]);
   });
   it('strom se stavy: kořeny dostupné, ostatní zamčené; neznámá země má obecný strom', () => {
@@ -109,7 +109,7 @@ describe('plnění cíle a účinky', () => {
     const before = industryOf(s0, 'GER'), after = industryOf(a, 'GER');
     expect(after.civ).toBe(before.civ + 1);
     expect(after.mil).toBe(before.mil + 1);
-    expect(polModsOf(a, GER).prod).toBeCloseTo(0.03, 9);
+    expect(polModsOf(a, GER).prod).toBeCloseTo(polModsOf(s0, GER).prod + 0.03, 9);   // nad bonus národních duchů (M74)
     expect(focusMods(a.nat.own[GER].done).prod).toBe(0.03);
     expect(focusTree(a, 'GER').find((f) => f.id === 'ger_rearm').status).toBe('available');
   });

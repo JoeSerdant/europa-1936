@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createGame, getWorld, advance, advanceHour, declareWar, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, removeLine,
   addTrade, setTradeAmount, cancelTrade, industryOf, stateIndustry, slotsOf, slotsUsed, categoryOf, infraOf, geo, supplyFlow,
-  IND, IND_NATIONAL, BUILDINGS, EQUIP_PROD, RES_IDS, EQUIP, GAME_VERSION,
+  consOf, IND, IND_NATIONAL, BUILDINGS, EQUIP_PROD, RES_IDS, EQUIP, GAME_VERSION,
 } from '../src/engine/index.js';
 
 const W = getWorld();
@@ -139,7 +139,7 @@ describe('stavby', () => {
     const cons = s.ind.cons.slice(); cons[o] = IND.CONS_MAX;
     const hi = { ...s, ind: { ...s.ind, cons } };
     expect(industryOf(hi, 'GER').points).toBeLessThan(industryOf(s, 'GER').points);
-    expect(industryOf(s, 'GER').consFac).toBeCloseTo(s.ind.cons[o] * (40 + 22), 5);
+    expect(industryOf(s, 'GER').consFac).toBeCloseTo(consOf(s, o) * (40 + 22), 5);   // základ země + zákony, poradci a národní duchové
     const none = { ...s, ind: { ...s.ind, cons: s.ind.cons.map(() => 1) } };
     const b = day(build(none, st, 'civ'), 20);
     expect(b.ind.build[0].prog).toBe(0);

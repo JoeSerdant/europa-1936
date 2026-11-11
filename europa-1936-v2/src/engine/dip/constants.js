@@ -46,5 +46,6 @@ export const DIP = {
   AU_MULT: [1.6, 1, 0.5, 0.2], // násobek příspěvků pánovi podle úrovně
   SUB_MAN: 0.002,         // podíl lidské síly loutky, který denně připadne pánovi
   SUB_PP: 0.4,            // politická moc, kterou denně dostane pán za každou loutku
+  VICTORY_DAYS: 180,      // dnů trvání ducha „Vítězná nálada“ po kapitulaci protivníka (M74)
   ANNEX_PP: 150,          // cena anexe vlastní loutky        // bonus za shodnou ideologii
 };

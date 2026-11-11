@@ -5,6 +5,7 @@ import { withCtx, settleAfterPeace } from '../army/commands.js';
 import { DIP } from './constants.js';
 import { logAdd } from '../log.js';
 import { conference } from './subjects.js';
+import { addSpirit } from '../nat/spirits.js';
 
 export function capitulate(state, loser) {
   const w = getWorld();
@@ -43,5 +44,8 @@ export function capitulate(state, loser) {
     pol: { ...state.pol, own: pol },
   };
   void annexed;
-  return conference(logAdd(withCtx(next, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser }), loser, by);
+  let top = 0;   // M74: země, která dobyla nejvíc provincií poraženého, dostane dočasného ducha „Vítězná nálada“
+  for (const c in by) if (!top || by[c] > by[top]) top = +c;
+  const done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
+  return conference(logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser }), loser, by);
 }

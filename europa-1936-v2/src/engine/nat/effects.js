@@ -11,6 +11,7 @@ import { countryStats } from '../selectors.js';
 import { addXp } from '../doc/commands.js';
 import { resolveDemand } from '../dip/demand.js';
 import { pushParty, ideologyOf } from '../politics/parties.js';
+import { addSpirit, removeSpirit } from './spirits.js';
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const touch = (state, o, fn) => {
@@ -95,6 +96,8 @@ function applyOne(state, o, e) {
     }
     case 'xp': return addXp(state, o, e.b, e.n);
     case 'ult': return resolveDemand(state, o, e.id, !!e.ok);   // M68: odpověď na ultimátum
+    case 'spirit': return addSpirit(state, o, e.id, e.days || 0);   // M74: národní duch (days = trvání, bez něj trvale)
+    case 'unspirit': return removeSpirit(state, o, e.id);
     case 'flag': return touch(state, o, (own) => ({ ...own, flags: { ...own.flags, [e.id]: 1 } }));
     case 'event': return touch(state, o, (own) => ({ ...own, sched: [...own.sched, { id: e.id, at: state.tick + e.days * 24 }] }));
     default: return state;

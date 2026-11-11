@@ -5,6 +5,7 @@ import { NAT } from './constants.js';
 import { logAdd } from '../log.js';
 import { focusStatus, focusTreeOf, eventReady, rand01 } from './core.js';
 import { applyFx } from './effects.js';
+import { expireSpirits } from './spirits.js';
 
 const setOwn = (state, o, own) => {
   const arr = state.nat.own.slice();
@@ -36,6 +37,7 @@ export function fireEvent(state, o, id, player) {
 
 export function natDay(state) {
   const w = getWorld();
+  state = expireSpirits(state);   // M74: dočasní národní duchové
   const player = state.player ? w.ownerIdx[state.player] : 0;
   for (let o = 1; o < w.owners.length; o++) {
     let own = state.nat.own[o];
