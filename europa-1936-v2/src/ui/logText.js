@@ -47,6 +47,9 @@ export function logLine(e, me = 0) {
     case 'inv': return { icon: 'army', tone: e.b === me ? 'bad' : 'info', world: true, mine: e.o === me || e.b === me, text: e.a ? `${nm(e.o)} vysílá ${e.y} divizí k vylodění u ${w.provName(e.x)} (${nm(e.b)}).` : `${nm(e.o)} posílá ${e.y} divizí jako posily do předmostí u ${w.provName(e.x)}.` };
     case 'lands': return { icon: 'army', tone: 'bad', world: false, mine: true, text: `Nepřítel (${nm(e.o)}) se vylodil: ${w.provName(e.x)}.` };
     case 'release': return { icon: 'flag', tone: 'info', world: true, mine: e.o === me || e.y === me, text: `${nm(e.o)} z území poražené země ${nm(e.y)} vytvořila loutkový stát ${nm(e.x)}.` };
+    case 'nap': return { icon: 'dip', tone: e.y ? 'info' : 'bad', world: !!e.y, mine: e.a === me || e.b === me, text: e.y ? `${nm(e.a)} a ${nm(e.b)} uzavřely pakt o neútočení.` : `${nm(e.b)} odmítla pakt o neútočení se zemí ${nm(e.a)}.` };
+    case 'napq': return { icon: 'dip', tone: 'info', world: false, mine: e.b === me, text: `${nm(e.a)} vám nabízí pakt o neútočení.` };
+    case 'napend': return { icon: 'dip', tone: 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} vypověděla pakt o neútočení se zemí ${nm(e.b)}.` };
     case 'access': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} dovoluje armádám země ${nm(e.b)} průchod svým územím.` };
     case 'accend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} odvolala přístup armádám země ${nm(e.b)}.` };
     case 'garend': return { icon: 'dip', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} už nezaručuje nezávislost země ${nm(e.b)}.` };
@@ -62,6 +65,8 @@ export function logLine(e, me = 0) {
 export function logImportant(e, me) {
   if (e.k === 'war') return e.a === me || e.b === me;
   if (e.k === 'gov') return true;
+  if (e.k === 'napq' || e.k === 'napend') return e.b === me;
+  if (e.k === 'nap') return !!e.y && (e.a === me || e.b === me);
   if (e.k === 'inv') return e.b === me && !!e.a;
   return e.k === 'cap' || e.k === 'tech' || e.k === 'focus' || e.k === 'sunk' || e.k === 'landing' || e.k === 'lands' || e.k === 'built' || e.k === 'doctrine' || e.k === 'free';
 }

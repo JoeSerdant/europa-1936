@@ -6,12 +6,14 @@ import { vpHeld } from './core.js';
 import { capitulate } from './capitulate.js';
 import { subjectsDay } from './subjects.js';
 import { accessDay } from './access.js';
+import { pactDay } from './pact.js';
 import { civilDay, isCivilWar } from '../civil/index.js';
 
 export function dipDay(state) {
   const w = getWorld();
   state = civilDay(state);   // M69: historické občanské války
   state = subjectsDay(state);
+  state = pactDay(state);   // M75: nabídky a zaniklé pakty
   // kapitulace
   for (let o = 1; o < w.owners.length; o++) {
     if (state.dip.cap[o] || !hasWar(state.mil, o)) continue;

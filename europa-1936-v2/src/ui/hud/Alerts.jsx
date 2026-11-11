@@ -5,7 +5,7 @@ import { Icon } from '../common/Icon.jsx';
 import { alertsOf } from '../../engine/index.js';
 import { playerIdx, openPanel, toggleIndustry } from '../actions.js';
 
-const ICON = { event: 'politics', research: 'research', focus: 'flag', pp: 'politics', build: 'build', prod: 'industry', divs: 'army', decisions: 'gavel', fuel: 'supply' };
+const ICON = { event: 'politics', research: 'research', focus: 'flag', pp: 'politics', build: 'build', prod: 'industry', divs: 'army', decisions: 'gavel', fuel: 'supply', offer: 'dip' };
 
 /**
  * Řada upozornění vedle lišty nabídek (jako v HOI4): ikona s počtem, po najetí seznam podrobností, klik otevře příslušné okno,

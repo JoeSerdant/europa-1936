@@ -178,7 +178,8 @@ export function applyScenario(state, id) {
     since[pairKeyOf(w.ownerIdx[a], w.ownerIdx[b])] = sc.tick;
     if (att === 'att') goal[`${w.ownerIdx[a]}>${w.ownerIdx[b]}`] = 'conquest';   // útočník války (AI se podle toho rozhoduje o útoku, M66)
   }
-  s = { ...s, dip: { ...s.dip, goal, since, ver: s.dip.ver + 1 } };
+  const nap = (sc.pacts || []).map(([a, b]) => ({ a: w.ownerIdx[a], b: w.ownerIdx[b], t: sc.tick })).filter((x) => x.a && x.b);   // M75: pakty o neútočení platné na začátku
+  s = { ...s, dip: { ...s.dip, goal, since, nap, ver: s.dip.ver + 1 } };
   // 4) čas
   return { ...s, tick: sc.tick };
 }

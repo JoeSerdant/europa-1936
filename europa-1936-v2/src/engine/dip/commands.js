@@ -8,6 +8,7 @@ import { DIP } from './constants.js';
 import { WARGOALS } from '../../data/dip/wargoals.js';
 import { logAdd } from '../log.js';
 import { ideologyOf } from '../politics/parties.js';
+import { pactOf, voidPacts } from './pact.js';
 import { joiningGuarantors, breakGuarantees } from './guarantee.js';
 import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey } from './core.js';
 
@@ -23,6 +24,7 @@ export function warBlock(state, a, b) {
   if (sameFaction(state, a, b)) return 'Země je ve stejném bloku.';
   if (state.dip.sub && (state.dip.sub[a] === b || state.dip.sub[b] === a)) return 'Pán a jeho loutkový stát spolu nebojují.';
   if (state.dip.sub && state.dip.sub[a]) return 'Loutkový stát nevede vlastní války.';
+  if (pactOf(state, a, b)) return 'Platí pakt o neútočení – nejdřív ho vypovězte.';   // M75
   return null;
 }
 
@@ -63,7 +65,7 @@ export function startWar(state, a, b, free = false) {
   rel = setRel(rel, a, b, DIP.REL_WAR);
   for (const y of defenders) if (y !== b) rel = setRel(rel, a, y, DIP.REL_WAR_ALLY);
   const jg = (state.dip.just.find((j) => j.a === a && j.b === b) || {}).g || 'conquest';
-  return logAdd(patch(s, { rel, since, goal: { ...s.dip.goal, [`${a}>${b}`]: jg }, just: s.dip.just.filter((j) => !(j.a === a && j.b === b)) }), { k: 'war', a, b });
+  return voidPacts(logAdd(patch(s, { rel, since, goal: { ...s.dip.goal, [`${a}>${b}`]: jg }, just: s.dip.just.filter((j) => !(j.a === a && j.b === b)) }), { k: 'war', a, b }));   // M75: válka bloků ruší pakty mezi jejich členy
 }
 
 /** Zdůvodnění, proč druhá strana bílý mír odmítne (český text), nebo null. */
