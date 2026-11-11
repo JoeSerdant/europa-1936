@@ -6,6 +6,7 @@ export const DECISION_CATS = { eco: 'Hospodářství', mil: 'Armáda', pol: 'Pol
 
 export const DECISIONS = [
   // ---- hospodářství ----
+  { id: 'vyrobni_kampan', cat: 'eco', n: 'Válečná výrobní kampaň', info: 'Mimořádné směny a soutěže závodů: na čtyři měsíce roste výroba, lidé jsou ale unavení.', cost: 50, cd: 365, when: { war: true, stab: [0.35, 1] }, fx: [{ t: 'spirit', id: 'valecne_usili', days: 120 }], ai: true },
   { id: 'zbrojni_pujcka', cat: 'eco', n: 'Zbrojní půjčka', info: 'Státní půjčka pro zbrojovky: nová vojenská továrna, ale rozladěné obyvatelstvo.', cost: 40, cd: 180, when: { stab: [0.4, 1] }, fx: [{ t: 'factory', k: 'mil', n: 1 }, { t: 'stab', v: -0.03 }], ai: true },
   { id: 'prumyslova_kampan', cat: 'eco', n: 'Průmyslová kampaň', info: 'Podpora výstavby civilního průmyslu.', cost: 30, cd: 120, when: { stab: [0.35, 1] }, fx: [{ t: 'factory', k: 'civ', n: 1 }, { t: 'stab', v: -0.02 }], ai: true },
   { id: 'pruzkum_surovin', cat: 'eco', n: 'Průzkum surovin', info: 'Geologové a stavbaři: modernizace komunikací v hlavním státě.', cost: 35, cd: 150, when: {}, fx: [{ t: 'infra', n: 1 }], ai: true },

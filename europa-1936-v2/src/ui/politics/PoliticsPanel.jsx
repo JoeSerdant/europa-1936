@@ -1,6 +1,6 @@
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { politicsOf, focusTree } from '../../engine/index.js';
+import { politicsOf, focusTree, spiritsOf } from '../../engine/index.js';
 import { COUNTRIES, IDEOLOGIES } from '../../data/countries.js';
 import { Flag } from '../common/Flag.jsx';
 import { playerIdx, changeLaw, hireAdv, dismissAdv, backParty } from '../actions.js';
@@ -106,6 +106,7 @@ export function PoliticsPanel() {
   if (!me) return <div className="prod-screen politics-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádnou politiku.</p></div></div>;
   const p = politicsOf(state, me);
   const spirits = [
+    ...spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, hint: `${x.info} ${modText(x.mod)}${x.days ? ` · ještě ${x.days} dní` : ''}` })),
     ...p.laws.map((c) => { const o = c.options.find((x) => x.active); return { k: `l${c.cat}`, n: o.n, kind: 'law', hint: `${c.n}: ${o.info}` }; }),
     ...p.advisors.filter((a) => a.current).map((a) => ({ k: `a${a.slot}`, n: a.current.n, kind: 'adv', hint: `${a.n}: ${a.current.info}` })),
     ...focusTree(state, me).filter((f) => f.status === 'done').map((f) => ({ k: `f${f.id}`, n: f.n, kind: 'focus', hint: f.info || 'Splněný národní cíl' })),

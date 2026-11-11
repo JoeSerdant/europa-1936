@@ -338,6 +338,9 @@ button.st-row:hover { background: var(--ink-3); }
 .lc-spirits { display: flex; flex-wrap: wrap; gap: 5px; }
 .lc-spirits li { padding: 4px 9px; font-size: 12.5px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule-hi); border-radius: 12px; }
 .lc-spirits li.law { color: var(--brass-hi); }
+.lc-spirits li.spirit { color: var(--paper); font-weight: 600; box-shadow: inset 0 0 0 1px var(--brass); }
+.lc-spirits li.spirit.bad { box-shadow: inset 0 0 0 1px var(--red, #e07a6a); }
+.lc-spirits li.spirit.good { box-shadow: inset 0 0 0 1px var(--green); }
 .lc-spirits li.adv { color: var(--blue); }
 .lc-spirits li.focus { color: var(--green); }
 @media (max-width: 1500px) { .pol-cols { grid-template-columns: 240px minmax(0, 1.3fr) minmax(260px, 1fr); } }

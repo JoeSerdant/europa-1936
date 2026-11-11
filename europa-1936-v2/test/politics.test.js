@@ -101,7 +101,8 @@ describe('zákony', () => {
     expect(consOf(war, GER)).toBeCloseTo(consOf(rich, GER) - 0.15, 9);
     expect(industryOf(war, 'GER').consFac).toBeLessThan(industryOf(rich, 'GER').consFac);
     expect(industryOf(war, 'GER').points).toBeGreaterThan(industryOf(rich, 'GER').points);
-    expect(outMult(war, GER)).toBeCloseTo(outMult(rich, GER) * 1.05 * (stabMult(war.pol.own[GER].stab) / stabMult(rich.pol.own[GER].stab)), 9);
+    expect(outMult(war, GER)).toBeCloseTo(outMult(rich, GER) * ((1 + polModsOf(war, GER).prod) / (1 + polModsOf(rich, GER).prod)) * (stabMult(war.pol.own[GER].stab) / stabMult(rich.pol.own[GER].stab)), 9);
+    expect(polModsOf(war, GER).prod).toBeCloseTo(polModsOf(rich, GER).prod + 0.05, 9);
     const serv = setLaw(rich, GER, 'con', 'serv');
     expect(manMult(serv, GER)).toBeGreaterThan(manMult(rich, GER) * 1.3);
     expect(polModsOf(serv, GER).man).toBe(1);
@@ -143,7 +144,7 @@ describe('poradci', () => {
   it('poradci dávají bonusy: výzkum, výroba, stabilita', () => {
     const a = hireAdvisor(hireAdvisor(s0, GER, 'sci', 'akademik'), GER, 'ind', 'koncern');
     expect(researchOf(a, 'GER').speed).toBeCloseTo(researchOf(s0, 'GER').speed * 1.1, 9);
-    expect(polModsOf(a, GER).prod).toBeCloseTo(0.05, 9);
+    expect(polModsOf(a, GER).prod).toBeCloseTo(polModsOf(s0, GER).prod + 0.05, 9);   // nad bonus národních duchů (M74)
     const d = hireAdvisor(s0, GER, 'pol', 'diplomat');
     expect(politicsOf(d, 'GER').target.stab).toBeCloseTo(politicsOf(s0, 'GER').target.stab + 0.04, 9);
     const t = startResearch(a, GER, 0, 'pusky2');

@@ -7,6 +7,7 @@ import { COUNTRIES } from '../../data/countries.js';
 import { IDEO_ORDER } from '../../data/politics/ideology.js';
 import { IDEO_REL } from '../../data/dip/relations.js';
 import { logAdd } from '../log.js';
+import { addSpirit } from '../nat/spirits.js';
 import { POL } from './constants.js';
 import { startParties } from './setup.js';
 
@@ -85,6 +86,7 @@ export function changeGov(state, o, ideo) {
   const own = state.pol && state.pol.own[o];
   if (!own || !own.par || !IDEO_ORDER.includes(ideo) || ideo === own.gov) return state;
   let s = setOwn(state, o, { gov: ideo, gt: state.tick, stab: Math.max(0.1, own.stab - POL.COUP_HIT), pp: 0 });
+  s = addSpirit(s, o, 'porevolucni_chaos', POL.COUP_CHAOS_DAYS);   // M74: dočasný národní duch
   const id = s.dip.fac[o];
   if (id) {   // členové, jejichž vláda se s novou vládou o (nebo s vedoucím) neslučuje, blok opouštějí
     const f = s.dip.facs[id];

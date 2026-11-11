@@ -20,6 +20,7 @@ export const POL = {
   COUP_GAP: 10,        // převrat: některá strana předstihne vládnoucí o tolik bodů
   COUP_STAB: 0.35,     // a stabilita je pod touto hodnotou
   COUP_COOL: 365,      // dnů po změně vlády, ve kterých k převratu nedojde
+  COUP_CHAOS_DAYS: 365, // dnů trvání ducha „Porevoluční chaos“ po převratu (M74)
   COUP_HIT: 0.15,      // ztráta stability po převratu
   SPY_SUBVERT: 6,      // body, o které zpravodajská operace posílí stranu v cíli
 };

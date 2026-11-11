@@ -27,6 +27,7 @@ export function validateState(s) {
   for (const k of ['tech', 'pol', 'nat']) if (!isArr(s[k].own) || s[k].own.length !== w.owners.length) return `Uložená hra je poškozená (${k}).`;
   if (!isArr(s.doc.own) || s.doc.own.length !== w.owners.length) return 'Uložená hra je poškozená (doktríny).';
   if (!s.pol.own.slice(1).every((x) => x && x.par && x.gov)) return 'Uložená hra je poškozená (strany).';
+  if (!s.nat.own.slice(1).every((x) => x && x.sp && typeof x.sp === 'object')) return 'Uložená hra je poškozená (národní duchové).';
   if (!isArr(s.ind.fuel) || s.ind.fuel.length !== w.owners.length) return 'Uložená hra je poškozená (palivo).';
   if (!isArr(s.ai.inv)) return 'Uložená hra je poškozená (invaze AI).';
   if (!isArr(s.air.wings) || !isArr(s.air.pool) || s.air.pool.length !== w.owners.length) return 'Uložená hra je poškozená (letectvo).';
