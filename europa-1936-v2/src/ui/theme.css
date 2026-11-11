@@ -426,3 +426,9 @@ kbd {
 .dz-diff li { padding: 1px 7px; background: var(--ink-3); color: var(--text-2); }
 .dz-diff li.up { color: #8fd36a; }
 .dz-diff li.down { color: #e8715a; }
+.bt-tactics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 2px; }
+.bt-tac { display: flex; align-items: baseline; gap: 8px; padding: 6px 10px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule-hi); font-size: 13px; }
+.bt-tac i { font-style: normal; color: var(--text-3); font-size: 12px; }
+.bt-tac b { color: var(--paper); }
+.bt-tac em { margin-left: auto; font-style: normal; font-size: 12px; color: var(--red, #e07a6a); }
+.bt-tac.beaten b { text-decoration: line-through; opacity: 0.7; }

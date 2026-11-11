@@ -41,7 +41,7 @@ export function startBattleAgainst(ctx, id, target, foes) {
     if (!b.att.includes(id)) b.att = [...b.att, id];
     if (!b.from.includes(d.p)) b.from = [...b.from, d.p];
   } else {
-    b = addBattle(ctx, { p: target, att: [id], dep: foes.slice(), from: [d.p], hrs: 0, fa: [], fd: [], adv: 0.5 });
+    b = addBattle(ctx, { p: target, att: [id], dep: foes.slice(), from: [d.p], hrs: 0, fa: [], fd: [], adv: 0.5, ta: '', td: '' });
   }
   const ed = editDiv(ctx, id);
   ed.b = b.id;

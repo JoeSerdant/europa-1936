@@ -5,6 +5,8 @@ import { C, xpLevel, XP_NAMES } from './constants.js';
 import { deriveStats, divisionName as nameOf } from './stats.js';
 import { atWar as warBetween, hasWar as warOf, enemiesOf as foesOf } from './war.js';
 import { supplyFlow } from './supply.js';
+import { TACTICS } from '../../data/army/tactics.js';
+import { tacticEffects } from './tactics.js';
 import { seaPorts } from '../nav/core.js';
 import { friendsOf } from '../dip/accessCore.js';
 import { infraOf } from '../industry/infra.js';
@@ -264,5 +266,7 @@ export function battleView(state, id) {
       org: units.length ? units.reduce((a, u) => a + u.orgPct, 0) / units.length : 0,
     };
   };
-  return { id, p: b.p, terrain: w.terrain[b.p], hrs: b.hrs, adv: b.adv, att: side(b.att, b.fa || []), dep: side(b.dep, b.fd || []) };
+  const tv = (tid) => (TACTICS[tid] ? { id: tid, n: TACTICS[tid].n, info: TACTICS[tid].info } : null);   // M77: taktiky dne
+  const fx = tacticEffects(b.ta, b.td);
+  return { id, p: b.p, terrain: w.terrain[b.p], hrs: b.hrs, adv: b.adv, att: side(b.att, b.fa || []), dep: side(b.dep, b.fd || []), tactics: { att: tv(b.ta), dep: tv(b.td), beaten: fx.beaten } };
 }

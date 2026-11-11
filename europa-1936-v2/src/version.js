@@ -1,2 +1,2 @@
 // Označení verze hry zobrazené v hlavním menu (při dokončení milníku se zvedne).
-export const VERSION_LABEL = 'Verze 0.53 · M76 Mlha války';
+export const VERSION_LABEL = 'Verze 0.54 · M77 Bojové taktiky';

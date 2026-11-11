@@ -54,6 +54,9 @@ export const C = {
   XP_BONUS: 0.04,           // bonus útoku i obrany za úroveň zkušenosti (0–4)
   XP_LEVELS: [0.1, 0.3, 0.75, 0.9],
   XP_PER_COMBAT_HOUR: 0.0004,
+  TACTIC_HOURS: 24,         // bojové taktiky (M77): po kolika hodinách bitvy si strany volí novou taktiku
+  TACTIC_LEAD: 0.08,        // o kolik roste váha pokročilých taktik za úroveň velitele
+  TACTIC_COUNTER: 3,        // násobek váhy taktiky, která ruší taktiku protivníka (strana s převahou v průzkumu)
   RECON_BONUS: 0.015,       // bonus za bod převahy v průzkumu
   RECON_MAX: 0.06,
   HOLD_AFTER_LOSS: 36,      // hodin, po které poražený útočník nesmí útočit
