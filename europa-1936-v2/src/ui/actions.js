@@ -57,7 +57,7 @@ export function pickCountry(tag, fly = true) {
 /** Začne novou hru za zemi `tag` (null = pozorovatel). */
 export function startGame(tag) {
   const u = uiStore.getState();
-  gameStore.setState(createGame({ player: tag, aiLevel: u.aiLevel, hist: !!u.aiHist, scenario: u.scenario }));
+  gameStore.setState(createGame({ player: tag, aiLevel: u.aiLevel, hist: !!u.aiHist, scenario: u.scenario, rules: u.rules }));
   setUi({ screen: 'game', ...FRESH_UI });
   mc.setInsets(INSETS.game);
   if (tag) mc.flyToCountry(tag, 1100, 0.45, 1.8); else mc.viewEurope(900);

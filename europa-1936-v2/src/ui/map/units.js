@@ -1,7 +1,7 @@
 // Vrstva jednotek na mapě: z herního stavu staví žetony (divize ve stejné provincii se sloučí), shlukuje je při oddálení,
 // hledá žeton pod kurzorem a v obdélníku a kreslí žetony, šipky rozkazů, značky bitev a plány armád.
 // Data (buildCounters, clusterCounters, routesOf, ...) jsou čistá a jdou testovat bez plátna; kreslení používá Canvas 2D jen v metodách UnitLayer.
-import { geo, deriveStats, atWar } from '../../engine/index.js';
+import { geo, deriveStats, atWar, fogOn, visibleLand, sameFaction, getWorld } from '../../engine/index.js';
 import { labelPath } from './geometry.js';
 import { worldToScreen } from './camera.js';
 import { drawCounter, counterLook, counterScale, counterSize, arrowHead, COUNTER } from './counters.js';
@@ -13,10 +13,13 @@ const MOVING_MIN_PROG = 6;       // od tohoto postupu (z 100) se žeton kreslí 
 /** Žetony: divize stejné země ve stejné provincii (a se stejným směrem pohybu) tvoří jeden žeton. */
 export function buildCounters(game, world) {
   const mil = game.mil, g = geo(world);
+  const fog = fogOn(game), me = fog ? world.ownerIdx[game.player] : 0, vis = fog ? visibleLand(game, me) : null;
+  const ally = new Uint8Array(world.owners.length);
+  if (fog) for (let o = 1; o < ally.length; o++) if (sameFaction(game, me, o)) ally[o] = 1;
   const map = new Map();
   for (let id = 1; id < mil.divs.length; id++) {
     const d = mil.divs[id];
-    if (!d) continue;
+    if (!d || (fog && d.o !== me && !ally[d.o] && !vis[d.p])) continue;   // M76: mlha války skryje cizí divize mimo dohled
     const moving = d.b === 0 && d.path.length > 0 && d.prog >= MOVING_MIN_PROG;
     const next = moving ? d.path[0] : 0;
     const key = (d.o * 4096 + d.p) * 4096 + next;
@@ -103,7 +106,7 @@ export function routesOf(game) {
 }
 
 /** Bitvy pro mapu: { p, from: [provincie], adv } (adv = podíl útočníků na zásazích 0–1). */
-export const battlesOf = (game) => game.mil.battles.map((b) => ({ id: b.id, p: b.p, from: b.from, adv: b.adv, att: b.att.length, dep: b.dep.length }));
+export const battlesOf = (game) => game.mil.battles.filter((b) => !fogOn(game) || visibleLand(game, getWorld().ownerIdx[game.player])[b.p]).map((b) => ({ id: b.id, p: b.p, from: b.from, adv: b.adv, att: b.att.length, dep: b.dep.length }));
 
 import { buildAirMarks, drawAirBadge, MISSION_COLOR } from './air.js';
 import { buildFleetTokens, buildFleetRoutes, drawFleetToken, FLEET } from './fleets.js';
@@ -166,16 +169,16 @@ export class UnitLayer {
     }
     const mil = game.mil;
     let changed = false;
-    if (mil.divs !== this.divs || game.ctrl !== this.ctrlSrc || mil.wars !== this.warsSrc) {
-      this.divs = mil.divs; this.ctrlSrc = game.ctrl; this.warsSrc = mil.wars;
+    if (mil.divs !== this.divs || game.ctrl !== this.ctrlSrc || mil.wars !== this.warsSrc || game.rules !== this.rulesSrc || game.dip.ver !== this.dipVer) {
+      this.divs = mil.divs; this.ctrlSrc = game.ctrl; this.warsSrc = mil.wars; this.rulesSrc = game.rules; this.dipVer = game.dip.ver;
       this.counters = buildCounters(game, this.world);
       this.routes = routesOf(game);
       this.cluster.src = null;
       changed = true;
     }
-    if (game.nav && game.nav.fleets !== this.fleetSrc) { this.fleetSrc = game.nav.fleets; this.fleetTokens = buildFleetTokens(game, this.world); this.fleetRoutes = buildFleetRoutes(game, this.world); changed = true; }
+    if (game.nav && (game.nav.fleets !== this.fleetSrc || game.rules !== this.fleetRules)) { this.fleetSrc = game.nav.fleets; this.fleetRules = game.rules; this.fleetTokens = buildFleetTokens(game, this.world); this.fleetRoutes = buildFleetRoutes(game, this.world); changed = true; }
     if (game.air && (game.air.wings !== this.airSrc || game.player !== this.airPlayer)) { this.airSrc = game.air.wings; this.airPlayer = game.player; this.air = buildAirMarks(game, this.world); changed = true; }
-    if (mil.battles !== this.battlesSrc) { this.battlesSrc = mil.battles; this.battles = battlesOf(game); changed = true; }
+    if (mil.battles !== this.battlesSrc || changed) { this.battlesSrc = mil.battles; this.battles = battlesOf(game); changed = true; }
     this.game = game;
     return changed;
   }

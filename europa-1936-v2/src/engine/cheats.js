@@ -17,6 +17,7 @@ export const CHEAT_HELP = [
   'cp <n> – přidá velitelskou moc',
   'manpower <n> – přidá lidskou sílu',
   'fuel <n> – přidá palivo do zásoby',
+  'fow – zapne nebo vypne mlhu války',
   'stab <0–100>, ws <0–100> – nastaví stabilitu / podporu války',
   'research all | <id> – dokončí všechny / jednu technologii',
   'ic – okamžitě dokončí všechny vaše stavby',
@@ -56,6 +57,10 @@ export function runCheat(state, text) {
       }
       const own = state.pol.own.slice(); own[me] = { ...own[me], [cmd]: Math.min(1, Math.max(0, n / 100)) };
       return { state: { ...state, pol: { ...state.pol, own } }, msg: `${cmd === 'stab' ? 'Stabilita' : 'Podpora války'} ${Math.round(n)} %.` };
+    }
+    case 'fow': {
+      const on = !(state.rules && state.rules.fog === 0);
+      return { state: { ...state, rules: { ...state.rules, fog: on ? 0 : 1 } }, msg: on ? 'Mlha války vypnuta.' : 'Mlha války zapnuta.' };
     }
     case 'fuel': {
       const err = needMe(), n = num(a);

@@ -175,7 +175,7 @@ try {
     const u = window.__e1936.map.renderer.units, me = window.__e1936.map.world.ownerIdx.GER;
     return { all: u.counters.length, own: u.hits.filter((h) => h.c.o === me).length, foreign: u.hits.filter((h) => h.c.o !== me).length, ms: window.__e1936.map.renderer.stats.unitsMs };
   });
-  check('na mapě jsou žetony jednotek (vlastní i cizí)', cnt.all > 100 && cnt.own > 0, `${cnt.all} žetonů, na obrazovce ${cnt.own} vlastních a ${cnt.foreign} cizích`);
+  check('na mapě jsou žetony jednotek (vlastní i cizí u hranic; ostatní skrývá mlha války)', cnt.all > 30 && cnt.all < 200 && cnt.own > 0 && cnt.foreign > 0, `${cnt.all} žetonů, na obrazovce ${cnt.own} vlastních a ${cnt.foreign} cizích`);
   await shot('units');
 
   const own1 = await ownCounterXY();
@@ -557,7 +557,13 @@ try {
 
   // námořnictvo (M27): panel Námořnictvo (M), žetony flotil na mapě, sestavení flotily
   const fleetTokens = await E(() => { const r = window.__e1936.map.renderer; return r.units.fleetTokens.length; });
-  check('na mapě jsou žetony flotil', fleetTokens >= 10, `${fleetTokens} žetonů`);
+  check('na mapě jsou žetony flotil v dohledu (mlha války skrývá vzdálené)', fleetTokens >= 1 && fleetTokens < 10, `${fleetTokens} žetonů`);
+  const noFog = await E(() => { const e = window.__e1936; e.gameStore.setState({ ...e.gameStore.getState(), rules: { fog: 0 } }); return true; });
+  await page.waitForTimeout(500);
+  const allTokens = await E(() => { const r = window.__e1936.map.renderer; return { fleets: r.units.fleetTokens.length, divs: r.units.counters.length }; });
+  check('bez mlhy války jsou vidět všechny flotily a divize', noFog && allTokens.fleets >= 10 && allTokens.divs > 100, `${allTokens.fleets} flotil, ${allTokens.divs} žetonů divizí`);
+  await E(() => { const e = window.__e1936; e.gameStore.setState({ ...e.gameStore.getState(), rules: { fog: 1 } }); });
+  await page.waitForTimeout(300);
   await page.keyboard.press('m');
   await page.waitForSelector('.navy-panel', { timeout: 3000 });
   check('klávesa M otevře panel Námořnictvo s hlavní flotilou', (await ui()).panel === 'navy' && (await page.locator('.fleet-card').count()) >= 1 && /Transporty/.test(await page.locator('.navy-panel .rs-sum').innerText()));
