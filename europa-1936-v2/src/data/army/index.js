@@ -5,3 +5,4 @@ export * from './templates.js';
 export * from './national.js';
 export * from './names.js';
 export * from './traits.js';
+export * from './tactics.js';

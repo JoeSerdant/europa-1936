@@ -65,6 +65,12 @@ export function BattleDialog() {
               </div>
               <span className="muted">{v.adv >= 0.5 ? 'Útočníci mají navrch.' : 'Obránci se drží.'}</span>
             </div>
+            {v.tactics.att && v.tactics.dep ? (
+              <div className="bt-tactics" aria-label="Taktiky dne">
+                <span className={`bt-tac att${v.tactics.beaten === 'att' ? ' beaten' : ''}`} title={v.tactics.att.info}><i>Taktika útočníka</i><b>{v.tactics.att.n}</b>{v.tactics.beaten === 'att' ? <em>zmařena</em> : null}</span>
+                <span className={`bt-tac dep${v.tactics.beaten === 'dep' ? ' beaten' : ''}`} title={v.tactics.dep.info}><i>Taktika obránce</i><b>{v.tactics.dep.n}</b>{v.tactics.beaten === 'dep' ? <em>zmařena</em> : null}</span>
+              </div>
+            ) : null}
             <div className="bt-cols">
               <Side title="Útočník" side={v.att} tone="att" />
               <Side title="Obránce" side={v.dep} tone="dep" />

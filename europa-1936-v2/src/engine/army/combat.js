@@ -14,6 +14,7 @@ import { adjKind } from './paths.js';
 import { atMap, editDiv, removeDiv, relocate, removeBattle, editBattle, editGen, addMan, addCas, bumpVer, rnd } from './ctx.js';
 import { statsOf, lackOf, modsOf } from './unit.js';
 import { fuelRatio, FUEL } from '../fuel/index.js';
+import { chooseTactics, tacticEffects, leadOf } from './tactics.js';
 
 /** Násobek zásahu podle poměru průrazu a pancíře cíle. */
 export function pierceMult(pierce, armor) {
@@ -58,6 +59,8 @@ function profile(ctx, id, role, info) {
   const side = att ? info.attSide : info.depSide;
   const asup = ctx.state.air && ctx.state.air.sup;   // M30: podpora z letadel (klíč `vlastník:stát`)
   if (asup) a += asup[`${d.o}:${getWorld().provState[d.p]}`] || 0;
+  const mine = att ? info.tac.att : info.tac.dep, theirs = att ? info.tac.dep : info.tac.att;   // M77: taktiky
+  a += mine.atk - theirs.foe; f += mine.def;
   a -= side.stack + side.over;
   f -= side.over * 0.5;
   a += side.recon;
@@ -171,8 +174,15 @@ function fightOne(ctx, bid) {
   const W = TERRAIN_RULES[t].width * (1 + C.DIR_WIDTH * (dirs - 1));
   const fa = pickFront(ctx, att, W), fd = pickFront(ctx, dep, W);
   const recA = reconOf(ctx, att), recD = reconOf(ctx, dep);
+  // M77: taktiky stran (nová volba každých TACTIC_HOURS hodin bitvy)
+  let ta = b0.ta, td = b0.td;
+  if (!ta || !td || b0.hrs % C.TACTIC_HOURS === 0) {
+    const armored = (ids) => ids.some((id) => statsOf(mil, ctx.divs[id]).mech > 0.3);
+    ({ ta, td } = chooseTactics(ctx.tick, b0.id, { lead: leadOf(ctx, fa.front), arm: armored(fa.front), rec: recA }, { lead: leadOf(ctx, fd.front), arm: armored(fd.front), rec: recD }));
+  }
+  const tac = tacticEffects(ta, td);
   const info = {
-    terr: t, p: b0.p, dirs,
+    terr: t, p: b0.p, dirs, tac,
     attSide: sideInfo(ctx, fa.front, fa.reserve, fa.sum, W, dirs, recA, recD),
     depSide: sideInfo(ctx, fd.front, fd.reserve, fd.sum, W, 1, recD, recA),
   };
@@ -227,6 +237,7 @@ function fightOne(ctx, bid) {
   }
   const b = editBattle(ctx, bid);
   b.att = att; b.dep = dep; b.hrs += 1;
+  b.ta = ta; b.td = td;
   b.fa = fa.front; b.fd = fd.front;
   b.adv = outA + outD > 0 ? outA / (outA + outD) : 0.5;
 
