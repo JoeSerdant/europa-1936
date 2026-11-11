@@ -1,5 +1,6 @@
 // Flotily na mapě (M27): čistá data žetonů a cest (bez plátna) a kreslení námořního žetonu. Žetony stojí ve středu mořské oblasti.
 import { FONT_TEXT } from './fonts.js';
+import { seesFleet } from '../../engine/index.js';
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 export const FLEET = { W: 38, H: 20 };
@@ -12,7 +13,7 @@ export function buildFleetTokens(game, world) {
   const fleets = game.nav.fleets;
   for (let i = 1; i < fleets.length; i++) {
     const f = fleets[i];
-    if (!f) continue;
+    if (!f || !seesFleet(game, f.o, f.p)) continue;   // M76: mlha války skryje cizí flotily mimo dohled
     const key = `${f.p}:${f.o}`;
     let g = groups.get(key);
     if (!g) {
@@ -36,7 +37,7 @@ export function buildFleetRoutes(game, world) {
   const fleets = game.nav.fleets;
   for (let i = 1; i < fleets.length; i++) {
     const f = fleets[i];
-    if (!f || !f.path.length) continue;
+    if (!f || !f.path.length || !seesFleet(game, f.o, f.p)) continue;
     const nodes = [f.p, ...f.path].map((l) => world.sea[l - world.L].c);
     out.push({ o: f.o, ids: [i], nodes });
   }

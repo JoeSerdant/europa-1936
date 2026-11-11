@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
+import { fogOn, visibleLand, seesDivision, seesFleet, getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
 import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, buildFortHere, justifyOn, selectFleet, openBattle } from '../actions.js';
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
@@ -35,11 +35,13 @@ function Chips({ items }) {
 function ProvinceUnits({ p }) {
   const state = useGameSlow((s) => s, 400);
   const ids = divisionsByProvince(state).get(p);
+  const hidden = fogOn(state) && !visibleLand(state, getWorld().ownerIdx[state.player])[p];   // M76: mlha války
+  if (hidden) return <section><h3>Jednotky v provincii</h3><p className="muted">Mlha války: do této provincie nevidíte.</p></section>;
   if (!ids || !ids.length) return null;
   const by = new Map();
   for (const id of ids) {
     const d = state.mil.divs[id];
-    if (!d) continue;
+    if (!d || !seesDivision(state, d.o, d.p)) continue;
     if (by.has(d.o)) by.get(d.o).push(id); else by.set(d.o, [id]);
   }
   const w = getWorld();
@@ -252,7 +254,7 @@ function LandDossier({ p, owner, ctrl }) {
 function SeaFleets({ l }) {
   const state = useGameSlow((g) => g, 500);
   const me = playerIdx(state);
-  const list = fleetsInSea(state, l);
+  const list = fleetsInSea(state, l).filter((f) => seesFleet(state, f.o, l));   // M76: mlha války
   if (!list.length) return null;
   const w = getWorld();
   return (

@@ -29,6 +29,7 @@ export function validateState(s) {
   if (!s.pol.own.slice(1).every((x) => x && x.par && x.gov)) return 'Uložená hra je poškozená (strany).';
   if (!s.nat.own.slice(1).every((x) => x && x.sp && typeof x.sp === 'object')) return 'Uložená hra je poškozená (národní duchové).';
   if (!isArr(s.ind.fuel) || s.ind.fuel.length !== w.owners.length) return 'Uložená hra je poškozená (palivo).';
+  if (!s.rules || typeof s.rules !== 'object') return 'Uložená hra je poškozená (pravidla hry).';
   if (!isArr(s.ai.inv)) return 'Uložená hra je poškozená (invaze AI).';
   if (!isArr(s.air.wings) || !isArr(s.air.pool) || s.air.pool.length !== w.owners.length) return 'Uložená hra je poškozená (letectvo).';
   if (!isArr(s.dip.fac) || s.dip.fac.length !== w.owners.length || !isArr(s.dip.sub) || !isArr(s.dip.conf) || !isArr(s.dip.gar) || !isArr(s.dip.au) || !isArr(s.dip.acc) || !isArr(s.dip.ult) || !isArr(s.dip.nap) || !isArr(s.dip.napq) || !s.dip.goal || typeof s.dip.goal !== 'object') return 'Uložená hra je poškozená (diplomacie).';

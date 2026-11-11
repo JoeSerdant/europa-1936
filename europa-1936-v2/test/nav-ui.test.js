@@ -12,7 +12,7 @@ const ENG = W.ownerIdx.ENG, FRA = W.ownerIdx.FRA;
 const game = () => gameStore.getState();
 const ui = () => uiStore.getState();
 
-beforeEach(() => { A.goMenu(); A.startGame('ENG'); });
+beforeEach(() => { A.goMenu(); uiStore.setState({ ...uiStore.getState(), rules: { fog: 0 } }); A.startGame('ENG'); });   // bez mlhy války: testy počítají se všemi flotilami
 
 describe('žetony a cesty na mapě', () => {
   it('jeden žeton na dvojici (oblast, země), s počtem lodí a středem oblasti', () => {

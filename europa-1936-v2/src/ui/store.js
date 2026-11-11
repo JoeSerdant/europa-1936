@@ -17,6 +17,7 @@ export const uiStore = createStore({
   scenario: '1936',        // vybraný scénář nové hry (M39)
   aiLevel: 2,              // obtížnost AI zemí pro novou hru: 1 lehká, 2 běžná, 3 těžká (M24)
   aiHist: true,            // historické plány AI (války a bloky)
+  rules: {},               // pravidla hry zvolená před startem (M76; prázdné = výchozí)
   pickTag: 'GER',          // země vybraná na obrazovce výběru
   helpOpen: false,         // okno s ovládáním
   menuOpen: false,         // nabídka ve hře (Esc)
