@@ -13,6 +13,7 @@ import { campOf } from '../dip/core.js';
 import { aggrOf } from '../../data/ai/personality.js';
 import { landZones } from '../army/zones.js';
 import { stagingArmies, startInvasion } from './invasion.js';
+import { ruleMult } from '../rules.js';
 import { AI } from './constants.js';
 
 /** Armády země s divizemi: [{ id, n, x, y, ds }] (x, y = těžiště v pixelech světa). */
@@ -290,7 +291,7 @@ export function decideStrategy(state, o) {
   for (const [id, i] of sticky) { const pl = mil.armies[id].plan; if (pl && pl.k === 'front' && pl.to.length > 0) engaged.add(i); }
   const byId = new Map(armies.map((a) => [a.id, a]));
   const tag = w.owners[o].tag, aggressor = isAggressor(state, o, foes);
-  const ratioNeed = (AI.ATTACK_RATIO[level] ?? 1.3) / aggrOf(tag) * (aggressor ? 1 : AI.DEFENDER_MULT);
+  const ratioNeed = (AI.ATTACK_RATIO[level] ?? 1.3) / (aggrOf(tag) * ruleMult(state, 'aggr')) * (aggressor ? 1 : AI.DEFENDER_MULT);   // M78: pravidlo hry „Útočnost AI“
   const zones = landZones(state, o);
   for (const a of armies) a.zone = zones[mil.divs[a.ds[0]].p];
   for (const t of theaters) t.zone = t.posts.length ? zones[t.posts[0]] : 0;

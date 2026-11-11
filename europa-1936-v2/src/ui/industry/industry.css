@@ -135,6 +135,10 @@ li.on > .pol-opt { opacity: 1; box-shadow: inset 3px 0 0 var(--brass), inset 0 0
 /* ------------------------------------------------------------------ AI zemí (M24) */
 .ai-opts { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .ai-opts .muted { margin-right: 4px; font-size: 13px; }
+.rule-opts { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.rule-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.rule-row .muted { min-width: 92px; font-size: 13px; }
+.rule-row .sbtn { padding: 3px 9px; font-size: 12.5px; }
 .ai-hist { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 13px; color: var(--text-2); cursor: pointer; }
 
 /* ------------------------------------------------------------------ uložené hry (M25) */

@@ -24,7 +24,7 @@ export * from './time.js';
 export * from './army/index.js';
 export * from './industry/index.js';
 export { FOG, fogOn, visibleLand, visibleSeas, seesDivision, seesFleet } from './fog.js';
-export { RULES, RULE_IDS, createRules, ruleOf } from './rules.js';
+export { RULES, RULE_IDS, createRules, ruleOf, ruleMult } from './rules.js';
 export { FUEL, fuelOf, fuelRatio, fuelUse, fuelDay, createFuel } from './fuel/index.js';
 export * from './research/index.js';
 export * from './politics/index.js';
