@@ -5,6 +5,7 @@ import { POL } from './constants.js';
 import { aiMult } from '../ai/core.js';
 import { focusMods, NO_FOCUS_MODS } from '../nat/core.js';
 import { spiritMods, NO_SPIRIT_MODS } from '../nat/spirits.js';
+import { CONT_FOCUSES } from '../../data/nat/continuous.js';
 
 export const NO_POL = Object.freeze({ stab: 0, ws: 0, cons: 0, build: 0, prod: 0, extract: 0, imp: 0, man: 0, research: 0 });
 const cache = new WeakMap();   // laws → (adv → bonusy)
@@ -39,8 +40,8 @@ function baseModsOf(state, o) {
   return m;
 }
 const withSpirit = new WeakMap();   // bonusy bez duchů → (objekt duchů → součet)
-/** Bonusy zákonů, poradců, hotových národních cílů a národních duchů země (M74). */
-export function polModsOf(state, o) {
+/** Bonusy zákonů, poradců, hotových národních cílů a národních duchů země (M74; bez průběžného cíle). */
+function spiritModsOf(state, o) {
   const base = baseModsOf(state, o);
   const sp = state.nat?.own[o]?.sp, sm = spiritMods(sp);
   if (sm === NO_SPIRIT_MODS) return base;
@@ -48,6 +49,18 @@ export function polModsOf(state, o) {
   if (!bySp) { bySp = new WeakMap(); withSpirit.set(base, bySp); }
   let m = bySp.get(sp);
   if (!m) { m = { ...base }; for (const k in sm) m[k] = (m[k] || 0) + sm[k]; bySp.set(sp, m); }
+  return m;
+}
+const withCont = new WeakMap();   // bonusy bez průběžného cíle → Map(id cíle → součet)
+/** Všechny bonusy země: zákony, poradci, hotové cíle, národní duchové a průběžný cíl (M85). */
+export function polModsOf(state, o) {
+  const base = spiritModsOf(state, o);
+  const id = state.nat?.own[o]?.cont, C = id ? CONT_FOCUSES[id] : null;
+  if (!C) return base;
+  let byId = withCont.get(base);
+  if (!byId) { byId = new Map(); withCont.set(base, byId); }
+  let m = byId.get(id);
+  if (!m) { m = { ...base }; for (const k in C.mod) m[k] = (m[k] || 0) + C.mod[k]; byId.set(id, m); }
   return m;
 }
 
