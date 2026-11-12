@@ -1,6 +1,7 @@
 // Vyskakovací oznámení hráči (M58): z důležitých záznamů deníku se sestaví karta { kind, icon, tone, title, text, lines, sticky }.
 import { getWorld } from '../engine/world.js';
 import { IDEOLOGIES } from '../data/countries.js';
+import { OVERSEAS } from '../data/dip/overseas.js';
 import { FOCUS_BY_ID } from '../data/nat/focuses.js';
 import { fxLinesOf, modLines } from '../data/nat/describe.js';
 import { TECHS } from '../data/research/techs.js';
@@ -41,6 +42,9 @@ export function popupFor(e, me) {
     case 'civil':
       if (e.o === me) return { kind: 'civil', icon: 'swords', tone: 'bad', title: 'Občanská válka', text: `Část armády a území se postavily proti vládě. Povstalci vyhlásili stát ${nm(e.x)}.`, lines: ['Mír nelze uzavřít – rozhodne se na bojišti.'], sticky: true };
       return null;
+    case 'aid':
+      if (e.y === 1) return e.o === me ? { kind: 'aid', icon: 'trade', tone: 'good', title: 'Zámořská pomoc', text: `${OVERSEAS.n} vám začínají každý měsíc posílat výzbroj, letouny a palivo.`, lines: ['Zásilky chodí, dokud válčíte a váš hlavní přístav není zablokovaný.'], sticky: true } : { kind: 'aid', icon: 'trade', tone: 'info', title: 'Zámořská pomoc', text: `${OVERSEAS.n} začínají zásobovat zemi ${nm(e.o)}.`, lines: [] };
+      return e.o === me && e.y === 0 ? { kind: 'aid', icon: 'trade', tone: 'bad', title: 'Zásilka nedorazila', text: 'Nepřátelská flotila blokuje váš hlavní přístav.', lines: [] } : null;
     case 'napq':
       return e.b === me ? { kind: 'napq', icon: 'dip', tone: 'info', title: 'Nabídka paktu', text: `${nm(e.a)} vám nabízí pakt o neútočení.`, lines: ['Odpovězte v okně Diplomacie; nabídka za měsíc vyprší.'], sticky: true } : null;
     case 'napend':

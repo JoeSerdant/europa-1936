@@ -688,6 +688,10 @@ Každá bitva nese taktiku útočníka `b.ta` a obránce `b.td` (`GAME_VERSION =
 
 Pravidla hry z § 4zzb mají tři položky (`engine/rules.js` `RULES`; volba je `[hodnota, popisek, násobek?]`): **`fog`** mlha války (zapnuto / vypnuto), **`aggr`** útočnost AI (opatrná × 0,8, vyvážená, útočná × 1,25 – násobí povahu země `aggrOf` v `decideStrategy`, tedy převahu sil, kterou AI potřebuje k útoku) a **`bonus`** výhoda nebo nevýhoda země hráče (+15 % / bez úprav / −15 % výroby, staveb a výzkumu; `aiMult` vrací pro zemi hráče `ruleMult(state, 'bonus')`, pro AI dál násobek obtížnosti). `ruleMult(state, id)` vrací násobek zvolené volby (1, když ji volba nemá). **Rozhraní:** obrazovka výběru země má skupinu „Pravidla hry“ generovanou z `RULES` (volby se drží v `ui.rules` a `startGame` je předá `createGame`); nabídka ve hře (Esc) pravidla běžící hry vypisuje. Pravidla se za hry nemění (kromě cheatu `fow`). Tvar stavu se proti M76 nemění (`state.rules` jen má víc klíčů; starší uložené hry z verze 36 by chybějící klíče četly jako výchozí přes `ruleOf`).
 
+## 4zze. Zámořská pomoc (M79)
+
+Mapa končí v Evropě a Středomoří, velmoc za oceánem proto není zemí, ale **zdrojem dodávek** (`data/dip/overseas.js`: `OVERSEAS` s názvem „Spojené státy“, `OVERSEAS_AID`). Každá položka `{ id, to, from, until, every, foes, give }` dává zemi `to` od dne `from` každých `every` dní zásilku `give` (výzbroj podle `EQUIP` do skladu, letouny podle `PLANES` do rezervy, `fuel` do zásoby paliva): Británii od března 1941 (den 1896), SSSR od října 1941 (den 2100). Engine `dip/overseas.js`: `overseasDay` (v `dipDay`, jen s historickou AI) v den zásilky ověří `aidBlock` – příjemce existuje, válčí s některou ze zemí `foes` a mořská oblast jeho domovského přístavu není zablokovaná – a zavolá `deliverAid`. První zásilka se zapíše do deníku pro celý svět (`aid`, y = 1; příjemce dostane kartu „Zámořská pomoc“) a nastaví příznak `aid_<id>` v `nat.own[to].flags`; další zásilky a zásilky zmařené blokádou (y = 0) vidí jen příjemce. Tvar stavu se nemění. Zjednodušení: zámořská mocnost nevstupuje do války, neposílá divize ani lodě a dodávky nejsou cílem obchodní války (jen blokáda přístavu).
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -907,6 +911,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M76** | **Mlha války**: viditelnost provincií a moří (hranice, jednotky, radar, letectvo, zpravodajství, spojenci), skryté cizí žetony, flotily a bitvy, pravidla hry ve stavu | **hotovo** |
 | **M77** | **Bojové taktiky**: denní taktika útočníka a obránce, vliv velitele, tanků a průzkumu, rušení taktik, zobrazení v okně bitvy | **hotovo** |
 | **M78** | **Pravidla hry**: volby při startu (mlha války, útočnost AI, výhoda nebo nevýhoda hráče), skupina na obrazovce výběru země, výpis v nabídce | **hotovo** |
+| **M79** | **Zámořská pomoc**: mocnost mimo mapu posílá od roku 1941 každý měsíc výzbroj, letouny a palivo Británii a SSSR; blokáda přístavu zásilku zastaví | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
