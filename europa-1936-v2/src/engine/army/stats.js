@@ -32,7 +32,7 @@ export function deriveStats(tpl, lvl = null) {
   const { line, sup } = templateUnits(tpl);
   const all = line.concat(sup);
   const s = {
-    width: 0, hp: 0, org: 0, men: 0, sup: 0, fuel: 0, mech: 0, soft: 0, hard: 0, pierce: 0, def: 0, brk: 0, armor: 0, hardness: 0, speed: 99,
+    width: 0, hp: 0, org: 0, men: 0, sup: 0, fuel: 0, mech: 0, para: false, soft: 0, hard: 0, pierce: 0, def: 0, brk: 0, armor: 0, hardness: 0, speed: 99,
     rec: 0, eng: 0, plan: 0, supSave: 0, healing: 0, days: 0, nLine: line.length, nSup: sup.length, need: {}, cls: 'inf', terr: {}, cost: 0,
   };
   let orgW = 0, lineMen = 0, hardW = 0, allMen = 0, pierceMax = 0, pierceW = 0, pierceMen = 0, armorMax = 0, armorW = 0;
@@ -56,6 +56,7 @@ export function deriveStats(tpl, lvl = null) {
   }
   if (!line.length) s.speed = 0;
   s.org = lineMen ? orgW / lineMen : 0;
+  s.para = line.length > 0 && line.every((u) => u.para);   // M80: divize jen z výsadkových praporů umí výsadek
   s.mech = lineMen ? (share.arm + share.mot) / lineMen : 0;   // M73: podíl motorizace (účinek nedostatku paliva)
   s.hardness = allMen ? hardW / allMen : 0;
   s.pierce = pierceMen ? 0.4 * pierceMax + 0.6 * (pierceW / pierceMen) : 0;

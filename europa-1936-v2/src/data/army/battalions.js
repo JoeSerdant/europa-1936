@@ -9,6 +9,7 @@
 //  kind  druh výzbroje, kterou prapor „používá“ pro úroveň výzbroje (viz EQUIP_LEVEL_MULT)
 //  unlock  null = k dispozici od začátku, jinak id technologie, která jednotku odemyká (data/research/techs.js)
 //  sym   značka pro žeton na mapě
+//  para  prapor umí letecký výsadek (M80; divize seskočí, jen když jsou všechny liniové prapory výsadkové)
 //  fuel  spotřeba paliva za den v pohybu nebo v boji (M73; jen motorizované a tankové prapory)
 
 export const BATTALIONS = {
@@ -33,6 +34,13 @@ export const BATTALIONS = {
     terr: { 2: { atk: 0.15, def: 0.05, mov: 0.1 }, 3: { atk: 0.3, def: 0.1, mov: 0.2 } },
     unlock: null,
     info: 'Vycvičení pro hory a pahorkatiny: tam útočí a brání se lépe a pohybují se rychleji.',
+  },
+  vysad: {
+    n: 'Výsadkový prapor', ab: 'VÝS', sym: 'inf', w: 2, hp: 17, org: 60, men: 800, days: 130, spd: 4, sup: 0.05, para: true,
+    soft: 4.2, hard: 0.6, pierce: 3, def: 14, brk: 2.5, armor: 0, hardness: 0,
+    need: { pusky: 110, podpora: 6 }, kind: 'pusky', terr: {},
+    unlock: 'vysadek',
+    info: 'Lehká výběrová pěchota. Divize složená jen z výsadkových praporů umí seskočit z letiště do týlu nepřítele.',
   },
   motor: {
     n: 'Motorizovaný prapor', ab: 'MOT', sym: 'mot', w: 2, hp: 22, org: 45, men: 1000, days: 80, spd: 8, sup: 0.08, fuel: 0.03,

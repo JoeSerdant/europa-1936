@@ -144,7 +144,7 @@ export function MapView({ interactive = true, onPick, onCounter, onFleet, onBox,
           if (pickRef.current) pickRef.current(mc.pick(sx, sy), { shift: e.shiftKey });
         }
       } else if (d.button === 2 && contextRef.current) {
-        contextRef.current(mc.pick(sx, sy), { shift: e.shiftKey });
+        contextRef.current(mc.pick(sx, sy), { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey });
       }
     };
     const onLeave = () => {

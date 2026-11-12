@@ -20,6 +20,7 @@ const t = (cat, n, year, days, req, fx, info) => ({ cat, n, year, days, req, fx,
 export const TECHS = {
   // ---- pěchota ----
   pusky2: t('pesi', 'Opakovací pušky II', 1936, 70, [], { lv: { pusky: 2 } }, 'Modernější pušky a kulomety: lepší útok i obrana pěších praporů.'),
+  vysadek: t('pesi', 'Výsadkové vojsko', 1938, 90, ['pusky2'], {}, 'Odemyká výsadkový prapor: divize jen z výsadkářů umí seskočit z letiště za frontu.'),
   pusky3: t('pesi', 'Samonabíjecí pušky', 1940, 100, ['pusky2'], { lv: { pusky: 3 } }, 'Vyšší palebná síla pěchoty.'),
   pusky4: t('pesi', 'Útočné pušky', 1943, 120, ['pusky3'], { lv: { pusky: 4 } }, 'Nejmodernější pěchotní zbraně dekády.'),
   // ---- dělostřelectvo ----

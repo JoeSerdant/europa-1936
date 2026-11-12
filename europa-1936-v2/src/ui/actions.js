@@ -11,6 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
+  orderDrop, dropBlock, AIR,
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf,
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
@@ -341,12 +342,26 @@ export function mapClick(l, { shift = false } = {}) {
   selectLabel(l);
 }
 
+/** Letecký výsadek vybraných vlastních divizí na provincii `prov` (M80); při neúspěchu napíše důvod. */
+export function dropSelected(prov) {
+  const s = gameStore.getState();
+  const ids = ownSelected(s);
+  if (!ids.length) return false;
+  const why = dropBlock(s, ids, prov);
+  if (why) { toast(`Výsadek: ${why}`); return false; }
+  if (!run(orderDrop, ids, prov)) return false;
+  toast(`Výsadkáři startují – seskok za ${AIR.DROP_HOURS} hodin.`);
+  pruneSelection();
+  return true;
+}
+
 /** Pravé tlačítko na mapě: rozkaz vybraným vlastním divizím (pohyb, v nepřátelské provincii útok). */
-export function contextClick(l, { shift = false } = {}) {
+export function contextClick(l, { shift = false, ctrl = false } = {}) {
   const u = uiStore.getState();
   if (u.planEdit || !l) return false;
   if (u.fleetSel && getWorld().isSea(l)) return orderFleetTo(l);
   if (!u.selDivs.length) return false;
+  if (ctrl) return dropSelected(l);   // M80: Ctrl + pravé tlačítko = letecký výsadek
   return orderSelected(l, { queue: shift });
 }
 
