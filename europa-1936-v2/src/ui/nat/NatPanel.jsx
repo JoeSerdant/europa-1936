@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { focusTree, natOf, fxLinesOf, modLines, FOCUS_BY_ID } from '../../engine/index.js';
-import { playerIdx, pickFocus, abortFocus } from '../actions.js';
+import { focusTree, natOf, fxLinesOf, modLines, FOCUS_BY_ID, CONT_FOCUSES, CONT_IDS, contBlock, NAT } from '../../engine/index.js';
+import { playerIdx, pickFocus, abortFocus, pickContinuous } from '../actions.js';
 import { fmtDays } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -35,6 +35,7 @@ export function NatPanel() {
   if (!me) return <div className="prod-screen nat-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádné národní cíle.</p></div></div>;
   const n = natOf(state, me);
   const cur = tree.find((f) => f.status === 'active');
+  const cont = state.nat.own[me].cont || '';
   return (
     <Screen cls="nat-panel" title="Národní cíle" icon="flag" head={<div className="rs-sum"><span className="stat-cell"><i>Hotovo</i><b>{n.done}/{n.total}</b></span></div>}>
       <section className="rs-head rs-slots" aria-label="Plněný cíl">
@@ -47,6 +48,13 @@ export function NatPanel() {
             <span className="bar prog"><i style={{ width: `${((cur.p / cur.days) * 100).toFixed(1)}%` }} /></span>
           </div>
         ) : <div className="rs-slot empty"><span className="muted">Žádný cíl se neplní – vyberte níže.</span></div>}
+      </section>
+      <section className="cont-row" aria-label="Průběžné cíle">
+        <span className="muted">Průběžný cíl <i>({NAT.CONT_PP} PM denně, jen když se neplní běžný cíl)</i></span>
+        {CONT_IDS.map((id) => {
+          const on = cont === id, why = on ? null : contBlock(state, me, id);
+          return <button key={id} className={`sbtn ${on ? 'primary' : ''}`} aria-pressed={on} disabled={!on && !!why} title={`${CONT_FOCUSES[id].info} ${modLines(CONT_FOCUSES[id].mod).join(', ')}${why ? ` – ${why}` : ''}`} onClick={() => pickContinuous(on ? '' : id)}>{CONT_FOCUSES[id].n}</button>;
+        })}
       </section>
       <div className="prod-body tech-body"><div className="focus-grid">{[...tree].sort((a, b) => a.y - b.y || a.x - b.x).map((f) => <FocusCard key={f.id} f={f} />)}</div></div>
     </Screen>

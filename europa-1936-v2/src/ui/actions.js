@@ -8,7 +8,7 @@ import {
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
   justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, warBlock, peaceBlock, inviteBlock, justReady,
   formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, setFleetMission, orderSail, sailBlock, navyOf, SHIPS,
-  startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
+  startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID, setContinuous, contBlock,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   orderDrop, dropBlock, AIR, dropNuke, nukeBlock, confClaim, confClaimsDone,
@@ -699,6 +699,13 @@ export function hireAdv(slot, id) {
 export const dismissAdv = (slot) => { const me = playerIdx(); return !!me && run(fireAdvisor, me, slot); };
 
 // ============================================================ národní cíle a události (M22)
+/** Zvolí nebo zruší průběžný cíl hráče (M85); při neúspěchu napíše důvod. */
+export function pickContinuous(id) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me) return false;
+  if (id !== '') { const why = contBlock(s, me, id); if (why) { toast(why); return false; } }
+  return run(setContinuous, me, id);
+}
 /** Zahájí plnění cíle hráče; nahradí rozpracovaný cíl. */
 export function pickFocus(id) {
   const s = gameStore.getState(), me = playerIdx(s);

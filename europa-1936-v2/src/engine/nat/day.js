@@ -6,6 +6,8 @@ import { logAdd } from '../log.js';
 import { focusStatus, focusTreeOf, eventReady, rand01 } from './core.js';
 import { applyFx } from './effects.js';
 import { expireSpirits } from './spirits.js';
+import { setContinuous } from './commands.js';
+import { hasWar } from '../army/war.js';
 
 const setOwn = (state, o, own) => {
   const arr = state.nat.own.slice();
@@ -59,7 +61,18 @@ export function natDay(state) {
     // AI vybírá cíl
     if (o !== player && !own.cur) {
       const free = focusTreeOf(o).filter((f) => focusStatus(own, f) === 'available').sort((a, b) => a.ai - b.ai || a.y - b.y || a.x - b.x);
-      if (free.length) { own = { ...own, cur: { id: free[0].id, p: 0 } }; state = bump(setOwn(state, o, own)); }
+      if (free.length) { own = { ...own, cur: { id: free[0].id, p: 0 }, cont: '' }; state = bump(setOwn(state, o, own)); }
+      else if (!own.cont && !state.dip.cap[o]) {   // M85: strom je hotový (nebo zablokovaný) – AI drží průběžný cíl
+        const want = hasWar(state.mil, o) ? 'vyroba' : 'stavby';
+        const next = setContinuous(state, o, want);
+        if (next !== state) { state = next; own = state.nat.own[o]; }
+      }
+    }
+    // průběžný cíl (M85): denní cena v politické moci; bez ní cíl končí
+    if (own.cont) {
+      const p = state.pol.own[o];
+      if (own.cur || p.pp < NAT.CONT_PP) { own = { ...own, cont: '' }; state = bump(setOwn(state, o, own)); }
+      else { const pol = state.pol.own.slice(); pol[o] = { ...p, pp: p.pp - NAT.CONT_PP }; state = { ...state, pol: { ...state.pol, own: pol } }; }
     }
     // plnění cíle
     if (own.cur) {
