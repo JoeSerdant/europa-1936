@@ -18,3 +18,5 @@ export { guarantees, guarantorsOf, guaranteedBy, guaranteeBlock, guarantee, revo
 export { WARGOALS, WARGOAL_IDS } from '../../data/dip/wargoals.js';
 export { pactOf, pactBlock, pactAccepts, proposePact, answerPact, breakBlock, breakPact, voidPacts, pactDay, improveBlock, improveRelations, pactOffers } from './pact.js';
 export { HIST_PACTS } from '../../data/dip/pacts.js';
+export { aidBlock, deliverAid, overseasDay } from './overseas.js';
+export { OVERSEAS, OVERSEAS_AID } from '../../data/dip/overseas.js';
