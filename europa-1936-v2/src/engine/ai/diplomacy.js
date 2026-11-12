@@ -80,9 +80,11 @@ export function aiDiplomacy(state, o) {
     }
   }
   // historické válečné plány (drobná válka s okrajovou zemí další tažení nebrání)
-  if (!state.ai || !state.ai.hist || warBusy(state, o) || state.pol.own[o].stab < AI.STAB_MIN) return state;
+  if (!state.ai || !state.ai.hist || state.pol.own[o].stab < AI.STAB_MIN) return state;
+  const busy = warBusy(state, o);
   for (const plan of HIST_WARS) {
     if (plan.tag !== tag || day < plan.from || day > plan.until) continue;
+    if (busy && !(plan.force && day >= plan.from + plan.force)) continue;   // M87: zaneprázdněná země plán odkládá, nejdéle o `force` dní
     const t = w.ownerIdx[plan.target];
     if (t && pactOf(state, o, t) && !state.dip.goal[`${o}>${t}`]) {   // M75: historický útok přes pakt – nejdřív ho vypovědět (až to půjde)
       if (breakBlock(state, o, t)) continue;
@@ -98,6 +100,7 @@ export function aiDiplomacy(state, o) {
       if (next !== state) return next;
     }
   }
+  if (busy) return state;   // zaneprázdněná země se do oportunistických válek nepouští
   // oportunistické války (M68): země se přidá k zemi, kterou už z velké části dobyli jiní
   for (const j of HIST_JACKALS) {
     if (j.tag !== tag || day < j.from || day > j.until) continue;

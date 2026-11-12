@@ -11,6 +11,7 @@ import { hasWar, enemiesOf, nearestControlled } from '../army/war.js';
 import { recruit, createArmy, assignDivisions, assignCommander, setPlan } from '../army/commands.js';
 import { suggestFront, generalsOf, divisionCount } from '../army/selectors.js';
 import { campOf } from '../dip/core.js';
+import { fuelShort } from './logistics.js';
 import { AI } from './constants.js';
 
 /** Jednou za den projde divize a vrátí po zemích: počty šablon, volné divize a velikosti armád. */
@@ -69,7 +70,7 @@ export function desiredMix(state, o) {
   for (const k in base) mix[k] = base[k] / total;
   const tier = COUNTRIES[tag]?.tier ?? 3;
   if (tier <= 2 && mix.pesi) {
-    const shift = Math.min(mix.pesi * 0.5, AI.MOTOR_SHIFT * Math.min(1, state.tick / 24 / AI.MOTOR_DAYS));
+    const shift = fuelShort(state, o) ? 0 : Math.min(mix.pesi * 0.5, AI.MOTOR_SHIFT * Math.min(1, state.tick / 24 / AI.MOTOR_DAYS));   // M87: bez paliva se dál nemotorizuje
     if (mix.tank || tag === 'GER' || tag === 'SOV' || tag === 'FRA' || tag === 'ENG') { mix.pesi -= shift; mix.tank = (mix.tank || 0) + shift * 0.6; mix.motor = (mix.motor || 0) + shift * 0.4; }
   }
   return mix;
@@ -125,7 +126,7 @@ export function aiArmy(state, o, scan) {
   if (sc.loose.length) {
     for (const id of sc.loose) {
       const d = state.mil.divs[id];
-      if (!d || d.army) continue;
+      if (!d || d.army || deriveStats(state.mil.tpl[d.tpl]).para) continue;   // M87: výsadkové divize zůstávají mimo armády u letiště
       let target = 0, size = Infinity;
       for (const [aid, n] of sc.armies) {
         const a = state.mil.armies[aid];

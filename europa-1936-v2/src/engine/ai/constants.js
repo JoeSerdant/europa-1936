@@ -75,6 +75,17 @@ export const AI = {
   INV_REINF: 6,                     // základ hodnocení posil držené předmostí
   INV_KM: 1500,                     // srážka za 1 bod: tolik km plavby
   UNREACH: 1e8,                     // vzdálenost „nedosažitelné po souši“ při přidělování armád divadlům
+  FUEL_DAYS: 45,                    // palivo (M87): AI řeší nedostatek, když zásoba vystačí na méně dní (nebo spotřeba není pokrytá)
+  FUEL_DEALS: 2,                    // nejvíc smluv o dovozu ropy na zemi
+  FUEL_MARGIN: 1.3,                 // dovoz = schodek paliva krát tato rezerva
+  FUEL_SURPLUS_MIN: 0.5,            // vývozce musí mít aspoň takový přebytek ropy
+  FUEL_REL_MIN: -40,                // se zemí s horším vztahem AI o ropě nejedná
+  PARA_DIVS: 2,                     // výsadky (M87): tolik výsadkových divizí si velmoc drží
+  PARA_FROM_DAY: 1200,              // od tohoto dne hry je cvičí i v míru (jaro 1939)
+  PARA_MIN_SCORE: 2,                // cíl výsadku musí mít aspoň takovou hodnotu (vítězné body, uzel, přístav, hlavní město)
+  NAP_DAYS: 30,                     // pakty (M87): jak často AI zvažuje nabídku paktu
+  NAP_ASK_DAYS: 240,                // stejné zemi AI nabídku opakuje nejdřív po tolika dnech
+  NAP_PP_RESERVE: 50,               // politická moc, kterou si AI po nabídce nechá
   NUKE_MIN_FAC: 4,                  // jaderný úder (M82): AI míří jen na stát s aspoň tolika továrnami a loděnicemi
   PARTY_MARGIN: 15,                 // strany (M72): AI podpoří vládnoucí stranu, když její náskok před nejsilnějším soupeřem klesne pod tolik bodů
   PARTY_RESERVE: 80,                // a má aspoň tolik politické moci

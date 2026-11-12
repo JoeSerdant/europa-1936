@@ -12,6 +12,7 @@ import { basesOf, afbOf, radarOf, stateKm } from '../air/core.js';
 import { frontEdges } from '../army/selectors.js';
 import { AIR } from '../air/constants.js';
 import { nukeView, dropNuke } from '../air/nuke.js';
+import { fuelRatio, FUEL } from '../fuel/index.js';
 import { AI } from './constants.js';
 
 /** Stát země `o`, kde má smysl postavit letiště (už má letiště < max, nejvíc vítězných bodů). */
@@ -123,9 +124,11 @@ export function aiAir(state, o) {
     if (b && b.free >= 12) state = formWing(state, o, t, Math.min(n, b.free, 120), b.s);
   }
   // mise: křídla bez mise (nebo s neplatným cílem) dostanou úkol
+  const dry = fuelRatio(state, o) < FUEL.LOW;   // M87: při vážném nedostatku paliva se nebombarduje
   for (const wg of state.air.wings) {
     if (!wg || wg.o !== o) continue;
     const range = PLANES[wg.t].range;
+    if (dry && wg.m === 'bomb') { state = setMission(state, wg.id, null); continue; }   // M87: bez paliva bombardéry nelétají
     if (wg.m) {
       // bombardování končí mírem; podpora a hlídky se přehodnotí, když fronta zmizí
       if (wg.m === 'bomb' && state.stateOwner[wg.to] && hasWar(state.mil, o)) continue;
@@ -138,8 +141,8 @@ export function aiAir(state, o) {
     } else if (war && (wg.t === 'bit' || wg.t === 'tac')) {
       const z = frontState(state, o, wg.s, range);
       next = z ? setMission(state, wg.id, 'cas', z) : state;
-      if (next === state && wg.t === 'tac') { const b = bombTarget(state, o, wg.s, range); if (b) next = setMission(state, wg.id, 'bomb', b); }
-    } else if (war && wg.t === 'str') {
+      if (next === state && wg.t === 'tac' && !dry) { const b = bombTarget(state, o, wg.s, range); if (b) next = setMission(state, wg.id, 'bomb', b); }
+    } else if (war && wg.t === 'str' && !dry) {
       const b = bombTarget(state, o, wg.s, range);
       if (b) next = setMission(state, wg.id, 'bomb', b);
     } else if (wg.m && !war) next = setMission(state, wg.id, null);
