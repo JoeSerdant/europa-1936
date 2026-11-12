@@ -9,6 +9,7 @@ import { logAdd } from '../log.js';
 import { WARGOALS } from '../../data/dip/wargoals.js';
 import { setRel } from './core.js';
 import { releaseBlock, releaseNation } from '../civil/index.js';
+import { RELEASES } from '../../data/dip/releases.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 const tagOf = (o) => getWorld().owners[o].tag;
@@ -106,15 +107,85 @@ export function annexPuppet(state, overlord, puppet) {
 
 // ---- konference ----
 /** Zadá konferenci po kapitulaci: hráč dostane rozhodnutí, AI rozhodne hned (velká nebo významná země se stane loutkou). */
-export function conference(state, loser, by) {
+/** Hodnota státu pro mírovou konferenci (M84): vítězné body jeho provincií + dvojnásobek továren a loděnic + 1. */
+export function stateValue(state, s) {
+  const w = getWorld(), e = state.ind.st[s] || {};
+  let v = 1 + 2 * ((e.civ || 0) + (e.mil || 0) + (e.dok || 0));
+  for (const p of w.states[s].v) v += w.vp[p];
+  return v;
+}
+
+/** Sousedí stát `s` s územím, které vlastní nebo ovládá země `c`? */
+function touches(state, c, s) {
+  const w = getWorld();
+  for (const p of w.states[s].v) {
+    let hit = false;
+    w.forLandNeighbors(p, (q, kind) => { if (kind !== 2 && (state.ctrl[q] === c || state.stateOwner[w.provState[q]] === c)) hit = true; });
+    if (hit) return true;
+  }
+  return false;
+}
+
+/** Převede zbylý stát `s` poraženého `loser` vítězi `c` (celý, včetně provincií). */
+function claimState(state, loser, c, s) {
+  const w = getWorld();
+  const stateOwner = state.stateOwner.slice(), ctrl = state.ctrl.slice();
+  stateOwner[s] = c;
+  for (const p of w.states[s].v) if (ctrl[p] === loser) ctrl[p] = c;
+  const next = { ...state, stateOwner, ctrl, ownerVer: state.ownerVer + 1, mil: { ...state.mil, ver: state.mil.ver + 1 } };
+  return withCtx(next, (ctx) => settleAfterPeace(ctx, loser, c));
+}
+
+/**
+ * Nároky menších vítězů řízených AI (M84): kdo dobyl část poraženého, má body `pts` a za ně si bere zbylé státy sousedící s jeho územím
+ * (od nejcennějšího, na který má). Hlavní vítěz `top` a hráč `skip` si tu neberou nic; země s pravidlem uvolnění národa se nedělí.
+ */
+function minorClaims(state, loser, top, pts, skip) {
+  if (RELEASES[tagOf(loser)]) return state;
+  const order = Object.keys(pts).map(Number).filter((c) => c !== top && c !== skip && pts[c] > 0 && !state.dip.cap[c]).sort((a, b) => pts[b] - pts[a] || a - b);
+  const left = { ...pts };
+  let s0 = state, moved = true;
+  while (moved) {
+    moved = false;
+    for (const c of order) {
+      let pick = 0, pv = 0;
+      for (const s of statesOf(s0, loser)) { const v = stateValue(s0, s); if (v <= left[c] && v > pv && touches(s0, c, s)) { pv = v; pick = s; } }
+      if (!pick) continue;
+      s0 = claimState(s0, loser, c, pick);
+      left[c] -= pv; moved = true;
+    }
+  }
+  return s0;
+}
+
+/**
+ * Mírová konference po kapitulaci `loser`: `by` = počty států, které vítězové dobyli (určí hlavního vítěze), `val` = hodnota těch států
+ * (z ní mají vítězové body `CONF_SHARE × hodnota` na další územní zisky, M84).
+ */
+export function conference(state, loser, by, val = {}) {
   let victor = 0, best = 0;
   for (const k of Object.keys(by).map(Number).sort((a, b) => a - b)) if (by[k] > best) { best = by[k]; victor = k; }
   if (!victor || !statesOf(state, loser).length || state.dip.cap[victor]) return state;
   if (state.dip.goal[`${victor}>${loser}`] === 'civil' || state.dip.goal[`${loser}>${victor}`] === 'civil') return annexRump(state, victor, loser);   // M69: občanskou válku vítěz dokončí sjednocením
   const w = getWorld(), player = state.player ? w.ownerIdx[state.player] : 0;
+  const pts = {};
+  for (const c in val) pts[c] = Math.floor(val[c] * DIP.CONF_SHARE);
+  state = minorClaims(state, loser, victor, pts, player);
+  if (!statesOf(state, loser).length) return state;
+  if (player && player !== victor && pts[player] > 0 && !state.dip.cap[player]) {   // hráč je menší vítěz: nejdřív si vybere on, potom rozhodne hlavní vítěz
+    const id = state.dip.conf.reduce((a, c) => Math.max(a, c.id), 0) + 1;
+    return patch(state, { conf: [...state.dip.conf, { id, loser, victor: player, ph: 'claims', pts: pts[player], top: victor }] });
+  }
+  return rumpDecision(state, loser, victor, pts[victor] || 0);
+}
+
+/** O zbytku poraženého rozhodne hlavní vítěz: hráč v dialogu (se svými body na územní zisky), AI hned. */
+function rumpDecision(state, loser, victor, points) {
+  const w = getWorld(), player = state.player ? w.ownerIdx[state.player] : 0;
+  if (!statesOf(state, loser).length || state.dip.cap[victor]) return state;
   if (victor === player) {
     const id = state.dip.conf.reduce((a, c) => Math.max(a, c.id), 0) + 1;
-    return patch(state, { conf: [...state.dip.conf, { id, loser, victor, g: state.dip.goal[`${victor}>${loser}`] || 'conquest', rel: releaseBlock(state, victor, loser) === null ? 1 : 0 }] });
+    return patch(state, { conf: [...state.dip.conf, { id, loser, victor, g: state.dip.goal[`${victor}>${loser}`] || 'conquest', rel: releaseBlock(state, victor, loser) === null ? 1 : 0, pts: points }] });
   }
   if (releaseBlock(state, victor, loser) === null) {   // M70: AI vítěz z poražené země uvolní národ (Vichy, Slovensko, Chorvatsko) jako svou loutku
     state = releaseNation(state, victor, loser);
@@ -177,6 +248,33 @@ export function confTribute(state, id) {
 }
 export function confSkip(state, id) {
   return confOf(state, id) ? patch(state, { conf: without(state, id) }) : state;
+}
+
+/** Státy, které si hráč může v konferenci `id` vzít za body: [{ s, name, value, block }] od nejcennějšího (M84). */
+export function confClaims(state, id) {
+  const c = confOf(state, id), w = getWorld();
+  if (!c || !(c.pts > 0)) return [];
+  return statesOf(state, c.loser).map((s) => { const value = stateValue(state, s); return { s, name: w.states[s].n, value, block: value > c.pts ? `Chybí body (${value - c.pts}).` : null }; })
+    .sort((a, b) => b.value - a.value || a.s - b.s);
+}
+
+/** Hráč si v konferenci vezme stát `s` za body. Když poraženému nic nezbyde, konference končí. */
+export function confClaim(state, id, s) {
+  const c = confOf(state, id);
+  if (!c || state.stateOwner[s] !== c.loser) return state;
+  const v = stateValue(state, s);
+  if (!(c.pts >= v)) return state;
+  let n = claimState(state, c.loser, c.victor, s);
+  const rest = statesOf(n, c.loser).length;
+  n = patch(n, { conf: rest ? n.dip.conf.map((x) => (x.id === id ? { ...x, pts: c.pts - v } : x)) : without(n, id) });
+  return logAdd(n, { k: 'take', o: c.victor, x: c.loser, y: 1 });
+}
+
+/** Menší vítěz (hráč) dokončil své nároky: o zbytku rozhodne hlavní vítěz. */
+export function confClaimsDone(state, id) {
+  const c = confOf(state, id);
+  if (!c || c.ph !== 'claims') return state;
+  return rumpDecision(patch(state, { conf: without(state, id) }), c.loser, c.top, 0);
 }
 
 // ---- denní krok ----

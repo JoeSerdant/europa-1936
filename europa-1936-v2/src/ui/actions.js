@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  orderDrop, dropBlock, AIR, dropNuke, nukeBlock,
+  orderDrop, dropBlock, AIR, dropNuke, nukeBlock, confClaim, confClaimsDone,
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf,
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
@@ -845,6 +845,9 @@ export const conferenceRelease = (id) => run(confRelease, id);
 export const conferenceSkip = (id) => run(confSkip, id);
 export const conferenceTake = (id) => run(confTake, id);
 export const conferenceTribute = (id) => run(confTribute, id);
+/** Vezme si v mírové konferenci stát za body vítěze (M84). */
+export const conferenceClaim = (id, s) => run(confClaim, id, s);
+export const conferenceClaimsDone = (id) => run(confClaimsDone, id);
 export const annexOwnPuppet = (tag) => { const me = playerIdx(), t = getWorld().ownerIdx[tag]; return !!me && !!t && run(annexPuppet, me, t); };
 
 // ============================================================ autonomie loutek (M55)

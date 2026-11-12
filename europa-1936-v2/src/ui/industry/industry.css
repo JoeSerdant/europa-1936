@@ -505,3 +505,6 @@ button.st-row:hover { background: var(--ink-3); }
 .air-nukes { margin-bottom: 14px; }
 .nuke-list { display: flex; flex-direction: column; gap: 3px; }
 .nuke-list li { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 6px 10px; background: rgba(22, 34, 45, 0.75); box-shadow: inset 0 0 0 1px var(--rule); font-size: 13px; }
+.conf-claims { margin: 10px 0; }
+.conf-claims ul { display: flex; flex-direction: column; gap: 3px; max-height: 220px; overflow-y: auto; }
+.conf-claims li { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 5px 10px; background: rgba(22, 34, 45, 0.75); box-shadow: inset 0 0 0 1px var(--rule); font-size: 13.5px; }
