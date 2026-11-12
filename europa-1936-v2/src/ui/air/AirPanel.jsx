@@ -3,8 +3,8 @@ import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { Screen } from '../common/Screen.jsx';
-import { airOf, targetsFor, missionBlock, getWorld, PLANES, PLANE_IDS, AIR, afbOf, planesAt } from '../../engine/index.js';
-import { playerIdx, formAirWing, disbandAirWing, reinforceAirWing, setAirMission, selectLabel } from '../actions.js';
+import { airOf, targetsFor, missionBlock, getWorld, PLANES, PLANE_IDS, AIR, afbOf, planesAt, nukeView } from '../../engine/index.js';
+import { playerIdx, formAirWing, disbandAirWing, reinforceAirWing, setAirMission, selectLabel, nukeState } from '../actions.js';
 import { fmtInt } from '../format.js';
 
 const MISSIONS = { air: 'Hlídky', cas: 'Podpora boje', bomb: 'Bombardování' };
@@ -82,6 +82,32 @@ function NewWing({ a }) {
   );
 }
 
+/** Jaderné zbraně (M82): počet bomb, čas do další a cíle; skryté, dokud země nemá technologii ani bombu. */
+function Nukes({ state, me }) {
+  const v = nukeView(state, me);
+  const [confirm, setConfirm] = useState(0);
+  if (!v.tech && !v.n) return null;
+  const w = getWorld();
+  return (
+    <section className="air-nukes" aria-label="Jaderné zbraně">
+      <div className="sec-head"><h3>Jaderné zbraně</h3><span className="muted">{v.n} {v.n === 1 ? 'bomba' : v.n >= 2 && v.n <= 4 ? 'bomby' : 'bomb'}{v.left ? ` · další za ${v.left} dní` : ''}</span></div>
+      {v.n > 0 ? (
+        <ul className="nuke-list">
+          {v.targets.map((t) => (
+            <li key={t.s} title={t.block || 'Zničí polovinu továren státu, oslabí divize v něm a otřese zemí.'}>
+              <span>{t.name} <i className="muted">({w.owners[t.owner].name}, {t.fac} továren)</i></span>
+              {confirm === t.s
+                ? <button className="sbtn danger" onClick={() => { nukeState(t.s); setConfirm(0); }}>Potvrdit úder</button>
+                : <button className="sbtn" disabled={!!t.block} onClick={() => setConfirm(t.s)}>Svrhnout</button>}
+            </li>
+          ))}
+          {!v.targets.length && <li className="muted">Nejste ve válce – není na koho bombu svrhnout.</li>}
+        </ul>
+      ) : <p className="muted">První bomba se teprve vyrábí.</p>}
+    </section>
+  );
+}
+
 /** Okno Letectvo (klávesa A): křídla s misemi, rezerva, letiště. */
 export function AirPanel() {
   const state = useGameSlow((s) => s, 600);
@@ -117,6 +143,7 @@ export function AirPanel() {
           </div>
           <aside className="prod-right">
             <NewWing a={a} />
+            <Nukes state={state} me={me} />
             <div className="sec-head"><h3>Rezerva</h3></div>
             <ul className="eq">{PLANE_IDS.filter((t) => a.types.includes(t) || a.pool[t]).map((t) => <li key={t} title={PLANES[t].n}><i>{PLANES[t].ab}</i><b>{fmtInt(a.pool[t] || 0)}</b></li>)}</ul>
             <div className="sec-head"><h3>Letiště ({a.bases.length})</h3><span className="muted">{AIR.PER_LEVEL} letadel na úroveň</span></div>

@@ -11,6 +11,7 @@ import { formWing, setMission } from '../air/commands.js';
 import { basesOf, afbOf, radarOf, stateKm } from '../air/core.js';
 import { frontEdges } from '../army/selectors.js';
 import { AIR } from '../air/constants.js';
+import { nukeView, dropNuke } from '../air/nuke.js';
 import { AI } from './constants.js';
 
 /** Stát země `o`, kde má smysl postavit letiště (už má letiště < max, nejvíc vítězných bodů). */
@@ -71,6 +72,10 @@ function bombTarget(state, o, from, range) {
 
 export function aiAir(state, o) {
   const war = hasWar(state.mil, o);
+  if (war && state.air.nuke && state.air.nuke[o] && state.air.nuke[o].n > 0) {   // M82: hotovou bombu AI svrhne na nepřátelský stát s nejvíc továrnami v dosahu
+    const t = nukeView(state, o).targets.find((x) => !x.block && x.fac >= AI.NUKE_MIN_FAC);
+    if (t) return dropNuke(state, o, t.s);
+  }
   let sum = industryOf(state, o);
   const air = state.air;
   const have = {};

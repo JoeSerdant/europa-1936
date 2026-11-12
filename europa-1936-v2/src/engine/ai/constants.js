@@ -75,6 +75,7 @@ export const AI = {
   INV_REINF: 6,                     // základ hodnocení posil držené předmostí
   INV_KM: 1500,                     // srážka za 1 bod: tolik km plavby
   UNREACH: 1e8,                     // vzdálenost „nedosažitelné po souši“ při přidělování armád divadlům
+  NUKE_MIN_FAC: 4,                  // jaderný úder (M82): AI míří jen na stát s aspoň tolika továrnami a loděnicemi
   PARTY_MARGIN: 15,                 // strany (M72): AI podpoří vládnoucí stranu, když její náskok před nejsilnějším soupeřem klesne pod tolik bodů
   PARTY_RESERVE: 80,                // a má aspoň tolik politické moci
   PEACE_POSTS: 8,                   // domácích postů na armádu v míru

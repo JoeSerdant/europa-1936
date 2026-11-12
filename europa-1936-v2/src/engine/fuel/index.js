@@ -4,6 +4,7 @@
 // síla letectva a rychlost flotil. Čisté funkce nad stavem, denní krok volá `industryDay`.
 import { getWorld } from '../world.js';
 import { statsOf } from '../army/unit.js';
+import { modsOf } from '../research/core.js';
 import { FUEL } from './constants.js';
 
 export { FUEL } from './constants.js';
@@ -52,7 +53,7 @@ export function fuelDay(state, oil, tally) {
   for (let o = 1; o < fuel.length; o++) {
     const f = cur[o];
     if (!f) continue;
-    const gain = FUEL.PER_OIL * Math.max(0, oil[o] || 0) + FUEL.BASE * (tally[o].civ + tally[o].mil);
+    const gain = (FUEL.PER_OIL * Math.max(0, oil[o] || 0) + FUEL.BASE * (tally[o].civ + tally[o].mil)) * (1 + modsOf(state, o).fuel);   // M82: syntetické palivo (technologie)
     const avail = f.s + gain, u = use[o];
     const r = u > 1e-9 ? Math.min(1, avail / u) : 1;
     const s = Math.min(Math.max(FUEL.CAP_MIN, FUEL.CAP_DAYS * gain), Math.max(0, avail - u));

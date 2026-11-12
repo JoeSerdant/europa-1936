@@ -40,5 +40,5 @@ export function createAir(w, ind) {
   }
   // stíhači hlídají nad vlastním státem
   for (const wg of wings) if (wg && wg.t === 'sti') { wg.m = 'air'; wg.to = wg.s; }
-  return { ver: 0, wn: wings.length - 1, wings, pool, sup: {}, drops: [] };   // drops = výsadky ve vzduchu (M80)
+  return { ver: 0, wn: wings.length - 1, wings, pool, sup: {}, drops: [], nuke: Array.from({ length: n }, (_, o) => (o ? { n: 0, p: 0 } : null)) };   // drops = výsadky ve vzduchu (M80), nuke = atomové bomby a postup výroby (M82)
 }

@@ -20,6 +20,14 @@ export const AIR = {
   ACE_BONUS: 0.05,        // bonus síly hlídek křídla za každý stupeň es
   ACE_MAX: 3,             // nejvyšší stupeň es
   FORM_MAX: 400,
+  ROCKET_USE: 0.15,       // rakety (M82): podíl křídla raket spotřebovaný za den mise
+  NUKE_DAYS: 150,         // jaderná zbraň: dnů výroby jedné bomby po dokončení technologie
+  NUKE_MAX: 5,            // nejvíc bomb ve skladu
+  NUKE_PLANES: 10,        // nejméně strategických bombardérů v křídle, které bombu nese
+  NUKE_STAB: 0.12,        // ztráta stability zasažené země
+  NUKE_WS: 0.15,          // ztráta podpory války zasažené země
+  NUKE_FACTORY: 0.5,      // podíl zničených továren a loděnic ve státě
+  NUKE_UNITS: 0.5,        // zbytek síly a organizace divizí ve státě
   DROP_KM: 600,           // výsadek (M80): největší vzdálenost z provincie s letištěm do cíle
   DROP_HOURS: 10,         // doba letu k cíli
   DROP_PER_LEVEL: 1,      // divizí na jeden výsadek za úroveň letiště ve státě startu

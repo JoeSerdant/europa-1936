@@ -11,7 +11,7 @@ import {
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
-  orderDrop, dropBlock, AIR,
+  orderDrop, dropBlock, AIR, dropNuke, nukeBlock,
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf,
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
@@ -783,6 +783,16 @@ export function orderFleetTo(label) {
   if (!ownFleet(s, id)) return false;
   if (!run(orderFleet, id, label)) { toast('Flotila se tam nedostane (už tam je, nebo cesta neexistuje).'); return false; }
   return true;
+}
+/** Svrhne atomovou bombu hráče na stát `s` (M82); při neúspěchu napíše důvod. */
+export function nukeState(s) {
+  const st = gameStore.getState(), me = playerIdx(st);
+  if (!me) return false;
+  const why = nukeBlock(st, me, s);
+  if (why) { toast(why); return false; }
+  const okRun = run(dropNuke, me, s);
+  if (okRun) toast('Atomová bomba svržena.');
+  return okRun;
 }
 /** Zadá vlastní flotile misi (M81). */
 export const fleetMission = (id, m) => (ownFleet(gameStore.getState(), id) ? run(setFleetMission, id, m) : false);

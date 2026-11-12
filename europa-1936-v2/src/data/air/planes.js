@@ -1,11 +1,13 @@
 // Letouny a počáteční letectvo zemí (M30). Čísla jsou vlastní, zmenšená do měřítka hry.
 //  atk    síla ve vzdušném boji (hlídky)        cas    podpora pozemních bojů (bonus k útoku divizí)
 //  bomb   síla při bombardování                 range  dolet z letiště v km
+//  rocket raketa (M82): na misi ji nikdo nezastaví, ale denně se spotřebuje podíl `AIR.ROCKET_USE`
 //  unlock id technologie, která typ odemyká (null = od začátku)   role: 'air' hlídky, 'cas' podpora, 'bomb' bombardování
 export const PLANES = {
   sti: { n: 'Stíhací letoun', ab: 'STÍ', atk: 6, cas: 0.4, bomb: 0, range: 600, unlock: null, roles: ['air'], info: 'Vybojuje nadvládu ve vzduchu a kryje vlastní letadla.' },
   bit: { n: 'Bitevní letoun', ab: 'BIT', atk: 2, cas: 5, bomb: 1, range: 450, unlock: null, roles: ['cas'], info: 'Podporuje pozemní boje: bonus k útoku divizí ve zvoleném státě.' },
   tac: { n: 'Taktický bombardér', ab: 'TAK', atk: 1, cas: 3, bomb: 4, range: 800, unlock: null, roles: ['cas', 'bomb'], info: 'Univerzální: podpora boje i bombardování.' },
+  rak: { n: 'Raketa', ab: 'RAK', atk: 0, cas: 0, bomb: 14, range: 900, unlock: 'rakety', roles: ['bomb'], rocket: true, info: 'Úder na zázemí, který stíhači ani radar nezastaví. Každá raketa letí jen jednou: křídlo na misi se rychle spotřebuje.' },
   str: { n: 'Strategický bombardér', ab: 'STR', atk: 0.5, cas: 0, bomb: 10, range: 1500, unlock: 'strbomb', roles: ['bomb'], info: 'Dálkové bombardování zázemí: ničí zásoby a podlamuje podporu války.' },
 };
 export const PLANE_IDS = Object.keys(PLANES);
@@ -15,6 +17,7 @@ export const AIR_PROD = {
   bit: { cost: 14, res: { ocel: 1.2, hlinik: 1.6, ropa: 0.4 } },
   tac: { cost: 22, res: { ocel: 2, hlinik: 2.5, ropa: 0.6 } },
   str: { cost: 55, res: { ocel: 5, hlinik: 6, ropa: 1.2, chrom: 0.5 } },
+  rak: { cost: 9, res: { ocel: 1, hlinik: 0.6, ropa: 0.5 } },
 };
 
 /** Počáteční letouny zemí; chybí-li záznam, použije se výchozí podle velikosti země (tier). */

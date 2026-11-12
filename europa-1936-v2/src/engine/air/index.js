@@ -5,4 +5,5 @@ export { AIR, ACE_NAMES } from './constants.js';
 export { radarOf, afbOf, capacityOf, basesOf, planesAt, stateKm } from './core.js';
 export { createAir } from './setup.js';
 export { orderDrop, dropBlock, dropArrivals, patrolOver } from './para.js';
+export { nukeBlock, dropNuke, nukeView, nukeCarrier, nukeProduction, NUKE_TECH } from './nuke.js';
 export { PLANES, PLANE_IDS, AIR_PROD, AIR_NATIONAL } from '../../data/air/planes.js';
