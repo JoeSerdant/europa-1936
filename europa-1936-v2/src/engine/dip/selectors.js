@@ -10,6 +10,7 @@ import { guarantees, guaranteeBlock } from './guarantee.js';
 import { hasAccess, grants, accessBlock, grantBlock } from './access.js';
 import { demandSpec, demandBlock, demandForce } from './demand.js';
 import { HIST_DEMANDS } from '../../data/dip/demands.js';
+import { exileHost } from './exile.js';
 import { pactOf, pactBlock, pactAccepts, breakBlock, improveBlock, pactOffers } from './pact.js';
 
 /** Pakt o neútočení se zemí `t` pro rozhraní: { days (jak dlouho platí), breakBlock } nebo null. */
@@ -32,7 +33,7 @@ export function diplomacyOf(state, o) {
     const wb = warBlock(state, o, t);
     list.push({
       o: t, tag: w.owners[t].tag, name: w.owners[t].name, rel: relOf(state, o, t),
-      war, ally: sameFaction(state, o, t), capitulated: hasCapitulated(state, t), faction: factionOf(state, t),
+      war, ally: sameFaction(state, o, t), capitulated: hasCapitulated(state, t), exile: exileHost(state, t), faction: factionOf(state, t),   // exile = hostitel exilové vlády (M83)
       just: j ? { ready: j.ready, left: Math.max(0, Math.ceil((j.ready - state.tick) / 24)), done: justReady(state, o, t) } : null,
       canJustify: !wb && !j && state.dip.just.filter((x) => x.a === o).length < DIP.JUST_MAX && state.pol.own[o].pp >= WARGOALS.tribute.pp,
       justifyBlock: wb || (j ? 'Už se ospravedlňuje.' : state.dip.just.filter((x) => x.a === o).length >= DIP.JUST_MAX ? 'Příliš mnoho ospravedlnění.' : state.pol.own[o].pp < WARGOALS.tribute.pp ? `Chybí politická moc (${Math.ceil(WARGOALS.tribute.pp - state.pol.own[o].pp)}).` : null),

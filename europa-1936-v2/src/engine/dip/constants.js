@@ -58,6 +58,10 @@ export const DIP = {
   AU_MULT: [1.6, 1, 0.5, 0.2], // násobek příspěvků pánovi podle úrovně
   SUB_MAN: 0.002,         // podíl lidské síly loutky, který denně připadne pánovi
   SUB_PP: 0.4,            // politická moc, kterou denně dostane pán za každou loutku
+  EXILE_ORG: 0.7,         // exil (M83): zbytek organizace divizí, které přejdou k hostiteli
+  EXILE_STOCK: 0.2,       // podíl zásob výzbroje, který si exilová vláda odveze k hostiteli
+  RESTORE_STAB: 0.5,      // stabilita obnovené země
+  RESTORE_MAN: 50000,     // nejmenší lidská síla obnovené země
   VICTORY_DAYS: 180,      // dnů trvání ducha „Vítězná nálada“ po kapitulaci protivníka (M74)
   ANNEX_PP: 150,          // cena anexe vlastní loutky        // bonus za shodnou ideologii
 };
