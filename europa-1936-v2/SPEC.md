@@ -716,6 +716,10 @@ Kapitulace dál dá každý dobytý stát (hlavní provincie v rukou nepřítele
 
 Data `data/nat/continuous.js` (`CONT_FOCUSES`, sedm cílů: Zbrojní výroba, Stavební program, Podpora vědy, Náborová kampaň, Vnitřní klid, Válečná propaganda, Těžební kampaň; bonusy ve stejných klíčích jako zákony). Stav `nat.own[o].cont` (id nebo `''`), `GAME_VERSION = 41`. Průběžný cíl lze držet, jen když se **neplní běžný cíl**, země má aspoň `NAT.CONT_MIN` splněných cílů a politickou moc (`contBlock`); `setContinuous(state, o, id)` ho zvolí nebo zruší (`''`). Dokud běží, jeho bonus se přičítá v `polModsOf` (po duších) a `natDay` strhává denně `NAT.CONT_PP` politické moci; zahájení běžného cíle (`startFocus`) průběžný cíl ukončí. **AI** s hotovým nebo zablokovaným stromem drží Zbrojní výrobu (ve válce) nebo Stavební program (v míru). **Rozhraní:** řádek „Průběžný cíl“ v okně Národní cíle s přepínači a popisky účinků. Zjednodušení: průběžné cíle nemají vlastní podmínky podle země ani ideologie a žádné vojenské bonusy.
 
+## 4zzl. Úspěchy (M86)
+
+Úspěchy jsou věc rozhraní, ne herního stavu (`src/ui/achievements/`). `list.js`: `ACHIEVEMENTS` (17 položek s vlastními texty) – každý má `id`, název, popis a čistý test `(game, me) → boolean` nad stavem hry (např. 25 technologií, 100 továren, loutkový stát, pakt o neútočení, vylodění, výsadek, tři letadlové lodě, atomová bomba, exilová vláda, vítězství); `achievedNow(game, me)` vrací id právě splněných (pozorovatel žádné, chyba v testu úspěch jen nesplní). `store.js`: splněné se pamatují v `localStorage` napříč hrami (`achDone`, `markAch` vrací jen nově splněné, `resetAch`; vše v try/catch). `checkAchievements` (`ui/actions.js`) se volá jednou za herní den z herní smyčky: nové úspěchy zapíše a ohlásí vyskakovací kartou „Úspěch“. Okno **Úspěchy** (`AchievementsDialog`, tlačítko v nabídce ve hře, zavírá Esc) ukazuje všechny úspěchy a splněné zvýrazní. Tvar stavu hry se nemění.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -942,6 +946,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M83** | **Exilové vlády**: poražený člen bloku odchází k hostiteli s divizemi na spojeneckém území, loďstvem a částí zásob; po osvobození hlavního města se země obnoví | **hotovo** |
 | **M84** | **Mírová konference s body**: body vítězů z hodnoty dobytých států, nároky menších vítězů na sousední zbytek, územní zisky hráče v dialogu konference | **hotovo** |
 | **M85** | **Průběžné národní cíle**: sedm trvalých zaměření s bonusem za denní politickou moc, když se neplní běžný cíl; AI je používá po dokončení stromu | **hotovo** |
+| **M86** | **Úspěchy**: 17 úspěchů vyhodnocovaných ze stavu hry, uložení v prohlížeči napříč hrami, karta při splnění, okno Úspěchy v nabídce | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

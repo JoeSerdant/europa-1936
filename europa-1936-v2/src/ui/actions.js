@@ -16,6 +16,8 @@ import {
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
+import { achievedNow, ACH_BY_ID } from './achievements/list.js';
+import { markAch } from './achievements/store.js';
 import { play } from './sound.js';
 import { mapController as mc } from './map/controller.js';
 import { writeSave, readSave, deleteSave, slotName } from './saves.js';
@@ -759,6 +761,16 @@ export const quickLoad = () => loadGame('quick');
 export const openBattle = (id) => setUi({ battle: id });
 export const closeBattle = () => setUi({ battle: 0 });
 export const openOverview = () => setUi({ overview: true });
+/** Otevře nebo zavře okno Úspěchy (M86). */
+export const setAchOpen = (v) => setUi({ achOpen: !!v, menuOpen: false });
+/** Vyhodnotí úspěchy hráče nad stavem hry; nově splněné zapíše a ohlásí kartou. Vrací jejich id. */
+export function checkAchievements(game = gameStore.getState()) {
+  const me = game ? playerIdx(game) : 0;
+  if (!me) return [];
+  const fresh = markAch(achievedNow(game, me));
+  for (const id of fresh) pushPopup({ kind: 'ach', icon: 'victory', tone: 'good', title: 'Úspěch', text: ACH_BY_ID[id].n, lines: [ACH_BY_ID[id].info] });
+  return fresh;
+}
 export const closeOverview = () => setUi({ overview: false });
 /** Zavře přehled a ukáže hlavní město země `o` (označí provincii a přeletí kamerou). */
 export function selectCountryCapital(o) {
