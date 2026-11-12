@@ -14,6 +14,9 @@ import { aiSpy } from './spy.js';
 import { aiForts } from './forts.js';
 import { aiStrategy } from './strategy.js';
 import { aiParties } from './parties.js';
+import { aiFuel } from './logistics.js';
+import { aiPara } from './para.js';
+import { aiPacts } from './pacts.js';
 import { advanceInvasions } from './invasion.js';
 import { aiCommand } from '../cmd/index.js';
 import { aiLend } from '../dip/lend.js';
@@ -42,10 +45,12 @@ export function aiDay(state) {
     state = aiAir(state, o);
     state = aiDoctrine(state, o);
     state = aiLend(state, o);
+    state = aiFuel(state, o);    // M87: dovoz ropy při nedostatku paliva
+    state = aiPara(state, o);    // M87: výsadkové divize a výsadky
     state = aiCommand(state, o);
     state = advanceInvasions(state, o);   // M71: shromáždění, nalodění a pauzy námořních invazí
     if (weekly || newWar(state, o)) state = aiStrategy(state, o);   // M66: divadla války, přidělení armád, útok a obrana; v míru domácí rozmístění
-    if (!state.dip.sub[o]) state = aiDiplomacy(state, o);   // loutky nevedou vlastní diplomacii (M33)
+    if (!state.dip.sub[o]) state = aiPacts(aiDiplomacy(state, o), o);   // M87: AI si pakty o neútočení nabízí i sama   // loutky nevedou vlastní diplomacii (M33)
   }
   return state;
 }
