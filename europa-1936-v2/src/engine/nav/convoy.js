@@ -7,6 +7,7 @@ import { seaRoute, homeSea, powerOf } from './core.js';
 import { atWar } from '../army/war.js';
 import { sameFaction } from '../dip/core.js';
 import { docMods } from '../doc/core.js';
+import { SHIPS } from '../../data/navy/index.js';
 
 const routeCache = new WeakMap();   // ctrl → Map(klíč → trasa)
 let landComp = null;                // souvislé pevniny světa (nezávisle na vlastnících): provincie → číslo pevniny
@@ -68,8 +69,10 @@ export function routeRisk(state, route, from, to) {
     const atk = powerOf(f.ships).atk;
     if (!atk) continue;
     const dm = docMods(state, f.o);
-    if (atWar(state.mil, to, f.o) || atWar(state.mil, from, f.o)) raid.set(f.p, (raid.get(f.p) || 0) + atk * (1 + dm.raid));
-    else if (friendly(state, to, f.o) || friendly(state, from, f.o)) escort.set(f.p, (escort.get(f.p) || 0) + atk * (1 + dm.escort));
+    if (atWar(state.mil, to, f.o) || atWar(state.mil, from, f.o)) {
+      const subs = (f.ships.ss || 0) * SHIPS.ss.atk * (NAV.SUB_RAID - 1);   // M81: ponorky jsou proti konvojům účinnější
+      raid.set(f.p, (raid.get(f.p) || 0) + (atk + subs) * (1 + dm.raid) * (f.m === 'raid' ? NAV.MISSION_RAID : 1));
+    } else if (friendly(state, to, f.o) || friendly(state, from, f.o)) escort.set(f.p, (escort.get(f.p) || 0) + atk * (1 + dm.escort) * (f.m === 'escort' ? NAV.MISSION_ESCORT : 1));
   }
   let safe = 1;
   for (const [sea, r] of raid) safe *= 1 - Math.min(NAV.RAID_MAX, NAV.RAID_COEF * Math.max(0, r - NAV.ESCORT_K * (escort.get(sea) || 0)));

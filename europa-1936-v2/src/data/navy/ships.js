@@ -1,10 +1,12 @@
 // Lodě a počáteční námořnictvo zemí (M27). Vlastní čísla; počty jsou zmenšené oproti skutečnosti, aby odpovídaly měřítku hry.
 //  hp síla   atk palebná síla   spd rychlost (km/h)   cost body výroby na kus   res suroviny na kus
+//  air  síla palubních letounů (M81): udeří před děly a oslabí palbu protivníka   sub  ponorka: zasáhnou ji jen torpédoborce a letadlové lodě, proti konvojům je silnější
 export const SHIPS = {
   dd: { n: 'Torpédoborec', ab: 'TOR', hp: 10, atk: 4, spd: 55, info: 'Rychlý a levný, páteř flotil.' },
   ca: { n: 'Křižník', ab: 'KŘI', hp: 30, atk: 10, spd: 50, info: 'Vyvážená bojová loď.' },
   bb: { n: 'Bitevní loď', ab: 'BIT', hp: 90, atk: 28, spd: 38, info: 'Největší síla, drahá a pomalá.' },
-  ss: { n: 'Ponorka', ab: 'PON', hp: 6, atk: 5, spd: 30, info: 'Levná, křehká, ale nebezpečná.' },
+  ss: { n: 'Ponorka', ab: 'PON', hp: 6, atk: 5, spd: 30, sub: true, info: 'Levná a křehká. Zasáhnou ji jen torpédoborce a letadlové lodě; proti konvojům je o polovinu účinnější.' },
+  cv: { n: 'Letadlová loď', ab: 'LET', hp: 45, atk: 3, air: 26, spd: 46, info: 'Palubní letouny udeří dřív než děla a oslabí palbu protivníka; sama je zranitelná.' },
   tr: { n: 'Transportní loď', ab: 'TRA', hp: 8, atk: 0, spd: 25, info: 'Veze divize přes moře; sama se nebrání.' },
 };
 export const SHIP_IDS = Object.keys(SHIPS);
@@ -14,13 +16,14 @@ export const SHIP_PROD = {
   ca: { cost: 240, res: { ocel: 14, ropa: 2, chrom: 1 } },
   bb: { cost: 650, res: { ocel: 30, ropa: 4, chrom: 3, hlinik: 1 } },
   ss: { cost: 70, res: { ocel: 5, ropa: 1 } },
+  cv: { cost: 720, res: { ocel: 22, ropa: 4, hlinik: 4, chrom: 2 } },
   tr: { cost: 60, res: { ocel: 8 } },
 };
 
 /** Počáteční námořnictvo: loděnice a lodě (transportní lodě jdou do rezervy, ostatní do hlavní flotily). Země bez záznamu nemá námořnictvo. */
 export const NAVY_NATIONAL = {
-  ENG: { docks: 6, ships: { bb: 6, ca: 14, dd: 40, ss: 12, tr: 40 } },
-  FRA: { docks: 4, ships: { bb: 4, ca: 9, dd: 32, ss: 24, tr: 28 } },
+  ENG: { docks: 6, ships: { bb: 6, ca: 14, dd: 40, ss: 12, cv: 2, tr: 40 } },
+  FRA: { docks: 4, ships: { bb: 4, ca: 9, dd: 32, ss: 24, cv: 1, tr: 28 } },
   GER: { docks: 3, ships: { bb: 2, ca: 5, dd: 12, ss: 6, tr: 14 } },
   ITA: { docks: 4, ships: { bb: 3, ca: 10, dd: 30, ss: 28, tr: 24 } },
   SOV: { docks: 3, ships: { bb: 1, ca: 5, dd: 14, ss: 30, tr: 12 } },

@@ -254,7 +254,7 @@ function LandDossier({ p, owner, ctrl }) {
 function SeaFleets({ l }) {
   const state = useGameSlow((g) => g, 500);
   const me = playerIdx(state);
-  const list = fleetsInSea(state, l).filter((f) => seesFleet(state, f.o, l));   // M76: mlha války
+  const list = fleetsInSea(state, l).filter((f) => seesFleet(state, f.o, l, f.ships));   // M76: mlha války
   if (!list.length) return null;
   const w = getWorld();
   return (

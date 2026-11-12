@@ -5,7 +5,7 @@ import { SHIP_IDS } from '../../data/navy/index.js';
 import { cleanName } from '../army/commands.js';
 import { atWar } from '../army/war.js';
 import { hasAccess } from '../dip/accessCore.js';
-import { NAV } from './constants.js';
+import { NAV, NAV_MISSIONS } from './constants.js';
 import { homeSea, powerOf, seaRoute, seaBlocked, coastSeasOf, isSeaLabel } from './core.js';
 import { transportsOf } from './convoy.js';
 
@@ -32,7 +32,7 @@ export function formFleet(state, o, ships, nm = '') {
   const poolArr = state.nav.pool.slice();
   poolArr[o] = rest;
   const id = state.nav.fn + 1;
-  const fleet = { o, nm: cleanName(nm) || `${id}. flotila`, p: home.sea, ships: clean, c: {}, mx: powerOf(clean).hp, to: 0, path: [], prog: 0 };
+  const fleet = { o, nm: cleanName(nm) || `${id}. flotila`, p: home.sea, ships: clean, c: {}, mx: powerOf(clean).hp, to: 0, path: [], prog: 0, m: '' };
   return patch(state, { fn: id, pool: poolArr, fleets: [...state.nav.fleets, ...new Array(id - state.nav.fleets.length).fill(null), fleet] });
 }
 
@@ -70,6 +70,13 @@ export function orderFleet(state, id, label) {
   const r = seaRoute(f.p, new Set([label]), null);
   if (!r) return state;
   return setFleet(state, id, { to: label, path: r.path, prog: 0 });
+}
+
+/** Zadá flotile misi (`''` = bez mise, jinak klíč `NAV_MISSIONS`). */
+export function setFleetMission(state, id, m) {
+  const f = fleetOf(state, id);
+  if (!f || (m !== '' && !NAV_MISSIONS[m]) || (f.m || '') === m) return state;
+  return setFleet(state, id, { m });
 }
 
 /** Zastaví flotilu v aktuální oblasti. */

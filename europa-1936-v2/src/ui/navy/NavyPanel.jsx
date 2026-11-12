@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { navyOf, SHIPS, SHIP_IDS, getWorld, industryOf } from '../../engine/index.js';
-import { playerIdx, newFleet, selectFleet, stopSelectedFleet, disbandSelectedFleet, renameSelectedFleet, selectLabel } from '../actions.js';
+import { navyOf, SHIPS, SHIP_IDS, getWorld, industryOf, NAV_MISSIONS, NAV_MISSION_IDS } from '../../engine/index.js';
+import { playerIdx, newFleet, selectFleet, fleetMission, stopSelectedFleet, disbandSelectedFleet, renameSelectedFleet, selectLabel } from '../actions.js';
 import { fmtInt, fmtDays } from '../format.js';
 
 const shipsText = (ships) => SHIP_IDS.filter((k) => ships[k]).map((k) => `${ships[k]}× ${SHIPS[k].ab}`).join(' ');
@@ -21,6 +21,11 @@ function Fleet({ f, sel, home }) {
       </header>
       <p className="fl-ships">{shipsText(f.ships)}</p>
       <p className="muted">{f.moving ? `Plují do: ${f.dest}` : `Stojí: ${f.at}`}{f.speed ? ` · ${f.speed} km/h` : ''}{f.blocked ? ' · protivník ovládá oblast' : ''}</p>
+      <div className="fl-missions" role="group" aria-label="Mise flotily">
+        <span className="muted">Mise</span>
+        <button className={`sbtn ${!f.m ? 'primary' : ''}`} aria-pressed={!f.m} onClick={() => fleetMission(f.id, '')} title="Flotila jen drží oblast.">Žádná</button>
+        {NAV_MISSION_IDS.map((m) => <button key={m} className={`sbtn ${f.m === m ? 'primary' : ''}`} aria-pressed={f.m === m} onClick={() => fleetMission(f.id, m)} title={NAV_MISSIONS[m].info}>{NAV_MISSIONS[m].n}</button>)}
+      </div>
       <div className="ind-btns">
         <button className="sbtn" onClick={() => { selectFleet(f.id); selectLabel(f.p, true); }} title="Ukázat na mapě"><Icon name="target" size={14} />Ukázat</button>
         {sel ? <button className="sbtn" disabled={!f.moving} onClick={stopSelectedFleet}>Zastavit</button> : null}

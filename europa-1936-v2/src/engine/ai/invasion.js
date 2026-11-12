@@ -11,7 +11,7 @@ import { landZones } from '../army/zones.js';
 import { Heap } from '../army/heap.js';
 import { orderSail, sailBlock } from '../nav/commands.js';
 import { transportsOf } from '../nav/convoy.js';
-import { orderFleet } from '../nav/commands.js';
+import { orderFleet, setFleetMission } from '../nav/commands.js';
 import { seaGraph, seaBlocked, coastSeasOf, powerOf } from '../nav/core.js';
 import { sameFaction } from '../dip/core.js';
 import { divisionCount } from '../army/selectors.js';
@@ -193,7 +193,7 @@ export function advanceInvasions(state, o) {
   const site = sites.find((x) => x.p === op.p) || sites[0];
   let s = state;
   if (site && site.p !== op.p) { s = setInv(s, invOf(s).map((x) => (x === op ? { ...op, p: site.p } : x))); }
-  if (site && fleet.p !== site.sea && !fleet.path.length) s = orderFleet(s, op.fleet, site.sea);
+  if (site && fleet.p !== site.sea && !fleet.path.length) s = setFleetMission(orderFleet(s, op.fleet, site.sea), op.fleet, 'patrol');   // M81: krycí flotila hlídkuje
   if (!site || !gathered || fleet.p !== site.sea || foeAtSea(state, o, site.sea) || sailBlock(s, take, site.p)) return s;
   const sailed = orderSail(s, take, site.p);
   if (sailed === s) return s;

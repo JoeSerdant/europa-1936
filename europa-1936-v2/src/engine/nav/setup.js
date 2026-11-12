@@ -14,7 +14,7 @@ export function createNav(w, state) {
     let any = false;
     for (const s of SHIP_IDS) if (s !== 'tr' && def.ships[s]) { ships[s] = def.ships[s]; any = true; }
     const home = homeSea(state, o);
-    if (any && home) fleets.push({ o, nm: 'Hlavní flotila', p: home.sea, ships, c: {}, mx: powerOf(ships).hp, to: 0, path: [], prog: 0 });
+    if (any && home) fleets.push({ o, nm: 'Hlavní flotila', p: home.sea, ships, c: {}, mx: powerOf(ships).hp, to: 0, path: [], prog: 0, m: '' });
     else for (const s in ships) pool[o][s] += ships[s];
   }
   return { ver: 0, fn: fleets.length - 1, fleets, pool, sail: [], cv: new Array(n).fill(0) };

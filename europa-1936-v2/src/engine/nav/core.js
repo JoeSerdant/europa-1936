@@ -37,6 +37,23 @@ export function powerOf(ships) {
   return { hp, atk, n };
 }
 
+/** Síla palubních letounů lodí (M81). */
+export function airPower(ships) {
+  let a = 0;
+  for (const id of SHIP_IDS) if (ships[id] && SHIPS[id].air) a += ships[id] * SHIPS[id].air;
+  return a;
+}
+
+/** Je flotila jen z ponorek? (v mlze války ji vidí jen ten, kdo má v oblasti torpédoborce nebo letadlovou loď) */
+export function subOnly(ships) {
+  let n = 0;
+  for (const id of SHIP_IDS) { if (!ships[id]) continue; if (!SHIPS[id].sub) return false; n += ships[id]; }
+  return n > 0;
+}
+
+/** Protiponorková síla lodí: torpédoborce a dvojnásobně letadlové lodě. */
+export const aswOf = (ships) => (ships.dd || 0) + 2 * (ships.cv || 0);
+
 /** Rychlost flotily (km/h): nejpomalejší loď. */
 export function fleetSpeed(ships) {
   let v = Infinity;

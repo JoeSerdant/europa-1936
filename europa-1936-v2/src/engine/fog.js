@@ -6,7 +6,7 @@ import { getWorld } from './world.js';
 import { geo, adjacency } from './army/geo.js';
 import { friendsOf } from './dip/accessCore.js';
 import { sameFaction } from './dip/core.js';
-import { seaGraph } from './nav/core.js';
+import { seaGraph, subOnly, aswOf } from './nav/core.js';
 
 export const FOG = {
   RADAR_KM: 120,      // dosah radaru na úroveň (od hlavní provincie státu)
@@ -81,9 +81,12 @@ export function seesDivision(state, owner, p) {
   return owner === me || sameFaction(state, me, owner) || !!visibleLand(state, me)[p];
 }
 
-/** Vidí hráč flotilu země `owner` v mořské oblasti `label`? */
-export function seesFleet(state, owner, label) {
+/** Vidí hráč flotilu země `owner` v mořské oblasti `label`? Flotilu jen z ponorek (`ships`) odhalí až vlastní nebo spojenecké torpédoborce či letadlová loď v téže oblasti (M81). */
+export function seesFleet(state, owner, label, ships = null) {
   if (!fogOn(state)) return true;
   const me = getWorld().ownerIdx[state.player];
-  return owner === me || sameFaction(state, me, owner) || visibleSeas(state, me).has(label);
+  if (owner === me || sameFaction(state, me, owner)) return true;
+  if (!visibleSeas(state, me).has(label)) return false;
+  if (!ships || !subOnly(ships)) return true;
+  return state.nav.fleets.some((f) => f && f.p === label && (f.o === me || sameFaction(state, me, f.o)) && aswOf(f.ships) > 0);
 }

@@ -9,7 +9,7 @@ import { NAV } from './constants.js';
 import { tradeRoute, routeRisk, needOf } from './convoy.js';
 import { docMods } from '../doc/core.js';
 import { fuelNavMult } from '../fuel/index.js';
-import { seaGraph, seaKm, powerOf, fleetSpeed, seaRoute, homeSeas, seaBlocked } from './core.js';
+import { seaGraph, seaKm, powerOf, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf } from './core.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
 
@@ -86,11 +86,11 @@ function retreatTo(state, f) {
 const lossFrac = (fireA, hpB) => (hpB > 0 ? Math.min(NAV.DMG_CAP, (NAV.DMG * fireA) / hpB) : 0);
 
 /** Použije ztrátu `frac` na lodě flotily (přenos zbytků); vrací novou flotilu (nebo null, je-li prázdná). */
-function applyLoss(f, frac) {
+function applyLoss(f, frac, subFrac = frac) {
   const ships = { ...f.ships }, c = { ...f.c };
   for (const k of SHIP_IDS) {
     if (!ships[k]) continue;
-    c[k] = (c[k] || 0) + ships[k] * frac;
+    c[k] = (c[k] || 0) + ships[k] * (SHIPS[k].sub ? subFrac : frac);   // M81: ponorky zasáhnou jen torpédoborce a letadlové lodě
     const lost = Math.min(ships[k], Math.floor(c[k]));
     ships[k] -= lost; c[k] -= lost;
     if (!ships[k]) { delete ships[k]; delete c[k]; }
@@ -114,13 +114,23 @@ function combat(state) {
     const sideB = owners.filter((x) => !sideA.includes(x) && atWar(state.mil, A, x) || (!sideA.includes(x) && sideA.some((a) => atWar(state.mil, a, x))));
     if (!sideB.length) continue;
     const idsA = ids.filter((i) => sideA.includes(f0[i].o)), idsB = ids.filter((i) => sideB.includes(f0[i].o));
-    const fire = (i) => 1 + docMods(state, f0[i].o).fire;
-    const pa = idsA.reduce((a, i) => { const p = powerOf(f0[i].ships); return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i) }; }, { hp: 0, atk: 0 });
-    const pb = idsB.reduce((a, i) => { const p = powerOf(f0[i].ships); return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i) }; }, { hp: 0, atk: 0 });
-    if (pa.atk <= 0 && pb.atk <= 0) continue;
-    const fa = lossFrac(pb.atk, pa.hp), fb = lossFrac(pa.atk, pb.hp);
+    // M81: mise (hlídka střílí lépe, nájezdníci uhýbají), palubní letouny (první úder) a ponorky (zasáhnou je jen torpédoborce a letadlové lodě)
+    const mis = (i) => (f0[i].m === 'patrol' ? 1 + NAV.MISSION_PATROL : f0[i].m === 'raid' ? NAV.MISSION_EVADE : 1);
+    const fire = (i) => (1 + docMods(state, f0[i].o).fire) * mis(i);
+    const sum = (list) => list.reduce((a, i) => {
+      const sh = f0[i].ships, p = powerOf(sh);
+      return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i), air: a.air + airPower(sh) * fire(i), asw: a.asw + aswOf(sh), ss: a.ss + (sh.ss || 0) };
+    }, { hp: 0, atk: 0, air: 0, asw: 0, ss: 0 });
+    const pa = sum(idsA), pb = sum(idsB);
+    if (pa.atk + pa.air <= 0 && pb.atk + pb.air <= 0) continue;
+    const strikeOnB = lossFrac(pa.air, pb.hp), strikeOnA = lossFrac(pb.air, pa.hp);   // první úder letounů oslabí palbu protivníka
+    const fa = lossFrac(pb.atk * (1 - NAV.CV_SUPPRESS * strikeOnB) + pb.air, pa.hp), fb = lossFrac(pa.atk * (1 - NAV.CV_SUPPRESS * strikeOnA) + pa.air, pb.hp);
+    const subA = fa * Math.min(1, pb.asw / Math.max(1, pa.ss)), subB = fb * Math.min(1, pa.asw / Math.max(1, pb.ss));
     if (!copy) { fleets = fleets.slice(); copy = true; }
-    for (const [list, frac] of [[idsA, fa], [idsB, fb]]) for (const i of list) { fleets[i] = fleets[i] && applyLoss(fleets[i], frac); touched.push(i); }
+    for (const [list, frac, sub] of [[idsA, fa, subA], [idsB, fb, subB]]) for (const i of list) {
+      const ev = f0[i].m === 'raid' ? NAV.MISSION_EVADE : 1;
+      fleets[i] = fleets[i] && applyLoss(fleets[i], frac * ev, sub * ev); touched.push(i);
+    }
   }
   if (!copy) return state;
   // ústup oslabených flotil a očištění
