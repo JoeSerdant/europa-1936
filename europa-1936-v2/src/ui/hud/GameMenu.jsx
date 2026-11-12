@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useUi } from '../store.js';
+import { useUi, useGame } from '../store.js';
+import { RULES, RULE_IDS, ruleOf } from '../../engine/index.js';
 import { soundOn, setSound } from '../sound.js';
 import { tutorialOn, setTutorial } from '../tutorial/prefs.js';
 import { setUi } from '../store.js';
@@ -9,6 +10,7 @@ import { goMenu, setHelp, setMenuOpen, openSaveDialog } from '../actions.js';
 /** Nabídka ve hře (Esc): pokračovat, ovládání, zpět do hlavního menu. */
 export function GameMenu() {
   const open = useUi((s) => s.menuOpen);
+  const rules = useGame((s) => (s ? s.rules : null));
   const [confirm, setConfirm] = useState(false);
   const [snd, setSnd] = useState(soundOn());
   const [tut, setTut] = useState(tutorialOn());
@@ -27,6 +29,7 @@ export function GameMenu() {
           <button className="btn" aria-pressed={tut} onClick={() => { setTutorial(!tut); setTut(!tut); }}>Průvodce: {tut ? 'zapnutý' : 'vypnutý'}</button>
           <button className="btn" aria-pressed={edge} onClick={() => { setEdgeScroll(!edge); setEdge(!edge); setUi({ edgeScroll: !edge }); }}>Posun okrajem: {edge ? 'zapnutý' : 'vypnutý'}</button>
           <button className="btn" aria-pressed={snd} onClick={() => { setSound(!snd); setSnd(!snd); }}>Zvuk: {snd ? 'zapnutý' : 'vypnutý'}</button>
+          <p className="muted menu-rules" aria-label="Pravidla hry">Pravidla: {RULE_IDS.map((id) => `${RULES[id].n.toLowerCase()} ${(RULES[id].opts.find(([v]) => v === ruleOf({ rules }, id)) || [0, '?'])[1]}`).join(' · ')}</p>
           {confirm ? (
             <div className="confirm">
               <p>Neuložená hra se ztratí. Opravdu odejít do hlavního menu?</p>

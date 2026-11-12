@@ -6,7 +6,7 @@ import { mapController as mc } from '../map/controller.js';
 import { COUNTRIES, IDEOLOGIES, TIER_NAMES, DIFF_NAMES } from '../../data/countries.js';
 
 const TIER_HEADS = { 1: 'Velmoci', 2: 'Regionální mocnosti', 3: 'Malé státy' };
-import { allCountries, countryStats, getWorld, SCENARIOS, SCENARIO_IDS } from '../../engine/index.js';
+import { allCountries, countryStats, getWorld, SCENARIOS, SCENARIO_IDS, RULES, RULE_IDS } from '../../engine/index.js';
 import { goMenu, pickCountry, startGame, setAiOptions, INSETS } from '../actions.js';
 import { fmtInt, fmtPop, fmtArea } from '../format.js';
 
@@ -24,6 +24,7 @@ export function CountrySelect() {
   const aiLevel = useUi((s) => s.aiLevel);
   const aiHist = useUi((s) => s.aiHist);
   const scenario = useUi((s) => s.scenario);
+  const rules = useUi((s) => s.rules);
   const sc = SCENARIOS[scenario] || SCENARIOS[1936];
   const dead = !!pickTag && !!sc.dead && sc.dead.includes(pickTag);
   const owner = useGame((s) => s.stateOwner);
@@ -110,6 +111,14 @@ export function CountrySelect() {
               <button key={n} className={`sbtn ${aiLevel === n ? 'primary' : ''}`} aria-pressed={aiLevel === n} onClick={() => setAiOptions({ aiLevel: n })} title={n === 2 ? 'Běžná obtížnost' : n === 1 ? 'AI zemí je o 10 % slabší v průmyslu a výzkumu' : 'AI zemí je o 10 % silnější v průmyslu a výzkumu'}>{t}</button>
             ))}
             <label className="ai-hist" title="Historické sklony AI k válkám a blokům (např. napětí kolem Československa a Polska)"><input type="checkbox" checked={!!aiHist} onChange={(e) => setAiOptions({ aiHist: e.target.checked })} /> Historické plány</label>
+          </div>
+          <div className="rule-opts" role="group" aria-label="Pravidla hry">
+            {RULE_IDS.map((id) => (
+              <div key={id} className="rule-row" title={RULES[id].info}>
+                <span className="muted">{RULES[id].n}</span>
+                {RULES[id].opts.map(([v, t]) => { const cur = id in rules ? rules[id] : RULES[id].def; return <button key={v} className={`sbtn ${cur === v ? 'primary' : ''}`} aria-pressed={cur === v} onClick={() => setAiOptions({ rules: { ...rules, [id]: v } })}>{t}</button>; })}
+              </div>
+            ))}
           </div>
           <button className="btn primary big" disabled={dead} title={dead ? 'Tato země ve zvoleném scénáři už neexistuje.' : undefined} onClick={() => startGame(pickTag)}>Začít hru</button>
         </footer>

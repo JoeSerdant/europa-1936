@@ -17,11 +17,11 @@ const capOf = (o) => W.owners[o].cap;
 describe('pravidla hry', () => {
   it('výchozí pravidla, neplatné hodnoty a neznámé klíče', () => {
     expect(RULE_IDS).toContain('fog');
-    expect(createRules(null)).toEqual({ fog: 1 });
-    expect(createRules({ fog: 0, nic: 5 })).toEqual({ fog: 0 });
-    expect(createRules({ fog: 7 })).toEqual({ fog: RULES.fog.def });
+    expect(createRules(null)).toEqual({ fog: 1, aggr: 1, bonus: 1 });
+    expect(createRules({ fog: 0, nic: 5 })).toEqual({ fog: 0, aggr: 1, bonus: 1 });
+    expect(createRules({ fog: 7 }).fog).toBe(RULES.fog.def);
     const s = game({ rules: { fog: 0 } });
-    expect(s.rules).toEqual({ fog: 0 });
+    expect(s.rules.fog).toBe(0);
     expect(ruleOf(s, 'fog')).toBe(0);
     expect(ruleOf({ }, 'fog')).toBe(1);
   });
@@ -33,7 +33,7 @@ describe('pravidla hry', () => {
     const s = game();
     expect(validateState(s)).toBeNull();
     expect(validateState({ ...s, rules: null })).toMatch(/pravidla/);
-    expect(unpackGame(JSON.parse(JSON.stringify(packGame(s)))).state.rules).toEqual({ fog: 1 });
+    expect(unpackGame(JSON.parse(JSON.stringify(packGame(s)))).state.rules.fog).toBe(1);
   });
 });
 
