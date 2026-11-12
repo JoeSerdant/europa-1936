@@ -19,7 +19,12 @@ export const AIR = {
   ACE_CHANCE: 0.06,       // denní šance na eso při plném vzdušném boji (násobí se podílem nepřátelských hlídek)
   ACE_BONUS: 0.05,        // bonus síly hlídek křídla za každý stupeň es
   ACE_MAX: 3,             // nejvyšší stupeň es
-  FORM_MAX: 400,          // nejvíc letadel v jednom křídle
+  FORM_MAX: 400,
+  DROP_KM: 600,           // výsadek (M80): největší vzdálenost z provincie s letištěm do cíle
+  DROP_HOURS: 10,         // doba letu k cíli
+  DROP_PER_LEVEL: 1,      // divizí na jeden výsadek za úroveň letiště ve státě startu
+  DROP_ORG: 0.6,          // zbytek organizace po seskoku
+  DROP_FAIL_HP: 0.85,     // zbytek síly, když se výsadek musí vrátit (cíl mezitím obsadili obránci)          // nejvíc letadel v jednom křídle
 };
 
 export const ACE_NAMES = ['', 'Dobrý pilot', 'Unikátní pilot', 'Geniální pilot'];

@@ -9,6 +9,7 @@ const ROWS = [
   ['Výběr jednotek', ['klik na žeton', 'Shift + tažení', 'dvojklik = celá armáda']],
   ['Rozkaz jednotkám (pohyb, útok)', ['pravé tlačítko myši']],
   ['Fronta rozkazů (další bod trasy)', ['Shift + pravé tlačítko']],
+  ['Letecký výsadek (jen výsadkové divize u letiště)', ['Ctrl + pravé tlačítko']],
   ['Skupiny jednotek: uložit / vyvolat (dvakrát = zaměřit)', ['Alt + 1–9', 'Shift + 1–9']],
   ['Zastavit vybrané / zaměřit výběr', ['X', 'F']],
   ['Okna jako v HOI4: Vláda / Výzkum / Diplomacie / Obchod / Stavby / Výroba / Nábor / Logistika', ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I']],
