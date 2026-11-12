@@ -1,11 +1,11 @@
 // Flotily na mapě (M27): čistá data žetonů a cest (bez plátna) a kreslení námořního žetonu. Žetony stojí ve středu mořské oblasti.
 import { FONT_TEXT } from './fonts.js';
-import { seesFleet } from '../../engine/index.js';
+import { seesFleet, SHIPS } from '../../engine/index.js';
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 export const FLEET = { W: 38, H: 20 };
 
-const hpOf = (f) => { let hp = 0; for (const k in f.ships) hp += f.ships[k] * ({ dd: 10, ca: 30, bb: 90, ss: 6, tr: 8 }[k] || 0); return hp; };
+const hpOf = (f) => { let hp = 0; for (const k in f.ships) hp += f.ships[k] * (SHIPS[k] ? SHIPS[k].hp : 0); return hp; };
 
 /** Žetony flotil: jedna skupina na dvojici (oblast, země): { key, x, y, o, n, ids, moving, hp } (hp = podíl síly vůči maximu, 0–1). */
 export function buildFleetTokens(game, world) {
@@ -13,7 +13,7 @@ export function buildFleetTokens(game, world) {
   const fleets = game.nav.fleets;
   for (let i = 1; i < fleets.length; i++) {
     const f = fleets[i];
-    if (!f || !seesFleet(game, f.o, f.p)) continue;   // M76: mlha války skryje cizí flotily mimo dohled
+    if (!f || !seesFleet(game, f.o, f.p, f.ships)) continue;   // M76: mlha války skryje cizí flotily mimo dohled (M81: ponorky jen před torpédoborci)
     const key = `${f.p}:${f.o}`;
     let g = groups.get(key);
     if (!g) {
@@ -37,7 +37,7 @@ export function buildFleetRoutes(game, world) {
   const fleets = game.nav.fleets;
   for (let i = 1; i < fleets.length; i++) {
     const f = fleets[i];
-    if (!f || !f.path.length || !seesFleet(game, f.o, f.p)) continue;
+    if (!f || !f.path.length || !seesFleet(game, f.o, f.p, f.ships)) continue;
     const nodes = [f.p, ...f.path].map((l) => world.sea[l - world.L].c);
     out.push({ o: f.o, ids: [i], nodes });
   }

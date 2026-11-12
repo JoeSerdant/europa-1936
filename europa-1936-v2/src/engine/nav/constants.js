@@ -14,5 +14,19 @@ export const NAV = {
   CONVOY_KM: 3000,      // každých tolik km trasy stojí smlouvu o konvoj navíc
   RAID_COEF: 0.01,      // denní riziko konvoje za bod palebné síly nepřátelských lodí na trase
   RAID_MAX: 0.8,        // nejvyšší riziko
-  ESCORT_K: 0.7,        // kolik z palebné síly vlastních lodí na trase ruší síly nájezdníků
+  ESCORT_K: 0.7,
+  CV_SUPPRESS: 1,       // letadlové lodě (M81): podíl síly protivníka vyřazený prvním úderem snižuje jeho palbu tolikrát
+  SUB_RAID: 1.5,        // násobek palebné síly ponorek proti konvojům
+  MISSION_PATROL: 0.15, // mise Hlídka: bonus palby flotily v boji
+  MISSION_RAID: 1.5,    // mise Nájezdy: násobek síly flotily proti konvojům
+  MISSION_EVADE: 0.6,   // mise Nájezdy: flotila v boji uhýbá – tolik ztrát utrpí i způsobí
+  MISSION_ESCORT: 1.5,  // mise Doprovod: násobek krytí konvojů        // kolik z palebné síly vlastních lodí na trase ruší síly nájezdníků
 };
+
+/** Mise flotil (M81): '' = bez mise (drží oblast). */
+export const NAV_MISSIONS = {
+  patrol: { n: 'Hlídka', info: 'Flotila vyhledává nepřítele v oblasti: lepší palba v boji.' },
+  raid: { n: 'Nájezdy', info: 'Flotila loví konvoje na trasách oblastí a boji se silnějším se vyhýbá.' },
+  escort: { n: 'Doprovod', info: 'Flotila kryje vlastní a spojenecké konvoje v oblasti.' },
+};
+export const NAV_MISSION_IDS = Object.keys(NAV_MISSIONS);

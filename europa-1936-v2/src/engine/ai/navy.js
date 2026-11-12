@@ -6,7 +6,7 @@ import { addLine, setLineFactories } from '../industry/commands.js';
 import { industryOf } from '../industry/selectors.js';
 import { slotsOf, slotsUsed } from '../industry/core.js';
 import { I } from '../industry/constants.js';
-import { formFleet, orderFleet } from '../nav/commands.js';
+import { formFleet, orderFleet, setFleetMission } from '../nav/commands.js';
 import { convoysOf, tradeRoute, needOf, routeRisk } from '../nav/convoy.js';
 import { atWar } from '../army/war.js';
 import { NAV } from '../nav/constants.js';
@@ -80,9 +80,9 @@ function aiRaids(state, o) {
     const need = needOf(r, d.amt);
     if (atWar(state.mil, o, d.to) || atWar(state.mil, o, d.from)) {
       const mid = r.seas[Math.floor(r.seas.length / 2)];
-      targets.push({ sea: mid, w: need });
+      targets.push({ sea: mid, w: need, m: 'raid' });
     } else if ((d.to === o || d.from === o) && routeRisk(state, r, d.from, d.to) > 0) {
-      for (const sea of r.seas) if (state.nav.fleets.some((f) => f && f.p === sea && atWar(state.mil, o, f.o))) targets.push({ sea, w: need * 2 });
+      for (const sea of r.seas) if (state.nav.fleets.some((f) => f && f.p === sea && atWar(state.mil, o, f.o))) targets.push({ sea, w: need * 2, m: 'escort' });
     }
   }
   targets.sort((a, b) => b.w - a.w || a.sea - b.sea);
@@ -94,6 +94,7 @@ function aiRaids(state, o) {
     if (!t) break;
     used.add(t.sea);
     if (f.p !== t.sea) state = orderFleet(state, i, t.sea);
+    state = setFleetMission(state, i, t.m);   // M81: nájezdy na cizí konvoje, doprovod vlastních
   }
   return state;
 }

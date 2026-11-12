@@ -23,7 +23,7 @@ describe('žetony a cesty na mapě', () => {
     const home = homeSea(s, ENG).sea;
     expect(eng.p).toBe(home);
     expect([eng.x, eng.y]).toEqual(W.sea[home - W.L].c);
-    expect(eng.n).toBe(6 + 14 + 40 + 12);
+    expect(eng.n).toBe(6 + 14 + 40 + 12 + 2);   // včetně dvou letadlových lodí (M81)
     expect(eng.hp).toBe(1);
     expect(eng.moving).toBe(false);
     expect(eng.ids).toHaveLength(1);

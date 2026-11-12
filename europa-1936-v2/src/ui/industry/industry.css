@@ -499,3 +499,6 @@ button.st-row:hover { background: var(--ink-3); }
 .dip-offers { margin-bottom: 14px; }
 .dip-offers ul { display: flex; flex-direction: column; gap: 4px; }
 .dip-offers li { display: grid; grid-template-columns: 22px 1fr auto auto; gap: 8px; align-items: center; padding: 8px 10px; background: rgba(22, 34, 45, 0.75); box-shadow: inset 0 0 0 1px var(--brass); font-size: 13.5px; }
+.fl-missions { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 4px 0 6px; }
+.fl-missions .muted { font-size: 12.5px; margin-right: 2px; }
+.fl-missions .sbtn { padding: 2px 8px; font-size: 12.5px; }

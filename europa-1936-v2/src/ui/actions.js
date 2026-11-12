@@ -7,7 +7,7 @@ import {
   setPlan, clearPlan, setPlanMode, suggestFront,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
   justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, warBlock, peaceBlock, inviteBlock, justReady,
-  formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, orderSail, sailBlock, navyOf, SHIPS,
+  formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, setFleetMission, orderSail, sailBlock, navyOf, SHIPS,
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
@@ -784,6 +784,8 @@ export function orderFleetTo(label) {
   if (!run(orderFleet, id, label)) { toast('Flotila se tam nedostane (už tam je, nebo cesta neexistuje).'); return false; }
   return true;
 }
+/** Zadá vlastní flotile misi (M81). */
+export const fleetMission = (id, m) => (ownFleet(gameStore.getState(), id) ? run(setFleetMission, id, m) : false);
 export const stopSelectedFleet = () => { const id = uiStore.getState().fleetSel; return ownFleet(gameStore.getState(), id) ? run(stopFleet, id) : false; };
 export function disbandSelectedFleet() {
   const id = uiStore.getState().fleetSel;
