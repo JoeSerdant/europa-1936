@@ -511,3 +511,9 @@ button.st-row:hover { background: var(--ink-3); }
 .cont-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 18px; border-bottom: 1px solid var(--rule); }
 .cont-row .muted { margin-right: 6px; font-size: 13px; }
 .cont-row .sbtn { padding: 3px 10px; font-size: 12.5px; }
+.ach-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 60vh; overflow-y: auto; margin-top: 10px; }
+.ach-list li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: center; padding: 8px 12px; background: rgba(22, 34, 45, 0.75); box-shadow: inset 0 0 0 1px var(--rule); opacity: 0.6; }
+.ach-list li.done { opacity: 1; box-shadow: inset 0 0 0 1px var(--brass); }
+.ach-list li.done b { color: var(--brass-hi); }
+.ach-list li div { display: flex; flex-direction: column; gap: 2px; }
+.ach-list li span { font-size: 12.5px; }

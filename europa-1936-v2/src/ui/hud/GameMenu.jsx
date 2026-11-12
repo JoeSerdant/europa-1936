@@ -5,7 +5,7 @@ import { soundOn, setSound } from '../sound.js';
 import { tutorialOn, setTutorial } from '../tutorial/prefs.js';
 import { setUi } from '../store.js';
 import { edgeScrollOn, setEdgeScroll } from '../edge.js';
-import { goMenu, setHelp, setMenuOpen, openSaveDialog } from '../actions.js';
+import { goMenu, setHelp, setMenuOpen, openSaveDialog, setAchOpen } from '../actions.js';
 
 /** Nabídka ve hře (Esc): pokračovat, ovládání, zpět do hlavního menu. */
 export function GameMenu() {
@@ -26,6 +26,7 @@ export function GameMenu() {
           <button className="btn" onClick={() => { setMenuOpen(false); openSaveDialog('save'); }}>Uložit hru</button>
           <button className="btn" onClick={() => { setMenuOpen(false); openSaveDialog('load'); }}>Načíst hru</button>
           <button className="btn" onClick={() => { setMenuOpen(false); setHelp(true); }}>Ovládání</button>
+          <button className="btn" onClick={() => setAchOpen(true)}>Úspěchy</button>
           <button className="btn" aria-pressed={tut} onClick={() => { setTutorial(!tut); setTut(!tut); }}>Průvodce: {tut ? 'zapnutý' : 'vypnutý'}</button>
           <button className="btn" aria-pressed={edge} onClick={() => { setEdgeScroll(!edge); setEdge(!edge); setUi({ edgeScroll: !edge }); }}>Posun okrajem: {edge ? 'zapnutý' : 'vypnutý'}</button>
           <button className="btn" aria-pressed={snd} onClick={() => { setSound(!snd); setSnd(!snd); }}>Zvuk: {snd ? 'zapnutý' : 'vypnutý'}</button>

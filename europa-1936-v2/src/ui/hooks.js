@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, pushPopup, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, pushPopup, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
@@ -36,6 +36,7 @@ export function useGameLoop(active) {
           for (const e of fresh) { const card = popupFor(e, me); if (card) pushPopup(card); else rest.push(e); }
           if (rest.length) toast(logLine(rest[rest.length - 1], me).text);
         }
+        if (cur.player && Math.floor(cur.tick / 24) !== Math.floor(prev.tick / 24)) checkAchievements(cur);   // M86: úspěchy jednou za herní den
         if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) writeSave('auto', cur, new Date().toLocaleString('cs-CZ'));
         void before; void after;
       }
@@ -66,6 +67,7 @@ export function useHotkeys() {
       if (e.key === 'F1' || e.key === '?') { e.preventDefault(); setHelp(!ui.helpOpen); return; }
       if (ui.saveDialog) { if (e.key === 'Escape') closeSaveDialog(); return; }
       if (ui.overview && e.key === 'Escape') { closeOverview(); return; }
+      if (ui.achOpen) { if (e.key === 'Escape') setAchOpen(false); return; }   // M86: okno Úspěchy
       if (ui.battle && e.key === 'Escape') { closeBattle(); return; }
       if (e.key === 'F2' || e.key === '`' || e.key === '~' || e.code === 'Backquote') { e.preventDefault(); if (uiStore.getState().screen === 'game') toggleConsole(); return; }
       if (ui.console && e.key === 'Escape') { closeConsole(); return; }

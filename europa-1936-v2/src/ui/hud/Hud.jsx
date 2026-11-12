@@ -14,6 +14,7 @@ import { Tutorial } from '../tutorial/Tutorial.jsx';
 import { EndDialog } from './EndDialog.jsx';
 import { ConferenceDialog } from '../nat/ConferenceDialog.jsx';
 import { OverviewDialog } from '../log/OverviewDialog.jsx';
+import { AchievementsDialog } from '../achievements/AchievementsDialog.jsx';
 import { IndustryPanel } from '../industry/IndustryPanel.jsx';
 import { RecruitPanel } from '../army/RecruitPanel.jsx';
 import { ResearchPanel } from '../research/ResearchPanel.jsx';
@@ -78,6 +79,7 @@ export function Hud() {
       <ConferenceDialog />
       <EndDialog />
       <OverviewDialog />
+      <AchievementsDialog />
     </>
   );
 }
