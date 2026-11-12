@@ -4,7 +4,7 @@ import { atWar } from '../army/war.js';
 import { withCtx, settleAfterPeace } from '../army/commands.js';
 import { DIP } from './constants.js';
 import { logAdd } from '../log.js';
-import { conference } from './subjects.js';
+import { conference, stateValue } from './subjects.js';
 import { addSpirit } from '../nat/spirits.js';
 import { exileCandidate, goIntoExile, dropExiles } from './exile.js';
 
@@ -14,7 +14,7 @@ export function capitulate(state, loser) {
   const stateOwner = state.stateOwner.slice();
   const ctrl = state.ctrl.slice();
   let annexed = 0;
-  const by = {};
+  const by = {}, val = {};
   for (let s = 1; s < w.states.length; s++) {
     if (stateOwner[s] !== loser) continue;
     const c = ctrl[w.states[s].cap];
@@ -23,6 +23,7 @@ export function capitulate(state, loser) {
     for (const p of w.states[s].v) ctrl[p] = c;
     annexed++;
     by[c] = (by[c] || 0) + 1;
+    val[c] = (val[c] || 0) + stateValue(state, s);   // M84: hodnota dobytých států = body vítěze v mírové konferenci
   }
   const host = exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje
   const allies = host ? state.dip.facs[state.dip.fac[loser]].mem.slice() : [];
@@ -52,5 +53,5 @@ export function capitulate(state, loser) {
   let done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
   if (host) done = goIntoExile(done, loser, host, allies, ctrl);
   done = dropExiles(done, loser);   // exily u poražené země zanikají
-  return conference(logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser }), loser, by);
+  return conference(logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser }), loser, by, val);
 }

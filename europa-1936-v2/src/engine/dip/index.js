@@ -19,5 +19,6 @@ export { WARGOALS, WARGOAL_IDS } from '../../data/dip/wargoals.js';
 export { pactOf, pactBlock, pactAccepts, proposePact, answerPact, breakBlock, breakPact, voidPacts, pactDay, improveBlock, improveRelations, pactOffers } from './pact.js';
 export { HIST_PACTS } from '../../data/dip/pacts.js';
 export { aidBlock, deliverAid, overseasDay } from './overseas.js';
+export { stateValue, confClaims, confClaim, confClaimsDone } from './subjects.js';
 export { exileHost, exileCandidate, goIntoExile, restorable, restoreCountry, exileDay, dropExiles } from './exile.js';
 export { OVERSEAS, OVERSEAS_AID } from '../../data/dip/overseas.js';
