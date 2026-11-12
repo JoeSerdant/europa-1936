@@ -6,7 +6,7 @@ import { RES } from './constants.js';
 import { polModsOf } from '../politics/core.js';
 import { aiMult } from '../ai/core.js';
 
-export const NO_MODS = Object.freeze({ effCap: 0, build: 0, extract: 0, research: 0 });
+export const NO_MODS = Object.freeze({ effCap: 0, build: 0, extract: 0, research: 0, fuel: 0 });
 const modCache = new WeakMap();   // done → bonusy
 
 /** Součet bonusů z hotových technologií (mezipaměť podle objektu `done`). */

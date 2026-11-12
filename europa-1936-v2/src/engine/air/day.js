@@ -9,6 +9,7 @@ import { docMods } from '../doc/core.js';
 import { logAdd } from '../log.js';
 import { rand01 } from '../nat/core.js';
 import { fuelAirMult } from '../fuel/index.js';
+import { nukeProduction } from './nuke.js';
 
 const key = (o, s) => `${o}:${s}`;
 
@@ -63,8 +64,9 @@ export function airDay(state) {
         }
       }
     } else {
-      const cov = cover(wg.o, wg.to, e);
-      frac += AIR.LOSS_INT * (1 - cov);
+      const rocket = !!PLANES[wg.t].rocket;   // M82: raketu nikdo nezastaví, ale letí jen jednou
+      const cov = rocket ? 1 : cover(wg.o, wg.to, e);
+      frac = rocket ? AIR.ROCKET_USE : frac + AIR.LOSS_INT * (1 - cov);
       if (wg.m === 'cas') {
         sup[key(wg.o, wg.to)] = (sup[key(wg.o, wg.to)] || 0) + power(wg, 'cas') * cov;
       } else if (wg.m === 'bomb') {
@@ -103,8 +105,11 @@ export function airDay(state) {
   // 5) výsledek: zrušená křídla s nulou letadel nezůstávají
   const changedSup = JSON.stringify(supOut) !== JSON.stringify(air.sup);
   const out = { ...air, wings, pool, sup: changedSup ? supOut : air.sup, ver: air.ver + 1 };
+  const made = nukeProduction(state);   // M82: výroba atomových bomb
+  if (made) out.nuke = made.nuke;
   const player = state.player ? w.ownerIdx[state.player] : 0;
   let res = { ...next, pol, mil, air: out };
   for (const a of aces) if (a.o === player) res = logAdd(res, a);
+  if (made) for (const o of made.ready) if (o === player) res = logAdd(res, { k: 'nukeready', o });
   return res;
 }

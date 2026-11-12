@@ -42,6 +42,10 @@ export function popupFor(e, me) {
     case 'civil':
       if (e.o === me) return { kind: 'civil', icon: 'swords', tone: 'bad', title: 'Občanská válka', text: `Část armády a území se postavily proti vládě. Povstalci vyhlásili stát ${nm(e.x)}.`, lines: ['Mír nelze uzavřít – rozhodne se na bojišti.'], sticky: true };
       return null;
+    case 'nuke':
+      return { kind: 'nuke', icon: 'air', tone: 'bad', title: 'Jaderný úder', text: e.b === me ? `${nm(e.o)} svrhla atomovou bombu na váš stát ${getWorld().states[e.x]?.n || ''}.` : `${nm(e.o)} svrhla atomovou bombu na ${getWorld().states[e.x]?.n || 'stát'} (${nm(e.b)}).`, lines: e.b === me ? ['Továrny státu jsou zčásti zničené, divize v něm oslabené a země otřesená.'] : [], sticky: e.b === me || e.o === me };
+    case 'nukeready':
+      return e.o === me ? { kind: 'nukeready', icon: 'air', tone: 'good', title: 'Atomová bomba', text: 'První bomba je hotová. Svrhnout ji může křídlo strategických bombardérů (okno Letectvo).', lines: [], sticky: true } : null;
     case 'aid':
       if (e.y === 1) return e.o === me ? { kind: 'aid', icon: 'trade', tone: 'good', title: 'Zámořská pomoc', text: `${OVERSEAS.n} vám začínají každý měsíc posílat výzbroj, letouny a palivo.`, lines: ['Zásilky chodí, dokud válčíte a váš hlavní přístav není zablokovaný.'], sticky: true } : { kind: 'aid', icon: 'trade', tone: 'info', title: 'Zámořská pomoc', text: `${OVERSEAS.n} začínají zásobovat zemi ${nm(e.o)}.`, lines: [] };
       return e.o === me && e.y === 0 ? { kind: 'aid', icon: 'trade', tone: 'bad', title: 'Zásilka nedorazila', text: 'Nepřátelská flotila blokuje váš hlavní přístav.', lines: [] } : null;
