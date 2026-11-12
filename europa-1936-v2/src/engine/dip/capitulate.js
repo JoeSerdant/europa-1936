@@ -6,6 +6,7 @@ import { DIP } from './constants.js';
 import { logAdd } from '../log.js';
 import { conference } from './subjects.js';
 import { addSpirit } from '../nat/spirits.js';
+import { exileCandidate, goIntoExile, dropExiles } from './exile.js';
 
 export function capitulate(state, loser) {
   const w = getWorld();
@@ -23,6 +24,8 @@ export function capitulate(state, loser) {
     annexed++;
     by[c] = (by[c] || 0) + 1;
   }
+  const host = exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje
+  const allies = host ? state.dip.facs[state.dip.fac[loser]].mem.slice() : [];
   const wars = state.mil.wars.filter(([a, b]) => a !== loser && b !== loser);
   const cap = state.dip.cap.slice();
   cap[loser] = 1;
@@ -46,6 +49,8 @@ export function capitulate(state, loser) {
   void annexed;
   let top = 0;   // M74: země, která dobyla nejvíc provincií poraženého, dostane dočasného ducha „Vítězná nálada“
   for (const c in by) if (!top || by[c] > by[top]) top = +c;
-  const done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
+  let done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
+  if (host) done = goIntoExile(done, loser, host, allies, ctrl);
+  done = dropExiles(done, loser);   // exily u poražené země zanikají
   return conference(logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser }), loser, by);
 }

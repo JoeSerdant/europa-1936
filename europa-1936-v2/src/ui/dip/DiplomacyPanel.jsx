@@ -35,7 +35,7 @@ function Row({ c, me }) {
   if (c.accDeal) flags.push(['ally', 'přístup']);
   if (c.mine) flags.push(['ally', 'vaše loutka']);
   else if (c.overlord) flags.push(['cap', 'loutka']);
-  if (c.capitulated) flags.push(['cap', 'kapitulovala']);
+  if (c.capitulated) flags.push(['cap', c.exile ? 'v exilu' : 'kapitulovala']);
   if (c.just && !c.just.done) flags.push(['just', `ospravedlnění ${c.just.left} d`]);
   if (c.just && c.just.done) flags.push(['just', 'ospravedlněno']);
   return (

@@ -48,6 +48,8 @@ export function logLine(e, me = 0) {
     case 'inv': return { icon: 'army', tone: e.b === me ? 'bad' : 'info', world: true, mine: e.o === me || e.b === me, text: e.a ? `${nm(e.o)} vysílá ${e.y} divizí k vylodění u ${w.provName(e.x)} (${nm(e.b)}).` : `${nm(e.o)} posílá ${e.y} divizí jako posily do předmostí u ${w.provName(e.x)}.` };
     case 'lands': return { icon: 'army', tone: 'bad', world: false, mine: true, text: e.y ? `Nepřátelský výsadek (${nm(e.o)}): ${w.provName(e.x)}.` : `Nepřítel (${nm(e.o)}) se vylodil: ${w.provName(e.x)}.` };
     case 'release': return { icon: 'flag', tone: 'info', world: true, mine: e.o === me || e.y === me, text: `${nm(e.o)} z území poražené země ${nm(e.y)} vytvořila loutkový stát ${nm(e.x)}.` };
+    case 'exile': return { icon: 'flag', tone: 'info', world: true, mine: e.o === me || e.x === me, text: `Vláda země ${nm(e.o)} odešla do exilu (${nm(e.x)})${e.y ? ` a odvedla s sebou ${e.y} divizí` : ''}.` };
+    case 'restore': return { icon: 'flag', tone: 'good', world: true, mine: e.o === me || e.x === me, text: `${nm(e.o)} je osvobozena: exilová vláda se vrací a země bojuje po boku svých spojenců.` };
     case 'nuke': return { icon: 'air', tone: 'bad', world: true, mine: e.o === me || e.b === me, text: `${nm(e.o)} svrhla atomovou bombu na ${w.states[e.x]?.n || 'stát'} (${nm(e.b)}).` };
     case 'nukeready': return { icon: 'air', tone: 'good', world: false, mine: true, text: 'Atomová bomba je připravena k použití.' };
     case 'drop': return { icon: 'air', tone: e.a ? 'good' : 'bad', world: false, mine: true, text: e.a ? `Výsadek dopadl: ${w.provName(e.x)}.` : `Výsadek se vrátil na letiště (${w.provName(e.x)}): cíl obsadili obránci.` };
@@ -69,7 +71,8 @@ export function logLine(e, me = 0) {
 /** Je záznam důležitý natolik, aby se ohlásil oznámením? (válka a kapitulace se zemí hráče nebo cizí kapitulace, dokončený výzkum a cíl hráče) */
 export function logImportant(e, me) {
   if (e.k === 'war') return e.a === me || e.b === me;
-  if (e.k === 'gov' || e.k === 'nuke' || e.k === 'nukeready') return true;
+  if (e.k === 'gov' || e.k === 'nuke' || e.k === 'nukeready' || e.k === 'restore') return true;
+  if (e.k === 'exile') return e.x === me;
   if (e.k === 'aid') return e.y === 1 || (e.o === me && e.y === 0);
   if (e.k === 'napq' || e.k === 'napend') return e.b === me;
   if (e.k === 'nap') return !!e.y && (e.a === me || e.b === me);

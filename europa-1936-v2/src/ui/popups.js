@@ -42,6 +42,10 @@ export function popupFor(e, me) {
     case 'civil':
       if (e.o === me) return { kind: 'civil', icon: 'swords', tone: 'bad', title: 'Občanská válka', text: `Část armády a území se postavily proti vládě. Povstalci vyhlásili stát ${nm(e.x)}.`, lines: ['Mír nelze uzavřít – rozhodne se na bojišti.'], sticky: true };
       return null;
+    case 'exile':
+      return e.x === me ? { kind: 'exile', icon: 'flag', tone: 'info', title: 'Exilová vláda', text: `Vláda země ${nm(e.o)} našla útočiště u vás.`, lines: [e.y ? `Pod vaše velení přešlo ${e.y} divizí a její loďstvo.` : 'Její loďstvo přešlo pod vaše velení.', 'Po osvobození hlavního města se země obnoví.'], sticky: true } : null;
+    case 'restore':
+      return { kind: 'restore', icon: 'flag', tone: 'good', title: 'Osvobození', text: `${nm(e.o)} je osvobozena a exilová vláda se vrací.`, lines: [] };
     case 'nuke':
       return { kind: 'nuke', icon: 'air', tone: 'bad', title: 'Jaderný úder', text: e.b === me ? `${nm(e.o)} svrhla atomovou bombu na váš stát ${getWorld().states[e.x]?.n || ''}.` : `${nm(e.o)} svrhla atomovou bombu na ${getWorld().states[e.x]?.n || 'stát'} (${nm(e.b)}).`, lines: e.b === me ? ['Továrny státu jsou zčásti zničené, divize v něm oslabené a země otřesená.'] : [], sticky: e.b === me || e.o === me };
     case 'nukeready':
