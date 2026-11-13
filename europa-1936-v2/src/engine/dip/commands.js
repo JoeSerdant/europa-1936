@@ -41,6 +41,20 @@ export function justifyWar(state, a, b, goal = 'conquest') {
   return { ...patch(state, { just: [...state.dip.just, { a, b, g: goal, ready: state.tick + G.days * 24 }] }), pol: { ...state.pol, own: pol } };
 }
 
+/** Napadená země `b` bez bloku vstoupí do bloku prvního zaručitele z `guard`, který svůj blok vede a má v něm místo (M88). */
+function joinGuarantor(state, b, guard) {
+  if (state.dip.fac[b]) return state;
+  for (const g of guard) {
+    const id = state.dip.fac[g], f = id ? state.dip.facs[id] : null;
+    if (!f || f.ldr !== g || f.mem.length >= DIP.FAC_MAX_MEM) continue;
+    const fac = state.dip.fac.slice(), facs = state.dip.facs.slice();
+    fac[b] = id;
+    facs[id] = { ...f, mem: [...f.mem, b] };
+    return logAdd(patch(state, { fac, facs }), { k: 'join', o: b, x: f.nm });
+  }
+  return state;
+}
+
 /** Má `a` hotové ospravedlnění proti `b`? */
 export const justReady = (state, a, b) => state.dip.just.some((j) => j.a === a && j.b === b && j.ready <= state.tick && state.tick - j.ready <= DIP.JUST_KEEP * 24);
 
@@ -55,6 +69,7 @@ export function startWar(state, a, b, free = false) {
   const guard = free ? [] : joiningGuarantors(state, b, attackers);   // M48: zaručitelé obránce se přidají i s bloky
   for (const g of guard) for (const x of campOf(state, g)) if (!hasCapitulated(state, x) && !attackers.includes(x) && !defenders.includes(x)) defenders = [...defenders, x];
   let s = free ? state : breakGuarantees(state, b, attackers);
+  s = joinGuarantor(s, b, guard);   // M88: napadená země bez bloku vstoupí do bloku svého zaručitele (sdílí s ním území a zásobování)
   const since = { ...state.dip.since };
   for (const x of attackers) for (const y of defenders) {
     if (x === y || atWar(s.mil, x, y)) continue;
@@ -68,10 +83,41 @@ export function startWar(state, a, b, free = false) {
   return voidPacts(logAdd(patch(s, { rel, since, goal: { ...s.dip.goal, [`${a}>${b}`]: jg }, just: s.dip.just.filter((j) => !(j.a === a && j.b === b)) }), { k: 'war', a, b }));   // M75: válka bloků ruší pakty mezi jejich členy
 }
 
+/** Proč `a` nemůže vyhlásit válečný cíl proti zemi `b`, se kterou už válčí (český text), nebo null. (M88) */
+export function goalBlock(state, a, b, goal = 'conquest') {
+  const G = WARGOALS[goal];
+  if (!ok(a) || !ok(b) || a === b || !G) return 'Neplatná země.';
+  if (!atWar(state.mil, a, b)) return 'Válečný cíl lze vyhlásit jen proti zemi, se kterou válčíte.';
+  if (state.dip.goal[`${a}>${b}`]) return 'Válečný cíl proti této zemi už máte.';
+  if (state.dip.goal[`${b}>${a}`] === 'civil') return 'V občanské válce se cíle nevyhlašují.';
+  if (state.dip.sub && state.dip.sub[a]) return 'Loutkový stát nevede vlastní války.';
+  if (hasCapitulated(state, a) || hasCapitulated(state, b)) return 'Kapitulovaná země.';
+  if (state.pol.own[a].pp < G.pp) return `Chybí politická moc (${G.pp}).`;
+  return null;
+}
+
+/**
+ * Vyhlásí válečný cíl proti zemi, se kterou `a` už válčí (M88): do války ji třeba zatáhla záruka nebo spojenec a teprve teď ji chce porazit.
+ * Stojí politickou moc jako ospravedlnění, platí hned. Země s cílem je útočníkem (AI podle toho útočí) a cíl se použije na mírové konferenci.
+ */
+export function claimGoal(state, a, b, goal = 'conquest') {
+  if (goalBlock(state, a, b, goal)) return state;
+  const pol = state.pol.own.slice();
+  pol[a] = { ...pol[a], pp: pol[a].pp - WARGOALS[goal].pp };
+  return logAdd({ ...patch(state, { goal: { ...state.dip.goal, [`${a}>${b}`]: goal } }), pol: { ...state.pol, own: pol } }, { k: 'goal', a, b, g: goal });
+}
+
+const isMajor = (o) => (COUNTRIES[tagOf(o)]?.tier ?? 3) === 1;
+/** Vedoucí bloku země `o`, pokud jím není sama (jinak 0). */
+const leaderOver = (state, o) => { const f = state.dip.facs[state.dip.fac[o]]; return f && f.ldr !== o ? f.ldr : 0; };
+
 /** Zdůvodnění, proč druhá strana bílý mír odmítne (český text), nebo null. */
 export function peaceBlock(state, a, b) {
   if (!ok(a) || !ok(b) || a === b || !atWar(state.mil, a, b)) return 'Nejste ve válce.';
   if (state.dip.goal[`${a}>${b}`] === 'civil' || state.dip.goal[`${b}>${a}`] === 'civil') return 'V občanské válce se mír neuzavírá – rozhodne se na bojišti.';   // M69
+  if (isMajor(a) && isMajor(b)) return 'Velmoci spolu bojují až do kapitulace – bílý mír mezi nimi není možný.';   // M88: světová válka neskončí remízou po půl roce klidu na frontě
+  const la = leaderOver(state, a), lb = leaderOver(state, b);   // M88: člen bloku neuzavírá separátní mír, dokud s protivníkem válčí vedoucí bloku
+  if ((la && atWar(state.mil, la, b)) || (lb && atWar(state.mil, lb, a))) return 'Člen bloku neuzavře separátní mír, dokud válčí vedoucí bloku.';
   if (warScore(state, b, a) >= DIP.PEACE_SCORE) return 'Protivník vyhrává a bílý mír odmítá.';
   const oa = state.dip.sub[a], ob = state.dip.sub[b];   // M66: loutka vede války pána, vlastní mír neuzavře (jinak by ji pán hned zase vtáhl do války)
   if ((oa && atWar(state.mil, oa, b)) || (ob && atWar(state.mil, ob, a))) return 'Loutka vede válku svého pána a vlastní mír neuzavře.';

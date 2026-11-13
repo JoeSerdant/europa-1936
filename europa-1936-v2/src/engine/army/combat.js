@@ -10,6 +10,7 @@ import { C, xpLevel } from './constants.js';
 import { geo, adjacency } from './geo.js';
 import { TERRAIN_RULES, RIVER } from '../../data/army/terrain.js';
 import { atWar } from './war.js';
+import { hasAccess } from '../dip/accessCore.js';
 import { adjKind } from './paths.js';
 import { atMap, editDiv, removeDiv, relocate, removeBattle, editBattle, editGen, addMan, addCas, bumpVer, rnd } from './ctx.js';
 import { statsOf, lackOf, modsOf } from './unit.js';
@@ -108,19 +109,24 @@ function refreshSides(ctx, b) {
   return { att, dep };
 }
 
-/** Kam může ustoupit poražená divize: sousední vlastní provincie bez nepřítele, co nejdál od útočníků. */
-function retreatTarget(ctx, d, b) {
+/**
+ * Kam může ustoupit poražená divize: sousední vlastní nebo spojenecká provincie (kam smí vstoupit – blok, loutka a pán, dohoda o přístupu; M88) bez nepřítele,
+ * co nejdál od útočníků; vlastní území má při shodě přednost. Dřív směla jen do vlastní provincie, takže na území spojence po prohrané bitvě zanikla.
+ */
+export function retreatTarget(ctx, d, b) {
   const w = getWorld(), g = geo(w), adj = adjacency(w);
+  const dip = ctx.state.dip;
   let best = 0, bs = -Infinity;
   for (const e of adj[d.p]) {
-    const q = e.to;
-    if (e.kind === 2 || ctx.ctrl[q] !== d.o || b.from.includes(q)) continue;
+    const q = e.to, c = ctx.ctrl[q];
+    if (e.kind === 2 || b.from.includes(q)) continue;
+    if (c !== d.o && !(dip && c > 0 && !atWar(ctx.mil, d.o, c) && hasAccess(dip, d.o, c))) continue;
     const there = atMap(ctx).get(q);
     if (there && there.some((x) => atWar(ctx.mil, d.o, ctx.divs[x].o))) continue;
     let far = Infinity;
     for (const f of b.from) far = Math.min(far, g.distKm(q, f));
     if (!isFinite(far)) far = 0;
-    const score = far - q * 1e-6;
+    const score = far + (c === d.o ? 1 : 0) - q * 1e-6;
     if (score > bs) { bs = score; best = q; }
   }
   return best;

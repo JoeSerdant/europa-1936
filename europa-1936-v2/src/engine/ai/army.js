@@ -6,6 +6,7 @@ import { COUNTRIES } from '../../data/countries.js';
 import { rearmFactor, DYN_DIVS } from '../../data/ai/rearm.js';
 import { countryStats } from '../selectors.js';
 import { deriveStats } from '../army/stats.js';
+import { tplStats } from '../army/unit.js';
 import { C as ARMY } from '../army/constants.js';
 import { hasWar, enemiesOf, nearestControlled } from '../army/war.js';
 import { recruit, createArmy, assignDivisions, assignCommander, setPlan } from '../army/commands.js';
@@ -17,13 +18,16 @@ import { AI } from './constants.js';
 /** Jednou za den projde divize a vrátí po zemích: počty šablon, volné divize a velikosti armád. */
 export function scanArmies(state) {
   const n = state.mil.stock.length;
-  const out = Array.from({ length: n }, () => ({ tpl: new Map(), loose: [], armies: new Map(), count: 0 }));
+  const out = Array.from({ length: n }, () => ({ tpl: new Map(), loose: [], armies: new Map(), count: 0, hp: 0, eq: {} }));
   const divs = state.mil.divs;
   for (let id = 1; id < divs.length; id++) {
     const d = divs[id];
     if (!d) continue;
     const e = out[d.o];
     e.count++;
+    const st = tplStats(state.mil, d.tpl);
+    e.hp += d.hp / st.hp;   // součet podílů síly (M88: průměr = hp / count)
+    for (const k in st.need) e.eq[k] = (e.eq[k] || 0) + st.need[k];   // výzbroj v poli (M88: podle ní se drží rezerva na doplňování)
     e.tpl.set(d.tpl, (e.tpl.get(d.tpl) || 0) + 1);
     if (d.army) e.armies.set(d.army, (e.armies.get(d.army) || 0) + 1); else e.loose.push(id);
   }
@@ -103,7 +107,8 @@ export function aiArmy(state, o, scan) {
   const queued = state.mil.queue.reduce((a, q) => a + (q.o === o ? 1 : 0), 0);
   const target = targetDivs(state, o);
   const trainMax = Math.max(AI.TRAIN_MAX, Math.ceil(target / AI.TRAIN_DIV));
-  if (sc.count && queued < trainMax && sc.count + queued < target) {
+  const worn = war && sc.count > 0 && sc.hp / sc.count < AI.RECRUIT_HP;   // M88: vykrvácená armáda nejdřív doplní stavy, nové divize by jí braly výzbroj
+  if (sc.count && queued < trainMax && sc.count + queued < target && !worn) {
     const site = recruitSite(state, o);
     if (site) {
       const kinds = tplOfKind(state, o), mix = desiredMix(state, o);
@@ -113,8 +118,13 @@ export function aiArmy(state, o, scan) {
       const gap = target - sc.count - queued;
       const batch = Math.min(war ? AI.RECRUIT_BATCH_WAR : AI.RECRUIT_BATCH + (gap > 8 ? 1 : 0), trainMax - queued);
       let done = false;
+      const keep = war ? AI.STOCK_KEEP_WAR : AI.STOCK_KEEP, stock = state.mil.stock[o] || {};
       for (const k of order) {
+        const need = deriveStats(state.mil.tpl[kinds[k]]).need;
         for (let n = batch; n >= 1 && !done; n--) {
+          let short = false;   // M88: ve skladu musí po odvodu zůstat rezerva na doplňování divizí v poli
+          for (const e in need) if ((stock[e] || 0) - need[e] * n < keep * (sc.eq[e] || 0)) { short = true; break; }
+          if (short) continue;
           const next = recruit(state, kinds[k], site, n);
           if (next !== state) { state = next; done = true; }
         }

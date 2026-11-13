@@ -6,7 +6,7 @@ export const I = {
   LV_COST: 0.2,             // příplatek k ceně kusu výzbroje za každou úroveň nad první (M20)
   EFF_GROW: 0.035,          // denní přírůstek: podíl vzdálenosti ke stropu
   EFF_INIT: 0.4,            // efektivita linek na začátku hry
-  LINE_MAX_FAC: 20,         // nejvíc továren na jedné lince
+  LINE_MAX_FAC: 40,         // nejvíc továren na jedné lince (M88: 40 – velké hospodářství by jinak narazilo na strop počtu linek)
   LINES_MAX: 15,            // nejvíc linek na zemi
   RES_FLOOR: 0.25,          // nejmenší výkon linky při nedostatku suroviny
   TRADE_CIV: 0.12,          // civilní továrny spotřebované jednou jednotkou dováženou za den

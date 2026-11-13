@@ -14,6 +14,11 @@ import { aggrOf } from '../../data/ai/personality.js';
 import { landZones } from '../army/zones.js';
 import { stagingArmies, startInvasion } from './invasion.js';
 import { ruleMult } from '../rules.js';
+import { fortOf } from '../industry/selectors.js';
+import { TERRAIN_RULES } from '../../data/army/terrain.js';
+import { statsOf } from '../army/unit.js';
+import { docMods } from '../doc/core.js';
+import { spiritArmyMods } from '../nat/spirits.js';
 import { AI } from './constants.js';
 
 /** Armády země s divizemi: [{ id, n, x, y, ds }] (x, y = těžiště v pixelech světa). */
@@ -33,7 +38,7 @@ function armiesOf(state, o) {
 }
 
 const sameList = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
-const samePlan = (a, b) => !!a && a.k === b.k && (b.k === 'area' ? sameList(a.area, b.area) : a.mode === b.mode && sameList(a.line, b.line) && sameList(a.to, b.to));
+const samePlan = (a, b) => !!a && a.k === b.k && (b.k === 'area' ? sameList(a.area, b.area) : a.mode === b.mode && !a.loc === !b.loc && sameList(a.line, b.line) && sameList(a.to, b.to));
 
 /** Nastaví plán, pokud se liší od dosavadního. */
 function plan(state, armyId, p) {
@@ -50,8 +55,10 @@ export function theatersOf(state, o, foes) {
   const ctrl = state.ctrl;
   const contact = [];
   const isContact = new Uint8Array(w.L + 1);
+  const sub = state.dip.sub;   // M88: území vlastních loutek je pro pána součástí fronty (brání je a útočí z něj)
+  const mine = (c) => c === o || (c > 0 && sub[c] === o);
   for (let p = 1; p <= w.L; p++) {
-    if (ctrl[p] !== o) continue;
+    if (!mine(ctrl[p])) continue;
     for (const e of adj[p]) if (e.kind !== 2 && foes.has(ctrl[e.to])) { isContact[p] = 1; contact.push(p); break; }
   }
   if (!contact.length) return [];
@@ -64,7 +71,7 @@ export function theatersOf(state, o, foes) {
     for (let d = 0; d < 2; d++) {
       const next = [];
       for (const q of ring) for (const e of adj[q]) {
-        if (e.kind === 2 || seen.has(e.to) || ctrl[e.to] !== o) continue;
+        if (e.kind === 2 || seen.has(e.to) || !mine(ctrl[e.to])) continue;
         seen.add(e.to); next.push(e.to);
         if (isContact[e.to]) { const a = find(p), b = find(e.to); if (a !== b) parent.set(a, b); }
       }
@@ -153,6 +160,27 @@ function suppliedNear(state, o, a, view, count) {
   return out;
 }
 
+/**
+ * Týl divadla (M88): zásobované vlastní provincie dva až čtyři kroky za posty `posts` (ne posty samy ani jejich sousedé), nejbližší armádě `a`, nejvýš `count`.
+ * Sem se staví druhý sled, který se na frontu nevejde.
+ */
+export function rearOf(state, o, posts, a, view, count) {
+  const w = getWorld(), g = geo(w), adj = adjacency(w);
+  const seen = new Set(posts), out = [];
+  let ring = posts.slice();
+  for (let step = 1; step <= 4 && ring.length; step++) {
+    const next = [];
+    for (const p of ring) for (const e of adj[p]) {
+      if (e.kind === 2 || seen.has(e.to) || state.ctrl[e.to] !== o) continue;
+      seen.add(e.to); next.push(e.to);
+      if (step >= 2 && view.reach[e.to] >= AI.SUP_TARGET_MIN) out.push(e.to);
+    }
+    ring = next;
+  }
+  const dist = (p) => Math.hypot(g.cx[p] - a.x, g.cy[p] - a.y);
+  return out.sort((p, q) => dist(p) - dist(q) || p - q).slice(0, count).sort((p, q) => p - q);
+}
+
 /** Je země (nebo někdo z jejího bloku) útočníkem proti některému z nepřátel? (válka ospravedlněná a vyhlášená přes `startWar` zapíše cíl do `dip.goal`) */
 export function isAggressor(state, o, foes) {
   const camp = new Set(campOf(state, o));
@@ -233,8 +261,8 @@ export function allocateArmies(theaters, armies, { dist, sticky = new Map(), eng
   });
   let spare = 0;
   for (const id of free) spare += byId.get(id).n;
-  theaters.forEach((t, i) => {   // posily k útoku (víc divizí, než unese šířka fronty, je zbytečných)
-    if (!t.viable.length || (t.eff > 0 && (have(i) + spare) / t.eff < ratioNeed * (engaged.has(i) ? AI.STAY_MULT : 1))) return;
+  theaters.forEach((t, i) => {   // posily k útoku (víc divizí, než unese šířka fronty, je zbytečných); práh může mít každé divadlo vlastní (`t.need`, M88)
+    if (!t.viable.length || (t.eff > 0 && (have(i) + spare) / t.eff < (t.need ?? ratioNeed) * (engaged.has(i) ? AI.STAY_MULT : 1))) return;
     const need = Math.min(Math.ceil(t.eff * AI.OFFENSE_FORCE) + AI.OFFENSE_BASE, Math.max(AI.ARMY_SIZE, Math.ceil(t.posts.length * AI.OFFENSE_PER_POST)));
     while (have(i) < need && free.size) { const id = pick(i); if (!id) break; spare -= byId.get(id).n; }
   });
@@ -274,6 +302,15 @@ export function decideStrategy(state, o) {
     let res = 0;
     for (const c of t.defenders) res += Math.max(0, (total.get(c) || 0) - (nearBy.get(c) || 0)) * (t.posts.length / shareOf.get(c));
     t.eff = t.enemy + AI.RESERVE_SHARE * res;
+    // M88: pevnostní pásmo násobí sílu obrany (průměrná úroveň pevností v cílech divadla) – AI na ně čelně neútočí, dokud nemá drtivou převahu
+    let forts = 0;
+    for (const tp of t.targets) forts += fortOf(state, tp);
+    t.fort = t.targets.length ? forts / t.targets.length : 0;
+    t.eff *= 1 + AI.FORT_EFF * t.fort;
+    // M88: kvalita armád (doktríny a národní duchové) – počet divizí není všechno
+    let main = 0, mn = -1;
+    for (const c of t.defenders) { const n = t.by.get(c) || 0; if (n > mn) { mn = n; main = c; } }
+    if (main) t.eff *= armyQuality(state, main) / armyQuality(state, o);
   }
 
   // ---- přidělení armád divadlům ----
@@ -288,10 +325,15 @@ export function decideStrategy(state, o) {
     if (bi >= 0 && bn >= 2) sticky.set(a.id, bi);
   }
   const engaged = new Set();   // divadla, kde už některá armáda útočí (hystereze)
-  for (const [id, i] of sticky) { const pl = mil.armies[id].plan; if (pl && pl.k === 'front' && pl.to.length > 0) engaged.add(i); }
+  for (const [id, i] of sticky) { const pl = mil.armies[id].plan; if (pl && pl.k === 'front' && pl.to.length > 0 && !pl.loc) engaged.add(i); }   // místní útok (M88) se za zahájenou ofenzivu nepočítá
   const byId = new Map(armies.map((a) => [a.id, a]));
-  const tag = w.owners[o].tag, aggressor = isAggressor(state, o, foes);
-  const ratioNeed = (AI.ATTACK_RATIO[level] ?? 1.3) / (aggrOf(tag) * ruleMult(state, 'aggr')) * (aggressor ? 1 : AI.DEFENDER_MULT);   // M78: pravidlo hry „Útočnost AI“
+  // M88: útočníkem je země jen v divadlech, kde stojí proti zemi, proti které má její tábor válečný cíl (jinde jen drží frontu – „podivná válka“ na západě během tažení v Polsku)
+  const tag = w.owners[o].tag;
+  const aggr = theaters.map((t) => isAggressor(state, o, new Set([...t.defenders, ...t.by.keys()])));
+  const baseNeed = (AI.ATTACK_RATIO[level] ?? 1.3) / (aggrOf(tag) * ruleMult(state, 'aggr'));   // M78: pravidlo hry „Útočnost AI“
+  const need = aggr.map((a) => baseNeed * (a ? 1 : AI.DEFENDER_MULT));
+  theaters.forEach((t, i) => { t.need = need[i]; });
+  const aggressor = aggr.some(Boolean), ratioNeed = Math.min(...need);
   const zones = landZones(state, o);
   for (const a of armies) a.zone = zones[mil.divs[a.ds[0]].p];
   for (const t of theaters) t.zone = t.posts.length ? zones[t.posts[0]] : 0;
@@ -301,14 +343,62 @@ export function decideStrategy(state, o) {
   // ---- útok, nebo obrana ----
   const ratio = theaters.map((t, i) => (t.eff > 0 ? have(i) / t.eff : 99));
   // už zahájený útok se neruší kvůli malému poklesu poměru sil (hystereze): armády, které útočí, pokračují, dokud poměr neklesne pod `STAY_MULT` prahu
-  const committed = theaters.map((t, i) => got[i].some((id) => { const pl = mil.armies[id].plan; return pl && pl.k === 'front' && pl.to.length > 0; }));
+  const committed = theaters.map((t, i) => got[i].some((id) => { const pl = mil.armies[id].plan; return pl && pl.k === 'front' && pl.to.length > 0 && !pl.loc; }));
   const attack = theaters.map((t, i) => {
     if (!t.viable.length) return false;
-    const need = committed[i] ? ratioNeed * AI.STAY_MULT : ratioNeed;
+    const nd = committed[i] ? need[i] * AI.STAY_MULT : need[i];
     const opp = committed[i] ? AI.OPPORTUNITY_RATIO * AI.STAY_MULT : AI.OPPORTUNITY_RATIO;
-    return ratio[i] >= need && (aggressor || ratio[i] >= opp);
+    return ratio[i] >= nd && (aggr[i] || ratio[i] >= opp);
   });
-  return { armies, byId, foes, theaters, got, reserve, ratio, attack, aggressor, ratioNeed, view };
+  return { armies, byId, foes, theaters, got, reserve, ratio, attack, aggressor, aggr, ratioNeed, view, sticky };
+}
+
+/** Kvalita armády země očima AI (M88): 1 + průměr bonusů útoku a obrany z pozemní doktríny a národních duchů, v mezích 0,7–1,4. */
+export function armyQuality(state, o) {
+  const doc = state.doc ? docMods(state, o) : null;
+  const sp = state.nat && state.nat.own[o] ? spiritArmyMods(state.nat.own[o].sp) : null;
+  const sum = (m) => (m ? (m.atk || 0) + (m.def || 0) : 0);
+  return Math.min(1.4, Math.max(0.7, 1 + (sum(doc) + sum(sp)) / 2));
+}
+
+/** Počty nepřátelských divizí po provinciích (pro místní poměr sil, M88). */
+export function foeCounts(state, foes) {
+  const m = new Map();
+  for (let id = 1; id < state.mil.divs.length; id++) { const d = state.mil.divs[id]; if (d && foes.has(d.o)) m.set(d.p, (m.get(d.p) || 0) + 1); }
+  return m;
+}
+
+/** Síla obrany cíle `tp` očima AI (M88): divize v provincii, podíl divizí v sousedních nepřátelských provinciích (mohou přijít na pomoc), přirážka za pevnost a terén. */
+export function localDefense(state, foes, foeAt, tp) {
+  const w = getWorld();
+  let back = 0;
+  for (const e of adjacency(w)[tp]) if (e.kind !== 2 && foes.has(state.ctrl[e.to])) back += foeAt.get(e.to) || 0;
+  return ((foeAt.get(tp) || 0) + AI.LOCAL_BACK * back) * (1 + AI.LOCAL_FORT * fortOf(state, tp)) * (1 - TERRAIN_RULES[w.terrain[tp]].atk);
+}
+
+/** Je armáda ve stavu k místnímu útoku? (průměrná síla a zásobování divizí; vyčerpaná nebo hladová armáda jen drží linii) */
+export function fitArmy(state, a) {
+  let hp = 0, sup = 0;
+  for (const id of a.ds) { const d = state.mil.divs[id]; hp += d.hp / statsOf(state.mil, d).hp; sup += d.sg > 0 ? 1 : d.sup; }
+  return hp / a.n >= AI.LOCAL_HP && sup / a.n >= AI.LOCAL_SUP;
+}
+
+/**
+ * Slabá místa fronty (M88): cíle z `cand`, na které armáda o `n` divizích stačí sama s místní převahou `AI.LOCAL_RATIO` (obránce `mult`krát větší).
+ * `def(tp)` = síla obrany cíle, `claimed` = cíle, na které už útočí jiná armáda (přednost mají volné), `score` = menší je lepší (blíž k hlavnímu městu).
+ * Vrací nejvýš `n / AI.DIVS_PER_TARGET` cílů; prázdné pole = armáda drží linii. Čistá funkce.
+ */
+export function localTargets(cand, n, def, claimed, mult, score) {
+  const list = cand.map((tp) => ({ tp, e: def(tp), c: claimed.has(tp) ? 1 : 0, s: score(tp) })).sort((x, y) => x.c - y.c || x.e - y.e || x.s - y.s || x.tp - y.tp);
+  const max = Math.ceil(n / AI.DIVS_PER_TARGET), out = [];
+  let left = n;
+  for (const x of list) {
+    if (out.length >= max) break;
+    const need = Math.max(AI.LOCAL_MIN, x.e * AI.LOCAL_RATIO * mult);
+    if (need > left) continue;
+    out.push(x.tp); left -= need;
+  }
+  return out;
 }
 
 /** Strategie země ve válce: divadla, přidělení armád, plány útoku a obrany. Bez války nebo styku s nepřítelem mírové rozmístění. */
@@ -322,6 +412,10 @@ export function aiStrategy(state, o) {
   }
   const w = getWorld(), g = geo(w), adj = adjacency(w);
   const { byId, foes, theaters, got, reserve, ratio, attack, view } = d;
+  const foeAt = foeCounts(state, foes), defMemo = new Map(), claimed = new Set();   // M88: místní poměr sil u cílů
+  const defOf = (tp) => { let v = defMemo.get(tp); if (v === undefined) { v = localDefense(state, foes, foeAt, tp); defMemo.set(tp, v); } return v; };
+  const home = new Set([o, ...friendsOf(state.dip, o)]);   // území vlastního tábora (podle vlastnictví států)
+  const echelon = [];   // armády druhého sledu (na frontu se nevešly) – lze z nich sestavit invazní sbor
   if (reserve.length) {   // nepotřebné armády zůstanou doma (nebo se z nich sestaví invazní sbor, M71)
     const free = reserve.map((id) => byId.get(id));
     state = startInvasion(state, o, free);
@@ -335,8 +429,18 @@ export function aiStrategy(state, o) {
   };
   theaters.forEach((t, i) => {
     const viable = new Set(t.viable);
-    for (const id of got[i]) {
+    // M88: fronta unese jen tolik divizí, kolik uživí zásobování jejích postů; další armády tvoří druhý sled v týlu (armády, které na frontě už stojí, mají přednost)
+    const room = Math.max(AI.ARMY_SIZE, AI.FRONT_FILL * t.posts.reduce((sum, p) => sum + Math.floor(view.reach[p] * C.SUP_CAPACITY / AI.DIV_SUP + 0.25), 0));
+    const order = got[i].slice().sort((p, q) => (d.sticky.get(q) === i ? 1 : 0) - (d.sticky.get(p) === i ? 1 : 0));
+    const fortFree = t.viable.some((tp) => fortOf(state, tp) < AI.FORT_AVOID);
+    let placed = 0;
+    for (const id of order) {
       const a = byId.get(id);
+      if (placed > 0 && placed + a.n > room) {
+        const rear = rearOf(state, o, t.posts, a, view, Math.max(AI.SLICE_MIN, a.n));
+        if (rear.length) { state = plan(state, id, { k: 'area', area: rear }); echelon.push(id); continue; }
+      }
+      placed += a.n;
       if (starving(state, a)) {   // hladovějící armáda se stáhne k zásobovaným provinciím a obnoví síly
         const near = suppliedNear(state, o, a, view, Math.max(AI.SLICE_MIN, a.n));
         if (near.length) { state = plan(state, id, { k: 'area', area: near.sort((p, q) => p - q) }); continue; }
@@ -345,25 +449,42 @@ export function aiStrategy(state, o) {
       const fed = t.posts.filter(view.post);   // posty bez zásob armádu zbytečně vyhladoví – obsadí se, jen když zásobované chybí
       const sorted = (fed.length >= AI.SLICE_MIN ? fed : t.posts).slice().sort((p, q) => dist(p) - dist(q) || p - q);
       const slice = sorted.slice(0, Math.max(AI.SLICE_MIN, a.n * AI.SLICE_PER_DIV)).sort((p, q) => p - q);
-      if (attack[i]) {
-        // úder se soustředí na několik cílů (zaměřených k hlavnímu městu nepřítele), ne na celou šířku fronty
-        const cand = [];
-        for (const p of slice) for (const e of adj[p]) if (e.kind !== 2 && viable.has(e.to) && foes.has(state.ctrl[e.to]) && !cand.includes(e.to)) cand.push(e.to);
-        if (!cand.length) { state = plan(state, id, { k: 'area', area: areaOf(slice) }); continue; }
-        const score = (tp) => {
-          const cap = w.owners[state.ctrl[tp]].cap;
-          return Math.hypot(g.cx[tp] - g.cx[cap], g.cy[tp] - g.cy[cap]) * g.kmPerPx - AI.TARGET_VP * w.vp[tp];
-        };
-        cand.sort((p, q) => score(p) - score(q) || p - q);
-        const to = cand.slice(0, Math.max(AI.TARGETS_MIN, Math.ceil(a.n / AI.DIVS_PER_TARGET)));
-        const pick = new Set(to);
-        const line = slice.filter((p) => adj[p].some((e) => pick.has(e.to)));
-        if (line.length < AI.SLICE_MIN) for (const p of slice) if (!line.includes(p) && line.length < AI.SLICE_MIN) line.push(p);
-        state = plan(state, id, { k: 'front', line: line.sort((p, q) => p - q), to: to.sort((p, q) => p - q), mode: ratio[i] >= AI.RUSH_RATIO ? 'rush' : 'balanced' });
-      } else {
-        state = plan(state, id, { k: 'area', area: areaOf(slice) });
+      const cand = [];
+      for (const p of slice) for (const e of adj[p]) {
+        if (e.kind === 2 || !viable.has(e.to) || !foes.has(state.ctrl[e.to]) || cand.includes(e.to)) continue;
+        if (fortFree && fortOf(state, e.to) >= AI.FORT_AVOID) continue;   // M88: silné pevnosti se neztékají, dokud je kudy je obejít
+        cand.push(e.to);
       }
+      const score = (tp) => {
+        const cap = w.owners[state.ctrl[tp]].cap;
+        return Math.hypot(g.cx[tp] - g.cx[cap], g.cy[tp] - g.cy[cap]) * g.kmPerPx - AI.TARGET_VP * w.vp[tp] + AI.TARGET_FORT * fortOf(state, tp);   // M88: pevnosti se obcházejí
+      };
+      let to = [], local = false;
+      if (cand.length && attack[i]) {
+        // celková ofenziva: úder se soustředí na několik cílů (zaměřených k hlavnímu městu nepřítele), ne na celou šířku fronty
+        cand.sort((p, q) => score(p) - score(q) || p - q);
+        to = cand.slice(0, Math.max(AI.TARGETS_MIN, Math.ceil(a.n / AI.DIVS_PER_TARGET)));
+      } else if (cand.length && fitArmy(state, a)) {
+        // M88: na ofenzivu síly nestačí – armáda aspoň udeří tam, kde má místní převahu (slabě hájené nebo prázdné provincie); průlom frontu natáhne a obranu zředí.
+        // Obránce (země bez válečného cíle proti protivníkovi v divadle) takhle jen osvobozuje území svého tábora.
+        const open = d.aggr[i] ? cand : cand.filter((tp) => home.has(state.stateOwner[w.provState[tp]]));
+        to = localTargets(open, a.n, defOf, claimed, d.aggr[i] ? 1 : AI.DEFENDER_MULT, score);
+        local = to.length > 0;
+      }
+      if (!to.length) { state = plan(state, id, { k: 'area', area: areaOf(slice) }); continue; }
+      for (const tp of to) claimed.add(tp);
+      const pick = new Set(to);
+      const line = slice.filter((p) => adj[p].some((e) => pick.has(e.to)));
+      if (line.length < AI.SLICE_MIN) for (const p of slice) if (!line.includes(p) && line.length < AI.SLICE_MIN) line.push(p);
+      const mode = local ? (to.every((tp) => defOf(tp) === 0) ? 'rush' : 'balanced') : ratio[i] >= AI.RUSH_RATIO ? 'rush' : 'balanced';
+      const pl = { k: 'front', line: line.sort((p, q) => p - q), to: to.sort((p, q) => p - q), mode };
+      if (local) pl.loc = 1;
+      state = plan(state, id, pl);
     }
   });
+  if (echelon.length) {   // M88: druhý sled může vyplout proti nepříteli za mořem (Norsko 1940), i když hlavní síly váže pozemní fronta
+    const pick = new Set(echelon);
+    state = startInvasion(state, o, armiesOf(state, o).filter((a) => pick.has(a.id)));
+  }
   return state;
 }

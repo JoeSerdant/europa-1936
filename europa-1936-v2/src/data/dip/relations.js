@@ -27,7 +27,7 @@ export const PAIR_REL = [
 /** Počáteční bloky: název, vedoucí a členové (tagy). */
 export const START_FACTIONS = [
   { nm: 'Malá dohoda', ldr: 'CZE', mem: ['CZE', 'ROM', 'YUG'] },
-  { nm: 'Francouzský systém', ldr: 'FRA', mem: ['FRA', 'POL', 'BEL'] },
+  { nm: 'Francouzský systém', ldr: 'FRA', mem: ['FRA', 'POL'] },   // Belgie je od roku 1936 neutrální (M88): do bloku ji přivede až záruka a útok
   { nm: 'Balkánská dohoda', ldr: 'TUR', mem: ['TUR', 'GRE'] },
   { nm: 'Pobaltská dohoda', ldr: 'LAT', mem: ['LAT', 'EST', 'LIT'] },
 ];

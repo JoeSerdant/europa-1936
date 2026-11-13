@@ -97,8 +97,9 @@ export function aiIndustry(state, o) {
   sum = industryOf(state, o);
   let free = Math.min(10, sum.milFree);
   const split = demandSplit(state, o, war);
+  const full = new Set();   // M88: druh, kterému už nejde přidat továrnu (plné linky a strop počtu linek), se přeskočí – továrny nezůstanou stát
   while (free > 0) {
-    const eqs = Object.keys(split).filter((e) => isUnlocked(state, o, EQUIP[e].unlock));
+    const eqs = Object.keys(split).filter((e) => !full.has(e) && isUnlocked(state, o, EQUIP[e].unlock));
     const cur = industryOf(state, o);
     const tot = cur.lines.reduce((a, l) => a + l.fac, 0) + 1;
     let pick = '', pk = -Infinity;
@@ -110,7 +111,7 @@ export function aiIndustry(state, o) {
     if (!pick) break;
     const line = cur.lines.find((l) => l.eq === pick && l.fac < I.LINE_MAX_FAC);
     const next = line ? setLineFactories(state, line.id, line.fac + 1) : addLine(state, o, pick, 1);
-    if (next === state) break;
+    if (next === state) { full.add(pick); continue; }
     state = next;
     free--;
   }

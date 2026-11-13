@@ -14,7 +14,7 @@ import { aiSpy } from './spy.js';
 import { aiForts } from './forts.js';
 import { aiStrategy } from './strategy.js';
 import { aiParties } from './parties.js';
-import { aiFuel } from './logistics.js';
+import { aiFuel, aiTrade } from './logistics.js';
 import { aiPara } from './para.js';
 import { aiPacts } from './pacts.js';
 import { advanceInvasions } from './invasion.js';
@@ -28,10 +28,17 @@ function newWar(state, o) {
   return false;
 }
 
+/** Útočí země a některá její armáda už dobyla všechny cíle plánu? Pak dostane nové dřív než za týden (M88: průlom se nezastaví na první provincii). */
+function spentOffensive(state, o) {
+  if (!hasWar(state.mil, o)) return false;
+  for (let id = 1; id < state.mil.armies.length; id++) { const a = state.mil.armies[id]; if (a && a.o === o && a.plan && a.plan.k === 'front' && a.plan.to.length === 0) return true; }
+  return false;
+}
+
 export function aiDay(state) {
   const w = getWorld();
   const player = playerOf(state);
-  const weekly = state.tick % (24 * AI.PLAN_DAYS) === 0;
+  const weekly = state.tick % (24 * AI.PLAN_DAYS) === 0, soon = state.tick % (24 * AI.PLAN_DAYS_WAR) === 0;
   const scan = scanArmies(state);
   for (let o = 1; o < w.owners.length; o++) {
     if (o === player || state.dip.cap[o]) continue;
@@ -39,6 +46,7 @@ export function aiDay(state) {
     state = aiParties(state, o);
     state = aiSpy(state, o);
     state = aiForts(state, o);
+    state = aiTrade(state, o);     // M88: dovoz surovin, které brzdí zbrojovky
     state = aiIndustry(state, o);
     state = aiArmy(state, o, scan);
     state = aiNavy(state, o);
@@ -49,7 +57,7 @@ export function aiDay(state) {
     state = aiPara(state, o);    // M87: výsadkové divize a výsadky
     state = aiCommand(state, o);
     state = advanceInvasions(state, o);   // M71: shromáždění, nalodění a pauzy námořních invazí
-    if (weekly || newWar(state, o)) state = aiStrategy(state, o);   // M66: divadla války, přidělení armád, útok a obrana; v míru domácí rozmístění
+    if (weekly || newWar(state, o) || (soon && spentOffensive(state, o))) state = aiStrategy(state, o);   // M66: divadla války, přidělení armád, útok a obrana; v míru domácí rozmístění
     if (!state.dip.sub[o]) state = aiPacts(aiDiplomacy(state, o), o);   // M87: AI si pakty o neútočení nabízí i sama   // loutky nevedou vlastní diplomacii (M33)
   }
   return state;

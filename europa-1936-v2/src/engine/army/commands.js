@@ -392,7 +392,9 @@ export function normalizePlan(plan) {
     const line = landList(plan.line), to = landList(plan.to ?? []);
     const mode = PLAN_MODES.includes(plan.mode) ? plan.mode : 'balanced';
     if (!line || !to || line.length < 1 || line.length > AREA_MAX || to.length > AREA_MAX) return null;
-    return { k: 'front', line, to: to.filter((p) => !line.includes(p)), mode };
+    const out = { k: 'front', line, to: to.filter((p) => !line.includes(p)), mode };
+    if (plan.loc) out.loc = 1;   // M88: místní útok AI na slabá místa (ne celková ofenziva divadla)
+    return out;
   }
   return null;
 }

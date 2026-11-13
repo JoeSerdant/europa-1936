@@ -2,7 +2,7 @@
 // Čísla vycházejí ze scénáře „Září 1939“ (data/scenarios.js), aby se hra z roku 1936 do roku 1939 dostala přibližně na stejný stav.
 //  army    násobek počtu divizí v září 1939 (tag → násobek, `default` pro ostatní)
 export const REARM = {
-  GER: 2.4, ENG: 2.5, FRA: 1.3, ITA: 1.35, SOV: 2.0, POL: 1.35, CZE: 1.3, SPR: 1.2, HUN: 1.8, ROM: 1.4, YUG: 1.3, BUL: 1.4, TUR: 1.3,
+  GER: 3.8, ENG: 2.5, FRA: 1.3, ITA: 1.35, SOV: 2.0, POL: 1.35, CZE: 1.3, SPR: 1.2, HUN: 1.8, ROM: 1.4, YUG: 1.3, BUL: 1.4, TUR: 1.3,
   FIN: 1.5, SWE: 1.4, default: 1.25,
 };
 /** Základní sestava divizí rezervních zemí (M69), které nemají výchozí armádu v datech zemí: AI podle ní určuje cílový počet a složení. */
