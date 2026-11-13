@@ -9,7 +9,8 @@ import { Screen } from '../common/Screen.jsx';
 
 const pct = (v) => `${Math.round(v * 100)} %`;
 const MODS = { stab: 'stabilita', ws: 'podpora války', cons: 'spotřební zboží', build: 'stavby', prod: 'výroba', extract: 'těžba', imp: 'cena dovozu', man: 'lidská síla', research: 'výzkum' };
-const modText = (mod) => Object.entries(mod).map(([k, v]) => `${MODS[k]} ${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)} %`).join(', ');
+const MODS_ARMY = { atk: 'útok divizí', def: 'obrana divizí', planCap: 'strop plánování', planGain: 'rychlost plánování', supUse: 'spotřeba zásob', speed: 'rychlost divizí', orgRegen: 'obnova organizace', atkArm: 'útok obrněných', atkInf: 'útok pěchoty', defInf: 'obrana pěchoty', hillAtk: 'útok v kopcích', hillDef: 'obrana v kopcích' };
+const modText = (mod, army) => [...Object.entries(mod).map(([k, v]) => [MODS[k], v]), ...Object.entries(army || {}).map(([k, v]) => [MODS_ARMY[k], v])].map(([n, v]) => `${n} ${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)} %`).join(', ');
 
 function Meter({ label, value, target, hint, cls }) {
   return (
@@ -106,7 +107,7 @@ export function PoliticsPanel() {
   if (!me) return <div className="prod-screen politics-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádnou politiku.</p></div></div>;
   const p = politicsOf(state, me);
   const spirits = [
-    ...spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, hint: `${x.info} ${modText(x.mod)}${x.days ? ` · ještě ${x.days} dní` : ''}` })),
+    ...spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, hint: `${x.info} ${modText(x.mod, x.army)}${x.days ? ` · ještě ${x.days} dní` : ''}` })),
     ...p.laws.map((c) => { const o = c.options.find((x) => x.active); return { k: `l${c.cat}`, n: o.n, kind: 'law', hint: `${c.n}: ${o.info}` }; }),
     ...p.advisors.filter((a) => a.current).map((a) => ({ k: `a${a.slot}`, n: a.current.n, kind: 'adv', hint: `${a.n}: ${a.current.info}` })),
     ...focusTree(state, me).filter((f) => f.status === 'done').map((f) => ({ k: `f${f.id}`, n: f.n, kind: 'focus', hint: f.info || 'Splněný národní cíl' })),

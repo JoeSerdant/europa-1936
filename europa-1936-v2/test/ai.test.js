@@ -83,25 +83,29 @@ describe('armáda AI', () => {
 
 describe('diplomacie AI', () => {
   it('vyčerpaná AI navrhne bílý mír, vítězící protivník ho odmítne', () => {
-    const w = setPol(declareWar(createGame({ player: 'POL', aiLevel: 2 }), 'ITA', 'FRA'), ITA, { stab: 0.2 });
+    // malé země bez bloku (velmoci mezi sebou bílý mír neuzavírají, M88)
+    const HUN = idx('HUN'), BUL = idx('BUL');
+    const w = setPol(declareWar(createGame({ player: 'POL', aiLevel: 2, hist: false }), 'HUN', 'BUL'), HUN, { stab: 0.2 });
     const a = day(w, 1);
-    expect(atWar(a, 'ITA', 'FRA')).toBe(false);          // žádná okupace: protivník přijme
+    expect(atWar(a, 'HUN', 'BUL')).toBe(false);          // žádná okupace: protivník přijme
     const ctrl = w.ctrl.slice();
-    for (let p = 1; p <= W.L; p++) if (w.stateOwner[W.provState[p]] === ITA && W.vp[p] >= 2) ctrl[p] = FRA;
+    for (let p = 1; p <= W.L; p++) if (w.stateOwner[W.provState[p]] === HUN && W.vp[p] >= 2) ctrl[p] = BUL;
     const lost = day({ ...w, ctrl }, 1);
-    expect(atWar(lost, 'ITA', 'FRA') || lost.dip.cap[ITA] === 1 || lost.dip.sub[ITA] === FRA).toBe(true);   // vítěz mír odmítl (nebo ITA kapitulovala)
+    expect(atWar(lost, 'HUN', 'BUL') || lost.dip.cap[HUN] === 1 || lost.dip.sub[HUN] === BUL).toBe(true);   // vítěz mír odmítl (nebo HUN kapitulovalo)
+    const big = setPol(declareWar(createGame({ player: 'POL', aiLevel: 2, hist: false }), 'ITA', 'FRA'), ITA, { stab: 0.2 });
+    expect(atWar(day(big, 1), 'ITA', 'FRA')).toBe(true); // velmoci bojují až do kapitulace
   });
   it('vleklá válka bez výsledku skončí bílým mírem', () => {
-    // Británie a SSSR se nedotýkají: žádná fronta, skóre zůstane nulové a po čase AI uzavře bílý mír
-    const ENG = idx('ENG');
+    // Portugalsko a Bulharsko se nedotýkají: žádná fronta, skóre zůstane nulové a po čase AI uzavře bílý mír (velmoci takhle válku neukončí, M88)
+    const POR = idx('POR'), BUL = idx('BUL');
     const s = createGame({ player: 'SWE', aiLevel: 2, hist: false });
-    const j = { ...s, dip: { ...s.dip, just: [{ a: ENG, b: SOV, ready: 0 }] } };
-    const w = startWar(j, ENG, SOV);
-    expect(atWar(w, 'ENG', 'SOV')).toBe(true);
-    expect(w.dip.since[`${Math.min(ENG, SOV)}-${Math.max(ENG, SOV)}`]).toBe(0);
-    expect(atWar(day(w, 100), 'ENG', 'SOV')).toBe(true);
+    const j = { ...s, dip: { ...s.dip, just: [{ a: POR, b: BUL, ready: 0 }] } };
+    const w = startWar(j, POR, BUL);
+    expect(atWar(w, 'POR', 'BUL')).toBe(true);
+    expect(w.dip.since[`${Math.min(POR, BUL)}-${Math.max(POR, BUL)}`]).toBe(0);
+    expect(atWar(day(w, 100), 'POR', 'BUL')).toBe(true);
     const later = day(w, AI.STALEMATE_DAYS + 20);
-    expect(atWar(later, 'ENG', 'SOV')).toBe(false);
+    expect(atWar(later, 'POR', 'BUL')).toBe(false);
     expect(Object.keys(later.dip.since)).toHaveLength(0);
   });
   it('historický plán: SSSR ospravedlní a napadne Finsko v okně plánu; bez `hist` ne', () => {

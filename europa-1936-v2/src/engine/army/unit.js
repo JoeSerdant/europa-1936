@@ -3,6 +3,7 @@ import { deriveStats } from './stats.js';
 import { abilityMods } from '../cmd/index.js';
 import { armyMods, ZERO_MODS, MOD_KEYS } from './leaders.js';
 import { docMods } from '../doc/core.js';
+import { spiritArmyMods, NO_SPIRIT_MODS } from '../nat/spirits.js';
 
 /** Odvozené statistiky šablony divize. */
 /** Statistiky šablony včetně úrovně výzbroje jejího vlastníka (M20). */
@@ -22,13 +23,24 @@ export function modsOf(ctx, d) {
   for (const k in ab) r[k] = (r[k] || 0) + ab[k];
   return r;
 }
+const spiritCache = new WeakMap();   // bonusy velitele a doktrín → Map(bonusy duchů → součet)
 function baseMods(ctx, d) {
-  const lead = d.army ? armyMods(ctx.gens, ctx.mil.groups, ctx.armies[d.army]) : ZERO_MODS;
-  const doc = ctx.state.doc ? docMods(ctx.state, d.o) : null;
-  if (!doc || !doc.land) return lead;
-  let m = mergeCache.get(lead);
-  if (!m) { m = new Map(); mergeCache.set(lead, m); }
-  let r = m.get(doc);
-  if (!r) { r = { ...lead }; for (const k of MOD_KEYS) r[k] = (lead[k] || 0) + (doc[k] || 0); m.set(doc, r); }
-  return r;
+  const army = d.army ? ctx.armies[d.army] : null;
+  const o = d.o ?? (army ? army.o : 0);   // dotaz za armádu (`{ army }`) nese jen její id
+  const lead = army ? armyMods(ctx.gens, ctx.mil.groups, army) : ZERO_MODS;
+  const doc = ctx.state.doc && o ? docMods(ctx.state, o) : null;
+  let r = lead;
+  if (doc && doc.land) {
+    let m = mergeCache.get(lead);
+    if (!m) { m = new Map(); mergeCache.set(lead, m); }
+    r = m.get(doc);
+    if (!r) { r = { ...lead }; for (const k of MOD_KEYS) r[k] = (lead[k] || 0) + (doc[k] || 0); m.set(doc, r); }
+  }
+  const sp = o && ctx.state.nat ? spiritArmyMods(ctx.state.nat.own[o] && ctx.state.nat.own[o].sp) : NO_SPIRIT_MODS;   // M88: vojenské bonusy národních duchů
+  if (sp === NO_SPIRIT_MODS) return r;
+  let m = spiritCache.get(r);
+  if (!m) { m = new Map(); spiritCache.set(r, m); }
+  let q = m.get(sp);
+  if (!q) { q = { ...r }; for (const k of MOD_KEYS) q[k] = (r[k] || 0) + (sp[k] || 0); m.set(sp, q); }
+  return q;
 }

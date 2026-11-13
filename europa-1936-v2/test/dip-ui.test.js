@@ -30,12 +30,16 @@ describe('akce diplomacie', () => {
   it('mír: nejsou-li ve válce, hlásí důvod; navržený mír platí jen s protivníkem', () => {
     expect(A.makePeaceWith('POL')).toBe(false);
     expect(ui().toast.text).toMatch(/válce/);
-    pay(100); A.justifyOn('POL');
+    pay(100); A.justifyOn('POL'); A.justifyOn('DEN');
     gameStore.setState(advance(game(), 24 * 31));
+    A.declareWarOn('DEN');
+    expect(A.makePeaceWith('DEN')).toBe(true);                       // malá země bez bloku: bílý mír jde
+    expect(atWar(game(), 'GER', 'DEN')).toBe(false);
     A.declareWarOn('POL');
-    expect(A.makePeaceWith('POL')).toBe(true);
-    expect(atWar(game(), 'GER', 'POL')).toBe(false);
-    expect(atWar(game(), 'GER', 'FRA')).toBe(true);                  // s Francií dál válčí
+    expect(A.makePeaceWith('POL')).toBe(false);                      // M88: Polsko je v bloku Francie, která válčí dál
+    expect(ui().toast.text).toMatch(/vedoucí bloku/);
+    expect(atWar(game(), 'GER', 'POL')).toBe(true);
+    expect(atWar(game(), 'GER', 'FRA')).toBe(true);
   });
   it('bloky: založení, pozvání, odchod; hlášky při neúspěchu', () => {
     expect(A.foundBloc('Osa')).toBe(false);

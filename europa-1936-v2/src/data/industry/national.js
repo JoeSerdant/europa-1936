@@ -1,9 +1,9 @@
 // Počáteční průmysl zemí v lednu 1936 (vlastní odhady). civ/mil = počet továren, res = těžba surovin za den (kolonie jsou v číslech zahrnuty, protože mapa končí u Evropy),
 // cons = podíl spotřebního zboží (jinak podle velikosti země). Země bez záznamu nemá průmysl.
 export const IND_NATIONAL = {
-  GER: { civ: 40, mil: 22, res: { ocel: 26, hlinik: 3, ropa: 1.5, wolfram: 0.4, guma: 0.8 } },
+  GER: { civ: 40, mil: 22, res: { ocel: 36, hlinik: 3, ropa: 1.5, wolfram: 0.4, guma: 2 } },   // M88: největší evropský výrobce oceli; guma = začínající syntetická výroba
   FRA: { civ: 30, mil: 16, res: { ocel: 22, hlinik: 4, ropa: 1.2, wolfram: 0.2, guma: 2.5 } },
-  ENG: { civ: 40, mil: 17, res: { ocel: 20, hlinik: 1, ropa: 1, wolfram: 0.3, chrom: 0.3, guma: 3 } },
+  ENG: { civ: 40, mil: 17, res: { ocel: 26, hlinik: 1, ropa: 1, wolfram: 0.3, chrom: 0.3, guma: 3 } },
   IRE: { civ: 2, mil: 0, res: {} },
   HOL: { civ: 9, mil: 3, res: { ocel: 0.5, ropa: 0.5, guma: 1.5 } },
   BEL: { civ: 10, mil: 4, res: { ocel: 6 } },
@@ -47,4 +47,20 @@ export const TRADE_SEED = [
   { from: 'SWE', to: 'GER', res: 'ocel', amt: 3 },
   { from: 'TUR', to: 'GER', res: 'chrom', amt: 1.5 },
   { from: 'HOL', to: 'GER', res: 'guma', amt: 1 },
+];
+
+/**
+ * Pevnostní linie na startu hry (M88): každá provincie země `tag`, která sousedí po souši s územím země `vs`, má pevnost úrovně `lv`.
+ * Vlastní odhady podle stavu opevnění v lednu 1936 (další úrovně si země dostaví za hry).
+ */
+export const FORT_START = [
+  { tag: 'FRA', vs: 'GER', lv: 4 },   // hlavní pevnostní pásmo na Rýně a v Lotrinsku
+  { tag: 'FRA', vs: 'ITA', lv: 2 },   // alpské opevnění
+  { tag: 'ITA', vs: 'FRA', lv: 2 },
+  { tag: 'BEL', vs: 'GER', lv: 2 },   // pevnosti na Máze
+  { tag: 'CZE', vs: 'GER', lv: 2 },   // rozestavěné pohraniční opevnění
+  { tag: 'FIN', vs: 'SOV', lv: 2 },   // linie na Karelské šíji a podél hranice
+  { tag: 'SOV', vs: 'POL', lv: 1 },
+  { tag: 'GRE', vs: 'BUL', lv: 2 },
+  { tag: 'SWI', vs: 'GER', lv: 1 },
 ];

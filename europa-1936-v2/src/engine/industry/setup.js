@@ -2,7 +2,8 @@
 import { nextRandom } from '../rng.js';
 import { COUNTRIES } from '../../data/countries.js';
 import { EQUIP } from '../../data/army/equipment.js';
-import { IND_NATIONAL, TRADE_SEED, DEFAULT_SPLIT, RESOURCES } from '../../data/industry/index.js';
+import { IND_NATIONAL, TRADE_SEED, DEFAULT_SPLIT, RESOURCES, FORT_START } from '../../data/industry/index.js';
+import { adjacency } from '../army/geo.js';
 import { NAVY_NATIONAL } from '../../data/navy/ships.js';
 import { I } from './constants.js';
 import { categoryOf } from './core.js';
@@ -34,6 +35,13 @@ export function createInd(w, rng) {
     build: [], lines: [], trade: [],
     fuel: createFuel(w),   // M73: zásoby paliva
   };
+  // M88: pevnostní linie na hranicích (data `FORT_START`)
+  const adj = adjacency(w);
+  for (const f of FORT_START) {
+    const a = w.ownerIdx[f.tag], b = w.ownerIdx[f.vs];
+    if (!a || !b) continue;
+    for (let p = 1; p <= w.L; p++) if (w.provOwner0[p] === a && adj[p].some((e) => e.kind !== 2 && w.provOwner0[e.to] === b)) ind.fort[p] = Math.max(ind.fort[p] || 0, f.lv);
+  }
   let seed = rng;
   const rnd = () => { const [x, n] = nextRandom(seed); seed = n; return x; };
 

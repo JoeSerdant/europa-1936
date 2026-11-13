@@ -19,7 +19,7 @@ import { createCmd } from './cmd/index.js';
 import { createStat, recordStat } from './stat/index.js';
 import { createRules } from './rules.js';
 
-export const GAME_VERSION = 41;
+export const GAME_VERSION = 42;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 

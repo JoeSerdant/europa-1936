@@ -89,6 +89,12 @@ function computeReach(ctrl, o, w, infra, friends, ports) {
     // uzel spojený železnicí s hlavním městem dostává podíl jeho toku; každý uzel má aspoň slabé místní zásoby (kolonie, obklíčení)
     push(p, Math.max(C.SUP_HUB * rail[p], C.SUP_LOCAL));
   }
+  // M88: spojenec (blok, loutka, pán, dohoda o přístupu) živí cizí vojsko na svém území ze svého hlavního města a uzlů – slaběji než vlastní zázemí
+  if (fset) for (let p = 1; p <= L; p++) {
+    const c = ctrl[p];
+    if (c === o || !fset.has(c)) continue;
+    if (w.owners[c].cap === p) push(p, C.SUP_ALLY_CAPITAL); else if (g.hub[p]) push(p, C.SUP_ALLY_HUB);
+  }
   const spread = () => {
     while (heap.size) {
       const [nk, p] = heap.pop();

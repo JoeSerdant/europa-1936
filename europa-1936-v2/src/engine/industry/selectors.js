@@ -26,7 +26,7 @@ export function industryOf(state, o) {
   const dockUsed = lines.filter((l) => isShip(l.eq)).reduce((a, l) => a + l.fac, 0);
   return {
     o, civ: t.civ, mil: t.mil, dok: t.dok, dockUsed, dockFree: Math.max(0, t.dok - dockUsed), occupied: t.occ,
-    cons: consOf(state, o), consFac: use.consFac, tradeCiv,
+    cons: consOf(state, o), consFac: use.consFac, tradeCiv, imports,
     civAvail: Math.max(0, use.civAfterCons - tradeCiv), milAvail: use.milAvail, milUsed: used, milFree: Math.max(0, Math.floor(use.milAvail - used + 1e-9)),
     points: Math.max(0, use.civAfterCons - tradeCiv) * I.IC_PER_FAC * (1 + mods.build + pm.build) * out,
     effCap: I.EFF_CAP + mods.effCap,

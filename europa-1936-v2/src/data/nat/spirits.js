@@ -1,14 +1,17 @@
 // Národní duchové (M74): trvalé nebo dočasné rysy země s bonusy a postihy (stejné klíče jako zákony a poradci:
 // stab, ws, cons, build, prod, extract, imp, man, research). Vlastní názvy, texty a čísla.
 //  tone  'good' | 'bad' | 'mixed' – barva na kartě státu
+//  army  vojenské bonusy ducha (M88; klíče z `MOD_KEYS` v engine/army/leaders.js: atk, def, speed, orgRegen, planGain, …) – čte je `modsOf` divizí
 export const SPIRITS = {
   zbrojni_horecka: { n: 'Zbrojní horečka', info: 'Stát lije peníze do zbrojovek na úkor spotřeby.', tone: 'mixed', mod: { prod: 0.05, cons: 0.03 } },
   revize_smluv: { n: 'Touha po revizi smluv', info: 'Společnost nepřijala poválečné uspořádání a je ochotná za jeho změnu bojovat.', tone: 'good', mod: { ws: 0.05 } },
   rozstepena_republika: { n: 'Rozštěpená republika', info: 'Vlády se střídají po měsících a ulice patří krajnostem.', tone: 'bad', mod: { stab: -0.05 } },
-  obranne_mysleni: { n: 'Obranné myšlení', info: 'Vzpomínka na zákopy velí schovat se za pevnosti a nikam nepospíchat.', tone: 'bad', mod: { ws: -0.05, build: 0.05 } },
+  obranne_mysleni: { n: 'Obranné myšlení', info: 'Vzpomínka na zákopy velí schovat se za pevnosti a nikam nepospíchat.', tone: 'bad', mod: { ws: -0.05, build: 0.05 }, army: { atk: -0.1 } },
+  tezkopadne_veleni: { n: 'Těžkopádné velení', info: 'Rozkazy putují telefonem a spojkami; na rychlý manévr armáda připravená není.', tone: 'bad', mod: {}, army: { def: -0.1, orgRegen: -0.2 } },
+  ukolova_taktika: { n: 'Úkolová taktika', info: 'Velitelé na místě jednají podle vlastního úsudku a útok nečeká na rozkaz shora.', tone: 'good', mod: {}, army: { atk: 0.12, planGain: 0.25 } },
   usmirovani: { n: 'Politika usmiřování', info: 'Veřejnost i vláda věří, že ústupky válku odvrátí.', tone: 'bad', mod: { ws: -0.06 } },
   svetove_imperium: { n: 'Světové impérium', info: 'Zámořské državy dodávají suroviny a obchodní cesty jsou krátké.', tone: 'good', mod: { imp: -0.1, extract: 0.05 } },
-  cistky: { n: 'Velké čistky', info: 'Strach ochromil důstojnický sbor i úřady a nikdo si není jistý zítřkem.', tone: 'bad', mod: { stab: -0.05, ws: -0.03 } },
+  cistky: { n: 'Velké čistky', info: 'Strach ochromil důstojnický sbor i úřady a nikdo si není jistý zítřkem.', tone: 'bad', mod: { stab: -0.05, ws: -0.03 }, army: { atk: -0.08, def: -0.1, orgRegen: -0.1 } },
   petiletky: { n: 'Pětiletý plán', info: 'Celá země je jedno staveniště.', tone: 'good', mod: { build: 0.1 } },
   sen_o_imperiu: { n: 'Sen o novém impériu', info: 'Režim slibuje návrat staré slávy a lidé tomu zatím věří.', tone: 'good', mod: { ws: 0.05 } },
   slaby_prumysl: { n: 'Slabá průmyslová základna', info: 'Chybí suroviny, stroje i zkušení dělníci.', tone: 'bad', mod: { prod: -0.05 } },
@@ -26,8 +29,8 @@ export const SPIRIT_IDS = Object.keys(SPIRITS);
 
 /** Počáteční duchové zemí (trvalí, dokud je účinek `unspirit` neodstraní). */
 export const SPIRIT_START = {
-  GER: ['zbrojni_horecka', 'revize_smluv'],
-  FRA: ['rozstepena_republika', 'obranne_mysleni'],
+  GER: ['zbrojni_horecka', 'revize_smluv', 'ukolova_taktika'],
+  FRA: ['rozstepena_republika', 'obranne_mysleni', 'tezkopadne_veleni'],
   ENG: ['usmirovani', 'svetove_imperium'],
   SOV: ['cistky', 'petiletky'],
   ITA: ['sen_o_imperiu', 'slaby_prumysl'],

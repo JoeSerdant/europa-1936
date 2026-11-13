@@ -6,7 +6,7 @@ import { landZones } from '../src/engine/army/zones.js';
 import { supplyFlow } from '../src/engine/army/supply.js';
 import { seaPorts, seaBlocked, powerOf } from '../src/engine/nav/core.js';
 import { allocateArmies } from '../src/engine/ai/strategy.js';
-import { landingSites, startInvasion, advanceInvasions, stagingArmies, reservedFleets, navalBalance } from '../src/engine/ai/invasion.js';
+import { landingSites, startInvasion, advanceInvasions, stagingArmies, reservedFleets, navalBalance, localSuperiority } from '../src/engine/ai/invasion.js';
 import { logLine, logImportant } from '../src/ui/logText.js';
 import { popupFor } from '../src/ui/popups.js';
 
@@ -19,6 +19,7 @@ const named = (n) => { for (let p = 1; p <= W.L; p++) if (W.provName(p) === n) r
 function emptyGermany() {
   let s = createGame({ player: null, aiLevel: 2, scenario: '1939' });
   s = declareWar(s, 'ENG', 'GER');
+  s = { ...s, dip: { ...s.dip, goal: { ...s.dip.goal, [`${ENG}>${GER}`]: 'conquest' }, ver: s.dip.ver + 1 } };   // M88: vylodění jen u země, proti které má útočník válečný cíl
   const divs = s.mil.divs.map((d) => (d && d.o === GER ? null : d));
   return { ...s, mil: { ...s.mil, divs, ver: s.mil.ver + 1 } };
 }
@@ -144,9 +145,19 @@ describe('místa vylodění a sestavení sboru', () => {
     expect(startInvasion(none, ENG, armiesOfCountry(none, ENG))).toBe(none);
     const b = navalBalance(s, ENG);
     expect(b.own).toBeGreaterThan(0);
+    // M88: převaha se posuzuje u místa vylodění – obří nepřátelské loďstvo poblíž cílové oblasti vylodění zakáže, vzdálené ne
     const weak = { ...s, nav: { ...s.nav, fleets: s.nav.fleets.map((f) => (f && f.o === GER ? { ...f, ships: { bb: 500 } } : f)) } };
     expect(powerOf({ bb: 500 }).atk).toBeGreaterThan(0);
-    expect(startInvasion(weak, ENG, armiesOfCountry(weak, ENG))).toBe(weak);
+    const gf = weak.nav.fleets.find((f) => f && f.o === GER);
+    expect(localSuperiority(weak, ENG, gf.p)).toBe(false);
+    const noFoe = { ...s, nav: { ...s.nav, fleets: s.nav.fleets.map((f) => (f && f.o === GER ? null : f)) } };
+    expect(localSuperiority(noFoe, ENG, gf.p)).toBe(true);
+    const t = startInvasion(weak, ENG, armiesOfCountry(weak, ENG));
+    if (t !== weak) {   // sbor smí vyrazit jen tam, kde nepřátelské loďstvo poblíž není
+      const op = t.ai.inv.find((x) => x.o === ENG);
+      const sea = landingSites(weak, ENG, [...Array(W.L + 1).keys()].filter((p) => p && W.portLevel[p] && weak.ctrl[p] === ENG), 12).find((x) => x.p === op.p);
+      if (sea) expect(localSuperiority(weak, ENG, sea.sea)).toBe(true);
+    }
   });
   it('zem v míru nebo jiná země bez válek invazi nezačne', () => {
     const peace = createGame({ player: null, aiLevel: 2, scenario: '1939' });

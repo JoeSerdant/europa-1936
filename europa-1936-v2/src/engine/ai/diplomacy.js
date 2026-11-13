@@ -4,7 +4,7 @@ import { HIST_WARS, HIST_FACTIONS, HIST_GUARANTEES } from '../../data/ai/plans.j
 import { HIST_DEMANDS, HIST_JACKALS } from '../../data/dip/demands.js';
 import { hasWar, enemiesOf, atWar } from '../army/war.js';
 import { divisionCount } from '../army/selectors.js';
-import { justifyWar, startWar, proposePeace, justReady, warBlock, createFaction, inviteToFaction } from '../dip/commands.js';
+import { justifyWar, startWar, proposePeace, justReady, warBlock, createFaction, inviteToFaction, claimGoal } from '../dip/commands.js';
 import { subjectsOf, autonomyOf, tightenControl } from '../dip/subjects.js';
 import { guarantee } from '../dip/guarantee.js';
 import { campOf, hasCapitulated, warScore, pairKey, vpHeld } from '../dip/core.js';
@@ -13,6 +13,7 @@ import { adjacency } from '../army/geo.js';
 import { pactOf, pactBlock, proposePact, breakBlock, breakPact } from '../dip/pact.js';
 import { HIST_PACTS } from '../../data/dip/pacts.js';
 import { AI } from './constants.js';
+import { COUNTRIES } from '../../data/countries.js';
 import { playerOf } from './core.js';
 import { theatersOf } from './strategy.js';
 
@@ -79,13 +80,28 @@ export function aiDiplomacy(state, o) {
       if (next !== state) return next;
     }
   }
+  // M88: bez historické AI si velmoc po roce války sama vyhlásí cíl proti nepřátelské velmoci (jinak by obě strany jen držely frontu)
+  if (state.ai && !state.ai.hist && (COUNTRIES[tag]?.tier ?? 3) === 1 && state.tick % (24 * 7) === 0) {
+    for (const e of enemiesOf(state.mil, o)) {
+      if ((COUNTRIES[w.owners[e].tag]?.tier ?? 3) !== 1 || state.dip.goal[`${o}>${e}`]) continue;
+      const since = state.dip.since[pairKey(o, e)];
+      if (since == null || (state.tick - since) / 24 < AI.GOAL_DAYS) continue;
+      const next = claimGoal(state, o, e);
+      if (next !== state) return next;
+    }
+  }
   // historické válečné plány (drobná válka s okrajovou zemí další tažení nebrání)
   if (!state.ai || !state.ai.hist || state.pol.own[o].stab < AI.STAB_MIN) return state;
   const busy = warBusy(state, o);
   for (const plan of HIST_WARS) {
     if (plan.tag !== tag || day < plan.from || day > plan.until) continue;
-    if (busy && !(plan.force && day >= plan.from + plan.force)) continue;   // M87: zaneprázdněná země plán odkládá, nejdéle o `force` dní
     const t = w.ownerIdx[plan.target];
+    if (t && atWar(state.mil, o, t)) {   // M88: s cílem plánu už válčí (zatáhla ho záruka nebo spojenec) – vyhlásí válečný cíl a přejde do útoku
+      if (!state.dip.goal[`${o}>${t}`] && !hasCapitulated(state, t)) { const next = claimGoal(state, o, t); if (next !== state) return next; }
+      continue;
+    }
+    if (plan.war) continue;   // plán jen pro válku, která už běží (země ji sama nezačne)
+    if (busy && !(plan.force && day >= plan.from + plan.force)) continue;   // M87: zaneprázdněná země plán odkládá, nejdéle o `force` dní
     if (t && pactOf(state, o, t) && !state.dip.goal[`${o}>${t}`]) {   // M75: historický útok přes pakt – nejdřív ho vypovědět (až to půjde)
       if (breakBlock(state, o, t)) continue;
       return breakPact(state, o, t);

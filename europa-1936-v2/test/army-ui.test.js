@@ -396,8 +396,12 @@ describe('výběr a rozkazy (akce)', () => {
     expect(atWar(game(), 'GER', 'POL')).toBe(true);
     expect(A.declareWarOn('POL')).toBe(false);
     expect(A.makePeaceWith('ITA')).toBe(false);                      // s Itálií nejsou ve válce (s Francií ano: blok Polska se zapojil)
-    expect(A.makePeaceWith('POL')).toBe(true);
-    expect(atWar(game(), 'GER', 'POL')).toBe(false);
+    expect(A.makePeaceWith('POL')).toBe(false);                      // M88: člen bloku neuzavře separátní mír, dokud válčí vedoucí bloku (Francie)
+    expect(atWar(game(), 'GER', 'POL')).toBe(true);
+    justified('DEN');
+    expect(A.declareWarOn('DEN')).toBe(true);
+    expect(A.makePeaceWith('DEN')).toBe(true);                       // malá země bez bloku: bílý mír jde
+    expect(atWar(game(), 'GER', 'DEN')).toBe(false);
     A.startGame(null);
     expect(A.declareWarOn('POL')).toBe(false);
   });

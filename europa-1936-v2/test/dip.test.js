@@ -81,9 +81,9 @@ describe('ospravedlnění a vyhlášení války', () => {
     const w = startWar(ready(s0, ITA, YUG), ITA, YUG);
     for (const x of [YUG, CZE, ROM]) expect(atWar(w, ITA, x)).toBe(true);
     const f = startWar(ready({ ...s0, player: 'FRA' }, FRA, GER), FRA, GER);
-    for (const x of [FRA, POL, BEL]) expect(atWar(f, x, GER)).toBe(true);
+    for (const x of [FRA, POL]) expect(atWar(f, x, GER)).toBe(true);
     expect(atWar(f, ENG, GER)).toBe(false);
-    expect(atWar(f, POL, BEL)).toBe(false);
+    expect(atWar(f, BEL, GER)).toBe(false);   // M88: Belgie je neutrální, v bloku Francie není
     expect(relOf(f, FRA, GER)).toBeLessThan(relOf(s0, FRA, GER));
   });
   it('platnost ospravedlnění je omezená', () => {
@@ -96,21 +96,32 @@ describe('ospravedlnění a vyhlášení války', () => {
 
 describe('mír', () => {
   const s0 = createGame({ player: 'GER' });
-  const war = declareWar(s0, 'FRA', 'GER');
+  const DEN = idx('DEN');
+  const war = declareWar(s0, 'DEN', 'GER');   // velmoc s malou zemí (velmoci mezi sebou bílý mír neuzavírají, M88)
   it('bez okupace přijme bílý mír každá strana', () => {
-    const p = proposePeace(war, GER, FRA);
-    expect(atWar(p, GER, FRA)).toBe(false);
-    expect(proposePeace(s0, GER, FRA)).toBe(s0);            // nejsou ve válce
-    expect(peaceBlock(s0, GER, FRA)).toMatch(/válce/);
+    const p = proposePeace(war, GER, DEN);
+    expect(atWar(p, GER, DEN)).toBe(false);
+    expect(proposePeace(s0, GER, DEN)).toBe(s0);            // nejsou ve válce
+    expect(peaceBlock(s0, GER, DEN)).toMatch(/válce/);
   });
   it('vítěz bílý mír odmítne, poražený ho přijme', () => {
-    const w = takeAll(war, GER, FRA, 0.3);
-    expect(warScore(w, FRA, GER)).toBeGreaterThanOrEqual(DIP.PEACE_SCORE);
-    expect(proposePeace(w, GER, FRA)).toBe(w);
-    expect(peaceBlock(w, GER, FRA)).toMatch(/vyhrává/);
-    const p = proposePeace(w, FRA, GER);
-    expect(atWar(p, FRA, GER)).toBe(false);
-    expect(p.ctrl.filter((c, i) => i > 0 && c === FRA && p.stateOwner[W.provState[i]] === GER)).toHaveLength(0);
+    const w = takeAll(war, GER, DEN, 0.3);
+    expect(warScore(w, DEN, GER)).toBeGreaterThanOrEqual(DIP.PEACE_SCORE);
+    expect(proposePeace(w, GER, DEN)).toBe(w);
+    expect(peaceBlock(w, GER, DEN)).toMatch(/vyhrává/);
+    const p = proposePeace(w, DEN, GER);
+    expect(atWar(p, DEN, GER)).toBe(false);
+    expect(p.ctrl.filter((c, i) => i > 0 && c === DEN && p.stateOwner[W.provState[i]] === GER)).toHaveLength(0);
+  });
+  it('M88: velmoci spolu bílý mír neuzavřou a člen bloku neuzavře separátní mír, dokud válčí jeho vedoucí', () => {
+    const big = declareWar(s0, 'FRA', 'GER');
+    expect(peaceBlock(big, GER, FRA)).toMatch(/Velmoci/);
+    expect(proposePeace(big, GER, FRA)).toBe(big);
+    const bloc = declareWar(big, 'POL', 'GER');             // Polsko je v bloku Francie, která s Německem válčí
+    expect(peaceBlock(bloc, GER, POL)).toMatch(/vedoucí bloku/);
+    expect(peaceBlock(bloc, POL, GER)).toMatch(/vedoucí bloku/);
+    const alone = declareWar(s0, 'POL', 'GER');             // bez války vedoucího bloku mír jde
+    expect(peaceBlock(alone, GER, POL)).toBeNull();
   });
 });
 
@@ -234,11 +245,13 @@ describe('přehled a determinismus', () => {
     expect(divisionCount(a, 'GER')).toBeGreaterThanOrEqual(0);
   });
   it('zapomínání: změna vztahu se v míru vrací k nule', () => {
-    const a = startWar(ready(s0, GER, POL), GER, POL);
-    const peace = proposePeace(a, GER, POL);
-    const r0 = relOf(peace, GER, POL);
+    const DEN = idx('DEN');
+    const a = startWar(ready(s0, GER, DEN), GER, DEN);
+    const peace = proposePeace({ ...a, tick: a.tick + 24 * (DIP.WAR_LOCK_DAYS + 1) }, GER, DEN);
+    expect(atWar(peace, GER, DEN)).toBe(false);
+    const r0 = relOf(peace, GER, DEN);
     const later = day(peace, 100);
-    expect(relOf(later, GER, POL)).toBeGreaterThan(r0);
-    expect(relOf(later, GER, POL)).toBeLessThanOrEqual(baseRel(GER, POL));
+    expect(relOf(later, GER, DEN)).toBeGreaterThan(r0);
+    expect(relOf(later, GER, DEN)).toBeLessThanOrEqual(baseRel(GER, DEN));
   });
 });

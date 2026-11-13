@@ -300,12 +300,13 @@ try {
   const tplAfter = await page.locator('.tpl-card').count();
   check('návrhář šablon: nová šablona se uloží a objeví v seznamu', (await page.locator('.designer').count()) === 0 && tplAfter === tplBefore + 1, `${tplBefore} → ${tplAfter}`);
 
-  // válka je splněna: bílý mír s protivníky (AI zemí by jinak za dlouhé skoky v čase hráče porazily), pak dlouhé skoky v čase
+  // válka je splněna: mír s protivníky (AI zemí by jinak za dlouhé skoky v čase hráče porazily), pak dlouhé skoky v čase.
+  // Od M88 velmoci a členové válčících bloků bílý mír neuzavírají, proto nízkoúrovňový `makePeace` (jen pro zkoušku).
   const peace = await E(() => {
     const { gameStore, engine } = window.__e1936;
-    const GER = engine.getWorld().ownerIdx.GER;
+    const w = engine.getWorld(), GER = w.ownerIdx.GER;
     let s = gameStore.getState();
-    for (const [a, b] of s.mil.wars.slice()) { const e = a === GER ? b : b === GER ? a : 0; if (e) s = engine.proposePeace(s, GER, e); }
+    for (const [a, b] of s.mil.wars.slice()) { const e = a === GER ? b : b === GER ? a : 0; if (e) s = engine.makePeace(s, 'GER', w.owners[e].tag); }
     gameStore.setState(s);
     return s.mil.wars.filter(([a, b]) => a === GER || b === GER).length;
   });

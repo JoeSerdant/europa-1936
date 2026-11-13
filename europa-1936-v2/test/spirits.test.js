@@ -32,9 +32,9 @@ describe('data', () => {
 describe('stav a bonusy', () => {
   it('země začínají se svými duchy (trvalými) a země bez dat s prázdným seznamem', () => {
     const s = base();
-    expect(s.nat.own[GER].sp).toEqual({ zbrojni_horecka: 0, revize_smluv: 0 });
+    expect(s.nat.own[GER].sp).toEqual({ zbrojni_horecka: 0, revize_smluv: 0, ukolova_taktika: 0 });
     expect(s.nat.own[LUX].sp).toEqual({});
-    expect(spiritsOf(s, GER).map((x) => x.id)).toEqual(['zbrojni_horecka', 'revize_smluv']);
+    expect(spiritsOf(s, GER).map((x) => x.id)).toEqual(['zbrojni_horecka', 'revize_smluv', 'ukolova_taktika']);
     expect(spiritsOf(s, GER)[0].days).toBe(0);
   });
   it('bonusy duchů se sčítají do polModsOf a mění cíl stability a podpory války', () => {

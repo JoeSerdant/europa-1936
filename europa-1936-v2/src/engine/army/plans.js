@@ -4,6 +4,7 @@
 //      careful  počká na nahromaděné plánování (polovina stropu) a plně odpočatou organizaci,
 //      balanced útočí, když je organizace aspoň 65 %,
 //      rush     útočí hned (organizace aspoň 35 %).
+//    Divize pod prahem síly režimu (70 / 50 / 35 %) na cíle plánu neútočí (M88).
 //    Dobytá cílová provincie přejde z 'to' do 'line'.
 // Plánovač běží denně (a hned po zadání plánu); ovládá jen nečinné divize – ruční rozkaz platí, dokud divize nedojde.
 // Země bez hráče (zatím jen obranná AI): armády bez vlastního plánu dostanou plán „Hájit oblast“ kolem fronty s nepřítelem.
@@ -23,6 +24,7 @@ export const PLAN_MODES = ['careful', 'balanced', 'rush'];
 export const MODE_NAMES = { careful: 'Opatrně', balanced: 'Vyváženě', rush: 'Zteče' };
 const MODE_ORG = { careful: 0.85, balanced: 0.65, rush: 0.35 };
 const MODE_PLAN = { careful: 0.5, balanced: 0, rush: 0 };
+const MODE_HP = { careful: 0.7, balanced: 0.5, rush: 0.35 };   // M88: vykrvácená divize na cíl plánu neútočí (drží linii a doplňuje stavy)
 export const AREA_MAX = 300;
 
 /** Důležitost provincie pro obranu: vítězné body, uzel, přístav, hlavní město, nepřátelé v sousedství. */
@@ -59,7 +61,12 @@ export function capQuotas(q, caps, wt) {
     if (best < 0) break;
     out[best]++; excess--;
   }
-  if (excess > 0) { const extra = quotas(excess, wt); for (let i = 0; i < out.length; i++) out[i] += extra[i]; }
+  // nikde není místo: zbytek se rozloží rovnoměrně (vždy na post, který je vůči své kapacitě nejméně přeplněný; M88 – dřív podle vah, takže se desítky divizí sešly na jednom postu)
+  while (excess > 0) {
+    let best = 0, bk = Infinity;
+    for (let i = 0; i < out.length; i++) { const k = (out[i] + 1) / Math.max(1, caps[i]); if (k < bk || (k === bk && wt[i] > wt[best])) { bk = k; best = i; } }
+    out[best]++; excess--;
+  }
   return out;
 }
 
@@ -104,6 +111,31 @@ function supplyOf(ctx, o) {
   return r;
 }
 
+/** Kolik divizí jiných armád (a divizí bez armády) země `o` stojí v provinciích nebo do nich míří: Map(provincie → počet). Mezipaměť po armádách v kontextu. */
+function othersAt(ctx, o, armyId) {
+  if (!ctx.destMemo) ctx.destMemo = new Map();
+  let all = ctx.destMemo.get(o);
+  if (!all) {   // provincie → Map(armáda → počet)
+    all = new Map();
+    for (let id = 1; id < ctx.divs.length; id++) {
+      const d = ctx.divs[id];
+      if (!d || d.o !== o) continue;
+      const p = d.path.length ? d.path[d.path.length - 1] : d.p;
+      let m = all.get(p);
+      if (!m) { m = new Map(); all.set(p, m); }
+      m.set(d.army, (m.get(d.army) || 0) + 1);
+    }
+    ctx.destMemo.set(o, all);
+  }
+  const out = new Map();
+  for (const [p, m] of all) {
+    let n = 0;
+    for (const [a, c] of m) if (a !== armyId) n += c;
+    if (n) out.set(p, n);
+  }
+  return out;
+}
+
 function postsOf(ctx, army) {
   const plan = army.plan;
   const list = plan.k === 'area' ? plan.area : plan.line;
@@ -144,12 +176,16 @@ export function planArmy(ctx, armyId, byArmy, pathOf) {
     });
     // každý post aspoň jednu divizi, pokud jich je dost; zbytek podle důležitosti
     let q = ids.length >= posts.length ? quotas(ids.length - posts.length, wt).map((x) => x + 1) : quotas(ids.length, wt);
-    if (ids.length > posts.length) {   // zásobování: post unese jen tolik divizí, kolik uživí (M67)
-      let use = 0;
-      for (const id of ids) use += statsOf(ctx.mil, ctx.divs[id]).sup;
-      use = Math.max(0.1, use / ids.length);
-      const reach = supplyOf(ctx, o);
-      q = capQuotas(q, posts.map((p) => Math.max(1, Math.floor((reach[p] * C.SUP_CAPACITY) / use + 0.25))), wt);
+    {   // zásobování: post unese jen tolik divizí, kolik uživí (M67); místo, které už zabraly jiné armády téže země, se odečte (M88)
+      const others = othersAt(ctx, o, armyId);
+      const crowded = posts.some((p) => others.has(p));
+      if (ids.length > posts.length || crowded) {
+        let use = 0;
+        for (const id of ids) use += statsOf(ctx.mil, ctx.divs[id]).sup;
+        use = Math.max(0.1, use / ids.length);
+        const reach = supplyOf(ctx, o);
+        q = capQuotas(q, posts.map((p) => Math.max(others.has(p) ? 0 : 1, Math.floor((reach[p] * C.SUP_CAPACITY) / use + 0.25) - (others.get(p) || 0))), wt);
+      }
     }
     const want = new Map(posts.map((p, i) => [p, q[i]]));
     const have = new Map();
@@ -188,7 +224,8 @@ export function planArmy(ctx, armyId, byArmy, pathOf) {
           if (d.b !== 0 || d.path.length || d.hold > 0 || d.rt > 0) continue;
           const k = adjKind(d.p, t);
           if (k < 0 || k === 2) continue;
-          if (d.org < statsOf(ctx.mil, d).org * MODE_ORG[plan.mode]) continue;
+          const st = statsOf(ctx.mil, d);
+          if (d.org < st.org * MODE_ORG[plan.mode] || d.hp < st.hp * MODE_HP[plan.mode]) continue;
           sendTo(ctx, id, [t]);
         }
       }

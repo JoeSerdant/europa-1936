@@ -19,6 +19,20 @@ export function spiritMods(sp) {
   return m;
 }
 
+const armyCache = new WeakMap();   // objekt `sp` → součet vojenských bonusů
+/** Součet vojenských bonusů duchů (M88; klíče jako u velitelů a doktrín). Bez bonusů vrací `NO_SPIRIT_MODS`. */
+export function spiritArmyMods(sp) {
+  if (!sp) return NO_SPIRIT_MODS;
+  let m = armyCache.get(sp);
+  if (m) return m;
+  m = {};
+  let any = false;
+  for (const id in sp) { const mod = SPIRITS[id]?.army; if (mod) { any = true; for (const k in mod) m[k] = (m[k] || 0) + mod[k]; } }
+  if (!any) m = NO_SPIRIT_MODS;
+  armyCache.set(sp, m);
+  return m;
+}
+
 /** Počáteční duchové země podle tagu. */
 export function startSpirits(tag) {
   const sp = {};

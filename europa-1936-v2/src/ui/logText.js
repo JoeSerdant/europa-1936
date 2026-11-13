@@ -19,6 +19,7 @@ export function logLine(e, me = 0) {
   const w = getWorld();
   switch (e.k) {
     case 'war': return { icon: 'swords', tone: 'bad', world: true, mine: e.a === me || e.b === me, text: `Válka: ${nm(e.a)} napadá zemi ${nm(e.b)}.` };
+    case 'goal': return { icon: 'swords', tone: 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} vyhlašuje válečný cíl proti zemi ${nm(e.b)}: z držení fronty přechází do útoku.` };   // M88
     case 'peace': return { icon: 'check', tone: 'good', world: true, mine: e.a === me || e.b === me, text: `Bílý mír mezi zeměmi ${nm(e.a)} a ${nm(e.b)}.` };
     case 'cap': return { icon: 'flag', tone: 'bad', world: true, mine: e.o === me, text: `Kapitulace: ${nm(e.o)}.` };
     case 'faction': return { icon: 'dip', tone: 'info', world: true, mine: e.o === me, text: `Nový blok „${e.x}“ (zakladatel: ${nm(e.o)}).` };
@@ -71,6 +72,7 @@ export function logLine(e, me = 0) {
 /** Je záznam důležitý natolik, aby se ohlásil oznámením? (válka a kapitulace se zemí hráče nebo cizí kapitulace, dokončený výzkum a cíl hráče) */
 export function logImportant(e, me) {
   if (e.k === 'war') return e.a === me || e.b === me;
+  if (e.k === 'goal') return e.b === me;   // M88: někdo si vyhlásil válečný cíl proti hráči
   if (e.k === 'gov' || e.k === 'nuke' || e.k === 'nukeready' || e.k === 'restore') return true;
   if (e.k === 'exile') return e.x === me;
   if (e.k === 'aid') return e.y === 1 || (e.o === me && e.y === 0);

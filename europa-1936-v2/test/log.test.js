@@ -40,8 +40,10 @@ describe('zápisy ze systémů', () => {
     let s = day(justifyWar(pp(s0, GER, 100), GER, POL), 31);
     s = startWar(s, GER, POL);
     expect(s.log.items.at(-1)).toMatchObject({ k: 'war', a: GER, b: POL });
-    const p = proposePeace(s, GER, POL);
-    expect(p.log.items.at(-1)).toMatchObject({ k: 'peace', a: GER, b: POL });
+    expect(proposePeace(s, GER, POL)).toBe(s);   // M88: člen bloku neuzavře separátní mír, dokud válčí vedoucí bloku (Francie)
+    const DEN = W.ownerIdx.DEN;
+    const p = proposePeace(declareWar(s0, 'GER', 'DEN'), GER, DEN);
+    expect(p.log.items.at(-1)).toMatchObject({ k: 'peace', a: GER, b: DEN });
     const f = createFaction(pp(s0, ITA, 100), ITA, 'Osa');
     expect(f.log.items.at(-1)).toMatchObject({ k: 'faction', o: ITA, x: 'Osa' });
     const j = inviteToFaction(f, ITA, GER);
