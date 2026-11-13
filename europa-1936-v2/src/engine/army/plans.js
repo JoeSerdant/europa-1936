@@ -61,7 +61,12 @@ export function capQuotas(q, caps, wt) {
     if (best < 0) break;
     out[best]++; excess--;
   }
-  if (excess > 0) { const extra = quotas(excess, wt); for (let i = 0; i < out.length; i++) out[i] += extra[i]; }
+  // nikde není místo: zbytek se rozloží rovnoměrně (vždy na post, který je vůči své kapacitě nejméně přeplněný; M88 – dřív podle vah, takže se desítky divizí sešly na jednom postu)
+  while (excess > 0) {
+    let best = 0, bk = Infinity;
+    for (let i = 0; i < out.length; i++) { const k = (out[i] + 1) / Math.max(1, caps[i]); if (k < bk || (k === bk && wt[i] > wt[best])) { bk = k; best = i; } }
+    out[best]++; excess--;
+  }
   return out;
 }
 

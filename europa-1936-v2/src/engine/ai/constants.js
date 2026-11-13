@@ -17,6 +17,7 @@ export const AI = {
   ATTACK_RATIO: { 1: 2.0, 2: 1.3, 3: 1.0 },    // nejmenší poměr vlastních divizí k účinné síle nepřítele v divadle, aby AI útočila (M66)
   TARGETS_MIN: 2,                   // nejméně cílů útoku armády
   DIVS_PER_TARGET: 3,               // cílů útoku na tolik divizí armády
+  REAR_DEPTH: 7,                    // jak hluboko za frontou (kroky po vlastním území) se hledá týl pro druhý sled (M88)
   FRONT_FILL: 1.0,                  // podíl zásobovací kapacity postů divadla, který smí obsadit první sled (M88)
   DIV_SUP: 0.65,                    // odhad spotřeby zásob jedné divize pro tento výpočet
   FORT_AVOID: 3,                    // cíle s pevností aspoň této úrovně ofenziva vynechá, dokud jsou v divadle jiné

@@ -77,11 +77,12 @@ describe('účinek paktu', () => {
     expect(breakBlock(b, GER, ITA)).toMatch(/Žádný pakt/);
   });
   it('válka bloků pakt mezi jejich členy zruší (voidPacts) a zaniklá země pakt ztrácí', () => {
-    let t = proposePact(pp(base(), BEL), BEL, GER, true);
-    expect(pactOf(t, GER, BEL)).toBeTruthy();
+    const PLN = W.ownerIdx.POL;
+    let t = proposePact(pp(base(), PLN), PLN, GER, true);
+    expect(pactOf(t, GER, PLN)).toBeTruthy();
     t = { ...t, dip: { ...t.dip, just: [{ a: GER, b: FRA, g: 'conquest', ready: t.tick }] } };
-    t = startWar(t, GER, FRA);   // Belgie je v bloku Francie
-    expect(pactOf(t, GER, BEL)).toBeNull();
+    t = startWar(t, GER, FRA);   // Polsko je v bloku Francie
+    expect(pactOf(t, GER, PLN)).toBeNull();
     const cap = { ...s, dip: { ...s.dip, cap: s.dip.cap.map((v, i) => (i === ITA ? 1 : v)) } };
     expect(pactOf(pactDay(cap), GER, ITA)).toBeNull();
     expect(voidPacts(s)).toBe(s);

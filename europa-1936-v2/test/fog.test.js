@@ -56,7 +56,6 @@ describe('viditelnost na souši', () => {
     const f = game({ player: 'FRA' });
     const v = visibleLand(f, FRA);
     expect(v[capOf(PLN)]).toBe(1);
-    expect(v[capOf(BEL)]).toBe(1);
     expect(seesDivision(f, PLN, capOf(SOV))).toBe(true);
   });
   it('vlastní divize v cizí zemi odkryje své okolí', () => {

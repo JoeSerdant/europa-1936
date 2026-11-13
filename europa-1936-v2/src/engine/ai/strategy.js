@@ -164,16 +164,16 @@ function suppliedNear(state, o, a, view, count) {
  * Týl divadla (M88): zásobované vlastní provincie dva až čtyři kroky za posty `posts` (ne posty samy ani jejich sousedé), nejbližší armádě `a`, nejvýš `count`.
  * Sem se staví druhý sled, který se na frontu nevejde.
  */
-export function rearOf(state, o, posts, a, view, count) {
+export function rearOf(state, o, posts, a, view, count, used = null) {
   const w = getWorld(), g = geo(w), adj = adjacency(w);
   const seen = new Set(posts), out = [];
   let ring = posts.slice();
-  for (let step = 1; step <= 4 && ring.length; step++) {
+  for (let step = 1; step <= AI.REAR_DEPTH && ring.length; step++) {
     const next = [];
     for (const p of ring) for (const e of adj[p]) {
       if (e.kind === 2 || seen.has(e.to) || state.ctrl[e.to] !== o) continue;
       seen.add(e.to); next.push(e.to);
-      if (step >= 2 && view.reach[e.to] >= AI.SUP_TARGET_MIN) out.push(e.to);
+      if (step >= 2 && view.reach[e.to] >= AI.SUP_TARGET_MIN && !(used && used.has(e.to))) out.push(e.to);   // `used` = týl už rozdaný jiným armádám
     }
     ring = next;
   }
@@ -416,6 +416,7 @@ export function aiStrategy(state, o) {
   const defOf = (tp) => { let v = defMemo.get(tp); if (v === undefined) { v = localDefense(state, foes, foeAt, tp); defMemo.set(tp, v); } return v; };
   const home = new Set([o, ...friendsOf(state.dip, o)]);   // území vlastního tábora (podle vlastnictví států)
   const echelon = [];   // armády druhého sledu (na frontu se nevešly) – lze z nich sestavit invazní sbor
+  const rearUsed = new Set();   // týlové provincie už rozdané (každá armáda druhého sledu dostane vlastní, aby se nehromadily)
   if (reserve.length) {   // nepotřebné armády zůstanou doma (nebo se z nich sestaví invazní sbor, M71)
     const free = reserve.map((id) => byId.get(id));
     state = startInvasion(state, o, free);
@@ -437,8 +438,8 @@ export function aiStrategy(state, o) {
     for (const id of order) {
       const a = byId.get(id);
       if (placed > 0 && placed + a.n > room) {
-        const rear = rearOf(state, o, t.posts, a, view, Math.max(AI.SLICE_MIN, a.n));
-        if (rear.length) { state = plan(state, id, { k: 'area', area: rear }); echelon.push(id); continue; }
+        const rear = rearOf(state, o, t.posts, a, view, Math.max(AI.SLICE_MIN, a.n), rearUsed);
+        if (rear.length) { for (const p of rear) rearUsed.add(p); state = plan(state, id, { k: 'area', area: rear }); echelon.push(id); continue; }
       }
       placed += a.n;
       if (starving(state, a)) {   // hladovějící armáda se stáhne k zásobovaným provinciím a obnoví síly
@@ -460,11 +461,12 @@ export function aiStrategy(state, o) {
         return Math.hypot(g.cx[tp] - g.cx[cap], g.cy[tp] - g.cy[cap]) * g.kmPerPx - AI.TARGET_VP * w.vp[tp] + AI.TARGET_FORT * fortOf(state, tp);   // M88: pevnosti se obcházejí
       };
       let to = [], local = false;
-      if (cand.length && attack[i]) {
+      const fit = cand.length > 0 && fitArmy(state, a);   // M88: vyčerpaná nebo hladová armáda neútočí (ani v celkové ofenzivě), drží linii a doplňuje stavy
+      if (fit && attack[i]) {
         // celková ofenziva: úder se soustředí na několik cílů (zaměřených k hlavnímu městu nepřítele), ne na celou šířku fronty
         cand.sort((p, q) => score(p) - score(q) || p - q);
         to = cand.slice(0, Math.max(AI.TARGETS_MIN, Math.ceil(a.n / AI.DIVS_PER_TARGET)));
-      } else if (cand.length && fitArmy(state, a)) {
+      } else if (fit) {
         // M88: na ofenzivu síly nestačí – armáda aspoň udeří tam, kde má místní převahu (slabě hájené nebo prázdné provincie); průlom frontu natáhne a obranu zředí.
         // Obránce (země bez válečného cíle proti protivníkovi v divadle) takhle jen osvobozuje území svého tábora.
         const open = d.aggr[i] ? cand : cand.filter((tp) => home.has(state.stateOwner[w.provState[tp]]));

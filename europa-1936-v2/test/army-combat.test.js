@@ -79,7 +79,8 @@ describe('boj', () => {
 
   it('zkušenější vojáci vyhrávají', () => {
     const vet = fight({ xpA: 0.9, xpD: 0.1 }), green = fight({ xpA: 0.1, xpD: 0.9 });
-    expect(vet.hours).toBeLessThan(green.hours);
+    expect(pct(vet.s, vet.d.D[0])).toBeLessThan(pct(green.s, green.d.D[0]));        // zkušený útočník obránce pocuchá víc
+    expect(pct(vet.s, vet.d.A[0])).toBeGreaterThan(pct(green.s, green.d.A[0]));     // a sám ztratí míň
   });
 
   it('tanky prorazí pěchotu rychleji a pěchota proti tankům krvácí víc', () => {

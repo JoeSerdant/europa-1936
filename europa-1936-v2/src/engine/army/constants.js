@@ -93,6 +93,8 @@ export const C = {
   SUP_CAPITAL: 6.0,         // tok z hlavního města
   SUP_HUB: 3.4,             // tok z uzlu (násobí se podílem toku, který k uzlu dorazil)
   SUP_LOCAL: 1.4,           // nejmenší tok v každém vlastním uzlu železnice, i když není spojený s hlavním městem
+  SUP_ALLY_CAPITAL: 3.0,    // tok z hlavního města spojence pro cizí vojsko na jeho území (M88)
+  SUP_ALLY_HUB: 1.2,        // tok z uzlu spojence
   SUP_RAIL_DROP: 0.1,       // srážka toku po železnici na spoj (dělí se úrovní spoje 1–5)
   SUP_INFRA_RELIEF: 0.3,    // o kolik srážku terénu snižuje nejvyšší infrastruktura
   SUP_CAPACITY: 1.25,       // zásoby za hodinu na jeden bod toku

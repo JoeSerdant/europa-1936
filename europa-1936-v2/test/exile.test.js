@@ -15,6 +15,11 @@ const GER = idx('GER'), FRA = idx('FRA'), PLN = idx('POL'), BEL = idx('BEL'), EN
 /** Německo válčí s Francií, Polskem a Belgií (Francouzský systém); Německo drží všechny polské provincie a pár polských divizí stojí ve Francii. */
 function fallOfPoland() {
   let s = createGame({ player: null, aiLevel: 0 });
+  {   // Belgie je od M88 na startu neutrální; pro test ji do bloku Francie vrátíme
+    const fid = s.dip.fac[FRA], fac = s.dip.fac.slice(), facs = s.dip.facs.slice();
+    fac[BEL] = fid; facs[fid] = { ...facs[fid], mem: [...facs[fid].mem, BEL] };
+    s = { ...s, dip: { ...s.dip, fac, facs, ver: s.dip.ver + 1 } };
+  }
   for (const t of ['FRA', 'POL', 'BEL']) s = declareWar(s, 'GER', t);
   const ctrl = s.ctrl.slice();
   for (let p = 1; p <= W.L; p++) if (ctrl[p] === PLN) ctrl[p] = GER;

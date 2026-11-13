@@ -190,12 +190,20 @@ describe('přidělení armád a zásobování', () => {
 
 describe('spojenecké území (M67)', () => {
   const LAT = idx('LAT'), LIT = idx('LIT');
-  it('divadla AI se tvoří jen z vlastních hranic: fronta spojence z ní armády nestahuje', () => {
-    // SSSR s loutkou Lotyšskem: lotyšská hranice s Litvou není divadlem SSSR
+  it('divadla AI se tvoří z vlastních hranic a z hranic vlastních loutek (M88); území pouhého spojence z bloku se nepočítá', () => {
+    // SSSR s loutkou Lotyšskem: lotyšská hranice s Litvou je součástí sovětské fronty (pán brání loutku a útočí z jejího území)
     const s0 = warAs(base(), SOV, LIT);
     const sub = s0.dip.sub.slice(); sub[LAT] = SOV;
     const s1 = { ...s0, dip: { ...s0.dip, sub, ver: s0.dip.ver + 1 } };
-    for (const t of theatersOf(s1, SOV, new Set([LIT]))) for (const p of t.posts) expect(s1.ctrl[p]).toBe(SOV);
+    const own = theatersOf(s0, SOV, new Set([LIT])).flatMap((t) => t.posts), withSub = theatersOf(s1, SOV, new Set([LIT])).flatMap((t) => t.posts);
+    for (const p of own) expect(s0.ctrl[p]).toBe(SOV);
+    for (const p of withSub) expect([SOV, LAT]).toContain(s1.ctrl[p]);
+    expect(withSub.some((p) => s1.ctrl[p] === LAT)).toBe(true);
+    // spojenec z bloku (ne loutka): jeho hranice divadlem není
+    const fid = s0.dip.facs.length, fac = s0.dip.fac.slice(), facs = [...s0.dip.facs, { nm: 'Test', ldr: SOV, mem: [SOV, LAT] }];
+    fac[SOV] = fid; fac[LAT] = fid;
+    const s2 = { ...s0, dip: { ...s0.dip, fac, facs, ver: s0.dip.ver + 1 } };
+    for (const t of theatersOf(s2, SOV, new Set([LIT]))) for (const p of t.posts) expect(s2.ctrl[p]).toBe(SOV);
   });
   it('s přístupem se zásobování AI šíří přes území spojence (supplyView.reach)', () => {
     const s0 = base();

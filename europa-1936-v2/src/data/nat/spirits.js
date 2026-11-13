@@ -11,7 +11,7 @@ export const SPIRITS = {
   ukolova_taktika: { n: 'Úkolová taktika', info: 'Velitelé na místě jednají podle vlastního úsudku a útok nečeká na rozkaz shora.', tone: 'good', mod: {}, army: { atk: 0.12, planGain: 0.25 } },
   usmirovani: { n: 'Politika usmiřování', info: 'Veřejnost i vláda věří, že ústupky válku odvrátí.', tone: 'bad', mod: { ws: -0.06 } },
   svetove_imperium: { n: 'Světové impérium', info: 'Zámořské državy dodávají suroviny a obchodní cesty jsou krátké.', tone: 'good', mod: { imp: -0.1, extract: 0.05 } },
-  cistky: { n: 'Velké čistky', info: 'Strach ochromil důstojnický sbor i úřady a nikdo si není jistý zítřkem.', tone: 'bad', mod: { stab: -0.05, ws: -0.03 }, army: { atk: -0.08, orgRegen: -0.1 } },
+  cistky: { n: 'Velké čistky', info: 'Strach ochromil důstojnický sbor i úřady a nikdo si není jistý zítřkem.', tone: 'bad', mod: { stab: -0.05, ws: -0.03 }, army: { atk: -0.08, def: -0.1, orgRegen: -0.1 } },
   petiletky: { n: 'Pětiletý plán', info: 'Celá země je jedno staveniště.', tone: 'good', mod: { build: 0.1 } },
   sen_o_imperiu: { n: 'Sen o novém impériu', info: 'Režim slibuje návrat staré slávy a lidé tomu zatím věří.', tone: 'good', mod: { ws: 0.05 } },
   slaby_prumysl: { n: 'Slabá průmyslová základna', info: 'Chybí suroviny, stroje i zkušení dělníci.', tone: 'bad', mod: { prod: -0.05 } },
