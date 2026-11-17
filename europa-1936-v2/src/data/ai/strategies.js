@@ -60,6 +60,7 @@ export const HIST_STRATEGIES = [
   { id: 'ger_east_def', tag: 'GER', war: 'SOV', from: 2760, until: 3800, defend: true },
   { id: 'bagration', tag: 'SOV', from: 3094, until: 3200, needWar: 'GER', spirit: 'bagration' },
   { id: 'ger_collapse', tag: 'GER', from: 3150, until: 3800, spirit: 'rozpad_front' },
+  { id: 'ger_ruin', tag: 'GER', from: 3260, until: 3800, needWar: 'SOV', spirit: 'zhroucene_hospodarstvi' },   // M96: bombardované továrny, ztracená ropa
   // vylodění Spojenců: Sicílie a Itálie 1943, Normandie 1944
   { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },
   { id: 'husky', tag: 'ENG', from: 2650, until: 2950, invade: 'ITA', at: 'ITA' },

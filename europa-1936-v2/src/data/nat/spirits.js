@@ -30,6 +30,7 @@ export const SPIRITS = {
   evakuace_prumyslu: { n: 'Průmysl za Uralem', info: 'Továrny rozebrané na západě znovu vyrábějí daleko za frontou, dnem i nocí.', tone: 'good', mod: { prod: 0.3, extract: 0.4, man: 0.15 } },
   bagration: { n: 'Operace na střed', info: 'Desítky divizí, tisíce děl a tanků udeří naráz na oslabený střed fronty.', tone: 'good', mod: {}, army: { atk: 0.3, speed: 0.15, planGain: 0.4 } },
   rozpad_front: { n: 'Rozpad front', info: 'Chybí lidé, palivo i zbraně; fronty se drží jen silou rozkazů.', tone: 'bad', mod: { prod: -0.1, man: -0.2, stab: -0.1 }, army: { atk: -0.15, def: -0.1 } },
+  zhroucene_hospodarstvi: { n: 'Zhroucené hospodářství', info: 'Továrny leží v troskách, ropná pole jsou ztracená a vlaky nejezdí.', tone: 'bad', mod: { prod: -0.25, man: -0.3, extract: -0.3 }, army: { def: -0.1, orgRegen: -0.1 } },
   general_zima: { n: 'Generál Zima', info: 'Mráz, sníh a bláto: motory nestartují, zásobování vázne a útok uvízl.', tone: 'bad', mod: {}, army: { atk: -0.15, speed: -0.2 } },
   sibirske_zalohy: { n: 'Sibiřské zálohy', info: 'Čerstvé divize zvyklé na mráz přicházejí z východu a přecházejí do protiútoku.', tone: 'good', mod: { man: 0.1 }, army: { atk: 0.1, orgRegen: 0.1 } },
   letni_ofenziva: { n: 'Letní ofenziva', info: 'Soustředěné síly se znovu dávají do pohybu směrem k řece a k ropě.', tone: 'good', mod: {}, army: { atk: 0.12, speed: 0.1 } },
