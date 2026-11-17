@@ -38,6 +38,20 @@ export function powerOf(ships) {
   return { hp, atk, n };
 }
 
+/** Síla lodí země `o` s úrovní techniky typů lodí (M96, `mil.lv[o][typ]`): palba +`NAV.LV_ATK` a odolnost +`NAV.LV_HP` za úroveň nad první. */
+export function fleetPower(state, o, ships) {
+  const lv = state.mil.lv && state.mil.lv[o];
+  if (!lv) return powerOf(ships);
+  let hp = 0, atk = 0, n = 0;
+  for (const id of SHIP_IDS) {
+    const c = ships[id] || 0;
+    if (!c) continue;
+    const l = (lv[id] || 1) - 1;
+    hp += c * SHIPS[id].hp * (1 + NAV.LV_HP * l); atk += c * SHIPS[id].atk * (1 + NAV.LV_ATK * l); n += c;
+  }
+  return { hp, atk, n };
+}
+
 /** Kapacita palub lodí (M90): kolik palubních letounů flotila unese. */
 export function deckOf(ships) {
   let n = 0;

@@ -6,7 +6,22 @@ import { RES } from './constants.js';
 import { polModsOf } from '../politics/core.js';
 import { aiMult } from '../ai/core.js';
 
-export const NO_MODS = Object.freeze({ effCap: 0, build: 0, extract: 0, research: 0, fuel: 0 });
+export const NO_MODS = Object.freeze({ effCap: 0, build: 0, extract: 0, research: 0, fuel: 0, air: 0, nav: 0 });   // M96: air = síla letectva, nav = palba loďstva
+export const NO_TECH_ARMY = Object.freeze({});
+const armyCache = new WeakMap();   // done → vojenské bonusy
+
+/** Součet vojenských bonusů hotových technologií (M96, pole `army` s klíči z `MOD_KEYS`; mezipaměť podle `done`). Bez bonusů `NO_TECH_ARMY`. */
+export function techArmyMods(done) {
+  if (!done) return NO_TECH_ARMY;
+  let m = armyCache.get(done);
+  if (m) return m;
+  m = {};
+  let any = false;
+  for (const id in done) { const a = TECHS[id]?.fx.army; if (a) { any = true; for (const k in a) m[k] = (m[k] || 0) + a[k]; } }
+  if (!any) m = NO_TECH_ARMY;
+  armyCache.set(done, m);
+  return m;
+}
 const modCache = new WeakMap();   // done → bonusy
 
 /** Součet bonusů z hotových technologií (mezipaměť podle objektu `done`). */

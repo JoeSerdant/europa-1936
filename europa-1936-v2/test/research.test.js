@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { EQUIP_LEVEL_MULT } from '../src/data/army/index.js';
 import { PLANES } from '../src/data/air/planes.js';
+import { SHIPS } from '../src/data/navy/ships.js';
 import {
   createGame, getWorld, advance, advanceHour, startResearch, cancelResearch, researchOf, techList, isUnlocked, isAvailable, techMods, slotCount, yearOf,
   createTemplate, TECHS, TECH_IDS, CATS, CAT_IDS, fxLines, RES, EQUIP, BATTALIONS, SUPPORT, deriveStats, industryOf, addLine, setLineEquip,
@@ -40,7 +41,7 @@ describe('data technologií', () => {
 
   it('každý zámek jednotky a výzbroje má odemykající technologii', () => {
     for (const u of [...Object.values(BATTALIONS), ...Object.values(SUPPORT), ...Object.values(EQUIP), ...Object.values(PLANES)]) if (u.unlock) expect(TECHS[u.unlock]).toBeTruthy();
-    for (const id of TECH_IDS) for (const e in TECHS[id].fx.lv || {}) { expect(EQUIP[e] || PLANES[e]).toBeTruthy(); expect(TECHS[id].fx.lv[e]).toBeLessThanOrEqual(EQUIP_LEVEL_MULT.length); }
+    for (const id of TECH_IDS) for (const e in TECHS[id].fx.lv || {}) { expect(EQUIP[e] || PLANES[e] || SHIPS[e]).toBeTruthy(); expect(TECHS[id].fx.lv[e]).toBeLessThanOrEqual(EQUIP_LEVEL_MULT.length); }
   });
 
   it('popis účinků je česky a neprázdný pro technologie s účinkem', () => {

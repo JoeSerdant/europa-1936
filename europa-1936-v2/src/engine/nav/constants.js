@@ -1,6 +1,8 @@
 // Vyvážení námořnictva (M27): všechna čísla na jednom místě. Čas v hodinách, rychlost v km/h.
 export const NAV = {
-  DMG: 0.3,             // podíl síly strany, který za den zničí palba protivníka rovné její síle
+  DMG: 0.3,
+  LV_ATK: 0.12,         // M96: palba lodi za každou úroveň techniky jejího typu nad první
+  LV_HP: 0.08,          // M96: odolnost lodi za úroveň techniky             // podíl síly strany, který za den zničí palba protivníka rovné její síle
   DMG_CAP: 0.4,         // nejvyšší denní ztráta síly strany
   RETREAT: 0.5,         // flotila ustoupí, když její síla klesne pod tento podíl maxima
   TR_SPEED: 25,         // rychlost transportních lodí (km/h)
