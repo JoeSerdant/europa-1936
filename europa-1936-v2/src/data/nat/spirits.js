@@ -23,6 +23,12 @@ export const SPIRITS = {
   // dočasní duchové (přidává je engine nebo účinek `spirit`)
   porevolucni_chaos: { n: 'Porevoluční chaos', info: 'Po převratu se úřady teprve skládají a továrny stojí.', tone: 'bad', mod: { prod: -0.1, build: -0.1 } },
   vitezna_nalada: { n: 'Vítězná nálada', info: 'Vítězství ve válce stmelilo zemi.', tone: 'good', mod: { stab: 0.04, ws: 0.04 } },
+  bleskova_valka: { n: 'Blesková válka', info: 'Tanky, letadla a pěchota postupují v jednom rytmu; průlom se okamžitě rozvíjí do hloubky.', tone: 'good', mod: {}, army: { atk: 0.12, speed: 0.12, planGain: 0.4 } },
+  podivna_valka: { n: 'Podivná válka', info: 'Měsíce nečinnosti za pevnostmi podlomily ducha; velení nevěří, že útok přijde jinudy.', tone: 'bad', mod: { ws: -0.05 }, army: { atk: -0.12, def: -0.1, orgRegen: -0.15 } },
+  valecne_hospodarstvi: { n: 'Válečné hospodářství', info: 'Zbrojovky jedou ve třech směnách a stát řídí suroviny i pracovní sílu.', tone: 'mixed', mod: { prod: 0.15, extract: 0.1, cons: 0.03 } },
+  prekvapivy_uder: { n: 'Překvapivý úder', info: 'Útok přišel bez varování: nepřítel je zaskočený a vlastní armáda postupuje rychle.', tone: 'good', mod: {}, army: { atk: 0.2, def: 0.1, speed: 0.2, planGain: 0.5, supUse: -0.3 } },
+  sok_z_napadeni: { n: 'Šok z napadení', info: 'Pohraniční armády byly zaskočené, spojení selhává a velení se teprve sbírá.', tone: 'bad', mod: { stab: -0.05 }, army: { atk: -0.3, def: -0.3, orgRegen: -0.4 } },
+  vlastenecka_valka: { n: 'Vlastenecká válka', info: 'Celá země se semkla k obraně vlasti: odvody rostou a vojáci se nevzdávají.', tone: 'good', mod: { man: 0.15, ws: 0.15, stab: 0.05 }, army: { def: 0.12, orgRegen: 0.1 } },
   valecne_usili: { n: 'Válečné úsilí', info: 'Mimořádná kampaň vybičovala výrobu, ale lidé jsou unavení.', tone: 'mixed', mod: { prod: 0.08, stab: -0.03 } },
 };
 export const SPIRIT_IDS = Object.keys(SPIRITS);

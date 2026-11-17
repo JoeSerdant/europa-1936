@@ -767,6 +767,18 @@ Letadlová loď už nemá pevnou „sílu letounů“: nese **palubu** (`SHIPS.c
 
 **AI** (`aiCarrierPlanes` v `ai/navy.js`): chybí-li na palubách vlastních letadlových lodí (ve flotilách i v rezervě lodí) víc letounů, než je v rezervě letectva, AI otevře linku palubních letounů (nejvýš `AI.CV_PLANE_FAC` továren, jedna na `CV_PLANE_PER_FAC` chybějících letounů); když je jich dost, linku zruší. AI letectvo palubní letouny nevybírá pro letecké linky ani do křídel. **Rozhraní:** karta flotily ukazuje „Palubní letouny x/y“ (s upozorněním, že se doplní v přístavu), souhrn námořnictva letouny na palubách, kapacitu a rezervu; okno Letectvo je nenabízí pro nová křídla. Test `test/carrier.test.js`.
 
+## 4zzq. Historické strategie AI (M92)
+
+Obdoba `ai_strategy` a skriptovaných postihů v HOI4: historie se nedolaďuje vyvážením čísel (výsledek války je chaotický – drobná změna jinde ho otočí), ale **kolejemi** – záměrnými chybami a chytrými tahy AI a dočasnými duchy. Platí jen s historickou AI (`state.ai.hist`). Data `HIST_STRATEGIES` v `data/ai/strategies.js`, logika `engine/ai/hist.js` (denně v `aiDay` jako první, `histStrategies`); tvar stavu se nemění (duchové jsou běžné `nat.own[o].sp`).
+
+- **Spouštěč války** (`war`, `after`, `upto`, `spirit`, `days`): když válka se zemí `war` trvá `after`–`upto` dní, země dostane ducha na `days` dní od začátku války (0 = trvale); opakované spuštění nic nemění. Barbarossa: Německo *Překvapivý úder* (90 dní: útok +20 %, obrana +10 %, rychlost +20 %, plánování, spotřeba zásob −30 %), SSSR *Šok z napadení* (180 dní: útok a obrana −30 %, obnova organizace −40 %), po 180 dnech *Vlastenecká válka* (trvale: obrana, odvody, podpora války).
+- **Okenní duch** (`from`, `until`, `spirit`, volitelně `needWar`): duch platí v okně dnů hry, s `needWar` jen ve válce s tou zemí (po jejím konci zanikne). Jaro 1940: Německo *Blesková válka*, Francie *Podivná válka*; od podzimu 1940 Německo *Válečné hospodářství* (výroba +15 %, těžba +10 %).
+- **Záměrné chyby:** `holdBack` (podíl divizí v záloze v týlu – Francie 1939–1940; `holdBackOf` čte `decideStrategy` a odebere armády z méně důležitých divadel) a `defend` (země proti zemi `war` po `after`–`upto` dní války jen brání – SSSR prvních 150 dní Barbarossy; `defendOnlyOf` zakáže útoky v `aiStrategy`).
+- **Hranice kapitulace** (`CAP_LIMITS`, obdoba surrender limit; `capLimitOf` v `dip/day.js`, platí vždy): Francie se vzdá při 50 % bodů nebo 25 % po pádu Paříže, SSSR až při 85 % (80 % po pádu Moskvy), Británie 70 % / 45 %.
+- **Strategie AI obecně:** fronta, kde žádný post nedostane zásoby (`t.fed = 0`, např. polární Kirkenes), se neobsazuje; armáda dál než `AI.PICK_KM` od divadla se mu nepřiděluje (pochody pustinou končily hladem); zálohy za války nestojí na frontových postech (`aiPeaceDeploy(…, avoid)`).
+
+Ověření pozorovatelskou hrou od roku 1936 (semínka 1936, 7, 42): Francie kapituluje 3.–22. 7. 1940, Barbarossa 22. 6. 1941, do listopadu 1941 Minsk a Kyjev (ve dvou hrách i Smolensk) v německých rukou, Moskva drží. Test `test/hist-strategy.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -1006,6 +1018,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M89** | **AI: podpora cizích stran a přesun výroby**: velmoci a regionální mocnosti podporují spřízněnou stranu u sousedů (průzkum, pak operace); oprava účinku operace; AI přesouvá továrny mezi druhy výzbroje a drží za války větší zásobu – pád Francie v roce 1940 nezávisí na náhodě | **hotovo** |
 | **M90** | **Palubní letouny**: letadlové lodě nesou palubní letouny z výroby, úder podle letounů na palubě, ztráty v boji, doplňování v přístavu, podpora pobřežních bojů, AI výroba | **hotovo** |
 | **M91** | **Grafika mapy**: reliéf z terénu (stínování), moře podle hloubky, záře hranic země hráče, ztmavení mimo dohled, den a noc se světly měst; přepínač v nabídce | **hotovo** |
+| **M92** | **Historické strategie AI** (jako `ai_strategy` v HOI4): duchové ze spouštěčů válek a z oken (blesková válka, podivná válka, Barbarossa, vlastenecká válka), záměrné chyby (francouzské zálohy, sovětská obrana bez protiútoků), hranice kapitulace podle země; AI neposílá armády na fronty bez zásobování a na pochody přes půl Evropy | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

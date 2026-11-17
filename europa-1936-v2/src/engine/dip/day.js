@@ -10,6 +10,13 @@ import { pactDay } from './pact.js';
 import { overseasDay } from './overseas.js';
 import { exileDay } from './exile.js';
 import { civilDay, isCivilWar } from '../civil/index.js';
+import { CAP_LIMITS } from '../../data/ai/strategies.js';
+
+/** Hranice kapitulace země (M92): `CAP_LIMITS` podle tagu, jinak výchozí `DIP.CAP_SHARE` a `DIP.CAP_CAPITAL_SHARE`. */
+export function capLimitOf(o) {
+  const l = CAP_LIMITS[getWorld().owners[o].tag];
+  return { share: l ? l.share : DIP.CAP_SHARE, capital: l ? l.capital : DIP.CAP_CAPITAL_SHARE };
+}
 
 export function dipDay(state) {
   const w = getWorld();
@@ -26,7 +33,8 @@ export function dipDay(state) {
       if (h.total && h.share >= DIP.CIVIL_CAP_SHARE) state = capitulate(state, o);
       continue;
     }
-    if (h.total && (h.share >= DIP.CAP_SHARE || (h.capHeld && h.share >= DIP.CAP_CAPITAL_SHARE))) state = capitulate(state, o);
+    const lim = capLimitOf(o);   // M92: hranice kapitulace podle země
+    if (h.total && (h.share >= lim.share || (h.capHeld && h.share >= lim.capital))) state = capitulate(state, o);
   }
   // vypršelá ospravedlnění
   let just = state.dip.just;
