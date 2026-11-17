@@ -4,6 +4,7 @@ import {
   createGame, getWorld, advance, declareWar, validateState, GAME_VERSION, SHIPS, SHIP_IDS, SHIP_PROD, NAVY_NATIONAL, NAV, NAV_MISSIONS, NAV_MISSION_IDS,
   setFleetMission, formFleet, navyOf, airPower, subOnly, aswOf, powerOf, routeRisk, tradeRoute, seesFleet, homeSea,
 } from '../src/engine/index.js';
+import { PLANES } from '../src/data/air/planes.js';
 
 const W = getWorld();
 const idx = (t) => W.ownerIdx[t];
@@ -20,7 +21,7 @@ const hp = (s, i) => (s.nav.fleets[i] ? powerOf(s.nav.fleets[i].ships).hp : 0);
 describe('data', () => {
   it('letadlová loď a ponorka mají své příznaky, ceny a Británie s Francií začínají s letadlovými loděmi', () => {
     expect(SHIP_IDS).toContain('cv');
-    expect(SHIPS.cv.air).toBeGreaterThan(0);
+    expect(SHIPS.cv.deck).toBeGreaterThan(0);   // M90: paluba pro palubní letouny
     expect(SHIPS.ss.sub).toBe(true);
     expect(SHIP_PROD.cv.cost).toBeGreaterThan(SHIP_PROD.bb.cost);
     expect(NAVY_NATIONAL.ENG.ships.cv).toBe(2);
@@ -30,7 +31,8 @@ describe('data', () => {
     expect(s.nav.pool[GER].cv).toBe(0);
   });
   it('pomocné funkce: síla letounů, flotila jen z ponorek, protiponorková síla', () => {
-    expect(airPower({ cv: 2, bb: 3 })).toBe(2 * SHIPS.cv.air);
+    expect(airPower({ cv: 2, bb: 3 })).toBeCloseTo(2 * SHIPS.cv.deck * PLANES.pal.nav, 6);   // M90: bez udání letounů plná paluba
+    expect(airPower({ cv: 2, bb: 3 }, 10)).toBeCloseTo(10 * PLANES.pal.nav, 6);
     expect(airPower({ bb: 3 })).toBe(0);
     expect(subOnly({ ss: 4 })).toBe(true);
     expect(subOnly({ ss: 4, dd: 1 })).toBe(false);

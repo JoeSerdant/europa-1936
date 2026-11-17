@@ -25,6 +25,7 @@ export function formWing(state, o, t, n, s) {
   const w = getWorld(), air = state.air;
   if (!validOwner(w, o) || !PLANES[t] || !isInt(n) || n < 1 || n > AIR.FORM_MAX) return state;
   if (!isUnlocked(state, o, PLANES[t].unlock) || (air.pool[o][t] || 0) < n) return state;
+  if (PLANES[t].carrier) return state;   // M90: palubní letouny patří na letadlové lodě
   if (!ownBase(state, o, s) || !afbOf(state.ind, s) || n > baseFree(state, o, s)) return state;
   if (air.wings.filter((x) => x && x.o === o).length >= AIR.WINGS_MAX) return state;
   const id = air.wings.length;

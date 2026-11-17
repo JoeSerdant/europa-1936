@@ -16,6 +16,10 @@ export const NAV = {
   RAID_MAX: 0.8,        // nejvyšší riziko
   ESCORT_K: 0.7,
   CV_SUPPRESS: 1,       // letadlové lodě (M81): podíl síly protivníka vyřazený prvním úderem snižuje jeho palbu tolikrát
+  PLANE_LOSS: 0.04,     // palubní letouny (M90): denní ztráta letounů flotily v bitvě (protiletadlová palba)
+  PLANE_DUEL: 0.2,      // další ztráta podle podílu nepřátelských palubních letounů ve vzdušném souboji nad flotilami
+  PLANE_REFILL: 8,      // nejvíc letounů, které flotila za den v domovském přístavu nalodí z rezervy
+  PLANE_CAS: 0.5,       // podíl podpůrné síly palubních letounů (`cas` v PLANES) pro boje v pobřežních státech mořské oblasti
   SUB_RAID: 1.5,        // násobek palebné síly ponorek proti konvojům
   MISSION_PATROL: 0.15, // mise Hlídka: bonus palby flotily v boji
   MISSION_RAID: 1.5,    // mise Nájezdy: násobek síly flotily proti konvojům

@@ -110,6 +110,8 @@ export const AI = {
   REBAL_MARGIN: 0.05,               // přesouvá se, jen když dárce i příjemce se od žádaného rozdělení liší víc než o tento podíl pozemních linek
   REBAL_MIN: 10,                    // země s menším počtem továren na pozemních linkách výrobu nepřesouvá
   RECRUIT_HP: 0.8,                  // ve válce AI nové divize necvičí, dokud průměrná síla těch stávajících nedosáhne této hodnoty (výzbroj jde na doplnění)
+  CV_PLANE_FAC: 3,                  // palubní letouny (M90): nejvíc továren na lince palubních letounů
+  CV_PLANE_PER_FAC: 15,             // na tolik chybějících letounů jedna továrna
   PARA_DIVS: 2,                     // výsadky (M87): tolik výsadkových divizí si velmoc drží
   PARA_FROM_DAY: 1200,              // od tohoto dne hry je cvičí i v míru (jaro 1939)
   PARA_MIN_SCORE: 2,                // cíl výsadku musí mít aspoň takovou hodnotu (vítězné body, uzel, přístav, hlavní město)

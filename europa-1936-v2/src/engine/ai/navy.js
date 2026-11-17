@@ -10,7 +10,7 @@ import { formFleet, orderFleet, setFleetMission } from '../nav/commands.js';
 import { convoysOf, tradeRoute, needOf, routeRisk } from '../nav/convoy.js';
 import { atWar } from '../army/war.js';
 import { NAV } from '../nav/constants.js';
-import { powerOf } from '../nav/core.js';
+import { powerOf, deckOf } from '../nav/core.js';
 import { reservedFleets } from './invasion.js';
 import { AI } from './constants.js';
 
@@ -61,6 +61,7 @@ export function aiNavy(state, o) {
     sum = industryOf(state, o);
     free--;
   }
+  state = aiCarrierPlanes(state, o);   // M90: palubní letouny pro letadlové lodě
   // z nových bojových lodí v rezervě se sestaví flotila
   const pool = state.nav.pool[o];
   const ships = {};
@@ -68,6 +69,24 @@ export function aiNavy(state, o) {
   for (const k of SHIP_IDS) if (k !== 'tr' && pool[k]) { ships[k] = pool[k]; n += pool[k]; }
   if (n >= 3 && state.nav.fleets.filter((f) => f && f.o === o).length < NAV.FLEET_MAX) state = formFleet(state, o, ships);
   return aiRaids(state, o);
+}
+
+/**
+ * Palubní letouny (M90): chybí-li na palubách vlastních letadlových lodí (ve flotilách i v rezervě) víc letounů, než je v rezervě letectva a ve výrobě,
+ * AI otevře linku palubních letounů (nebo jí přidá továrnu, nejvýš `AI.CV_PLANE_FAC`); když je letounů dost, linku zruší. Stejné příkazy jako hráč.
+ */
+export function aiCarrierPlanes(state, o) {
+  const cap = state.nav.fleets.reduce((a, f) => a + (f && f.o === o ? deckOf(f.ships) : 0), 0) + deckOf(state.nav.pool[o]);
+  const lines = state.ind.lines.filter((l) => l.o === o && l.eq === 'pal');
+  if (!cap && !lines.length) return state;
+  const have = state.nav.fleets.reduce((a, f) => a + (f && f.o === o ? f.pl || 0 : 0), 0) + ((state.air && state.air.pool[o].pal) || 0);
+  const fac = lines.reduce((a, l) => a + l.fac, 0);
+  const lack = cap - have;
+  if (lack <= 0) return lines.length ? setLineFactories(state, lines[0].id, 0) : state;
+  const want = Math.min(AI.CV_PLANE_FAC, Math.max(1, Math.ceil(lack / AI.CV_PLANE_PER_FAC)));
+  if (fac >= want) return state;
+  if (industryOf(state, o).milFree < 1) return state;
+  return lines.length ? setLineFactories(state, lines[0].id, lines[0].fac + 1) : addLine(state, o, 'pal', 1);
 }
 
 /** Obchodní válka: nečinné flotily plují na trasy nepřátelského dovozu (nájezdy) a na vlastní trasy ohrožené nepřítelem (krytí). */

@@ -32,7 +32,7 @@ export function formFleet(state, o, ships, nm = '') {
   const poolArr = state.nav.pool.slice();
   poolArr[o] = rest;
   const id = state.nav.fn + 1;
-  const fleet = { o, nm: cleanName(nm) || `${id}. flotila`, p: home.sea, ships: clean, c: {}, mx: powerOf(clean).hp, to: 0, path: [], prog: 0, m: '' };
+  const fleet = { o, nm: cleanName(nm) || `${id}. flotila`, p: home.sea, ships: clean, c: {}, mx: powerOf(clean).hp, to: 0, path: [], prog: 0, m: '', pl: 0 };   // M90: paluby se doplní v přístavu (`refillDecks`)
   return patch(state, { fn: id, pool: poolArr, fleets: [...state.nav.fleets, ...new Array(id - state.nav.fleets.length).fill(null), fleet] });
 }
 
@@ -48,7 +48,11 @@ export function disbandFleet(state, id) {
   poolArr[f.o] = rest;
   const fleets = state.nav.fleets.slice();
   fleets[id] = null;
-  return patch(state, { pool: poolArr, fleets });
+  const out = patch(state, { pool: poolArr, fleets });
+  if (!f.pl || !state.air) return out;   // M90: palubní letouny se vrátí do rezervy letectva
+  const ap = state.air.pool.slice();
+  ap[f.o] = { ...ap[f.o], pal: (ap[f.o].pal || 0) + f.pl };
+  return { ...out, air: { ...state.air, pool: ap, ver: state.air.ver + 1 } };
 }
 
 export const fleetOf = (state, id) => (Number.isInteger(id) && id > 0 && id < state.nav.fleets.length ? state.nav.fleets[id] : null);

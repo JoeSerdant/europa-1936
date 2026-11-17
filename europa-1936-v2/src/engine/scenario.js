@@ -13,6 +13,7 @@ import { disband, declareWar } from './army/commands.js';
 import { grantTech } from './research/commands.js';
 import { AIR } from './air/constants.js';
 import { PLANE_IDS } from '../data/air/planes.js';
+import { deckOf } from './nav/core.js';
 
 const pairKeyOf = (a, b) => (a < b ? `${a}-${b}` : `${b}-${a}`);
 const growthOf = (sc, tag) => sc.growth[tag] || sc.growth.default;
@@ -102,7 +103,7 @@ function growNavy(state, o, f) {
     if (!fl || fl.o !== o) return fl;
     const ships = {};
     for (const k in fl.ships) ships[k] = k === 'tr' ? fl.ships[k] : Math.round(fl.ships[k] * f);
-    return { ...fl, ships, mx: Math.round(fl.mx * f) };
+    return { ...fl, ships, mx: Math.round(fl.mx * f), pl: deckOf(ships) };   // M90: paluby plné
   });
   const pool = state.nav.pool.slice();
   pool[o] = { ...pool[o], tr: Math.round((pool[o].tr || 0) * f) };

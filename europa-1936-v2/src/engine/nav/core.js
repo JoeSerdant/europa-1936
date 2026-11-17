@@ -4,6 +4,7 @@ import { Heap } from '../army/heap.js';
 import { atWar } from '../army/war.js';
 import { sameFaction } from '../dip/core.js';
 import { SHIPS, SHIP_IDS } from '../../data/navy/index.js';
+import { PLANES } from '../../data/air/planes.js';
 import { NAV } from './constants.js';
 
 const graphCache = new WeakMap();
@@ -37,11 +38,33 @@ export function powerOf(ships) {
   return { hp, atk, n };
 }
 
-/** Síla palubních letounů lodí (M81). */
-export function airPower(ships) {
-  let a = 0;
-  for (const id of SHIP_IDS) if (ships[id] && SHIPS[id].air) a += ships[id] * SHIPS[id].air;
-  return a;
+/** Kapacita palub lodí (M90): kolik palubních letounů flotila unese. */
+export function deckOf(ships) {
+  let n = 0;
+  for (const id of SHIP_IDS) if (ships[id] && SHIPS[id].deck) n += ships[id] * SHIPS[id].deck;
+  return n;
+}
+
+/** Palubní letouny flotily (M90): nalodění, nejvýš kapacita palub. */
+export const planesOf = (f) => Math.min(f.pl || 0, deckOf(f.ships));
+
+/** Síla úderu palubních letounů (M81, od M90 podle letounů na palubě): `pl` letounů, bez udání plné paluby. */
+export function airPower(ships, pl = Infinity) {
+  return Math.min(pl, deckOf(ships)) * PLANES.pal.nav;
+}
+
+const coastStateCache = new WeakMap();   // svět → Map(mořská oblast → [státy s pobřežím])
+/** Státy, které mají pobřeží v mořské oblasti `label` (M90: kam dosáhne podpora palubních letounů). */
+export function coastStatesOf(label) {
+  const w = getWorld();
+  let m = coastStateCache.get(w);
+  if (!m) {
+    m = new Map();
+    for (let p = 1; p <= w.L; p++) w.forCoast(p, (s) => { const st = w.provState[p]; let a = m.get(s); if (!a) { a = []; m.set(s, a); } if (!a.includes(st)) a.push(st); });
+    for (const a of m.values()) a.sort((x, y) => x - y);
+    coastStateCache.set(w, m);
+  }
+  return m.get(label) || [];
 }
 
 /** Je flotila jen z ponorek? (v mlze války ji vidí jen ten, kdo má v oblasti torpédoborce nebo letadlovou loď) */

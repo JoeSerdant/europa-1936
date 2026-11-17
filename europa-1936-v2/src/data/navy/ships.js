@@ -1,12 +1,12 @@
 // Lodě a počáteční námořnictvo zemí (M27). Vlastní čísla; počty jsou zmenšené oproti skutečnosti, aby odpovídaly měřítku hry.
 //  hp síla   atk palebná síla   spd rychlost (km/h)   cost body výroby na kus   res suroviny na kus
-//  air  síla palubních letounů (M81): udeří před děly a oslabí palbu protivníka   sub  ponorka: zasáhnou ji jen torpédoborce a letadlové lodě, proti konvojům je silnější
+//  deck paluba (M90): kolik palubních letounů (`pal` v PLANES) loď nese; jejich úder přijde před palbou děl a oslabí ji   sub  ponorka: zasáhnou ji jen torpédoborce a letadlové lodě, proti konvojům je silnější
 export const SHIPS = {
   dd: { n: 'Torpédoborec', ab: 'TOR', hp: 10, atk: 4, spd: 55, info: 'Rychlý a levný, páteř flotil.' },
   ca: { n: 'Křižník', ab: 'KŘI', hp: 30, atk: 10, spd: 50, info: 'Vyvážená bojová loď.' },
   bb: { n: 'Bitevní loď', ab: 'BIT', hp: 90, atk: 28, spd: 38, info: 'Největší síla, drahá a pomalá.' },
   ss: { n: 'Ponorka', ab: 'PON', hp: 6, atk: 5, spd: 30, sub: true, info: 'Levná a křehká. Zasáhnou ji jen torpédoborce a letadlové lodě; proti konvojům je o polovinu účinnější.' },
-  cv: { n: 'Letadlová loď', ab: 'LET', hp: 45, atk: 3, air: 26, spd: 46, info: 'Palubní letouny udeří dřív než děla a oslabí palbu protivníka; sama je zranitelná.' },
+  cv: { n: 'Letadlová loď', ab: 'LET', hp: 45, atk: 3, deck: 20, spd: 46, info: 'Nese 20 palubních letounů: udeří dřív než děla, oslabí palbu protivníka a podporuje boje na pobřeží. Sama je zranitelná.' },
   tr: { n: 'Transportní loď', ab: 'TRA', hp: 8, atk: 0, spd: 25, info: 'Veze divize přes moře; sama se nebrání.' },
 };
 export const SHIP_IDS = Object.keys(SHIPS);

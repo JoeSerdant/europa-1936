@@ -20,6 +20,7 @@ function Fleet({ f, sel, home }) {
         <span className="muted">{f.count} lodí</span>
       </header>
       <p className="fl-ships">{shipsText(f.ships)}</p>
+      {f.deck ? <p className={`fl-deck ${f.planes < f.deck ? 'low' : ''}`} title="Palubní letouny: první úder v bitvě a podpora bojů na pobřeží. Doplňují se z rezervy letectva v domovském přístavu.">Palubní letouny <b>{f.planes}/{f.deck}</b>{f.planes < f.deck && !atHome ? ' · doplní se v přístavu' : ''}</p> : null}
       <p className="muted">{f.moving ? `Plují do: ${f.dest}` : `Stojí: ${f.at}`}{f.speed ? ` · ${f.speed} km/h` : ''}{f.blocked ? ' · protivník ovládá oblast' : ''}</p>
       <div className="fl-missions" role="group" aria-label="Mise flotily">
         <span className="muted">Mise</span>
@@ -72,6 +73,7 @@ export function NavyPanel() {
           <span className="stat-cell" title="Transportní lodě: volné / celkem"><i>Transporty</i><b>{nv.transports.free}/{nv.transports.total}</b></span>
           <span className="stat-cell" title="Námořní loděnice"><i>Loděnice</i><b>{ind.dok}</b></span>
           <span className="stat-cell" title="Volné loděnice bez lodní linky"><i>Volné</i><b>{ind.dockFree}</b></span>
+          {nv.carrier.deck ? <span className="stat-cell" title={`Palubní letouny: ${nv.carrier.aboard} na palubách z ${nv.carrier.deck} míst, ${nv.carrier.spare} v rezervě (vyrábějte je v okně Výroba; doplňují se v domovském přístavu)`}><i>Paluby</i><b>{nv.carrier.aboard}/{nv.carrier.deck} +{fmtInt(nv.carrier.spare)}</b></span> : null}
         </div>
         <ul className="eq">
           {SHIP_IDS.map((k) => <li key={k} title={`${SHIPS[k].n}: celkem ${nv.total[k]}, v rezervě ${nv.pool[k] || 0}`}><i>{SHIPS[k].ab}</i><b>{fmtInt(nv.total[k])}</b></li>)}
