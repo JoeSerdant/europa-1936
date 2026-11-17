@@ -19,6 +19,7 @@ export const AI = {
   DIVS_PER_TARGET: 3,               // cílů útoku na tolik divizí armády
   REAR_DEPTH: 7,                    // jak hluboko za frontou (kroky po vlastním území) se hledá týl pro druhý sled (M88)
   FRONT_FILL: 1.0,                  // podíl zásobovací kapacity postů divadla, který smí obsadit první sled (M88)
+  PUSH_FILL: 1.5,                   // za historické ofenzivy (`push`) smí první sled obsadit tolikrát víc zásobovací kapacity postů (M99)
   DIV_SUP: 0.65,                    // odhad spotřeby zásob jedné divize pro tento výpočet
   FORT_AVOID: 3,                    // cíle s pevností aspoň této úrovně ofenziva vynechá, dokud jsou v divadle jiné
   TARGET_FORT: 150,                 // za úroveň pevnosti se cíl „vzdálí“ o tolik km (M88: ofenziva obchází opevnění)
