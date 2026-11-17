@@ -83,12 +83,12 @@ const GER = big([
     ['ger_synth', 'Syntetické palivo', 70, ['ger_auto'], [boost('synt1', 0.5), civ()], { info: 'Benzín z uhlí: ropa z vlastních hydrogenačních závodů.' }],
     ['ger_ore', 'Rudné doly', 35, ['ger_road'], [boost('tez1', 0.5)], { mod: { extract: 0.04 } }],
     ['ger_reichsw', 'Státní hutní koncern', 70, ['ger_ore'], [civ(), mil(), adv('ind', 'koncern')], { info: 'Hutě zpracují i chudé domácí rudy.' }],
-    ['ger_ruhr', 'Modernizace Porúří', 70, ['ger_reichsw'], [mil(2)]],
+    ['ger_ruhr', 'Modernizace Porúří', 70, ['ger_reichsw'], [mil()]],
     ['ger_people_car', 'Lidový automobil', 35, ['ger_road'], [civ(), spirit('f_spotrebni_vyroba')], { info: 'Automobilka pro každou rodinu – a později pro armádu.' }],
     ['ger_rational', 'Racionalizace zbrojení', 70, ['ger_ruhr', 'ger_synth'], [spirit('f_racionalizace')]],
     ['ger_synth2', 'Syntetický kaučuk', 35, ['ger_synth'], [boost('synt2', 0.4)]],
-    ['ger_war_eco', 'Válečné hospodářství', 35, ['ger_rational'], [law('eco', 'war')]],
-    ['ger_total', 'Totální válka', 70, ['ger_war_eco'], [spirit('f_totalni_mobilizace'), law('eco', 'total')], { info: 'Celá země slouží válce.' }],
+    ['ger_war_eco', 'Řízení surovin', 35, ['ger_rational'], [boost('synt2', 0.2), pp(30)]],
+    ['ger_total', 'Totální válka', 70, ['ger_war_eco'], [spirit('f_totalni_mobilizace')], { ai: 900, info: 'Celá země slouží válce.' }],
   ] },
   { prio: 1, list: [
     ['ger_auta', 'Motorizace', 35, ['ger_road'], [boost('auta2'), mil()], { ai: 4 }],
@@ -152,7 +152,7 @@ const SOV = big([
     ['sov_oil', 'Baku a Kavkaz', 35, ['sov_siberia'], [boost('tez2', 0.4)], { mod: { extract: 0.04 } }],
     ['sov_plan3', 'Třetí pětiletka', 70, ['sov_stakh', 'sov_canal'], [mil(2), civ()]],
     ['sov_evac', 'Plány evakuace průmyslu', 35, ['sov_plan3'], [spirit('f_tylove_sluzby')], { info: 'Každá továrna má připravené vagony.' }],
-    ['sov_war_eco', 'Všechno pro frontu', 35, ['sov_evac'], [law('eco', 'war'), spirit('f_totalni_mobilizace')]],
+    ['sov_war_eco', 'Všechno pro frontu', 35, ['sov_evac'], [spirit('f_totalni_mobilizace')], { ai: 900 }],
   ] },
   { prio: 1, list: [
     ['sov_army', 'Přezbrojení armády', 45, ['sov_heavy'], [stock('pusky', 4000), stock('dela', 150), man(0.003)], { ai: 5 }],
@@ -215,7 +215,7 @@ const ENG = big([
     ['eng_midlands', 'Průmyslové hrabství', 70, ['eng_coal'], [civ(2)]],
     ['eng_ration', 'Přídělový systém', 35, ['eng_shadow'], [spirit('f_racionalizace')]],
     ['eng_war_eco', 'Válečný kabinet', 35, ['eng_ration'], [law('eco', 'war'), stab(0.04)]],
-    ['eng_total', 'Národní služba', 70, ['eng_war_eco'], [law('con', 'serv'), spirit('f_totalni_mobilizace')]],
+    ['eng_total', 'Národní služba', 70, ['eng_war_eco'], [spirit('f_totalni_mobilizace')], { ai: 900 }],
   ] },
   { prio: 1, list: [
     ['eng_army', 'Expediční armáda', 35, ['eng_rearm'], [man(0.003), ws(0.08)], { ai: 5 }],
@@ -341,7 +341,7 @@ const ITA = big([
     ['ita_south', 'Rozvoj jihu', 70, ['ita_road'], [civ(2), stab(0.03)]],
     ['ita_marsh', 'Vysoušení bažin', 35, ['ita_road'], [spirit('f_stavebni_program')]],
     ['ita_albania', 'Albánská ropa', 35, ['ita_auto'], [boost('tez1', 0.4)], { mod: { extract: 0.04 } }],
-    ['ita_war_eco', 'Válečná výroba', 35, ['ita_north'], [law('eco', 'war'), spirit('f_racionalizace')]],
+    ['ita_war_eco', 'Válečná výroba', 35, ['ita_north'], [spirit('f_racionalizace')]],
   ] },
   { prio: 1, list: [
     ['ita_army', 'Reforma armády', 35, ['ita_ind'], [man(0.004), ws(0.05)], { ai: 3 }],
