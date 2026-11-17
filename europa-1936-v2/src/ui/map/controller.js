@@ -1,5 +1,6 @@
 // Řadič mapy: vlastní kameru a vykreslovač, běží ve smyčce requestAnimationFrame a vykresluje jen když se něco změnilo.
 // React komponenty ho jen ovládají (kamera, výběr, režim) – kreslení samo je mimo React.
+import { mapEffectsOn } from './prefs.js';
 import { getWorld } from '../../engine/world.js';
 import { buildGeometry } from './geometry.js';
 import { MapRenderer, FONT_DISPLAY, FONT_TEXT } from './renderer.js';
@@ -31,6 +32,7 @@ export class MapController {
     this.canvas = canvas;
     if (!this.geo) this.geo = buildGeometry(this.world);
     this.renderer = new MapRenderer(canvas, this.world, this.geo);
+    if (!mapEffectsOn()) this.renderer.setEffects(false);   // M91: uložená volba efektů mapy
     if (this.pending) this.applyPending();
     this.dirty = true;
     const frame = (t) => {
@@ -56,6 +58,7 @@ export class MapController {
     if (p.mode) this.renderer.setMode(p.mode);
     if (p.focus !== undefined) this.renderer.setFocus(p.focus);
     if (p.units !== undefined) this.renderer.setUnitsVisible(p.units);
+    if (p.effects !== undefined) this.renderer.setEffects(p.effects);
     this.renderer.selected = p.selected || 0;
   }
 
@@ -97,6 +100,10 @@ export class MapController {
     this.renderer.setGame(game);
     // běžný postup času nic nemění na vzhledu mapy – překreslujeme jen při změně vlastníků, kontroly, jednotek nebo bitev
     if (!prev || prev.stateOwner !== game.stateOwner || prev.ctrl !== game.ctrl) this.dirty = true;
+    else if (prev.tick !== game.tick && this.renderer.options.daynight) {   // M91: den a noc – překreslit s postupem hodin, nejvýš asi šestkrát za sekundu
+      const now = typeof performance !== 'undefined' ? performance.now() : 0;
+      if (now - (this.nightAt || 0) > 160) { this.nightAt = now; this.dirty = true; }
+    }
     else if (this.renderer.showUnits && (prev.mil.divs !== game.mil.divs || prev.mil.battles !== game.mil.battles || prev.mil.wars !== game.mil.wars || prev.nav.fleets !== game.nav.fleets || prev.air.wings !== game.air.wings)) this.dirty = true;
   }
 
@@ -158,6 +165,11 @@ export class MapController {
   setOptions(o) {
     if (!this.renderer) return;
     Object.assign(this.renderer.options, o); this.dirty = true;
+  }
+  /** M91: efekty mapy (reliéf, den a noc, ztmavení mimo dohled) zapnout nebo vypnout. */
+  setEffects(on) {
+    if (!this.renderer) { this.pending = { ...(this.pending || {}), effects: on }; return; }
+    this.renderer.setEffects(on); this.dirty = true;
   }
   setInsets(i) { this.insets = { l: 0, r: 0, t: 0, b: 0, ...i }; }
 

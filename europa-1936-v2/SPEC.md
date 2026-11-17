@@ -834,6 +834,13 @@ Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé pl
 
 Zrnění a ztmavení okrajů mapy je **CSS překryv** (`.map-host::after`), ne kreslení do plátna.
 
+**Grafika mapy (M91, vlastní kresba bez převzatých podkladů):**
+- `relief.js` – **reliéf a moře** z dat světa: terén provincií dá výšku a členitost (`TERRAIN_RELIEF`), hřebenový šum (`ridged`, deterministický hash `hash2`) vrásnění pohoří, rozmazání (`boxBlur`) svahy mezi provinciemi; `hillshade` spočítá stínování se světlem od severozápadu a vyrovná průměrný jas na neutrální šedou. Moře se barví podle vzdálenosti od pobřeží (`distanceToLand`, `seaColor`: mělčiny světlejší, hlubiny tmavší, jemné vlnění). `buildRelief` (jen prohlížeč) postaví dva obrázky (`RELIEF_RES` = 2,5 px světa na buňku, moře v polovičním rozlišení) jednou, mimo první snímek (~0,2 s); do té doby se kreslí ploché moře. V dlaždici se moře kreslí jako podklad a reliéf přes barvy zemí v režimu `soft-light` (šedá 128 barvu nemění; síla podle režimu mapy – `RELIEF_MODES`).
+- **Hranice:** zemí širší měkký stín, hranice **země hráče** (`KIND.PLAYER`) zlatá záře; vše v dlaždicích.
+- `shade.js` – vrstvy **nad dlaždicemi**, každá jeden zvětšený obrázek (žádné vektory ve snímku, pravidlo 13): **ztmavení mimo dohled** (mlha války, jen ve hře se zapnutou mlhou; maska `fogMask` nad mřížkou štítků `labelGrid` po `FOG_RES` px světa, přepočet při změně dohledu nejvýš dvakrát za sekundu) a **den a noc** (`nightGrid`: střed buňky → zeměpisné souřadnice → výška Slunce podle herní hodiny a dne v roce, `NIGHT_RES` px světa; v noci se rozsvítí města s vítěznými body – předkreslený sprite, jas podle tmy v místě). Řadič mapy překresluje s postupem hodin nejvýš asi šestkrát za sekundu.
+- `sun.js` – projekce světa (kuželová konformní, `PROJ`; test ji ověřuje proti d3-geo z generátoru), `pxOf` / `lonLatOf`, herní čas (`utcOf`: středoevropský čas), `sunElevation`, `nightOf`.
+- Efekty lze vypnout v nabídce hry (*Efekty mapy*, `ui/map/prefs.js`, localStorage); bez práce s pixely plátna (testy) se vypnou samy (`renderer.fxOk`). Měření při 1920×1080: snímek s posunem kamery medián 1,9 ms, 90. percentil 3,3 ms. Test `test/mapfx.test.js`.
+
 **Armáda v rozhraní** (M18; `ui/army/`, `ui/map/units.js` + `counters.js`). Stav `uiStore`: `selDivs` (vybrané divize, `NONE` = sdílené prázdné pole), `hoverUnits`, `panel` (`null | 'army' | 'recruit'`), `armyFocus`, `open` (rozbalené uzly stromu), `planEdit`, `designer`, `toast`.
 - **Žetony na mapě** (`UnitLayer` v rendereru, kreslí se v obrazovkových pixelech nad dlaždicemi, ne do nich): divize stejné země ve stejné provincii (a se stejným směrem pohybu) tvoří jeden žeton s počtem, značkou převažujícího druhu, pruhy síly a organizace a odznaky stavu (boj, nedostatek zásob, ústup).
   Divize na pochodu se kreslí mezi provinciemi; při oddálení se blízké žetony stejné země slučují (`clusterCell` je mocnina dvou, shluky se při posunu mapy nemění). Vybrané mají zlatý okraj, nepřátelé červený. Kreslí se jen při změně; vrstva stojí ≈ 3–4 ms při ≈ 500 žetonech.
@@ -998,6 +1005,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M88** | **Západní fronta 1940**: válečný cíl za války, mír bloků, útočník po divadlech, místní útoky a druhý sled AI, pevnostní linie, vojenští duchové, ústup a zásobování u spojence, dovoz surovin a rezerva výzbroje AI; Francie padá v roce 1940 a vzniká Vichy | **hotovo** |
 | **M89** | **AI: podpora cizích stran a přesun výroby**: velmoci a regionální mocnosti podporují spřízněnou stranu u sousedů (průzkum, pak operace); oprava účinku operace; AI přesouvá továrny mezi druhy výzbroje a drží za války větší zásobu – pád Francie v roce 1940 nezávisí na náhodě | **hotovo** |
 | **M90** | **Palubní letouny**: letadlové lodě nesou palubní letouny z výroby, úder podle letounů na palubě, ztráty v boji, doplňování v přístavu, podpora pobřežních bojů, AI výroba | **hotovo** |
+| **M91** | **Grafika mapy**: reliéf z terénu (stínování), moře podle hloubky, záře hranic země hráče, ztmavení mimo dohled, den a noc se světly měst; přepínač v nabídce | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
