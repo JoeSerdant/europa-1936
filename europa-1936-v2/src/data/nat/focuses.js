@@ -3,6 +3,7 @@
 //  fx    okamžité účinky (viz SPEC § 4e)   mod   trvalé bonusy
 const F = (id, n, x, y, days, req, fx, extra = {}) => ({ id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', ...extra });
 import { MORE_TREES, EXTRA } from './focuses_more.js';
+import { BIG_TREES, GROW, DEFAULT_BIG, grow } from './focuses_big.js';
 const civ = (n = 1) => ({ t: 'factory', k: 'civ', n });
 const mil = (n = 1) => ({ t: 'factory', k: 'mil', n });
 
@@ -87,6 +88,10 @@ const BASE_TREES = {
 
 export const FOCUS_TREES = { ...BASE_TREES, ...MORE_TREES };
 for (const tag in EXTRA) FOCUS_TREES[tag] = [...BASE_TREES[tag], ...EXTRA[tag]];
+// M94: velké stromy velmocí (nahrazují původní, id původních cílů zůstávají), rozšíření zajímavých zemí a velký výchozí strom
+Object.assign(FOCUS_TREES, BIG_TREES);
+for (const tag in GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], GROW[tag]);
+FOCUS_TREES.DEFAULT = DEFAULT_BIG;
 
 /** Vyhledání cíle podle id (unikátní napříč stromy). */
 export const FOCUS_BY_ID = {};

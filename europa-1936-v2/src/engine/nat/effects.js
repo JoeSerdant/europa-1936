@@ -12,6 +12,8 @@ import { addXp } from '../doc/commands.js';
 import { resolveDemand } from '../dip/demand.js';
 import { pushParty, ideologyOf } from '../politics/parties.js';
 import { addSpirit, removeSpirit } from './spirits.js';
+import { setRel } from '../dip/core.js';
+import { BUILDINGS } from '../../data/industry/buildings.js';
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const touch = (state, o, fn) => {
@@ -30,6 +32,19 @@ function freeStateFor(state, o) {
   const w = getWorld();
   const cap = w.provState[w.owners[o].cap];
   const ok = (s) => state.stateOwner[s] === o && state.ctrl[w.states[s].cap] === o && slotsUsed(state.ind, s) < slotsOf(state.ind, s);
+  if (ok(cap)) return cap;
+  let best = 0;
+  for (let s = 1; s < w.states.length; s++) if (ok(s) && (!best || w.states[s].p > w.states[best].p)) best = s;
+  return best;
+}
+
+/** Stát pro budovu z účinku `bld` (M94): loděnice do státu s přístavem a volným slotem, letiště a radar do státu pod stropem; hlavní stát první, jinak největší. */
+function bldStateFor(state, o, k) {
+  const w = getWorld(), b = BUILDINGS[k];
+  const ok = (s) => state.stateOwner[s] === o && state.ctrl[w.states[s].cap] === o
+    && (!b.port || w.states[s].v.some((p) => w.portLevel[p] > 0))
+    && (b.slot ? slotsUsed(state.ind, s) < slotsOf(state.ind, s) : (state.ind.st[s][k] || 0) < (b.max ?? 1));
+  const cap = w.provState[w.owners[o].cap];
   if (ok(cap)) return cap;
   let best = 0;
   for (let s = 1; s < w.states.length; s++) if (ok(s) && (!best || w.states[s].p > w.states[best].p)) best = s;
@@ -95,6 +110,23 @@ function applyOne(state, o, e) {
       return { ...state, mil: { ...state.mil, stock } };
     }
     case 'xp': return addXp(state, o, e.b, e.n);
+    case 'rel': {   // M94: vztahy se zemí `tag` (+ zlepšení, − zhoršení)
+      const t = w.ownerIdx[e.tag];
+      if (!t || t === o) return state;
+      return { ...state, dip: { ...state.dip, rel: setRel(state.dip.rel, o, t, e.v), ver: state.dip.ver + 1 } };
+    }
+    case 'bld': {   // M94: hotová budova (loděnice, letiště, radar) bez stavby
+      if (!BUILDINGS[e.k] || BUILDINGS[e.k].province || e.k === 'inf' || e.k === 'civ' || e.k === 'mil') return state;
+      let st = state;
+      for (let i = 0; i < (e.n || 1); i++) {
+        const s = bldStateFor(st, o, e.k);
+        if (!s) break;
+        const arr = st.ind.st.slice();
+        arr[s] = { ...arr[s], [e.k]: (arr[s][e.k] || 0) + 1 };
+        st = { ...st, ind: { ...st.ind, st: arr, ver: st.ind.ver + 1 } };
+      }
+      return st;
+    }
     case 'ult': return resolveDemand(state, o, e.id, !!e.ok);   // M68: odpověď na ultimátum
     case 'spirit': return addSpirit(state, o, e.id, e.days || 0);   // M74: národní duch (days = trvání, bez něj trvale)
     case 'unspirit': return removeSpirit(state, o, e.id);

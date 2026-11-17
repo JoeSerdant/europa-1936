@@ -31,6 +31,8 @@ export function fxText(fx) {
     case 'stock': return `${EQUIP[fx.eq].n} +${fx.n}`;
     case 'xp': return `Zkušenosti (${{ land: 'armáda', air: 'letectvo', sea: 'námořnictvo' }[fx.b]}) +${fx.n}`;
     case 'ult': return e_ult(fx);
+    case 'rel': return `Vztahy: ${fx.nm || fx.tag} ${fx.v > 0 ? '+' : '−'}${Math.abs(fx.v)}`;
+    case 'bld': return `${fx.n || 1}× ${{ dok: 'námořní loděnice', afb: 'úroveň letiště', radar: 'radarová stanice' }[fx.k] || fx.k}`;
     case 'flag': return null;
     case 'event': return null;
     default: return null;
