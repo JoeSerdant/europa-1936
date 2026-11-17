@@ -7,7 +7,7 @@ import { SPIRITS } from '../src/data/nat/spirits.js';
 import { MOD_KEYS } from '../src/engine/army/leaders.js';
 import { NO_POL } from '../src/engine/politics/core.js';
 import { armisticeDue, armisticeRow, holdoutOf, dipDay } from '../src/engine/dip/day.js';
-import { defendOnlyOf, pushOf, noEnterOf, invadeOpOf, invadeTargetOf } from '../src/engine/ai/hist.js';
+import { defendOnlyOf, pushOf, noEnterOf, invadeOpOf, invadeTargetOf, gatherOf } from '../src/engine/ai/hist.js';
 import { landingSites } from '../src/engine/ai/invasion.js';
 import { landZones } from '../src/engine/army/zones.js';
 import { demandSplit } from '../src/engine/ai/industry.js';
@@ -59,6 +59,15 @@ describe('okna obrany, ofenzivy a tempa postupu', () => {
     expect(defendOnlyOf(at(base(), 2300), SOV).size).toBe(0);    // bez války nic
     expect(pushOf(noHist(bag), SOV).size).toBe(0);
     expect(noEnterOf(noHist(bag), SOV).size).toBe(0);
+  });
+  it('M99: v oknech ofenzivy i operační pauzy se zálohy soustřeďují k frontě s Německem; v míru a bez historie ne', () => {
+    const s = war(at(base(), 3100), GER, SOV);
+    expect(gatherOf(s, SOV).has(GER)).toBe(true);           // Bagration
+    expect(gatherOf(at(s, 3220), SOV).has(GER)).toBe(true); // pauza na Visle
+    expect(gatherOf(at(base(), 3100), SOV).size).toBe(0);   // bez války nic
+    expect(gatherOf(noHist(s), SOV).size).toBe(0);
+    expect(gatherOf(war(at(base(), 3100), GER, SOV), GER).size).toBe(0);   // trvalá obrana Německa po Kursku zálohy nesoustřeďuje
+    expect(AI.PUSH_FILL).toBeGreaterThan(1);
   });
   it('Německo po Kursku na východě jen brání', () => {
     const s = war(at(base(), 2900), GER, SOV);

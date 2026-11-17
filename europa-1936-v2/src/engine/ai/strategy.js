@@ -13,7 +13,7 @@ import { campOf } from '../dip/core.js';
 import { aggrOf } from '../../data/ai/personality.js';
 import { landZones } from '../army/zones.js';
 import { stagingArmies, startInvasion } from './invasion.js';
-import { holdBackOf, defendOnlyOf, pushOf, noEnterOf, invadeOpOf } from './hist.js';
+import { holdBackOf, defendOnlyOf, pushOf, noEnterOf, invadeOpOf, gatherOf } from './hist.js';
 import { ruleMult } from '../rules.js';
 import { fortOf } from '../industry/selectors.js';
 import { TERRAIN_RULES } from '../../data/army/terrain.js';
@@ -357,6 +357,20 @@ export function decideStrategy(state, o) {
       }
     }
   }
+  // M99: v historických oknech ofenzivy a operační pauzy (`gatherOf`) se vzdálené zálohy na stejné pevnině přidají k divadlu s tím nepřítelem jako druhý sled –
+  // počítají se do poměru sil a pochodují do týlu fronty (jinak by šířka fronty omezila útočné síly a zálohy by zůstaly natrvalo v hlubokém týlu)
+  const gather = gatherOf(state, o);
+  if (gather.size && reserve.length) {
+    const goal = theaters.map((t, i) => i).filter((i) => theaters[i].fed !== 0 && theaters[i].posts.length && [...theaters[i].defenders].some((c) => gather.has(c)));
+    for (const id of reserve.slice()) {
+      const a = byId.get(id);
+      if (held.has(id)) continue;
+      let bi = -1, bd = Infinity;
+      for (const i of goal) { const t = theaters[i]; if (a.zone && t.zone && a.zone !== t.zone) continue; const x = dist(a, t); if (x < bd) { bd = x; bi = i; } }
+      if (bi < 0 || bd > AI.PICK_KM) continue;
+      got[bi].push(id); reserve.splice(reserve.indexOf(id), 1);
+    }
+  }
   const have = (i) => got[i].reduce((sum, id) => sum + byId.get(id).n, 0);
 
   // ---- útok, nebo obrana ----
@@ -369,7 +383,7 @@ export function decideStrategy(state, o) {
     const opp = committed[i] ? AI.OPPORTUNITY_RATIO * AI.STAY_MULT : AI.OPPORTUNITY_RATIO;
     return ratio[i] >= nd && (aggr[i] || ratio[i] >= opp);
   });
-  return { armies, byId, foes, theaters, got, reserve, held, ratio, attack, aggressor, aggr, ratioNeed, view, sticky, push };
+  return { armies, byId, foes, theaters, got, reserve, held, ratio, attack, aggressor, aggr, ratioNeed, view, sticky, push, gather };
 }
 
 /** Kvalita armády země očima AI (M88): 1 + průměr bonusů útoku a obrany z pozemní doktríny a národních duchů, v mezích 0,7–1,4. */
@@ -446,22 +460,6 @@ export function aiStrategy(state, o) {
     const free = reserve.map((id) => byId.get(id));
     state = startInvasion(state, o, free);
     const left = new Set(free.map((a) => a.id));
-    // M93: za historické ofenzivy (`push`) pochodují vzdálené zálohy do týlu divadla s tím nepřítelem (jinak by po postupu fronty zůstaly natrvalo v hlubokém týlu)
-    if (d.push && d.push.size) {
-      const zones = landZones(state, o);
-      const goal = theaters.filter((t) => t.fed !== 0 && t.posts.length && [...t.defenders].some((c) => d.push.has(c)));
-      for (const id of [...left]) {
-        const a = byId.get(id);
-        if (!a || d.held.has(id)) continue;
-        const near = goal.filter((t) => zones[t.posts[0]] === a.zone).sort((t1, t2) => Math.hypot(a.x - t1.x, a.y - t1.y) - Math.hypot(a.x - t2.x, a.y - t2.y))[0];
-        if (!near) continue;
-        const rear = rearOf(state, o, near.posts, a, view, Math.max(AI.SLICE_MIN, a.n), rearUsed);
-        if (!rear.length) continue;
-        for (const p of rear) rearUsed.add(p);
-        state = plan(state, id, { k: 'area', area: rear });
-        left.delete(id);
-      }
-    }
     const front = new Set(theaters.flatMap((t) => t.posts));
     state = aiPeaceDeploy(state, o, armiesOf(state, o).filter((a) => left.has(a.id)), front);
   }
@@ -473,17 +471,33 @@ export function aiStrategy(state, o) {
   theaters.forEach((t, i) => {
     const viable = new Set(t.viable);
     // M88: fronta unese jen tolik divizí, kolik uživí zásobování jejích postů; další armády tvoří druhý sled v týlu (armády, které na frontě už stojí, mají přednost)
-    const room = Math.max(AI.ARMY_SIZE, AI.FRONT_FILL * t.posts.reduce((sum, p) => sum + Math.floor(view.reach[p] * C.SUP_CAPACITY / AI.DIV_SUP + 0.25), 0));
-    const order = got[i].slice().sort((p, q) => (d.sticky.get(q) === i ? 1 : 0) - (d.sticky.get(p) === i ? 1 : 0));
+    const pushed = [...t.defenders].some((c) => d.push.has(c));   // M99: historická ofenziva – víc armád v prvním sledu a útok v režimu „Zteče“
+    const room = Math.max(AI.ARMY_SIZE, AI.FRONT_FILL * (pushed ? AI.PUSH_FILL : 1) * t.posts.reduce((sum, p) => sum + Math.floor(view.reach[p] * C.SUP_CAPACITY / AI.DIV_SUP + 0.25), 0));
+    // M99: stálé pořadí – nejdřív armády, které na frontě divadla už útočí, pak ty, které na ní stojí, pak podle id (jinak se první a druhý sled každým během prohazují)
+    // při ofenzivě se vyčerpané armády střídají s čerstvými z druhého sledu (vykrvácená armáda by jinak zabírala místo na frontě a neútočila)
+    const hist = [...t.defenders].some((c) => d.gather.has(c));   // M99: jen v historických oknech (`gatherOf`); jinde se přidělení nemění
+    const rank = (id) => { const pl = state.mil.armies[id].plan; return (attack[i] && !fitArmy(state, byId.get(id)) ? 3 : 0) + (d.sticky.get(id) !== i ? 2 : pl && pl.k === 'front' ? 0 : 1); };
+    const order = hist ? got[i].slice().sort((p, q) => rank(p) - rank(q) || p - q) : got[i].slice().sort((p, q) => (d.sticky.get(q) === i ? 1 : 0) - (d.sticky.get(p) === i ? 1 : 0));
+    // M99: druhý sled si svou oblast v týlu divadla ponechá, dokud v něm celá leží (jinak by armády s každým během pochodovaly do jiného týlu);
+    // platné oblasti se zamluví předem, aby je nová armáda nezabrala
+    const rearAll = hist ? new Set(rearOf(state, o, t.posts, { x: t.x, y: t.y }, view, Infinity)) : null;
+    const kept = new Map();
+    if (hist) for (const id of order) {
+      const pl = state.mil.armies[id].plan;
+      if (pl && pl.k === 'area' && pl.area.length && pl.area.every((p) => rearAll.has(p) && !rearUsed.has(p))) { kept.set(id, pl.area); for (const p of pl.area) rearUsed.add(p); }
+    }
+    const keepRear = (id) => kept.has(id);
     const fortFree = t.viable.some((tp) => fortOf(state, tp) < AI.FORT_AVOID);
     let placed = 0;
     for (const id of order) {
       const a = byId.get(id);
       if (placed > 0 && placed + a.n > room) {
+        if (keepRear(id)) { echelon.push(id); continue; }
         const rear = rearOf(state, o, t.posts, a, view, Math.max(AI.SLICE_MIN, a.n), rearUsed);
         if (rear.length) { for (const p of rear) rearUsed.add(p); state = plan(state, id, { k: 'area', area: rear }); echelon.push(id); continue; }
       }
       placed += a.n;
+      if (kept.has(id)) { for (const p of kept.get(id)) rearUsed.delete(p); kept.delete(id); }
       if (starving(state, a)) {   // hladovějící armáda se stáhne k zásobovaným provinciím a obnoví síly
         const near = suppliedNear(state, o, a, view, Math.max(AI.SLICE_MIN, a.n));
         if (near.length) { state = plan(state, id, { k: 'area', area: near.sort((p, q) => p - q) }); continue; }
@@ -520,7 +534,7 @@ export function aiStrategy(state, o) {
       const pick = new Set(to);
       const line = slice.filter((p) => adj[p].some((e) => pick.has(e.to)));
       if (line.length < AI.SLICE_MIN) for (const p of slice) if (!line.includes(p) && line.length < AI.SLICE_MIN) line.push(p);
-      const mode = local ? (to.every((tp) => defOf(tp) === 0) ? 'rush' : 'balanced') : ratio[i] >= AI.RUSH_RATIO ? 'rush' : 'balanced';
+      const mode = local ? (to.every((tp) => defOf(tp) === 0) ? 'rush' : 'balanced') : ratio[i] >= AI.RUSH_RATIO || pushed ? 'rush' : 'balanced';
       const pl = { k: 'front', line: line.sort((p, q) => p - q), to: to.sort((p, q) => p - q), mode };
       if (local) pl.loc = 1;
       state = plan(state, id, pl);

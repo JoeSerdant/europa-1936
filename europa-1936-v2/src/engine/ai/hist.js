@@ -67,6 +67,23 @@ export function pushOf(state, o) {
   return out;
 }
 
+/**
+ * Nepřátelé, proti kterým země soustřeďuje zálohy k frontě (M99): během historické ofenzivy (`push`) i operační pauzy (`defend` v okně, po kterém proti stejné zemi přijde ofenziva) – vzdálené armády
+ * pochodují do týlu divadla, aby další ofenziva měla síly. Množina indexů.
+ */
+export function gatherOf(state, o) {
+  const out = new Set();
+  if (!histOn(state)) return out;
+  const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
+  for (const s of HIST_STRATEGIES) {
+    if (s.tag !== tag || !s.war || s.from === undefined || !(s.push || s.defend) || day < s.from || day >= s.until) continue;
+    if (!s.push && !HIST_STRATEGIES.some((r) => r.tag === tag && r.war === s.war && r.push && r.from >= s.until)) continue;   // obrana jen jako pauza před další ofenzivou (ne trvalá obrana Německa po Kursku)
+    const t = w.ownerIdx[s.war];
+    if (t && atWar(state.mil, o, t)) out.add(t);
+  }
+  return out;
+}
+
 /** Země, na jejichž původní (předválečné) území AI podle historické strategie zatím neútočí (`noEnter` v okně `from`–`until`): množina indexů. */
 export function noEnterOf(state, o) {
   const out = new Set();
