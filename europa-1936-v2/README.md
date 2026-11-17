@@ -3,7 +3,7 @@
 Velká strategie ve stylu **Hearts of Iron IV**, odehrávající se v lednu 1936 na mapě Evropy, Středomoří, severní Afriky a Blízkého východu.
 Nová hra od základů: vlastní kód, vlastní mapa (generovaná z veřejných geodat Natural Earth), vlastní texty a grafika.
 
-**Stav: milník M90 – palubní letouny na letadlových lodích (po M88–M89: pád Francie a Vichy v roce 1940 v pozorovatelské hře z roku 1936).** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
+**Stav: milník M91 – grafika mapy: reliéf, moře podle hloubky, záře hranic, ztmavení mimo dohled, den a noc (po M88–M90: pád Francie 1940, palubní letouny).** Hotové je: mapa (2895 provincií, 393 moří, 527 států, 35 zemí), čas a vlastnictví, hlavní menu, výběr země, horní lišta, mapové režimy (včetně zásobování),
 minimapa a panel s údaji o oblasti (M17) a **pozemní armáda**: divize ze šablon (vlastní návrhář), výzbroj a lidská síla, výcvik, velitelé, armády a skupiny armád, plány (Hájit oblast, Linie fronty),
 rozkazy, zásobování, boj s šířkou fronty, terénem a organizací a počáteční rozmístění všech zemí. Války se zatím vyhlašují z karty oblasti (dočasně).
 A od M19 **průmysl**: státy se sloty podle velikosti, civilní a vojenské továrny, fronta staveb, výrobní linky výzbroje s efektivitou, suroviny (ocel, hliník, ropa, wolfram, chrom, guma), obchodní smlouvy, spotřební zboží a vylepšování infrastruktury (zlepšuje pochod i zásobování). Výroba plní sklady výzbroje, ze kterých se nabírají divize.
@@ -108,6 +108,8 @@ nebo – nejjednodušeji – obsah hotové složky `web/` z balíčku s přípon
 3. S historickými plány vzniknou bloky (např. Osa) a války kolem Československa, Polska, Albánie nebo Finska v době, kdy by to odpovídalo dějinám – ale jen když jsou podmínky splněny; svět nemá napsaný průběh.
 
 ### Uložené hry
+
+Mapa má reliéf terénu, moře podle hloubky, zlatou záři hranic vaší země, ztmavení oblastí mimo dohled a střídání dne a noci (v noci svítí města); vše vypnete v nabídce (Esc) přepínačem **Efekty mapy**.
 
 Nabídka (Esc) → **Uložit hru** / **Načíst hru**, nebo **Načíst hru** v hlavním menu. K dispozici je pět ručních slotů, **rychlé uložení** (F6, načtení F9) a **automatické uložení** jednou za herní měsíc. Uložené hry žijí v úložišti prohlížeče (`localStorage`) a platí jen pro stejnou verzi hry.
 

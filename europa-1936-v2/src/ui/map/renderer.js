@@ -9,7 +9,9 @@ import { countryLabels, stateLabels } from './labels.js';
 import { TILE, MIN_LEVEL, MAX_LEVEL, levelFor, tileSize, tileKey, tileRange, Grid, LruCache, rectsOverlap } from './tiles.js';
 import { FONT_DISPLAY, FONT_TEXT } from './fonts.js';
 import { UnitLayer } from './units.js';
-import { frontEdges } from '../../engine/index.js';
+import { frontEdges, fogOn, visibleLand, visibleSeas } from '../../engine/index.js';
+import { buildRelief } from './relief.js';
+import { ShadeLayer, FOG_RES, NIGHT_RES } from './shade.js';
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (a, b, v) => clamp01((v - a) / (b - a));
@@ -17,7 +19,8 @@ const smooth = (a, b, v) => clamp01((v - a) / (b - a));
 export { FONT_DISPLAY, FONT_TEXT };
 
 const OUTER = '#0c1a27';                                   // pozadí mimo mapový list
-const KIND = { PROV: 0, STATE: 1, COUNTRY: 2, COAST: 3, LAKE: 4, SEA: 5, VOID: 6, NONE: 255 };
+const KIND = { PROV: 0, STATE: 1, COUNTRY: 2, COAST: 3, LAKE: 4, SEA: 5, VOID: 6, PLAYER: 7, NONE: 255 };   // PLAYER = hranice země hráče (M91: záře)
+const RELIEF_MODES = { political: 1, states: 1, terrain: 1.15, victory: 0.9 };   // síla reliéfu podle režimu mapy (ostatní 0,5)
 const MAX_TILES = 150;                                     // ≈ 150 MB pixelů v nejhorším případě
 const TILE_BUDGET_MS = 9;                                  // kolik času na snímek smí zabrat dokreslování dlaždic při pohybu kamery
 const HATCH_MODES = new Set(['political', 'states']);      // režimy, ve kterých okupované provincie dostanou pruhy barvy držitele
@@ -40,7 +43,14 @@ export class MapRenderer {
     this.selected = 0;
     this.player = 0;                // idx země hráče
     this.focus = 0;                 // idx země v plné barvě (výběr země), 0 = bez ztlumení
-    this.options = { rails: true, labels: true, vp: true, front: true, units: true };
+    this.options = { rails: true, labels: true, vp: true, front: true, units: true, relief: true, daynight: true, fogShade: true };   // M91: reliéf, den a noc, ztmavení mimo dohled
+    this.relief = null;             // obrázky reliéfu a moře (M91, staví se líně při prvním kreslení)
+    this.shade = new ShadeLayer(world, geo);
+    // efekty potřebují práci s pixely plátna; bez ní (zjednodušená plátna v testech) se vypnou
+    let probe = null;
+    try { probe = typeof this.ctx.createImageData === 'function' ? this.ctx.createImageData(1, 1) : null; } catch { probe = null; }
+    this.fxOk = !!(probe && probe.data && typeof document !== 'undefined');
+    if (!this.fxOk) { this.options.relief = false; this.options.daynight = false; this.options.fogShade = false; }
     this.cityPos = world.land.map((o, p) => (p && o ? (o.k[0] ? [o.k[0][2], o.k[0][3]] : o.c) : null));
     // body se značkou (vítězné body, přístavy) a pořadí jmen měst podle důležitosti
     this.markers = [];
@@ -96,6 +106,28 @@ export class MapRenderer {
     });
   }
 
+  /** Obrázky reliéfu a moře (M91): postaví se jednou při prvním kreslení dlaždice (desítky až stovky ms), vypnutý reliéf = null. */
+  reliefReady() {
+    if (!this.options.relief) return null;
+    if (!this.relief && !this.reliefJob && typeof document !== 'undefined') {
+      // staví se mimo snímek (první snímky jsou bez reliéfu), potom se dlaždice překreslí
+      this.reliefJob = setTimeout(() => {
+        try { this.relief = buildRelief(this.world, this.geo); this.stats.reliefMs = this.relief.ms; } catch { this.relief = null; this.options.relief = false; }
+        this.invalidate();
+      }, 30);
+    }
+    return this.relief;
+  }
+
+  /** Zapne nebo vypne efekty mapy (M91: reliéf, den a noc, ztmavení mimo dohled). */
+  setEffects(on) {
+    const o = this.options;
+    on = on && this.fxOk;
+    if (o.relief === on && o.daynight === on && o.fogShade === on) return;
+    o.relief = on; o.daynight = on; o.fogShade = on;
+    this.invalidate();
+  }
+
   /** Zneplatní všechny dlaždice (změna vlastníků, režimu, ztlumení, hustoty pixelů). */
   invalidate() {
     this.version++;
@@ -129,6 +161,7 @@ export class MapRenderer {
     if (!ownerChanged && occChanged && (this.mode === 'resistance' || this.mode === 'compliance')) { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     if (!ownerChanged && indChanged && this.mode === 'industry') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     this.units.player = game.player ? this.world.ownerIdx[game.player] : 0;
+    if (this.units.player !== this.player) { this.player = this.units.player; this.rebuildBorders(); this.invalidate(); }   // M91: záře hranic země hráče
     if (this.showUnits) this.units.setGame(game);
   }
 
@@ -194,7 +227,8 @@ export class MapRenderer {
     geo.arcs.forEach((a, i) => {
       let k = KIND.NONE;
       if (a.l >= 1 && a.l <= L && a.r >= 1 && a.r <= L) {
-        if (this.ownerOf(a.l) !== this.ownerOf(a.r)) k = KIND.COUNTRY;
+        const ol = this.ownerOf(a.l), or = this.ownerOf(a.r);
+        if (ol !== or) k = this.player && (ol === this.player || or === this.player) ? KIND.PLAYER : KIND.COUNTRY;
         else if (world.provState[a.l] !== world.provState[a.r]) k = KIND.STATE;
         else k = KIND.PROV;
       } else if (a.cls === 4) k = KIND.COAST;
@@ -253,16 +287,18 @@ export class MapRenderer {
     const m = 24 * px;
     const x0 = wx0 - m, y0 = wy0 - m, x1 = wx0 + size + m, y1 = wy0 + size + m;
 
-    // moře, prázdná pevnina, jezera
-    g.fillStyle = SEA_COLOR; g.fillRect(0, 0, world.frame.w, world.frame.h);
+    // moře (M91: barva podle hloubky z obrázku reliéfu), prázdná pevnina, jezera
+    const rel = this.reliefReady();
+    if (rel) { g.imageSmoothingEnabled = true; g.drawImage(rel.sea, 0, 0, rel.sw, rel.sh, 0, 0, rel.sw * rel.res * 2, rel.sh * rel.res * 2); }
+    else { g.fillStyle = SEA_COLOR; g.fillRect(0, 0, world.frame.w, world.frame.h); }
     if (geo.polys[0]) { g.fillStyle = VOID_COLOR; g.fill(labelPath(geo, 0), 'evenodd'); }
     const labels = this.labelsIn(x0, y0, x1, y1);
     g.fillStyle = LAKE_COLOR;
     for (const l of labels) if (l > L) g.fill(labelPath(geo, l), 'evenodd');
 
     // oblouky v dlaždici podle druhu
-    const byKind = [[], [], [], [], [], [], []];
-    for (const i of this.arcGrid.query(x0, y0, x1, y1)) { const k = this.arcKind[i]; if (k < 7) byKind[k].push(i); }
+    const byKind = [[], [], [], [], [], [], [], []];
+    for (const i of this.arcGrid.query(x0, y0, x1, y1)) { const k = this.arcKind[i]; if (k < 8) byKind[k].push(i); }
 
     // záře pobřeží (vodní mělčina)
     let coast = null;
@@ -290,6 +326,16 @@ export class MapRenderer {
       }
     }
 
+    // M91: reliéf – stínování terénu přes barvy zemí (soft-light: šedá 128 barvu nemění)
+    if (rel) {
+      g.globalCompositeOperation = 'soft-light';
+      g.globalAlpha = Math.min(1, RELIEF_MODES[this.mode] ?? 0.5);
+      g.drawImage(rel.relief, 0, 0, rel.w, rel.h, 0, 0, rel.w * rel.res, rel.h * rel.res);
+      if ((RELIEF_MODES[this.mode] ?? 0) > 1) { g.globalAlpha = RELIEF_MODES[this.mode] - 1; g.drawImage(rel.relief, 0, 0, rel.w, rel.h, 0, 0, rel.w * rel.res, rel.h * rel.res); }
+      g.globalAlpha = 1;
+      g.globalCompositeOperation = 'source-over';
+    }
+
     // hranice
     const stroke = (kind, style, width) => {
       if (!byKind[kind].length) return;
@@ -298,8 +344,13 @@ export class MapRenderer {
     };
     stroke(KIND.PROV, `rgba(10,14,20,${(0.10 + 0.22 * smooth(0.45, 3, z)).toFixed(3)})`, 0.8);
     stroke(KIND.STATE, 'rgba(10,14,20,0.55)', 1.1);
+    stroke(KIND.PLAYER, 'rgba(255,214,120,0.16)', 11);   // M91: záře hranic země hráče
+    stroke(KIND.PLAYER, 'rgba(255,214,120,0.34)', 5.5);
+    stroke(KIND.COUNTRY, 'rgba(8,10,14,0.12)', 9);       // M91: širší měkký stín hranic zemí
     stroke(KIND.COUNTRY, 'rgba(8,10,14,0.22)', 5);
     stroke(KIND.COUNTRY, 'rgba(8,10,14,0.9)', 1.7);
+    stroke(KIND.PLAYER, 'rgba(8,10,14,0.9)', 1.9);
+    stroke(KIND.PLAYER, 'rgba(255,226,150,0.85)', 0.7);
     if (coast) { g.strokeStyle = 'rgba(9,24,40,0.85)'; g.lineWidth = 1.0 * px; g.stroke(coast); }
     stroke(KIND.LAKE, 'rgba(25,55,85,0.8)', 0.8);
     stroke(KIND.VOID, 'rgba(0,0,0,0.5)', 1.0);
@@ -476,10 +527,12 @@ export class MapRenderer {
     ctx.fillStyle = OUTER;
     ctx.fillRect(0, 0, w, h);
     this.drawTiles(cam, dpr, view);
+    if (this.reliefJob && !this.relief && this.options.relief) this.pending = Math.max(this.pending, 1);   // M91: smyčka kreslí dál, dokud se nepostaví reliéf
 
     // zvýraznění označené oblasti a oblasti pod kurzorem (ve světových souřadnicích)
     ctx.setTransform(z * dpr, 0, 0, z * dpr, (cam.w / 2 - cam.x * z) * dpr, (cam.h / 2 - cam.y * z) * dpr);
     const px = 1 / z;
+    this.drawShades(cam, dpr, view);
     if (this.selected) this.drawOutline(this.selected, '#f2c14e', 2.6, 'rgba(255,240,200,0.22)', px);
     if (this.hover && this.hover !== this.selected) this.drawOutline(this.hover, 'rgba(255,255,255,0.9)', 1.6, 'rgba(255,255,255,0.10)', px);
     if (this.showUnits && this.options.units) {
@@ -497,6 +550,46 @@ export class MapRenderer {
     if (this.showUnits && this.options.units) { this.units.drawScreen(ctx, cam, view); this.stats.unitsMs = this.units.stats.ms; }
     this.drawNeatline(cam);
     this.stats.ms = performance.now() - t0;
+  }
+
+  /**
+   * M91: stínové vrstvy nad dlaždicemi – ztmavení mimo dohled (mlha války, jen ve hře) a noc podle herní hodiny se světly měst.
+   * Každá vrstva je jeden zvětšený obrázek (přepočítá se jen při změně), světla měst jsou předkreslené sprity.
+   */
+  drawShades(cam, dpr, view) {
+    const { ctx, game } = this;
+    if (!game) return;
+    const now = typeof performance !== 'undefined' ? performance.now() : 0;
+    if (this.options.fogShade && this.showUnits && game.player && fogOn(game)) {
+      const me = this.world.ownerIdx[game.player];
+      if (me) {
+        this.shade.updateFog(visibleLand(game, me), visibleSeas(game, me), now);
+        this.shade.drawWorld(ctx, this.shade.fogCanvas, FOG_RES);
+      }
+    }
+    if (!this.options.daynight) return;
+    this.shade.updateNight(game.tick);
+    if (this.shade.nightMax < 0.01) return;   // všude den
+    this.shade.drawWorld(ctx, this.shade.nightCanvas, NIGHT_RES);
+    // světla měst v noci (velikost podle vítězných bodů, jas podle tmy v místě)
+    const z = cam.zoom, glow = this.shade.glowSprite(), world = this.world;
+    const [vx0, vy0, vx1, vy1] = view;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalCompositeOperation = 'lighter';
+    for (const p of this.cityOrder) {
+      const c = this.cityPos[p];
+      if (c[0] < vx0 || c[0] > vx1 || c[1] < vy0 || c[1] > vy1) continue;
+      const n = this.shade.nightAt(c[0], c[1]);
+      if (n < 0.25) continue;
+      const vp = world.vp[p];
+      if (vp < 3 && z < 1.2) continue;
+      const s = (5 + Math.sqrt(vp) * 2.6) * Math.min(2.2, Math.max(0.7, z * 0.9));
+      const [sx, sy] = worldToScreen(cam, c[0], c[1]);
+      ctx.globalAlpha = Math.min(1, (n - 0.25) * 1.6) * 0.85;
+      ctx.drawImage(glow, sx - s, sy - s, s * 2, s * 2);
+    }
+    ctx.restore();
   }
 
   drawOutline(label, stroke, width, fill, px) {

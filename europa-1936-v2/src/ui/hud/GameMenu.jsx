@@ -5,6 +5,8 @@ import { soundOn, setSound } from '../sound.js';
 import { tutorialOn, setTutorial } from '../tutorial/prefs.js';
 import { setUi } from '../store.js';
 import { edgeScrollOn, setEdgeScroll } from '../edge.js';
+import { mapEffectsOn, setMapEffects } from '../map/prefs.js';
+import { mapController } from '../map/controller.js';
 import { goMenu, setHelp, setMenuOpen, openSaveDialog, setAchOpen } from '../actions.js';
 
 /** Nabídka ve hře (Esc): pokračovat, ovládání, zpět do hlavního menu. */
@@ -15,6 +17,7 @@ export function GameMenu() {
   const [snd, setSnd] = useState(soundOn());
   const [tut, setTut] = useState(tutorialOn());
   const [edge, setEdge] = useState(edgeScrollOn());
+  const [fx, setFx] = useState(mapEffectsOn());
   useEffect(() => { if (!open) setConfirm(false); }, [open]);
   if (!open) return null;
   return (
@@ -30,6 +33,7 @@ export function GameMenu() {
           <button className="btn" aria-pressed={tut} onClick={() => { setTutorial(!tut); setTut(!tut); }}>Průvodce: {tut ? 'zapnutý' : 'vypnutý'}</button>
           <button className="btn" aria-pressed={edge} onClick={() => { setEdgeScroll(!edge); setEdge(!edge); setUi({ edgeScroll: !edge }); }}>Posun okrajem: {edge ? 'zapnutý' : 'vypnutý'}</button>
           <button className="btn" aria-pressed={snd} onClick={() => { setSound(!snd); setSnd(!snd); }}>Zvuk: {snd ? 'zapnutý' : 'vypnutý'}</button>
+          <button className="btn" aria-pressed={fx} title="Reliéf terénu, hloubka moře, den a noc a ztmavení mimo dohled" onClick={() => { setMapEffects(!fx); setFx(!fx); mapController.setEffects(!fx); }}>Efekty mapy: {fx ? 'zapnuté' : 'vypnuté'}</button>
           <p className="muted menu-rules" aria-label="Pravidla hry">Pravidla: {RULE_IDS.map((id) => `${RULES[id].n.toLowerCase()} ${(RULES[id].opts.find(([v]) => v === ruleOf({ rules }, id)) || [0, '?'])[1]}`).join(' · ')}</p>
           {confirm ? (
             <div className="confirm">
