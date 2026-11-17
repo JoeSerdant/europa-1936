@@ -8,22 +8,48 @@ import { Screen } from '../common/Screen.jsx';
 
 const STATUS = { done: 'Hotovo', active: 'Plní se', available: 'K dispozici', locked: 'Zamčeno', excluded: 'Vyloučeno' };
 
+// M94: strom cílů jako mřížka (sloupce = větve, řádky = hloubka) s pevnou velikostí karet a spojnicemi předpokladů
+const CW = 214, RH = 138, CARD_H = 122;
+
 function FocusCard({ f }) {
   const lines = fxLinesOf(f.fx).concat(modLines(f.mod));
   const need = f.status === 'locked' ? f.req.filter((r) => FOCUS_BY_ID[r]).map((r) => FOCUS_BY_ID[r].n) : [];
+  const any = f.status === 'locked' && f.any.length ? f.any.map((r) => FOCUS_BY_ID[r].n) : [];
   const ex = f.excl.map((r) => FOCUS_BY_ID[r].n);
+  const tip = [f.n, ...lines, f.info, ex.length ? `Vylučuje: ${ex.join(', ')}` : '', need.length ? `Chybí: ${need.join(', ')}` : '', any.length ? `Stačí jeden z: ${any.join(', ')}` : ''].filter(Boolean).join('\n');
   return (
-    <article className={`focus-card ${f.status}`} aria-label={f.n}>
+    <article className={`focus-card ${f.status}`} aria-label={f.n} title={tip} style={{ left: f.x * CW, top: f.y * RH, width: CW - 14, height: CARD_H }}>
       <header><b>{f.n}</b><span className="muted">{fmtDays(f.days)}</span></header>
       {lines.length ? <ul className="tech-fx">{lines.map((x) => <li key={x}>{x}</li>)}</ul> : null}
-      {f.info ? <p className="muted">{f.info}</p> : null}
-      {ex.length ? <p className="muted">Vylučuje: {ex.join(', ')}</p> : null}
+      {ex.length ? <p className="muted fc-ex">Vylučuje: {ex.join(', ')}</p> : null}
       <footer>
-        <span className={`tech-st ${f.status}`}>{STATUS[f.status]}{f.status === 'active' ? ` · zbývá ${fmtDays(f.left)}` : ''}</span>
-        {need.length ? <span className="muted">Chybí: {need.join(', ')}</span> : null}
+        <span className={`tech-st ${f.status}`}>{STATUS[f.status]}{f.status === 'active' ? ` · ${fmtDays(f.left)}` : ''}</span>
         {f.status === 'available' ? <button className="sbtn primary" onClick={() => pickFocus(f.id)}>Zahájit</button> : null}
       </footer>
     </article>
+  );
+}
+
+/** Spojnice předpokladů: od spodku předpokladu ke hornímu okraji cíle (lomená čára); `any` čárkovaně. */
+function FocusLinks({ tree, w, h }) {
+  const at = new Map(tree.map((f) => [f.id, f]));
+  const paths = [];
+  for (const f of tree) for (const r of [...f.req, ...f.any]) {
+    const p = at.get(r);
+    if (!p) continue;
+    const x1 = p.x * CW + (CW - 14) / 2, y1 = p.y * RH + CARD_H, x2 = f.x * CW + (CW - 14) / 2, y2 = f.y * RH, my = y2 - (RH - CARD_H) / 2;
+    paths.push(<path key={`${r}>${f.id}`} d={`M${x1} ${y1} V${my} H${x2} V${y2}`} className={`${p.status === 'done' ? 'done' : ''} ${f.any.includes(r) ? 'any' : ''}`} />);
+  }
+  return <svg className="focus-links" width={w} height={h} aria-hidden="true">{paths}</svg>;
+}
+
+function FocusTree({ tree }) {
+  const w = (Math.max(0, ...tree.map((f) => f.x)) + 1) * CW, h = (Math.max(0, ...tree.map((f) => f.y)) + 1) * RH;
+  return (
+    <div className="focus-tree" style={{ width: w, height: h }}>
+      <FocusLinks tree={tree} w={w} h={h} />
+      {tree.map((f) => <FocusCard key={f.id} f={f} />)}
+    </div>
   );
 }
 
@@ -56,7 +82,7 @@ export function NatPanel() {
           return <button key={id} className={`sbtn ${on ? 'primary' : ''}`} aria-pressed={on} disabled={!on && !!why} title={`${CONT_FOCUSES[id].info} ${modLines(CONT_FOCUSES[id].mod).join(', ')}${why ? ` – ${why}` : ''}`} onClick={() => pickContinuous(on ? '' : id)}>{CONT_FOCUSES[id].n}</button>;
         })}
       </section>
-      <div className="prod-body tech-body"><div className="focus-grid">{[...tree].sort((a, b) => a.y - b.y || a.x - b.x).map((f) => <FocusCard key={f.id} f={f} />)}</div></div>
+      <div className="prod-body tech-body focus-scroll"><FocusTree tree={tree} /></div>
     </Screen>
   );
 }
