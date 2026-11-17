@@ -383,7 +383,7 @@ export function decideStrategy(state, o) {
     const opp = committed[i] ? AI.OPPORTUNITY_RATIO * AI.STAY_MULT : AI.OPPORTUNITY_RATIO;
     return ratio[i] >= nd && (aggr[i] || ratio[i] >= opp);
   });
-  return { armies, byId, foes, theaters, got, reserve, held, ratio, attack, aggressor, aggr, ratioNeed, view, sticky, push };
+  return { armies, byId, foes, theaters, got, reserve, held, ratio, attack, aggressor, aggr, ratioNeed, view, sticky, push, gather };
 }
 
 /** Kvalita armády země očima AI (M88): 1 + průměr bonusů útoku a obrany z pozemní doktríny a národních duchů, v mezích 0,7–1,4. */
@@ -475,13 +475,14 @@ export function aiStrategy(state, o) {
     const room = Math.max(AI.ARMY_SIZE, AI.FRONT_FILL * (pushed ? AI.PUSH_FILL : 1) * t.posts.reduce((sum, p) => sum + Math.floor(view.reach[p] * C.SUP_CAPACITY / AI.DIV_SUP + 0.25), 0));
     // M99: stálé pořadí – nejdřív armády, které na frontě divadla už útočí, pak ty, které na ní stojí, pak podle id (jinak se první a druhý sled každým během prohazují)
     // při ofenzivě se vyčerpané armády střídají s čerstvými z druhého sledu (vykrvácená armáda by jinak zabírala místo na frontě a neútočila)
+    const hist = [...t.defenders].some((c) => d.gather.has(c));   // M99: jen v historických oknech (`gatherOf`); jinde se přidělení nemění
     const rank = (id) => { const pl = state.mil.armies[id].plan; return (attack[i] && !fitArmy(state, byId.get(id)) ? 3 : 0) + (d.sticky.get(id) !== i ? 2 : pl && pl.k === 'front' ? 0 : 1); };
-    const order = got[i].slice().sort((p, q) => rank(p) - rank(q) || p - q);
+    const order = hist ? got[i].slice().sort((p, q) => rank(p) - rank(q) || p - q) : got[i].slice().sort((p, q) => (d.sticky.get(q) === i ? 1 : 0) - (d.sticky.get(p) === i ? 1 : 0));
     // M99: druhý sled si svou oblast v týlu divadla ponechá, dokud v něm celá leží (jinak by armády s každým během pochodovaly do jiného týlu);
     // platné oblasti se zamluví předem, aby je nová armáda nezabrala
-    const rearAll = new Set(rearOf(state, o, t.posts, { x: t.x, y: t.y }, view, Infinity));
+    const rearAll = hist ? new Set(rearOf(state, o, t.posts, { x: t.x, y: t.y }, view, Infinity)) : null;
     const kept = new Map();
-    for (const id of order) {
+    if (hist) for (const id of order) {
       const pl = state.mil.armies[id].plan;
       if (pl && pl.k === 'area' && pl.area.length && pl.area.every((p) => rearAll.has(p) && !rearUsed.has(p))) { kept.set(id, pl.area); for (const p of pl.area) rearUsed.add(p); }
     }

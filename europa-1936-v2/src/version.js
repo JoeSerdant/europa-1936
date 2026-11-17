@@ -1,2 +1,2 @@
 // Označení verze hry zobrazené v hlavním menu (při dokončení milníku se zvedne).
-export const VERSION_LABEL = 'Verze 0.75 · M98 Národní cíle a konec války';
+export const VERSION_LABEL = 'Verze 0.76 · M99 Ofenzivy Rudé armády';

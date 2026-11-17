@@ -66,6 +66,7 @@ describe('okna obrany, ofenzivy a tempa postupu', () => {
     expect(gatherOf(at(s, 3220), SOV).has(GER)).toBe(true); // pauza na Visle
     expect(gatherOf(at(base(), 3100), SOV).size).toBe(0);   // bez války nic
     expect(gatherOf(noHist(s), SOV).size).toBe(0);
+    expect(gatherOf(war(at(base(), 3100), GER, SOV), GER).size).toBe(0);   // trvalá obrana Německa po Kursku zálohy nesoustřeďuje
     expect(AI.PUSH_FILL).toBeGreaterThan(1);
   });
   it('Německo po Kursku na východě jen brání', () => {
