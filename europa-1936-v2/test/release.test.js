@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createGame, getWorld, advance, validateState, declareWar, capitulate, isDormant, hasCapitulated, divisionCount, overlordOf, atWar,
-  releaseIds, releaseBlock, releaseNation, RELEASES, confRelease, confAnnex, demand, demandSpec, DEMAND_BY_ID, countryTable, packGame, unpackGame,
+  releaseIds, releaseBlock, releaseNation, RELEASES, confRelease, confAnnex, confClaimsDone, demand, demandSpec, DEMAND_BY_ID, countryTable, packGame, unpackGame,
 } from '../src/engine/index.js';
 
 const W = getWorld();
@@ -90,7 +90,8 @@ describe('mírová konference', () => {
   });
   it('hráč jako vítěz dostane v konferenci volbu uvolnit národ; potvrzením vznikne loutka a zbytek se anektuje', () => {
     const s0 = createGame({ player: 'GER', aiLevel: 2 });
-    const t = defeat(s0, GER, CZE, ['Západní Slovensko', 'Střední Slovensko', 'Východní Slovensko', 'Podkarpatská Rus']);
+    let t = defeat(s0, GER, CZE, ['Západní Slovensko', 'Střední Slovensko', 'Východní Slovensko', 'Podkarpatská Rus']);
+    for (let k = 0; k < 50 && t.dip.conf[0] && t.dip.conf[0].ph === 'bid'; k++) t = confClaimsDone(t, t.dip.conf[0].id);   // M95: hráč v dražbě pasuje
     expect(t.dip.conf.length).toBe(1);
     expect(t.dip.conf[0].rel).toBe(1);
     const done = confRelease(t, t.dip.conf[0].id);

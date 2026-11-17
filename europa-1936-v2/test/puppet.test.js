@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createGame, getWorld, advance, declareWar, capitulate, makePuppet, annexRump, annexPuppet, confPuppet, confAnnex, confSkip, overlordOf, subjectsOf,
-  hasCapitulated, warBlock, diplomacyOf, packGame, unpackGame, DIP, atWar,
+  hasCapitulated, warBlock, diplomacyOf, packGame, unpackGame, DIP, atWar, confClaimsDone,
 } from '../src/engine/index.js';
 
 const W = getWorld();
@@ -16,7 +16,12 @@ function crush(player, by, loser, keep = 1) {
   for (let st = 1; st < W.states.length; st++) if (s.stateOwner[st] === loser) mine.push(st);
   for (const st of mine.slice(keep)) for (const p of W.states[st].v) ctrl[p] = by;
   s = { ...s, ctrl, ownerVer: 1 };
-  return capitulate(s, loser);
+  return toRump(capitulate(s, loser));
+}
+/** M95: hráč v dražbě pasuje, dokud nepřijde rozhodnutí o zbytku země. */
+function toRump(s) {
+  for (let k = 0; k < 50 && s.dip.conf[0] && s.dip.conf[0].ph === 'bid'; k++) s = confClaimsDone(s, s.dip.conf[0].id);
+  return s;
 }
 
 describe('mírová konference', () => {

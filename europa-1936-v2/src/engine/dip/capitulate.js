@@ -1,4 +1,4 @@
-// Kapitulace (M23): okupované státy připadnou okupantům, válečné stavy země skončí, jednotky v anektovaných provinciích odejdou domů nebo zaniknou.
+// Kapitulace (M23): okupované státy jdou na mírovou konferenci (M95; okupant je získá levněji), válečné stavy země skončí, jednotky v anektovaných provinciích odejdou domů nebo zaniknou.
 import { getWorld } from '../world.js';
 import { atWar, enemiesOf } from '../army/war.js';
 import { withCtx, settleAfterPeace, makePeace } from '../army/commands.js';
@@ -38,17 +38,16 @@ export function capitulate(state, loser, opts = {}) {
   state = endBlocWar(state, loser);
   const stateOwner = state.stateOwner.slice();
   const ctrl = state.ctrl.slice();
-  let annexed = 0;
-  const by = {}, val = {};
+  const foes = enemiesOf(state.mil, loser).filter((c) => !state.dip.cap[c]);   // M95: účastníci mírové konference
+  const by = {}, val = {}, occ = {};
   for (let s = 1; s < w.states.length; s++) {
     if (stateOwner[s] !== loser) continue;
     const c = ctrl[w.states[s].cap];
     if (c === loser || !atWar(state.mil, c, loser)) continue;
-    stateOwner[s] = c;
-    for (const p of w.states[s].v) ctrl[p] = c;
-    annexed++;
+    occ[s] = c;   // M95: okupovaný stát jde na konferenční stůl (okupant ho získá levněji)
     by[c] = (by[c] || 0) + 1;
     val[c] = (val[c] || 0) + stateValue(state, s);   // M84: hodnota dobytých států = body vítěze v mírové konferenci
+    if (opts.armistice) { stateOwner[s] = c; for (const p of w.states[s].v) ctrl[p] = c; }   // M93: po příměří připadnou okupované státy okupantům hned
   }
   // M88: cizí území, které poražený sám okupoval, se vrací vlastníkům (jeho divize tam pak zaniknou nebo odejdou domů)
   for (let p = 1; p <= w.L; p++) if (ctrl[p] === loser) { const own = stateOwner[w.provState[p]]; if (own !== loser) ctrl[p] = own; }
@@ -74,12 +73,11 @@ export function capitulate(state, loser, opts = {}) {
     dip: { ...state.dip, cap, fac, facs, since: Object.fromEntries(Object.entries(state.dip.since || {}).filter(([k]) => !k.split('-').map(Number).includes(loser))), just: state.dip.just.filter((j) => j.a !== loser && j.b !== loser), ver: state.dip.ver + 1 },
     pol: { ...state.pol, own: pol },
   };
-  void annexed;
   let top = 0;   // M74: země, která dobyla nejvíc provincií poraženého, dostane dočasného ducha „Vítězná nálada“
   for (const c in by) if (!top || by[c] > by[top]) top = +c;
   let done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
   if (host) done = goIntoExile(done, loser, host, allies, ctrl);
   done = dropExiles(done, loser);   // exily u poražené země zanikají
   done = logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser });
-  return opts.armistice ? done : conference(done, loser, by, val);   // M93: po historickém příměří zbytek země zůstane samostatný a neutrální (bez konference)
+  return opts.armistice ? done : conference(done, loser, by, val, occ, foes);   // M93: po historickém příměří zbytek země zůstane samostatný a neutrální (bez konference)
 }
