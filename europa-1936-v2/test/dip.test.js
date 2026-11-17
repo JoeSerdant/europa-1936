@@ -140,7 +140,7 @@ describe('kapitulace a anexe', () => {
     for (let s = 1; s < W.states.length; s++) if (w.stateOwner[s] === GER && a.stateOwner[s] === POL) moved++;
     expect(moved).toBeGreaterThan(0);
     for (let s = 1; s < W.states.length; s++) if (a.stateOwner[s] === GER) expect(a.ctrl[W.states[s].cap]).toBe(GER);   // zbytek nikdo neokupuje
-    expect(a.ownerVer).toBe(w.ownerVer + 1);
+    expect(a.ownerVer).toBeGreaterThan(w.ownerVer);
     expect(a.dip.ver).toBeGreaterThan(w.dip.ver);
     expect(day(a, 5).dip.cap[GER]).toBe(1);
     expect(capitulate(a, GER)).toBe(a);

@@ -660,8 +660,14 @@ try {
     return gameStore.getState().dip.conf.length;
   });
   await page.waitForSelector('.conference', { timeout: 3000 });
-  check('po kapitulaci protivníka se otevře mírová konference', conf0 === 1 && (await page.locator('.conference .btn').count()) === 3);
+  check('po kapitulaci protivníka se otevře mírová konference s dražbou států', conf0 === 1 && (await page.locator('.conference .conf-claims li').count()) > 0 && (await page.locator('.conference .conf-part').count()) >= 1);
   await shot('conference');
+  const own0 = await E(() => { const s = window.__e1936.gameStore.getState(), W2 = window.__e1936.engine.getWorld(); return s.stateOwner.filter((o) => o === W2.ownerIdx.GER).length; });
+  await page.locator('.conference .conf-claims li:not(.off)').first().getByRole('button', { name: 'Získat' }).click();
+  await page.waitForTimeout(200);
+  check('„Získat“ převede stát hráči za body', (await E(() => { const s = window.__e1936.gameStore.getState(), W2 = window.__e1936.engine.getWorld(); return s.stateOwner.filter((o) => o === W2.ownerIdx.GER).length; })) === own0 + 1);
+  for (let k = 0; k < 10 && (await page.getByRole('button', { name: /^Pas/ }).count()); k++) { await page.getByRole('button', { name: /^Pas/ }).click(); await page.waitForTimeout(150); }
+  check('po pasu rozhoduje hráč o zbytku země', (await page.locator('.conference .conf-opts .btn').count()) === 3);
   await page.getByRole('button', { name: /Loutkový stát/ }).click();
   await page.waitForTimeout(300);
   check('volba „Loutkový stát“ udělá z Polska loutku hráče', (await E(() => { const s = window.__e1936.gameStore.getState(), W2 = window.__e1936.engine.getWorld(); return s.dip.sub[W2.ownerIdx.POL] === W2.ownerIdx.GER && s.dip.conf.length === 0; })) && (await page.locator('.conference').count()) === 0);

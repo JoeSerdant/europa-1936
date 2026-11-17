@@ -1,7 +1,7 @@
-// Mírová konference s body (M84): hodnota státu, body vítězů, nároky menších vítězů (AI), nároky hráče jako hlavního i menšího vítěze, dokončení.
+// Mírová konference s body (M84, tahová dražba M95): hodnota státu, body vítězů, nároky menších vítězů (AI), nároky hráče jako hlavního i menšího vítěze, dokončení.
 import { describe, it, expect } from 'vitest';
 import {
-  createGame, getWorld, declareWar, capitulate, validateState, DIP, stateValue, confClaims, confClaim, confClaimsDone, confAnnex, confSkip,
+  createGame, getWorld, declareWar, capitulate, validateState, DIP, stateValue, confClaims, confClaim, confClaimsDone, confAnnex, confSkip, confFor, bidCost,
 } from '../src/engine/index.js';
 
 const W = getWorld();
@@ -39,60 +39,81 @@ describe('hodnota a body', () => {
 });
 
 describe('AI vítězové', () => {
-  it('dobyté státy připadnou tomu, kdo je dobyl; menší vítěz si za body vezme sousední zbytek, o zbylém rozhodne hlavní vítěz', () => {
+  it('dobyté státy si okupanti vydraží; menší vítěz si za zbylé body vezme sousední zbytek, o zbylém rozhodne hlavní vítěz', () => {
     const { s, ger, sov, rest } = partition(null);
     expect(rest.length).toBeGreaterThan(0);
     const t = capitulate(s, PLN);
     for (const x of ger) expect(t.stateOwner[x]).toBe(GER);
     for (const x of sov) expect(t.stateOwner[x]).toBe(SOV);
     const sovExtra = rest.filter((x) => t.stateOwner[x] === SOV);
-    expect(valueOf(s, sovExtra)).toBeLessThanOrEqual(Math.floor(valueOf(s, sov) * DIP.CONF_SHARE));
+    expect(valueOf(s, sovExtra)).toBeLessThanOrEqual(Math.floor(valueOf(s, sov) * DIP.CONF_SHARE) + DIP.CONF_BASE);
     expect(t.dip.conf).toHaveLength(0);
     expect(statesOf(t, PLN).length === 0 || t.dip.sub[PLN] === GER).toBe(true);   // zbytek anektován nebo loutka hlavního vítěze
     expect(validateState(t)).toBeNull();
   });
-  it('bez dobytého území nemá vítěz žádné body a nic navíc nedostane', () => {
+  it('bez dobytého území má účastník jen základní body', () => {
     const { s, rest } = partition(null, 0.5, 0);
     const t = capitulate(s, PLN);
-    expect(rest.some((x) => t.stateOwner[x] === SOV)).toBe(false);
+    expect(valueOf(s, rest.filter((x) => t.stateOwner[x] === SOV))).toBeLessThanOrEqual(DIP.CONF_BASE);
+  });
+});
+
+describe('ceny v dražbě', () => {
+  it('okupovaný stát je pro okupanta levnější; vzdálený stát si vzít nelze', () => {
+    const { s, ger } = partition('GER');
+    const t = capitulate(s, PLN);
+    const c = t.dip.conf[0];
+    const own = ger[0];
+    expect(bidCost(t, c, GER, own)).toBe(Math.max(1, Math.ceil(stateValue(t, own) * DIP.CONF_OCC)));
+    expect(bidCost(t, c, GER, W.provState[W.owners[GER].cap])).toBeNull();   // stát, který poraženému nepatří
+    expect(confFor(t, GER)).toBe(c);
   });
 });
 
 describe('hráč jako hlavní vítěz', () => {
-  const { s, ger, rest } = partition('GER');
+  const { s, ger } = partition('GER');
   const t = capitulate(s, PLN);
   const c = t.dip.conf[0];
-  it('dostane konferenci s body a seznamem států, které si může vzít', () => {
-    expect(c).toMatchObject({ loser: PLN, victor: GER, g: 'conquest' });
-    expect(c.pts).toBe(Math.floor(valueOf(s, ger) * DIP.CONF_SHARE));
+  it('dražba čeká na hráče: body, pořadí podle bodů, seznam států s cenou', () => {
+    expect(c).toMatchObject({ loser: PLN, top: GER, ph: 'bid', turn: GER, g: 'conquest' });
+    expect(c.order[0]).toBe(GER);
+    expect(c.order).toContain(SOV);
+    expect(c.pts[GER]).toBeGreaterThanOrEqual(DIP.CONF_BASE + Math.floor(valueOf(s, ger) * DIP.CONF_SHARE));
     const rows = confClaims(t, c.id);
     expect(rows.length).toBe(statesOf(t, PLN).length);
-    for (let i = 1; i < rows.length; i++) expect(rows[i - 1].value).toBeGreaterThanOrEqual(rows[i].value);
-    expect(rows.every((r) => (r.block === null) === (r.value <= c.pts))).toBe(true);
-    void rest;
+    expect(rows.every((r) => (r.block === null) === (r.cost != null && r.cost <= c.pts[GER]))).toBe(true);
+    for (const x of ger) expect(t.stateOwner[x]).toBe(PLN);   // okupované státy ještě nikomu nepatří
   });
-  it('vezme si stát za body; na dražší nemá a neplatný vstup stav nemění', () => {
-    const rows = confClaims(t, c.id);
-    const cheap = rows.filter((r) => !r.block).pop();
-    expect(cheap).toBeTruthy();
-    const u = confClaim(t, c.id, cheap.s);
-    expect(u.stateOwner[cheap.s]).toBe(GER);
-    expect(u.dip.conf[0].pts).toBe(c.pts - cheap.value);
+  it('vezme si stát za body, pak táhnou AI a hráč je znovu na tahu; neplatný vstup stav nemění', () => {
+    const row = confClaims(t, c.id).find((r) => !r.block);
+    const u = confClaim(t, c.id, row.s);
+    expect(u.stateOwner[row.s]).toBe(GER);
+    const c2 = u.dip.conf[0];
+    expect(c2.pts[GER]).toBe(c.pts[GER] - row.cost);
+    expect(c2.turn).toBe(GER);
     expect(u.log.items.some((e) => e.k === 'take' && e.o === GER && e.x === PLN)).toBe(true);
-    const dear = rows.find((r) => r.block);
-    if (dear) expect(confClaim(t, c.id, dear.s)).toBe(t);
-    expect(confClaim(t, 999, cheap.s)).toBe(t);
+    expect(confClaim(t, 999, row.s)).toBe(t);
     expect(confClaim(t, c.id, W.provState[W.owners[GER].cap])).toBe(t);
-    const done = confAnnex(u, c.id);   // se zbytkem naloží jako dřív
+  });
+  it('po pasu rozhodne hráč o zbytku jako dřív (anexe), zbylá okupovaná území se vrátí poraženému', () => {
+    const passed = confClaimsDone(t, c.id);
+    const r = passed.dip.conf[0];
+    expect(r).toMatchObject({ ph: 'rump', victor: GER, loser: PLN });
+    for (const x of statesOf(passed, PLN)) for (const p of W.states[x].v) expect(passed.ctrl[p]).toBe(PLN);
+    const done = confAnnex(passed, r.id);
     expect(statesOf(done, PLN)).toHaveLength(0);
     expect(done.dip.conf).toHaveLength(0);
     expect(validateState(done)).toBeNull();
+    expect(confAnnex(t, c.id)).toBe(t);   // během dražby se o zbytku nerozhoduje
   });
   it('když si vezme poslední stát, konference skončí sama', () => {
-    let u = { ...t, dip: { ...t.dip, conf: t.dip.conf.map((x) => ({ ...x, pts: 99999 })) } };
-    for (const st of statesOf(u, PLN)) u = confClaim(u, c.id, st);
-    expect(statesOf(u, PLN)).toHaveLength(0);
-    expect(u.dip.conf).toHaveLength(0);
+    let u = { ...t, dip: { ...t.dip, conf: t.dip.conf.map((x) => ({ ...x, pts: { ...x.pts, [GER]: 99999 } })) } };
+    for (let k = 0; k < 200 && u.dip.conf.length; k++) {
+      const row = confClaims(u, c.id).find((x) => !x.block);
+      if (!row) break;
+      u = confClaim(u, c.id, row.s);
+    }
+    expect(u.dip.conf.length === 0 || u.dip.conf[0].ph === 'rump').toBe(true);
   });
 });
 
@@ -100,20 +121,23 @@ describe('hráč jako menší vítěz', () => {
   const { s, sov } = partition('SOV');
   const t = capitulate(s, PLN);
   const c = t.dip.conf[0];
-  it('vybírá si první; hlavní vítěz rozhodne o zbytku až po něm', () => {
-    expect(c).toMatchObject({ loser: PLN, victor: SOV, ph: 'claims', top: GER });
-    expect(c.pts).toBe(Math.floor(valueOf(s, sov) * DIP.CONF_SHARE));
-    expect(statesOf(t, PLN).length).toBeGreaterThan(0);
+  it('AI hlavní vítěz si nejdřív vezme okupované, pak je na tahu hráč; po pasu rozhodne o zbytku hlavní vítěz', () => {
+    expect(c).toMatchObject({ loser: PLN, ph: 'bid', top: GER, turn: SOV });
+    expect(c.pts[SOV]).toBeGreaterThanOrEqual(DIP.CONF_BASE + Math.floor(valueOf(s, sov) * DIP.CONF_SHARE));
     expect(t.dip.sub[PLN]).toBe(0);
-    const row = confClaims(t, c.id).filter((r) => !r.block).pop();
+    const row = confClaims(t, c.id).find((r) => !r.block);
     const u = row ? confClaim(t, c.id, row.s) : t;
     if (row) expect(u.stateOwner[row.s]).toBe(SOV);
-    const done = confClaimsDone(u, c.id);
+    let done = u;
+    for (let k = 0; k < 50 && done.dip.conf.length; k++) done = confClaimsDone(done, c.id);
     expect(done.dip.conf).toHaveLength(0);
     expect(statesOf(done, PLN).length === 0 || done.dip.sub[PLN] === GER).toBe(true);
     expect(confClaimsDone(done, c.id)).toBe(done);
-    expect(confSkip(t, c.id).dip.conf).toHaveLength(0);
     expect(validateState(done)).toBeNull();
+  });
+  it('„Nechat být“ během dražby znamená pas', () => {
+    const u = confSkip(t, c.id);
+    expect(u.dip.conf.every((x) => x.ph !== 'bid' || x.pass.includes(SOV))).toBe(true);
   });
   void LIT;
 });

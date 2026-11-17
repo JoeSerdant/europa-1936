@@ -136,47 +136,118 @@ function claimState(state, loser, c, s) {
   return withCtx(next, (ctx) => settleAfterPeace(ctx, loser, c));
 }
 
-/**
- * Nároky menších vítězů řízených AI (M84): kdo dobyl část poraženého, má body `pts` a za ně si bere zbylé státy sousedící s jeho územím
- * (od nejcennějšího, na který má). Hlavní vítěz `top` a hráč `skip` si tu neberou nic; země s pravidlem uvolnění národa se nedělí.
- */
-function minorClaims(state, loser, top, pts, skip) {
-  if (RELEASES[tagOf(loser)]) return state;
-  const order = Object.keys(pts).map(Number).filter((c) => c !== top && c !== skip && pts[c] > 0 && !state.dip.cap[c]).sort((a, b) => pts[b] - pts[a] || a - b);
-  const left = { ...pts };
-  let s0 = state, moved = true;
-  while (moved) {
-    moved = false;
-    for (const c of order) {
-      let pick = 0, pv = 0;
-      for (const s of statesOf(s0, loser)) { const v = stateValue(s0, s); if (v <= left[c] && v > pv && touches(s0, c, s)) { pv = v; pick = s; } }
-      if (!pick) continue;
-      s0 = claimState(s0, loser, c, pick);
-      left[c] -= pv; moved = true;
-    }
-  }
-  return s0;
+// ---- tahová mírová konference (M95, obdoba HOI4) ----
+const playerOf = (state) => (state.player ? getWorld().ownerIdx[state.player] : 0);
+const setRec = (state, id, p) => patch(state, { conf: state.dip.conf.map((x) => (x.id === id ? { ...x, ...p } : x)) });
+const nextConfId = (state) => state.dip.conf.reduce((a, c) => Math.max(a, c.id), 0) + 1;
+const confOf = (state, id) => state.dip.conf.find((c) => c.id === id);
+const without = (state, id) => state.dip.conf.filter((c) => c.id !== id);
+
+/** Konference, ve které je na tahu (nebo rozhoduje o zbytku poraženého) země `o`, jinak null. */
+export function confFor(state, o) {
+  if (!o) return null;
+  return state.dip.conf.find((c) => (c.ph === 'bid' ? c.turn === o : c.victor === o)) || null;
 }
 
 /**
- * Mírová konference po kapitulaci `loser`: `by` = počty států, které vítězové dobyli (určí hlavního vítěze), `val` = hodnota těch států
- * (z ní mají vítězové body `CONF_SHARE × hodnota` na další územní zisky, M84).
+ * Cena státu `s` pro účastníka `c` v konferenci `rec` v bodech, nebo null, když si ho vzít nemůže: stát okupovaný vlastní armádou za `CONF_OCC`
+ * hodnoty, jinak jen stát sousedící s územím účastníka – neokupovaný za plnou hodnotu, okupovaný jiným účastníkem za `CONF_FOREIGN`násobek.
  */
-export function conference(state, loser, by, val = {}) {
+export function bidCost(state, rec, c, s) {
+  if (!rec || state.stateOwner[s] !== rec.loser) return null;
+  const v = stateValue(state, s), o = rec.occ[s] || 0;
+  if (o === c) return Math.max(1, Math.ceil(v * DIP.CONF_OCC));
+  if (!touches(state, c, s)) return null;
+  return o ? Math.ceil(v * DIP.CONF_FOREIGN) : v;
+}
+
+/** Tah AI: nejdřív nejcennější stát, který okupuje, potom (jen menší vítěz a ne u země s uvolněním národa) nejcennější volný soused, jinak pas (0). */
+function aiBid(state, rec, c) {
+  let best = 0, bv = -1, nb = 0, nv = -1;
+  for (const s of statesOf(state, rec.loser)) {
+    const cost = bidCost(state, rec, c, s);
+    if (cost == null || cost > rec.pts[c]) continue;
+    const v = stateValue(state, s);
+    if (rec.occ[s] === c) { if (v > bv) { bv = v; best = s; } }
+    else if (!rec.occ[s] && v > nv) { nv = v; nb = s; }
+  }
+  if (best) return best;
+  if (c === rec.top || RELEASES[tagOf(rec.loser)]) return 0;
+  return nb;
+}
+
+/** Další účastník na tahu po `c` (dokola v pořadí `order`, bez těch, kdo pasovali), nebo 0. */
+function nextTurn(rec, c, pass) {
+  const n = rec.order.length, i = rec.order.indexOf(c);
+  for (let k = 1; k <= n; k++) { const x = rec.order[(i + k + n) % n]; if (!pass.includes(x)) return x; }
+  return 0;
+}
+
+/** Účastník `c` získá stát `s` za body (bez kontroly tahu). */
+function doBid(state, id, c, s) {
+  const rec = confOf(state, id), cost = bidCost(state, rec, c, s);
+  let n = claimState(state, rec.loser, c, s);
+  const r2 = confOf(n, id);
+  n = setRec(n, id, { pts: { ...r2.pts, [c]: r2.pts[c] - cost }, log: [...r2.log, { c, s }] });
+  return c === playerOf(state) || rec.occ[s] !== c ? logAdd(n, { k: 'take', o: c, x: rec.loser, y: 1 }) : n;
+}
+
+/** Konec dražby: zbylá území se vrátí poraženému (cizí divize odejdou), o zbytku rozhodne hlavní vítěz (hráč v dialogu, AI hned). */
+function endBidding(state, id) {
+  const rec = confOf(state, id), w = getWorld();
+  const ctrl = state.ctrl.slice();
+  let moved = false;
+  for (const s of statesOf(state, rec.loser)) for (const p of w.states[s].v) if (ctrl[p] !== rec.loser && !atWar(state.mil, ctrl[p], rec.loser)) { ctrl[p] = rec.loser; moved = true; }
+  if (moved) {
+    state = { ...state, ctrl, ownerVer: state.ownerVer + 1, mil: { ...state.mil, ver: state.mil.ver + 1 } };
+    state = withCtx(state, (ctx) => { for (const c of rec.order) settleAfterPeace(ctx, c, rec.loser); });
+  }
+  const top = rec.top, player = playerOf(state);
+  if (!statesOf(state, rec.loser).length || !ok(top) || state.dip.cap[top]) return patch(state, { conf: without(state, id) });
+  if (top === player) return setRec(state, id, { ph: 'rump', victor: top, pts: (rec.pts[top] || 0), turn: 0 });
+  return rumpDecision(patch(state, { conf: without(state, id) }), rec.loser, top, 0);
+}
+
+/** Odehraje tahy AI, dokud není na tahu hráč nebo dražba neskončí. */
+export function confRun(state, id) {
+  const player = playerOf(state);
+  for (let guard = 0; guard < 2000; guard++) {
+    const rec = confOf(state, id);
+    if (!rec || rec.ph !== 'bid') return state;
+    if (!statesOf(state, rec.loser).length) return endBidding(state, id);
+    const pass = rec.pass.concat(rec.order.filter((c) => state.dip.cap[c] && !rec.pass.includes(c)));
+    const c = rec.turn && !pass.includes(rec.turn) ? rec.turn : nextTurn(rec, rec.turn || rec.order[0], pass);
+    if (!c) return endBidding(state, id);
+    if (c === player) return rec.turn === c && pass.length === rec.pass.length ? state : setRec(state, id, { turn: c, pass });
+    const s = aiBid(state, rec, c);
+    if (s) state = doBid(state, id, c, s);
+    const np = s ? pass : [...pass, c];
+    state = setRec(state, id, { pass: np, turn: nextTurn(confOf(state, id), c, np) });
+  }
+  return endBidding(state, id);
+}
+
+/**
+ * Mírová konference po kapitulaci `loser` (M95, obdoba HOI4): okupované státy (`occ`: stát → okupant) i zbytek země jdou na stůl. Účastníci (`foes`,
+ * nepřátelé poraženého) mají body: `CONF_BASE` + podíl `CONF_SHARE` hodnoty dobytých států + cena jejich okupovaných států; na tahu se střídají od
+ * nejbohatšího a berou si po jednom státu (`bidCost`), nebo pasují. Po dražbě rozhodne o zbytku hlavní vítěz (nejvíc dobytých států, `by`).
+ */
+export function conference(state, loser, by, val = {}, occ = {}, foes = null) {
   let victor = 0, best = 0;
   for (const k of Object.keys(by).map(Number).sort((a, b) => a - b)) if (by[k] > best) { best = by[k]; victor = k; }
   if (!victor || !statesOf(state, loser).length || state.dip.cap[victor]) return state;
   if (state.dip.goal[`${victor}>${loser}`] === 'civil' || state.dip.goal[`${loser}>${victor}`] === 'civil') return annexRump(state, victor, loser);   // M69: občanskou válku vítěz dokončí sjednocením
-  const w = getWorld(), player = state.player ? w.ownerIdx[state.player] : 0;
+  const parts = [...new Set([...(foes || []), ...Object.keys(by).map(Number)])].filter((c) => ok(c) && c !== loser && !state.dip.cap[c]).sort((a, b) => a - b);
   const pts = {};
-  for (const c in val) pts[c] = Math.floor(val[c] * DIP.CONF_SHARE);
-  state = minorClaims(state, loser, victor, pts, player);
-  if (!statesOf(state, loser).length) return state;
-  if (player && player !== victor && pts[player] > 0 && !state.dip.cap[player]) {   // hráč je menší vítěz: nejdřív si vybere on, potom rozhodne hlavní vítěz
-    const id = state.dip.conf.reduce((a, c) => Math.max(a, c.id), 0) + 1;
-    return patch(state, { conf: [...state.dip.conf, { id, loser, victor: player, ph: 'claims', pts: pts[player], top: victor }] });
+  for (const c of parts) {
+    let p = DIP.CONF_BASE + Math.floor((val[c] || 0) * DIP.CONF_SHARE);
+    for (const k in occ) if (occ[k] === c) p += Math.max(1, Math.ceil(stateValue(state, +k) * DIP.CONF_OCC));
+    pts[c] = p;
   }
-  return rumpDecision(state, loser, victor, pts[victor] || 0);
+  const order = parts.slice().sort((a, b) => pts[b] - pts[a] || a - b);
+  const id = nextConfId(state);
+  const rec = { id, loser, top: victor, occ: { ...occ }, pts, order, pass: [], ph: 'bid', turn: order[0], log: [], g: state.dip.goal[`${victor}>${loser}`] || 'conquest', rel: releaseBlock(state, victor, loser) === null ? 1 : 0 };
+  return confRun(patch(state, { conf: [...state.dip.conf, rec] }), id);
 }
 
 /** O zbytku poraženého rozhodne hlavní vítěz: hráč v dialogu (se svými body na územní zisky), AI hned. */
@@ -185,7 +256,7 @@ function rumpDecision(state, loser, victor, points) {
   if (!statesOf(state, loser).length || state.dip.cap[victor]) return state;
   if (victor === player) {
     const id = state.dip.conf.reduce((a, c) => Math.max(a, c.id), 0) + 1;
-    return patch(state, { conf: [...state.dip.conf, { id, loser, victor, g: state.dip.goal[`${victor}>${loser}`] || 'conquest', rel: releaseBlock(state, victor, loser) === null ? 1 : 0, pts: points }] });
+    return patch(state, { conf: [...state.dip.conf, { id, loser, victor, ph: 'rump', g: state.dip.goal[`${victor}>${loser}`] || 'conquest', rel: releaseBlock(state, victor, loser) === null ? 1 : 0, pts: points }] });
   }
   if (releaseBlock(state, victor, loser) === null) {   // M70: AI vítěz z poražené země uvolní národ (Vichy, Slovensko, Chorvatsko) jako svou loutku
     state = releaseNation(state, victor, loser);
@@ -195,10 +266,11 @@ function rumpDecision(state, loser, victor, points) {
   return statesOf(state, loser).length >= 3 || tier <= 2 ? makePuppet(state, victor, loser) : annexRump(state, victor, loser);
 }
 
-const confOf = (state, id) => state.dip.conf.find((c) => c.id === id);
-const without = (state, id) => state.dip.conf.filter((c) => c.id !== id);
+/** Záznam konference ve fázi rozhodnutí o zbytku poraženého (ne během dražby). */
+const rumpOf = (state, id) => { const c = confOf(state, id); return c && c.ph !== 'bid' ? c : null; };
+
 export function confPuppet(state, id) {
-  const c = confOf(state, id);
+  const c = rumpOf(state, id);
   if (!c) return state;
   if (c.g && c.g !== 'conquest') return state;
   const n = makePuppet(state, c.victor, c.loser);
@@ -206,7 +278,7 @@ export function confPuppet(state, id) {
 }
 /** Uvolnění národu: z poražené země vznikne loutka vítěze (Vichy, Slovensko, Chorvatsko), zbytek vítěz anektuje. */
 export function confRelease(state, id) {
-  const c = confOf(state, id);
+  const c = rumpOf(state, id);
   if (!c || (c.g && c.g !== 'conquest')) return state;
   let n = releaseNation(state, c.victor, c.loser);
   if (n === state) return state;
@@ -214,7 +286,7 @@ export function confRelease(state, id) {
   return patch(n, { conf: without(n, id) });
 }
 export function confAnnex(state, id) {
-  const c = confOf(state, id);
+  const c = rumpOf(state, id);
   if (!c) return state;
   if (c.g && c.g !== 'conquest') return state;
   const n = annexRump(state, c.victor, c.loser);
@@ -222,7 +294,7 @@ export function confAnnex(state, id) {
 }
 /** Územní nároky: vítěz převezme nejcennější zbylé státy poraženého, ten zůstane samostatný. */
 export function confTake(state, id) {
-  const c = confOf(state, id);
+  const c = rumpOf(state, id);
   if (!c || c.g !== 'border') return state;
   const w = getWorld();
   const left = statesOf(state, c.loser).sort((a, b) => w.states[b].v.reduce((x, p) => x + w.vp[p], 0) - w.states[a].v.reduce((x, p) => x + w.vp[p], 0) || a - b);
@@ -238,7 +310,7 @@ export function confTake(state, id) {
 }
 /** Ponížení: poražený zůstane samostatný, zaplatí politickou moc a ztratí podporu války. */
 export function confTribute(state, id) {
-  const c = confOf(state, id);
+  const c = rumpOf(state, id);
   if (!c || c.g !== 'tribute') return state;
   const cap = state.dip.cap.slice(); cap[c.loser] = 0;
   const pol = state.pol.own.slice();
@@ -246,35 +318,41 @@ export function confTribute(state, id) {
   pol[c.loser] = { ...pol[c.loser], ws: Math.max(0, pol[c.loser].ws - 0.2), stab: Math.max(pol[c.loser].stab, 0.3) };
   return logAdd({ ...patch(state, { cap, conf: without(state, id) }), pol: { ...state.pol, own: pol } }, { k: 'tribute', o: c.victor, x: c.loser });
 }
+/** Nechat být: během dražby hráč pasuje, při rozhodnutí o zbytku zůstane poražený kapitulovaný a bez moci. */
 export function confSkip(state, id) {
-  return confOf(state, id) ? patch(state, { conf: without(state, id) }) : state;
+  const c = confOf(state, id);
+  if (!c) return state;
+  return c.ph === 'bid' ? confClaimsDone(state, id) : patch(state, { conf: without(state, id) });
 }
 
-/** Státy, které si hráč může v konferenci `id` vzít za body: [{ s, name, value, block }] od nejcennějšího (M84). */
+/** Státy poraženého v konferenci `id` pro hráče na tahu: [{ s, name, value, cost, occ, block }] – nejdřív dostupné, od nejcennějšího (M95). */
 export function confClaims(state, id) {
-  const c = confOf(state, id), w = getWorld();
-  if (!c || !(c.pts > 0)) return [];
-  return statesOf(state, c.loser).map((s) => { const value = stateValue(state, s); return { s, name: w.states[s].n, value, block: value > c.pts ? `Chybí body (${value - c.pts}).` : null }; })
-    .sort((a, b) => b.value - a.value || a.s - b.s);
+  const c = confOf(state, id), w = getWorld(), me = playerOf(state);
+  if (!c || c.ph !== 'bid') return [];
+  const mine = c.turn === me, pts = c.pts[me] || 0;
+  return statesOf(state, c.loser).map((s) => {
+    const value = stateValue(state, s), cost = bidCost(state, c, me, s);
+    const block = !mine ? 'Nejste na tahu.' : cost == null ? 'Stát nesousedí s vaším územím a neokupujete ho.' : cost > pts ? `Chybí body (${cost - pts}).` : null;
+    return { s, name: w.states[s].n, value, cost, occ: c.occ[s] || 0, block };
+  }).sort((a, b) => (a.block ? 1 : 0) - (b.block ? 1 : 0) || b.value - a.value || a.s - b.s);
 }
 
-/** Hráč si v konferenci vezme stát `s` za body. Když poraženému nic nezbyde, konference končí. */
+/** Hráč na tahu si v konferenci vezme stát `s` za body; pak hrají AI účastníci, dokud není hráč znovu na tahu. */
 export function confClaim(state, id, s) {
-  const c = confOf(state, id);
-  if (!c || state.stateOwner[s] !== c.loser) return state;
-  const v = stateValue(state, s);
-  if (!(c.pts >= v)) return state;
-  let n = claimState(state, c.loser, c.victor, s);
-  const rest = statesOf(n, c.loser).length;
-  n = patch(n, { conf: rest ? n.dip.conf.map((x) => (x.id === id ? { ...x, pts: c.pts - v } : x)) : without(n, id) });
-  return logAdd(n, { k: 'take', o: c.victor, x: c.loser, y: 1 });
+  const c = confOf(state, id), me = playerOf(state);
+  if (!c || c.ph !== 'bid' || c.turn !== me) return state;
+  const cost = bidCost(state, c, me, s);
+  if (cost == null || cost > (c.pts[me] || 0)) return state;
+  const n = doBid(state, id, me, s);
+  return confRun(setRec(n, id, { turn: nextTurn(confOf(n, id), me, confOf(n, id).pass) }), id);
 }
 
-/** Menší vítěz (hráč) dokončil své nároky: o zbytku rozhodne hlavní vítěz. */
+/** Hráč pasuje (už si nic nebere); dražba pokračuje bez něj. */
 export function confClaimsDone(state, id) {
-  const c = confOf(state, id);
-  if (!c || c.ph !== 'claims') return state;
-  return rumpDecision(patch(state, { conf: without(state, id) }), c.loser, c.top, 0);
+  const c = confOf(state, id), me = playerOf(state);
+  if (!c || c.ph !== 'bid' || c.turn !== me) return state;
+  const pass = [...c.pass, me];
+  return confRun(setRec(state, id, { pass, turn: nextTurn(c, me, pass) }), id);
 }
 
 // ---- denní krok ----

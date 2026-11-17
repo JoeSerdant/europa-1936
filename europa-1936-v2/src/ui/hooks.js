@@ -1,6 +1,6 @@
 // Háčky pro hlavní smyčku hry a klávesové zkratky.
 import { useEffect } from 'react';
-import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld } from '../engine/index.js';
+import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld, confFor } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
   toast, pushPopup, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
@@ -74,7 +74,7 @@ export function useHotkeys() {
       if (e.key === 'F6') { e.preventDefault(); quickSave(); return; }
       if (e.key === 'F9') { e.preventDefault(); quickLoad(); return; }
       const gs = gameStore.getState();
-      if (ui.screen === 'game' && gs.player && (gs.nat.pend.some((p) => p.o === playerIdx(gs)) || gs.dip.conf.some((c) => c.victor === playerIdx(gs)) || (gs.end && !gs.end.ack))) return;   // čeká událost: nejdřív se rozhodne
+      if (ui.screen === 'game' && gs.player && (gs.nat.pend.some((p) => p.o === playerIdx(gs)) || confFor(gs, playerIdx(gs)) || (gs.end && !gs.end.ack))) return;   // čeká událost: nejdřív se rozhodne
       if (e.key === 'Escape') {
         if (ui.helpOpen) setHelp(false);
         else if (ui.screen === 'game') {
