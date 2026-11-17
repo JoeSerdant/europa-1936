@@ -32,7 +32,7 @@ function endBlocWar(state, loser) {
   return state;
 }
 
-export function capitulate(state, loser) {
+export function capitulate(state, loser, opts = {}) {
   const w = getWorld();
   if (state.dip.cap[loser]) return state;
   state = endBlocWar(state, loser);
@@ -52,7 +52,7 @@ export function capitulate(state, loser) {
   }
   // M88: cizí území, které poražený sám okupoval, se vrací vlastníkům (jeho divize tam pak zaniknou nebo odejdou domů)
   for (let p = 1; p <= w.L; p++) if (ctrl[p] === loser) { const own = stateOwner[w.provState[p]]; if (own !== loser) ctrl[p] = own; }
-  const host = exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje
+  const host = opts.armistice ? 0 : exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje (M93: ne po historickém příměří)
   const allies = host ? state.dip.facs[state.dip.fac[loser]].mem.slice() : [];
   const wars = state.mil.wars.filter(([a, b]) => a !== loser && b !== loser);
   const cap = state.dip.cap.slice();
@@ -80,5 +80,6 @@ export function capitulate(state, loser) {
   let done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
   if (host) done = goIntoExile(done, loser, host, allies, ctrl);
   done = dropExiles(done, loser);   // exily u poražené země zanikají
-  return conference(logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser }), loser, by, val);
+  done = logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser });
+  return opts.armistice ? done : conference(done, loser, by, val);   // M93: po historickém příměří zbytek země zůstane samostatný a neutrální (bez konference)
 }

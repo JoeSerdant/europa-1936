@@ -19,6 +19,7 @@ import { atWar } from '../army/war.js';
 import { logAdd } from '../log.js';
 import { AI } from './constants.js';
 import { goalFoes } from './core.js';
+import { invadeOpOf } from './hist.js';
 import { friendsOf } from '../dip/accessCore.js';
 
 const invOf = (state) => (state.ai && state.ai.inv) || [];
@@ -59,6 +60,16 @@ function coverFleet(state, o) {
     if (atk > ba) { ba = atk; best = i; }
   });
   return best;
+}
+
+/** Nejsilnější volná bojová flotila, která do mořské oblasti `sea` dopluje (nebo v ní stojí), nebo 0 (M93). */
+function reachableFleet(state, o, sea) {
+  const held = reservedFleets(state, o);
+  const list = [];
+  state.nav.fleets.forEach((f, i) => { if (f && f.o === o && !held.has(i) && !f.path.length) { const atk = powerOf(f.ships).atk; if (atk > 0) list.push([atk, i]); } });
+  list.sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+  for (const [, i] of list) if (state.nav.fleets[i].p === sea || orderFleet(state, i, sea) !== state) return i;
+  return 0;
 }
 
 /** Nepřátelská bojová flotila v mořské oblasti? */
@@ -102,6 +113,9 @@ export function landingSites(state, o, ports, n) {
   if (!foes.size) return [];
   // M88: vylodit se smí jen u země, kterou chce tábor porazit (má proti ní válečný cíl), nebo na území vlastního tábora, které nepřítel obsadil
   const wanted = goalFoes(state, o), homeLand = new Set([o, ...friendsOf(state.dip, o)]);
+  const hop = invadeOpOf(state, o), op = hop ? hop.t : 0;   // M93: historická operace vylodění (Sicílie, Normandie) – cíl má přednost a plavba smí být delší
+  if (op) wanted.add(op);
+  const opSite = (p, c) => !!op && c === op && (!hop.at || w.provOwner0[p] === hop.at);   // místo v oblasti operace (Normandie = německé území na půdě Francie)
   const foeAt = new Map(), foeList = [], mine = [];
   for (let id = 1; id < mil.divs.length; id++) {
     const d = mil.divs[id];
@@ -109,7 +123,7 @@ export function landingSites(state, o, ports, n) {
     if (foes.has(d.o)) { foeAt.set(d.p, (foeAt.get(d.p) || 0) + 1); foeList.push(d.p); } else if (d.o === o) mine.push(d.p);
   }
   const blocked = (l) => seaBlocked(state, o, l);
-  const dists = ports.map((p) => seaDists(w.portSea[p], blocked, AI.INV_SEA_KM));
+  const dists = ports.map((p) => seaDists(w.portSea[p], blocked, op ? AI.INV_SEA_KM * 2 : AI.INV_SEA_KM));
   const out = [];
   for (let p = 1; p <= w.L; p++) {
     const c = state.ctrl[p];
@@ -117,6 +131,7 @@ export function landingSites(state, o, ports, n) {
     if (!enemy && !beach) continue;
     if (enemy && (foeAt.has(p) || (!w.portLevel[p] && !g.hub[p]) || zones[p] === home)) continue;
     if (enemy && !wanted.has(c) && !homeLand.has(state.stateOwner[w.provState[p]])) continue;
+    if (enemy && op && c === op && hop.at && w.provOwner0[p] !== hop.at) continue;   // za historické operace se proti cílové zemi vyloďuje jen v oblasti operace (rozběhnutá výprava jinam se přesměruje)
     if (beach && !adj[p].some((e) => e.kind !== 2 && foes.has(state.ctrl[e.to]))) continue;   // předmostí bez styku s nepřítelem posily nepotřebuje
     const seas = coastSeasOf(p);
     let km = Infinity, from = 0, sea = 0;
@@ -125,10 +140,11 @@ export function landingSites(state, o, ports, n) {
     let near = 0, own = 0;   // obránci se počítají s váhou klesající se vzdáleností (posily dorazí za pár dní), vlastní divize jen v okolí předmostí
     for (const q of foeList) { const d = g.distKm(p, q); if (d < AI.INV_FAR_KM) near += 1 - d / AI.INV_FAR_KM; }
     for (const q of mine) if (g.distKm(p, q) <= AI.INV_NEAR_KM) own++;
-    if (beach ? own >= Math.max(AI.INV_HOLD, near * AI.INV_RATIO) || own + n < near * AI.INV_RATIO : n < Math.max(AI.INV_MIN, Math.ceil(near * AI.INV_RATIO))) continue;
+    const isOp = enemy && opSite(p, c);   // historická operace se vylodí i proti silnější obraně (sbor plné velikosti, mírnější práh `INV_OP_RATIO`)
+    if (beach ? own >= Math.max(AI.INV_HOLD, near * AI.INV_RATIO) || own + n < near * AI.INV_RATIO : n < Math.max(AI.INV_MIN, Math.ceil(near * (isOp ? AI.INV_OP_RATIO : AI.INV_RATIO)))) continue;
     const cap = w.owners[c].cap;
     const sc = (enemy ? AI.INV_PORT * (w.portLevel[p] || 1) + (g.hub[p] ? AI.INV_HUB : 0) + AI.INV_VP * w.vp[p] - AI.INV_CAP * g.distKm(p, cap) / 1000 - AI.INV_DEF * near : AI.INV_REINF + AI.INV_DEF * near) - km / AI.INV_KM;
-    out.push({ p, from, sea, km, sc, near });
+    out.push({ p, from, sea, km, sc: sc + (isOp ? AI.INV_OP_BONUS : 0), near, op: isOp });
   }
   return out.sort((a, b) => b.sc - a.sc || a.p - b.p);
 }
@@ -174,12 +190,12 @@ export function startInvasion(state, o, free) {
   for (const [z, ids] of [...byZone.entries()].sort((a, b) => b[1].length - a[1].length || a[0] - b[0])) {
     const n = Math.min(AI.INV_MAX, ids.length, transportsOf(state, o).free, Math.ceil(divisionCount(state, o) * AI.INV_SHARE));
     if (n < AI.INV_MIN) continue;
-    const site = landingSites(state, o, embarkPorts(state, o, zones, z), n).find((x) => localSuperiority(state, o, x.sea));
+    const site = landingSites(state, o, embarkPorts(state, o, zones, z), n).find((x) => x.op || localSuperiority(state, o, x.sea));   // M93: historická operace nečeká na převahu na moři
     if (site) { best = { ids, n, site }; break; }
   }
   if (!best) return state;
   const { site } = best;
-  best.n = Math.min(best.n, Math.max(AI.INV_MIN, Math.ceil(site.near * AI.INV_RATIO) + AI.INV_EXTRA));   // M88: sbor jen tak velký, kolik cíl žádá
+  if (!site.op) best.n = Math.min(best.n, Math.max(AI.INV_MIN, Math.ceil(site.near * AI.INV_RATIO) + AI.INV_EXTRA));   // M88: sbor jen tak velký, kolik cíl žádá (historická operace jde v plné síle)
   const ids = best.ids.slice().sort((a, b) => g.distKm(mil.divs[a].p, site.from) - g.distKm(mil.divs[b].p, site.from) || a - b).slice(0, best.n);
   const tag = w.owners[o].tag;
   let s = createArmy(state, tag, 'Expediční sbor', ids);
@@ -214,7 +230,14 @@ export function advanceInvasions(state, o) {
   const site = sites.find((x) => x.p === op.p) || sites[0];
   let s = state;
   if (site && site.p !== op.p) { s = setInv(s, invOf(s).map((x) => (x === op ? { ...op, p: site.p } : x))); }
-  if (site && fleet.p !== site.sea && !fleet.path.length) s = setFleetMission(orderFleet(s, op.fleet, site.sea), op.fleet, 'patrol');   // M81: krycí flotila hlídkuje
+  if (site && fleet.p !== site.sea && !fleet.path.length) {
+    const moved = orderFleet(s, op.fleet, site.sea);
+    if (moved === s) {   // M93: krycí flotila na místo nedopluje (např. zůstala za blokovaným průlivem) – operaci převezme jiná, která dopluje
+      const alt = reachableFleet(s, o, site.sea);
+      return alt ? setInv(s, invOf(s).map((x) => (x.o === o ? { ...x, fleet: alt } : x))) : s;
+    }
+    s = setFleetMission(moved, op.fleet, 'patrol');   // M81: krycí flotila hlídkuje
+  }
   if (!site || !gathered || fleet.p !== site.sea || foeAtSea(state, o, site.sea) || sailBlock(s, take, site.p)) return s;
   const sailed = orderSail(s, take, site.p);
   if (sailed === s) return s;

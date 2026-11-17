@@ -78,6 +78,8 @@ export const AI = {
   INV_GATHER: 0.75,                 // podíl sboru, který musí stát v přístavech, aby se nalodil
   INV_COOL_DAYS: 12,                // pauza mezi operacemi země
   INV_SEA_KM: 2500,                 // nejdelší plavba invaze
+  INV_OP_BONUS: 20,                 // přednost místa vylodění v zemi historické operace (M93)
+  INV_OP_RATIO: 0.3,                // historická operace: sbor musí mít aspoň tolik divizí na jednu nepřátelskou poblíž (vážená vzdáleností)
   INV_NAVAL_KM: 700,                // nepřátelské flotily se počítají do této vzdálenosti od cílové mořské oblasti (M88)
   INV_NAVAL: 1.2,                   // vlastní (s blokem) palebná síla lodí musí být aspoň tolikrát větší než nepřátelská, aby AI zahájila invazi
   INV_TOTAL_MIN: 20,                // země s menší armádou invazi nepodniká
@@ -109,6 +111,7 @@ export const AI = {
   REBAL_DAYS: 7,                    // přesun výroby (M89): jak často AI přerozděluje továrny mezi druhy výzbroje
   REBAL_STEP: 3,                    // nejvíc továren přesunutých najednou
   REBAL_MARGIN: 0.05,               // přesouvá se, jen když dárce i příjemce se od žádaného rozdělení liší víc než o tento podíl pozemních linek
+  RES_AVAIL_MIN: 0.15,              // M93: výzbroj bez potřebné suroviny dostane ve výrobě nejméně tento podíl své váhy (`demandSplit`)
   REBAL_MIN: 10,                    // země s menším počtem továren na pozemních linkách výrobu nepřesouvá
   RECRUIT_HP: 0.8,                  // ve válce AI nové divize necvičí, dokud průměrná síla těch stávajících nedosáhne této hodnoty (výzbroj jde na doplnění)
   CV_PLANE_FAC: 3,                  // palubní letouny (M90): nejvíc továren na lince palubních letounů

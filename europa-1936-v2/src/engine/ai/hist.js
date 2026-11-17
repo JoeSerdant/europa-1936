@@ -48,8 +48,31 @@ export function defendOnlyOf(state, o) {
   for (const s of HIST_STRATEGIES) {
     if (s.tag !== tag || !s.defend) continue;
     const t = w.ownerIdx[s.war], d = warDays(state, o, t);
-    if (d >= s.after && d < s.upto) out.add(t);
+    if (s.from !== undefined) { const day = state.tick / 24; if (d >= 0 && day >= s.from && day < s.until) out.add(t); }   // okno ve dnech hry (operační pauza)
+    else if (d >= s.after && d < s.upto) out.add(t);
   }
+  return out;
+}
+
+/** Násobek prahu poměru sil pro útok podle historické ofenzivy (`push` v okně `from`–`until`, jen proti zemi `war`): { foe → násobek }. */
+export function pushOf(state, o) {
+  const out = new Map();
+  if (!histOn(state)) return out;
+  const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
+  for (const s of HIST_STRATEGIES) {
+    if (s.tag !== tag || !s.push || day < s.from || day >= s.until) continue;
+    const t = w.ownerIdx[s.war];
+    if (t && atWar(state.mil, o, t)) out.set(t, Math.min(out.get(t) ?? 1, s.push));
+  }
+  return out;
+}
+
+/** Země, na jejichž původní (předválečné) území AI podle historické strategie zatím neútočí (`noEnter` v okně `from`–`until`): množina indexů. */
+export function noEnterOf(state, o) {
+  const out = new Set();
+  if (!histOn(state)) return out;
+  const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
+  for (const s of HIST_STRATEGIES) if (s.tag === tag && s.noEnter && day >= s.from && day < s.until) out.add(w.ownerIdx[s.noEnter]);
   return out;
 }
 
@@ -60,4 +83,22 @@ export function holdBackOf(state, o) {
   let h = 0;
   for (const s of HIST_STRATEGIES) if (s.tag === tag && s.holdBack && day >= (s.from ?? 0) && day <= (s.until ?? Infinity)) h = Math.max(h, s.holdBack);
   return h;
+}
+
+/** Operace vylodění podle historické strategie (`invade`, oblast `at`): { t: index cílové země, at: index země, na jejímž původním území se vyloďuje (0 = kdekoli) }, nebo null. */
+export function invadeOpOf(state, o) {
+  if (!histOn(state)) return null;
+  const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
+  for (const s of HIST_STRATEGIES) {
+    if (s.tag !== tag || !s.invade || day < s.from || day >= s.until) continue;
+    const t = w.ownerIdx[s.invade];
+    if (t && atWar(state.mil, o, t) && !state.dip.cap[t]) return { t, at: s.at ? w.ownerIdx[s.at] : 0 };
+  }
+  return null;
+}
+
+/** Index cílové země historické operace vylodění, nebo 0. */
+export function invadeTargetOf(state, o) {
+  const op = invadeOpOf(state, o);
+  return op ? op.t : 0;
 }

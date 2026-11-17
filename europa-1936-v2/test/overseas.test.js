@@ -1,6 +1,7 @@
 // Zámořská pomoc (M79): data, podmínky zásilky, připsání výzbroje, letounů a paliva, denní krok, blokáda, texty.
 import { describe, it, expect } from 'vitest';
 import { createGame, getWorld, declareWar, validateState, aidBlock, deliverAid, overseasDay, OVERSEAS, OVERSEAS_AID, EQUIP, PLANES } from '../src/engine/index.js';
+import { SHIPS } from '../src/data/navy/ships.js';
 import { homeSea } from '../src/engine/nav/core.js';
 import { logLine, logImportant } from '../src/ui/logText.js';
 import { popupFor } from '../src/ui/popups.js';
@@ -13,14 +14,14 @@ const at = (s, day) => ({ ...s, tick: day * 24 });
 const war = () => declareWar(createGame({ player: null, aiLevel: 2 }), 'ENG', 'GER');
 
 describe('data', () => {
-  it('zásilky odkazují na existující země a známé druhy výzbroje, letounů nebo palivo', () => {
+  it('zásilky odkazují na existující země a známé druhy výzbroje, letounů, lodí nebo palivo', () => {
     expect(OVERSEAS.n).toBeTruthy();
     for (const a of OVERSEAS_AID) {
       expect(idx(a.to), a.id).toBeTruthy();
       for (const f of a.foes) expect(idx(f), f).toBeTruthy();
       expect(a.until).toBeGreaterThan(a.from);
       expect(a.every).toBeGreaterThan(0);
-      for (const k in a.give) expect(!!EQUIP[k] || !!PLANES[k] || k === 'fuel', `${a.id}.${k}`).toBe(true);
+      for (const k in a.give) expect(!!EQUIP[k] || !!PLANES[k] || !!SHIPS[k] || k === 'fuel', `${a.id}.${k}`).toBe(true);
     }
   });
 });
