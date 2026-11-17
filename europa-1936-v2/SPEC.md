@@ -812,6 +812,25 @@ Obecné opravy objevené při ladění (platí pro AI i hráče): hlad divizi os
 
 Ověření pozorovatelskou hrou z roku 1936 se třemi semínky (snímek z 30. 11. 1941 a dál): příměří Itálie 27. 8. – 22. 10. 1943, vylodění v Normandii 7.–28. 6. 1944, kapitulace Německa 20. 2. – 18. 3. 1945; francouzské a polské tažení beze změny. Test `test/hist-late.test.js`.
 
+## 4zzr. Rozšířený výzkum (M96)
+
+Strom výzkumu má 149 technologií v osmi oborech (`data/research/techs.js` + `techs_more.js`; nové obory Námořnictvo a Elektronika a rakety). Nové druhy účinků technologií:
+- **`fx.army`** – vojenské bonusy divizí s klíči z `MOD_KEYS` (útok, obrana, pěchota, tanky, organizace, zásoby, plánování, hory); součet čte `techArmyMods(done)` (mezipaměť podle `done`) a `modsOf` divizí ho přičte k bonusům národních duchů (`extraMods`). Hodnoty jsou malé (0,5–2,5 % na technologii).
+- **Úrovně lodí** `fx.lv { dd, ca, bb, ss, cv, tr }` – sílu flotily země počítá `fleetPower(state, o, ships)` (palba +`NAV.LV_ATK`, odolnost +`NAV.LV_HP` za úroveň nad první); používá ji námořní boj (`combat`) a nájezdy na konvoje (`routeRisk`). `powerOf(ships)` zůstává bez vlastníka (srovnání pro AI a rozhraní).
+- **`mod.air`** (síla letectva, násobí `power` v `airDay`) a **`mod.nav`** (palba loďstva v `combat`); `NO_MODS` je rozšířené o oba klíče.
+- **Drobné technologie** (`minor`) zkoumá AI až po hlavních technologiích téhož roku (`aiPick`), aby se nezpomalilo zbrojení.
+Ověření: pozorovatelská hra 1936–1945 se třemi semínky (§ 4zzq). Testy `test/tech-more.test.js`, `test/research.test.js`.
+
+## 4zzs. Návrhář tanků, lodí a letadel (M97)
+
+Data v `data/design/modules.js`: `DESIGN_TYPES` (13 typů – lehký, střední a těžký tank, torpédoborec, křižník, bitevní loď, ponorka, letadlová loď, stíhací a bitevní letoun, taktický a strategický bombardér, palubní letoun; každý se 3–4 sloty) a `MODULES` (41 modulů: `cat`, `slot`, `unlock` = technologie, `only` = jen pro typy, `fx` s klíči `atk`, `def`, `armor`, `speed`, `hp`, `cas`, `bomb`, `cost`).
+- **Stav:** návrhy žijí v úrovních výzbroje `mil.lv[o].des = { typ: { nm, mods: { slot: modul } } }` (`GAME_VERSION` 45), takže mezipaměti statistik podle objektu úrovní se po změně obnoví samy.
+- **Násobky** `designMult(des)` = 1 + součet účinků modulů (nejméně 0,5; mezipaměť podle návrhu). Čtou je: `deriveStats` (tankové prapory podle `kind`: měkký a tvrdý útok, průlom a průraz × `atk`, obrana × `def`, pancíř × `armor`, rychlost liniových praporů × `speed`), `itemCost` (cena výroby × `cost`), `fleetPower` (palba × `atk`, odolnost × `hp`) a `power` v `airDay` (pole `atk`, `cas`, `bomb`).
+- **Příkaz** `setDesign(state, o, typ, mods, nm)` (kontroly `designBlock`: typ, slot, `only`, odemčení technologií, změna, zkušenosti): zaplatí `DESIGN.XP_BASE + DESIGN.XP_MOD × měněné moduly` zkušeností příslušné větve (tanky = armáda, lodě = námořnictvo, letadla = letectvo) a linky vyrábějící ten typ se přezbrojí (efektivita × `DESIGN.RETOOL`).
+- **AI** (`aiDesign`, jednou za `DESIGN.AI_DAYS`): pro typy, které vyrábí, zavede nejlepší návrh (v každém slotu modul s nejvyšším přínosem minus `AI_COST_W` × cena), jen když jí zbyde `AI_RESERVE` zkušeností pro doktríny.
+- **Rozhraní:** okno *Konstrukční kancelář* (klávesa B, lišta nabídek): záložky Tanky / Lodě / Letadla, seznam typů s aktuálním návrhem, výběr modulu do každého slotu (zamčené moduly s chybějící technologií), srovnání současného a nového návrhu, název, cena ve zkušenostech, tlačítko *Zavést návrh*.
+Test `test/design.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -1055,6 +1074,8 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M93** | **Válka 1942–1945 po historických kolejích**: operační pauzy a ofenzivy (Stalingrad, Kursk, Bagration, Visla–Odra), tempo postupu, vylodění na Sicílii a v Normandii, příměří Itálie, hlad nezničí divizi, výroba podle surovin | **hotovo** |
 | **M94** | **Velké stromy národních cílů**: velmoci 44–51 cílů ve větvích, rozšíření 15 zajímavých zemí, výchozí strom 36 cílů, nové účinky `rel` a `bld`, duchové z cílů, stromové zobrazení se spojnicemi | **hotovo** |
 | **M95** | **Mírová konference ve stylu HOI4**: okupované státy jdou na stůl, vítězové se střídají a za body si berou státy (okupované za polovinu, sousední za plnou cenu), pas; o zbytku rozhodne hlavní vítěz | **hotovo** |
+| **M96** | **Rozšířený výzkum**: 149 technologií v osmi oborech (námořnictvo, elektronika), vojenské bonusy technologií, úrovně lodí v námořním boji, bonusy letectva a loďstva | **hotovo** |
+| **M97** | **Návrhář tanků, lodí a letadel**: 13 typů, 41 modulů, násobky statistik a ceny, přezbrojení linek za zkušenosti, AI návrhy, okno Konstrukční kancelář | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
