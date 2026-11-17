@@ -1,11 +1,11 @@
 // AI: průmysl (M24). Používá stejné příkazy jako hráč: build, addLine, setLineFactories.
 import { getWorld } from '../world.js';
-import { DEFAULT_SPLIT, EQUIP_PROD } from '../../data/industry/index.js';
+import { DEFAULT_SPLIT, EQUIP_PROD, PROD } from '../../data/industry/index.js';
 import { deriveStats } from '../army/stats.js';
 import { desiredMix, tplOfKind, targetDivs } from './army.js';
 import { EQUIP } from '../../data/army/equipment.js';
 import { hasWar } from '../army/war.js';
-import { build, addLine, setLineFactories } from '../industry/commands.js';
+import { build, addLine, setLineFactories, setLineEquip } from '../industry/commands.js';
 import { industryOf, producibleEquip } from '../industry/selectors.js';
 import { slotsOf, slotsUsed } from '../industry/core.js';
 import { I } from '../industry/constants.js';
@@ -17,8 +17,10 @@ const WAR_SPLIT = { pusky: 0.4, dela: 0.2, auta: 0.15, podpora: 0.1, pdela: 0.06
 /**
  * Rozdělení výroby podle potřeby (M65): výrobní body na výzbroj úměrné tomu, kolik jí žádané složení armády potřebuje na jednu divizi (kusy × cena),
  * aby se divize dokončovaly vyváženě; druh, kterého je ve skladu dost, dostane míň, druh, kterého je málo, víc. Vrací { výzbroj → podíl } (součet 1).
+ * M93: s toky surovin `res` (z `industryOf`) dostane výzbroj, které chybí její nejvzácnější surovina, míň – továrny by jinak jen spotřebovaly ocel
+ * ostatním linkám (Německo 1942: lehké tanky bez chromu a gumy).
  */
-export function demandSplit(state, o, war) {
+export function demandSplit(state, o, war, res = null) {
   const mix = desiredMix(state, o), kinds = tplOfKind(state, o), lv = state.mil.lv[o] || null;
   const need = {};
   for (const k in mix) {
@@ -35,7 +37,9 @@ export function demandSplit(state, o, war) {
     const cost = EQUIP_PROD[e] ? EQUIP_PROD[e].cost : 1;
     const cover = (stock[e] || 0) / (need[e] * AI.STOCK_DIVS);
     const f = cover > 2 ? 0.25 : cover > 1 ? 0.6 : cover < 0.3 ? 1.6 : 1;
-    w[e] = need[e] * cost * f;
+    let avail = 1;
+    if (res && PROD[e]) for (const r in PROD[e].res) avail = Math.min(avail, res[r] ? res[r].f : 0);
+    w[e] = need[e] * cost * f * Math.max(AI.RES_AVAIL_MIN, avail);
     sum += w[e];
   }
   const out = {};
@@ -96,7 +100,7 @@ export function aiIndustry(state, o) {
   // linky: volné továrny dostanou výrobu podle nedostatku zásob
   sum = industryOf(state, o);
   let free = Math.min(10, sum.milFree);
-  const split = demandSplit(state, o, war);
+  const split = demandSplit(state, o, war, sum.res);
   const full = new Set();   // M88: druh, kterému už nejde přidat továrnu (plné linky a strop počtu linek), se přeskočí – továrny nezůstanou stát
   while (free > 0) {
     const eqs = Object.keys(split).filter((e) => !full.has(e) && isUnlocked(state, o, EQUIP[e].unlock));
@@ -142,9 +146,15 @@ export function rebalanceLines(state, o, split) {
   }
   if (!give || !take || give === take || gv < AI.REBAL_MARGIN || tv > -AI.REBAL_MARGIN) return state;
   const from = lines.filter((l) => l.eq === give).sort((a, b) => a.eff - b.eff || a.id - b.id)[0];
-  const k = Math.min(AI.REBAL_STEP, from.fac, Math.floor(gv * tot), Math.floor(-tv * tot));
+  let k = Math.min(AI.REBAL_STEP, from.fac, Math.floor(gv * tot), Math.floor(-tv * tot));
   if (k < 1) return state;
-  const to = lines.filter((l) => l.eq === take && l.fac + k <= I.LINE_MAX_FAC).sort((a, b) => b.eff - a.eff || a.id - b.id)[0];
+  const to = lines.filter((l) => l.eq === take && l.fac < I.LINE_MAX_FAC).sort((a, b) => b.eff - a.eff || a.id - b.id)[0];
+  if (to) k = Math.min(k, I.LINE_MAX_FAC - to.fac);
+  else if (state.ind.lines.filter((l) => l.o === o).length >= I.LINES_MAX) {
+    // M93: strop počtu linek a plné linky příjemce – nejmenší linka dárce se celá přepne na chybějící výzbroj (jinak by výroba zůstala natrvalo špatně rozdělená)
+    const conv = lines.filter((l) => l.eq === give).sort((a, b) => a.fac - b.fac || a.id - b.id)[0];
+    return conv.fac <= Math.min(gv, -tv) * tot ? setLineEquip(state, conv.id, take) : state;   // jen když dárce má navíc a příjemci chybí aspoň celá linka
+  }
   const freed = setLineFactories(state, from.id, from.fac - k);
   const next = to ? setLineFactories(freed, to.id, to.fac + k) : addLine(freed, o, take, k);
   return next === freed ? state : next;

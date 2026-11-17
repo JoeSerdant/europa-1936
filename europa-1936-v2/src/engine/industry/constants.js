@@ -7,7 +7,7 @@ export const I = {
   EFF_GROW: 0.035,          // denní přírůstek: podíl vzdálenosti ke stropu
   EFF_INIT: 0.4,            // efektivita linek na začátku hry
   LINE_MAX_FAC: 40,         // nejvíc továren na jedné lince (M88: 40 – velké hospodářství by jinak narazilo na strop počtu linek)
-  LINES_MAX: 15,            // nejvíc linek na zemi
+  LINES_MAX: 30,            // nejvíc linek na zemi (M93: 30 – lodní a letecké linky jinak zabraly místo pozemní výrobě)
   RES_FLOOR: 0.25,          // nejmenší výkon linky při nedostatku suroviny
   TRADE_CIV: 0.12,          // civilní továrny spotřebované jednou jednotkou dováženou za den
   TRADE_MAX: 40,            // nejvíc smluv na zemi (dovoz i vývoz dohromady)

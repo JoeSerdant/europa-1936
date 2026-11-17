@@ -12,9 +12,9 @@ export const HIST_WARS = [
   { tag: 'GER', target: 'FRA', from: 1585, until: 2400, ratio: 1.0 },              // M88: do jara 1940 „podivná válka“, potom tažení na západ
   { tag: 'GER', target: 'ENG', from: 1650, until: 3300, ratio: 1.0, war: true },
   { tag: 'ITA', target: 'FRA', from: 1620, until: 2400, ratio: 1.0, war: true },
-  { tag: 'SOV', target: 'GER', from: 2580, until: 3600, ratio: 1.0, war: true },   // od zimy 1943 přechází do útoku Rudá armáda
-  { tag: 'ENG', target: 'ITA', from: 2700, until: 3600, ratio: 1.0, war: true },   // od léta 1943 Spojenci
-  { tag: 'ENG', target: 'GER', from: 3000, until: 3600, ratio: 1.0, war: true },
+  { tag: 'SOV', target: 'GER', from: 2515, until: 3800, ratio: 1.0, war: true },   // M93: od obratu u Volhy (listopad 1942) útočí Rudá armáda; do té doby jen osvobozuje vlastní území
+  { tag: 'ENG', target: 'ITA', from: 2650, until: 3800, ratio: 1.0, war: true },   // od léta 1943 Spojenci
+  { tag: 'ENG', target: 'GER', from: 3000, until: 3800, ratio: 1.0, war: true },
   { tag: 'GER', target: 'SOV', from: 1960, until: 2400, ratio: 0.35, force: 30 },
   { tag: 'ITA', target: 'ALB', from: 1250, until: 1800, ratio: 1.0 },
   { tag: 'ITA', target: 'GRE', from: 1730, until: 2200, ratio: 1.0 },

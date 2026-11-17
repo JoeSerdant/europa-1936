@@ -6,6 +6,7 @@ import { logAdd } from '../log.js';
 import { atWar } from '../army/war.js';
 import { EQUIP } from '../../data/army/equipment.js';
 import { PLANES } from '../../data/air/planes.js';
+import { SHIPS } from '../../data/navy/ships.js';
 import { OVERSEAS_AID } from '../../data/dip/overseas.js';
 import { homeSea, seaBlocked } from '../nav/core.js';
 import { hasCapitulated } from './core.js';
@@ -24,21 +25,23 @@ export function aidBlock(state, a) {
   return null;
 }
 
-/** Připíše zásilku `a` příjemci (výzbroj do skladu, letouny do rezervy, palivo do zásoby). */
+/** Připíše zásilku `a` příjemci (výzbroj do skladu, letouny do rezervy, lodě do námořní rezervy – M93, palivo do zásoby). */
 export function deliverAid(state, a) {
   const w = getWorld(), to = w.ownerIdx[a.to];
   const stock = state.mil.stock.slice(), cur = { ...(stock[to] || {}) };
   let pool = state.air ? state.air.pool : null, fuel = state.ind.fuel;
-  let planes = null;
+  let planes = null, ships = null;
   for (const k in a.give) {
     const n = a.give[k];
     if (EQUIP[k]) cur[k] = (cur[k] || 0) + n;
+    else if (SHIPS[k] && state.nav) { ships = ships || { ...state.nav.pool[to] }; ships[k] = (ships[k] || 0) + n; }
     else if (PLANES[k] && pool) { planes = planes || { ...pool[to] }; planes[k] = (planes[k] || 0) + n; }
     else if (k === 'fuel' && fuel && fuel[to]) { fuel = fuel.slice(); fuel[to] = { ...fuel[to], s: fuel[to].s + n }; }
   }
   stock[to] = cur;
   let s = { ...state, mil: { ...state.mil, stock }, ind: fuel === state.ind.fuel ? state.ind : { ...state.ind, fuel } };
   if (planes) { pool = pool.slice(); pool[to] = planes; s = { ...s, air: { ...s.air, pool, ver: s.air.ver + 1 } }; }
+  if (ships) { const np = s.nav.pool.slice(); np[to] = ships; s = { ...s, nav: { ...s.nav, pool: np, ver: s.nav.ver + 1 } }; }
   return s;
 }
 

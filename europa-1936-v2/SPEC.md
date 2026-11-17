@@ -779,6 +779,22 @@ Obdoba `ai_strategy` a skriptovaných postihů v HOI4: historie se nedolaďuje v
 
 Ověření pozorovatelskou hrou od roku 1936 (semínka 1936, 7, 42): Francie kapituluje 3.–22. 7. 1940, Barbarossa 22. 6. 1941, do listopadu 1941 Minsk a Kyjev (ve dvou hrách i Smolensk) v německých rukou, Moskva drží. Test `test/hist-strategy.test.js`.
 
+### Válka 1942–1945 (M93)
+
+Koleje pokračují až do konce války. Nové druhy řádků `HIST_STRATEGIES` (čte je jen `engine/ai/hist.js`, kromě příměří v `dip/day.js`):
+
+- **`defend` v okně** (`war`, `from`, `until`): operační pauza – země proti `war` jen brání (SSSR jaro–léto 1942, jaro 1943 do Kurska, jaro 1944 do Bagrationu, zastavení na Visle srpen 1944 – leden 1945; Německo po Kursku na východě trvale).
+- **`push`** (`war`, `from`, `until`, násobek): historická ofenziva – práh poměru sil pro útok (`need` v `decideStrategy`) se v divadlech proti `war` násobí touto hodnotou (`pushOf`); vzdálené zálohy (mimo `PICK_KM`) v té době pochodují do týlu takového divadla (`rearOf`), jinak by po postupu fronty zůstaly natrvalo v hlubokém týlu. Uran a Charkov, léto 1943, Bagration, Visla–Odra a Berlín, spojenecký postup z Normandie.
+- **`noEnter`** (`from`, `until`): AI zatím neútočí na původní (`provOwner0`) území dané země – tempo postupu (Rudá armáda vstoupí do Německa až na podzim 1944; `noEnterOf` vyřadí cíle v `aiStrategy`).
+- **`invade` s `at`**: operace vylodění jen na původním území země `at` (Sicílie a Itálie: `at: 'ITA'`; Normandie: Němci držená Francie). Místa operace dostanou `AI.INV_OP_BONUS`, sbor jde v plné síle a stačí mu poměr `AI.INV_OP_RATIO` k obráncům v okolí; jiná místa vylodění u cílové země se v okně nevybírají (rozběhnutá výprava se přesměruje). Sbor smí vzniknout i z armád na frontě, když v záloze není dost divizí (`startInvasion(…, d.armies)`); krycí flotila, která na místo nedopluje (za blokovaným průlivem), operaci předá jiné (`reachableFleet`).
+- **`armistice`** (`from`, `until`, `held`, `force`): země kapituluje, jakmile nepřítel `armistice` nebo jeho spojenec drží aspoň `held` provincií jejího původního území, nebo od dne `force` v každém případě (`armisticeDue`; ne hráčova země). Kapitulace s volbou `{ armistice: true }` nevytvoří exil ani konferenci – zbytek Itálie zůstane samostatný a neutrální.
+- **Duchové 1942–1945:** *Generál Zima* (zimy 1941/42 a 1942/43), *Sibiřské zálohy*, *Letní ofenziva* 1942, *Zbrojní ministerstvo* (výroba, odvody, těžba +30 %), *Průmysl za Uralem* (SSSR od zimy 1941), *Velký obrat* (Stalingrad), *Vyčerpaná říše* a *Rozpad front* (Německo 1943 a 1944), *Rudá armáda v útoku*, *Spojenecká převaha*, *Rozklad režimu* (Itálie 1943), *Operace na střed* (Bagration). `CAP_LIMITS`: Itálie 45 % / 20 %, Německo 80 % / 70 %.
+- **Zámořská pomoc** smí dodávat i lodě (`SHIPS` → `nav.pool`): americké transportní lodě Británii 1943–1944; SSSR od roku 1942 silnější půjčka a pronájem.
+
+Obecné opravy objevené při ladění (platí pro AI i hráče): hlad divizi oslabí nejvýš na `C.SUP_ATTR_FLOOR` síly (zničit ji může jen boj); strop linek `I.LINES_MAX` je 30 (lodní a letecké linky dřív vytlačily pozemní výrobu); AI `demandSplit(…, res)` váží výzbroj dostupností její nejvzácnější suroviny (`AI.RES_AVAIL_MIN`) a `rebalanceLines` při plném stropu linek přepne celou linku dárce na chybějící výzbroj – Německo tak v roce 1942 přestalo vyrábět lehké tanky bez chromu místo pušek. Tvar stavu se nemění.
+
+Ověření pozorovatelskou hrou z roku 1936 se třemi semínky (snímek z 30. 11. 1941 a dál): příměří Itálie 27. 8. – 22. 10. 1943, vylodění v Normandii 7.–28. 6. 1944, kapitulace Německa 20. 2. – 18. 3. 1945; francouzské a polské tažení beze změny. Test `test/hist-late.test.js`.
+
 ## 4k. Letectvo (M30)
 
 Stav `state.air = { ver, wn, wings[], pool[], sup{} }` (`GAME_VERSION` 11). Čísla vyvážení jsou v `src/engine/air/constants.js` (`AIR`), data letounů v `src/data/air/planes.js` (`PLANES`, `AIR_PROD`, `AIR_NATIONAL`).
@@ -1019,6 +1035,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M90** | **Palubní letouny**: letadlové lodě nesou palubní letouny z výroby, úder podle letounů na palubě, ztráty v boji, doplňování v přístavu, podpora pobřežních bojů, AI výroba | **hotovo** |
 | **M91** | **Grafika mapy**: reliéf z terénu (stínování), moře podle hloubky, záře hranic země hráče, ztmavení mimo dohled, den a noc se světly měst; přepínač v nabídce | **hotovo** |
 | **M92** | **Historické strategie AI** (jako `ai_strategy` v HOI4): duchové ze spouštěčů válek a z oken (blesková válka, podivná válka, Barbarossa, vlastenecká válka), záměrné chyby (francouzské zálohy, sovětská obrana bez protiútoků), hranice kapitulace podle země; AI neposílá armády na fronty bez zásobování a na pochody přes půl Evropy | **hotovo** |
+| **M93** | **Válka 1942–1945 po historických kolejích**: operační pauzy a ofenzivy (Stalingrad, Kursk, Bagration, Visla–Odra), tempo postupu, vylodění na Sicílii a v Normandii, příměří Itálie, hlad nezničí divizi, výroba podle surovin | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
