@@ -57,6 +57,7 @@ export const AI = {
   OFFENSE_FORCE: 2.0,               // útok: žádaný násobek nepřátelských divizí poblíž
   OFFENSE_BASE: 4,                  // útok: pevný přídavek divizí
   OFFENSE_PER_POST: 5,              // útok: nejvíc divizí na styčnou provincii (šířka fronty víc neunese; aspoň ARMY_SIZE)
+  PICK_KM: 1400,                    // armáda dál než tolik km od divadla se mu nepřiděluje (M92: pochody pustinou končily hladem)
   RESERVE_KM: 450,                  // armáda dál než tolik km od nejbližšího divadla, kterou nikdo nepotřebuje, zůstane doma
   STICKY_KM: 500,                   // armáda zůstane u svého divadla, i když je jiné o tolik km blíž
   SLICE_MIN: 6,                     // nejméně styčných provincií v plánu armády

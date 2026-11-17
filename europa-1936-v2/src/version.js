@@ -1,2 +1,2 @@
 // Označení verze hry zobrazené v hlavním menu (při dokončení milníku se zvedne).
-export const VERSION_LABEL = 'Verze 0.68 · M91 Grafika mapy';
+export const VERSION_LABEL = 'Verze 0.69 · M92 Historické strategie AI';

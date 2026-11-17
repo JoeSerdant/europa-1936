@@ -15,6 +15,7 @@ import { aiForts } from './forts.js';
 import { aiStrategy } from './strategy.js';
 import { aiParties } from './parties.js';
 import { aiFuel, aiTrade } from './logistics.js';
+import { histStrategies } from './hist.js';
 import { aiPara } from './para.js';
 import { aiPacts } from './pacts.js';
 import { advanceInvasions } from './invasion.js';
@@ -42,6 +43,7 @@ export function aiDay(state) {
   const scan = scanArmies(state);
   for (let o = 1; o < w.owners.length; o++) {
     if (o === player || state.dip.cap[o]) continue;
+    state = histStrategies(state, o);   // M92: historické strategie (duchové ze spouštěčů válek)
     state = aiDecisions(state, o);
     state = aiParties(state, o);
     state = aiSpy(state, o);
