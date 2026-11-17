@@ -104,7 +104,11 @@ export const AI = {
   GOAL_DAYS: 365,                   // bez historické AI: po tolika dnech války si velmoc vyhlásí válečný cíl proti nepřátelské velmoci
   TRADE_CIV_SHARE: 0.25,            // nejvýš tento podíl civilních továren smí dovoz spotřebovat
   STOCK_KEEP: 0.12,                 // rezerva výzbroje (M88): po odvodu nové divize musí ve skladu zůstat tento podíl výzbroje divizí v poli (v míru)
-  STOCK_KEEP_WAR: 0.06,             // totéž za války
+  STOCK_KEEP_WAR: 0.12,             // totéž za války (M89: 0,12 – válčící země si drží zásobu na doplňování ztrát, dřív 0,06)
+  REBAL_DAYS: 7,                    // přesun výroby (M89): jak často AI přerozděluje továrny mezi druhy výzbroje
+  REBAL_STEP: 3,                    // nejvíc továren přesunutých najednou
+  REBAL_MARGIN: 0.05,               // přesouvá se, jen když dárce i příjemce se od žádaného rozdělení liší víc než o tento podíl pozemních linek
+  REBAL_MIN: 10,                    // země s menším počtem továren na pozemních linkách výrobu nepřesouvá
   RECRUIT_HP: 0.8,                  // ve válce AI nové divize necvičí, dokud průměrná síla těch stávajících nedosáhne této hodnoty (výzbroj jde na doplnění)
   PARA_DIVS: 2,                     // výsadky (M87): tolik výsadkových divizí si velmoc drží
   PARA_FROM_DAY: 1200,              // od tohoto dne hry je cvičí i v míru (jaro 1939)
@@ -113,6 +117,12 @@ export const AI = {
   NAP_ASK_DAYS: 240,                // stejné zemi AI nabídku opakuje nejdřív po tolika dnech
   NAP_PP_RESERVE: 50,               // politická moc, kterou si AI po nabídce nechá
   NUKE_MIN_FAC: 4,                  // jaderný úder (M82): AI míří jen na stát s aspoň tolika továrnami a loděnicemi
+  SUBVERT_TIER: 2,                  // podpora cizí strany (M89): operaci podnikají jen velmoci a regionální mocnosti
+  SUBVERT_MIN: 15,                  // spřízněná strana v cíli musí mít aspoň tolik procent
+  SUBVERT_GAP: 0.5,                 // srážka za každý bod, který straně chybí na vládnoucí stranu
+  SUBVERT_STAB: 20,                 // příplatek za nestabilitu cíle (při stabilitě 0)
+  SUBVERT_PP: 60,                   // politická moc, kterou si AI po zahájení operace nechá
+  SUBVERT_INTEL: 0.3,               // bez takového přehledu o cíli pošle nejdřív průzkum
   PARTY_MARGIN: 15,                 // strany (M72): AI podpoří vládnoucí stranu, když její náskok před nejsilnějším soupeřem klesne pod tolik bodů
   PARTY_RESERVE: 80,                // a má aspoň tolik politické moci
   PEACE_POSTS: 8,                   // domácích postů na armádu v míru
