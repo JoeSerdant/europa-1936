@@ -4,6 +4,7 @@
 //  pierce = 0,4 · nejvyšší + 0,6 · průměr (jen prapory s průrazem);  armor = 0,4 · nejvyšší + 0,6 · průměr přes liniové prapory
 //  speed = nejpomalejší liniový prapor;  width = součet šířek liniových praporů
 import { BATTALIONS, SUPPORT, EQUIP_LEVEL_MULT, GRID } from '../../data/army/index.js';
+import { multOf, ONE } from '../design/core.js';
 
 const TERR_KEYS = [0, 1, 2, 3, 4, 5, 6, 'r'];
 const cache = new WeakMap();      // šablona → statistiky při úrovni 1
@@ -37,21 +38,22 @@ export function deriveStats(tpl, lvl = null) {
   };
   let orgW = 0, lineMen = 0, hardW = 0, allMen = 0, pierceMax = 0, pierceW = 0, pierceMen = 0, armorMax = 0, armorW = 0;
   const share = { arm: 0, mot: 0, cav: 0, mtn: 0 };
+  const dOf = (kind) => (lvl && lvl.des ? multOf(lvl, kind) : ONE);   // M97: návrh varianty (tanky)
   for (const u of all) {
-    const m = levelMult(lvl, u.kind);
+    const m = levelMult(lvl, u.kind), dm = dOf(u.kind);
     s.hp += u.hp; s.men += u.men; s.sup += u.sup; s.fuel += u.fuel || 0;
-    s.soft += u.soft * m; s.hard += u.hard * m; s.def += u.def * m; s.brk += u.brk * m;
+    s.soft += u.soft * m * dm.atk; s.hard += u.hard * m * dm.atk; s.def += u.def * m * dm.def; s.brk += u.brk * m * dm.atk;
     s.rec += u.rec || 0; s.eng += u.eng || 0; s.plan += u.plan || 0; s.supSave += u.supSave || 0; s.healing += u.healing || 0;
     s.days = Math.max(s.days, u.days);
     for (const k in u.need) s.need[k] = (s.need[k] || 0) + u.need[k];
     allMen += u.men; hardW += u.men * u.hardness;
-    if (u.pierce > 0) { const p = u.pierce * m; pierceMax = Math.max(pierceMax, p); pierceW += u.men * p; pierceMen += u.men; }
+    if (u.pierce > 0) { const p = u.pierce * m * dm.atk; pierceMax = Math.max(pierceMax, p); pierceW += u.men * p; pierceMen += u.men; }
   }
   for (const u of line) {
-    const m = levelMult(lvl, u.kind);
-    s.width += u.w; s.speed = Math.min(s.speed, u.spd);
+    const m = levelMult(lvl, u.kind), dm = dOf(u.kind);
+    s.width += u.w; s.speed = Math.min(s.speed, u.spd * dm.speed);
     orgW += u.men * u.org; lineMen += u.men;
-    const a = u.armor * m; armorMax = Math.max(armorMax, a); armorW += u.men * a;
+    const a = u.armor * m * dm.armor; armorMax = Math.max(armorMax, a); armorW += u.men * a;
     if (u.sym === 'arm') share.arm += u.men; else if (u.sym === 'mot') share.mot += u.men; else if (u.sym === 'cav') share.cav += u.men; else if (u.sym === 'mtn') share.mtn += u.men;
   }
   if (!line.length) s.speed = 0;

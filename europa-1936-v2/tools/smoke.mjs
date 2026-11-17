@@ -356,7 +356,7 @@ try {
   await page.waitForTimeout(150);
 
   // hlavní lišta nabídek a Logistika (M29)
-  check('lišta nabídek má 16 tlačítek', (await page.locator('.menubar button').count()) === 16);
+  check('lišta nabídek má 17 tlačítek', (await page.locator('.menubar button').count()) === 17);
   await page.keyboard.press('i');
   await page.waitForSelector('.logistics-panel', { timeout: 3000 });
   check('klávesa I otevře Logistiku s tabulkou výzbroje a surovin', (await ui()).panel === 'logistics' && (await page.locator('.lg-table tbody tr').count()) >= 4 && (await page.locator('.lg-res li').count()) === 6);
@@ -390,6 +390,18 @@ try {
   check('přijetí doktríny: stupeň je přijat a směr větve zamčen', (await page.locator('.doc-level.done').count()) === 1 && (await page.locator('.doc-track.excluded').count()) >= 2);
   await shot('doctrine');
   await page.keyboard.press('k');
+  // M97: Konstrukční kancelář – návrh lehkého tanku
+  await page.keyboard.press('b');
+  await page.waitForSelector('.design-panel .ds-slot select', { timeout: 3000 });
+  check('klávesa B otevře Konstrukční kancelář s typy a sloty', (await ui()).panel === 'design' && (await page.locator('.ds-type').count()) === 3 && (await page.locator('.ds-slot select').count()) === 4);
+  await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); gameStore.setState(engine.addXp(s, engine.getWorld().ownerIdx.GER, 'land', 60)); });
+  await page.waitForTimeout(800);
+  await page.locator('.ds-slot select').first().selectOption('tk_kan_l');
+  await page.getByRole('button', { name: /Zavést návrh/ }).click();
+  await page.waitForTimeout(800);
+  check('„Zavést návrh“ uloží návrh lehkého tanku', await E(() => { const s = window.__e1936.gameStore.getState(); const lv = s.mil.lv[window.__e1936.engine.getWorld().ownerIdx.GER]; return !!(lv && lv.des && lv.des.ltanky && lv.des.ltanky.mods.zbran === 'tk_kan_l'); }));
+  await shot('design');
+  await page.keyboard.press('b');
   await page.keyboard.press('a');
   await page.waitForSelector('.air-panel .air-wing', { timeout: 3000 });
   check('klávesa A otevře Letectvo s křídly a letišti', (await ui()).panel === 'air' && (await page.locator('.air-wing').count()) >= 3 && (await page.locator('.air-bases li').count()) >= 1);

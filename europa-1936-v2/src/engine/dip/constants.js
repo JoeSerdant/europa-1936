@@ -58,6 +58,7 @@ export const DIP = {
   AU_MULT: [1.6, 1, 0.5, 0.2], // násobek příspěvků pánovi podle úrovně
   SUB_MAN: 0.002,         // podíl lidské síly loutky, který denně připadne pánovi
   SUB_PP: 0.4,            // politická moc, kterou denně dostane pán za každou loutku
+  HOLDOUT_SHARE: 0.95,    // M98: země s historickým vytrváním (`holdout`) kapituluje až při tomto podílu území v rukou nepřítele
   CONF_BASE: 3,           // mírová konference (M95): základní body každého účastníka
   CONF_OCC: 0.5,          // cena státu, který účastník sám okupuje (podíl hodnoty)
   CONF_FOREIGN: 1.5,      // cena sousedního státu, který okupuje jiný účastník (násobek hodnoty)

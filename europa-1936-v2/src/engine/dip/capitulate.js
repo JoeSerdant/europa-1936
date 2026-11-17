@@ -49,9 +49,10 @@ export function capitulate(state, loser, opts = {}) {
     val[c] = (val[c] || 0) + stateValue(state, s);   // M84: hodnota dobytých států = body vítěze v mírové konferenci
     if (opts.armistice) { stateOwner[s] = c; for (const p of w.states[s].v) ctrl[p] = c; }   // M93: po příměří připadnou okupované státy okupantům hned
   }
+  if (opts.victor && !Object.keys(by).length) by[opts.victor] = 1;   // M98: bezpodmínečná kapitulace bez okupace – konferenci vede země z koleje
   // M88: cizí území, které poražený sám okupoval, se vrací vlastníkům (jeho divize tam pak zaniknou nebo odejdou domů)
   for (let p = 1; p <= w.L; p++) if (ctrl[p] === loser) { const own = stateOwner[w.provState[p]]; if (own !== loser) ctrl[p] = own; }
-  const host = opts.armistice ? 0 : exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje (M93: ne po historickém příměří)
+  const host = opts.armistice || opts.noExile ? 0 : exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje (M93: ne po historickém příměří)
   const allies = host ? state.dip.facs[state.dip.fac[loser]].mem.slice() : [];
   const wars = state.mil.wars.filter(([a, b]) => a !== loser && b !== loser);
   const cap = state.dip.cap.slice();

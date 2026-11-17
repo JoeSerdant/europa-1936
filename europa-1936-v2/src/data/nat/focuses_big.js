@@ -23,6 +23,7 @@ const NAMES = {
   DEN: 'Dánsko', HOL: 'Nizozemsko', BEL: 'Belgie', SWI: 'Švýcarsko', AUS: 'Rakousko', EST: 'Estonsko', LAT: 'Lotyšsko', LIT: 'Litva', ALB: 'Albánie', EGY: 'Egypt',
 };
 const rel = (tag, v) => ({ t: 'rel', tag, nm: NAMES[tag] || tag, v });
+import { XL_BRANCHES, XL_DEFAULT } from './focuses_xl.js';
 
 function F(id, n, x, y, days, req, fx, extra = {}) {
   return { id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', ...extra };
@@ -73,7 +74,7 @@ export function grow(base, list) {
 }
 
 // ---------------------------------------------------------------- Německo
-const GER = big([
+const GER_B = [
   { prio: 0, list: [
     ['ger_plan', 'Čtyřletý plán', 45, [], [civ(), mil()], { ai: 1, mod: { prod: 0.03 }, info: 'Řízené hospodářství: továrny a trvale vyšší výroba.' }],
     ['ger_road', 'Dálniční síť', 35, ['ger_plan'], [infra(), civ()], { ai: 2 }],
@@ -137,10 +138,11 @@ const GER = big([
     ['ger_north', 'Severská ruda', 35, ['ger_axis'], [rel('SWE', 30), rel('FIN', 30)]],
     ['ger_unity', 'Národní společenství', 35, ['ger_prop'], [spirit('f_narodni_jednota'), party('gov', 10)]],
   ] },
-]);
+];
+const GER = big([...GER_B, ...(XL_BRANCHES.GER || [])]);   // M98: nové větve
 
 // ---------------------------------------------------------------- SSSR
-const SOV = big([
+const SOV_B = [
   { prio: 0, list: [
     ['sov_plan', 'Pětiletý plán', 45, [], [civ(2), mil(1)], { ai: 1, mod: { build: 0.05 } }],
     ['sov_heavy', 'Těžký průmysl', 45, ['sov_plan'], [mil(3)], { ai: 2 }],
@@ -203,10 +205,11 @@ const SOV = big([
     ['sov_mines', 'Rudné pánve', 35, ['sov_oil'], [boost('tez3', 0.3)], { mod: { extract: 0.03 } }],
     ['sov_supply', 'Vojenské železnice', 35, ['sov_evac'], [boost('log', 0.4), infra()]],
   ] },
-]);
+];
+const SOV = big([...SOV_B, ...(XL_BRANCHES.SOV || [])]);   // M98: nové větve
 
 // ---------------------------------------------------------------- Británie
-const ENG = big([
+const ENG_B = [
   { prio: 0, list: [
     ['eng_ind', 'Obnova průmyslu', 35, [], [civ(2)], { ai: 1 }],
     ['eng_rearm', 'Program přezbrojení', 45, ['eng_ind'], [mil(2)], { ai: 3 }],
@@ -266,10 +269,11 @@ const ENG = big([
     ['eng_harbour', 'Přenosné přístavy', 70, ['eng_staff', 'eng_convoy'], [xp('sea', 20), xp('land', 20)], { info: 'Vylodění nečeká na dobytý přístav.' }],
     ['eng_tactical', 'Taktické letectvo', 35, ['eng_bomber'], [boost('tac2'), xp('air', 15)]],
   ] },
-]);
+];
+const ENG = big([...ENG_B, ...(XL_BRANCHES.ENG || [])]);   // M98: nové větve
 
 // ---------------------------------------------------------------- Francie
-const FRA = big([
+const FRA_B = [
   { prio: 0, list: [
     ['fra_ind', 'Národní hospodářská obnova', 45, [], [civ(2)], { ai: 2 }],
     ['fra_arm', 'Znárodnění zbrojovek', 35, ['fra_ind'], [mil(2)], { ai: 3, mod: { prod: 0.02 } }],
@@ -328,10 +332,11 @@ const FRA = big([
     ['fra_radar', 'Protiletadlová obrana', 35, ['fra_fight'], [bld('radar', 2)]],
     ['fra_staff', 'Moderní velení', 70, ['fra_radio', 'fra_republic'], [{ t: 'unspirit', id: 'tezkopadne_veleni' }, xp('land', 20)], { info: 'Konec těžkopádného velení.' }],
   ] },
-]);
+];
+const FRA = big([...FRA_B, ...(XL_BRANCHES.FRA || [])]);   // M98: nové větve
 
 // ---------------------------------------------------------------- Itálie
-const ITA = big([
+const ITA_B = [
   { prio: 0, list: [
     ['ita_ind', 'Hospodářský program', 45, [], [civ(), mil()], { ai: 1 }],
     ['ita_auto', 'Soběstačnost', 35, ['ita_ind'], [law('trd', 'closed')], { ai: 2, mod: { extract: 0.06 } }],
@@ -390,7 +395,8 @@ const ITA = big([
     ['ita_eafrica', 'Východoafrické posádky', 35, ['ita_africa'], [man(0.003), stock('pusky', 2000)]],
     ['ita_elite', 'Výběrové divize', 35, ['ita_staff', 'ita_para'], [spirit('f_elitni_jednotky')]],
   ] },
-]);
+];
+const ITA = big([...ITA_B, ...(XL_BRANCHES.ITA || [])]);   // M98: nové větve
 
 export const BIG_TREES = { GER, SOV, ENG, FRA, ITA };
 
@@ -574,7 +580,7 @@ export const GROW = {
 };
 
 // ---------------------------------------------------------------- výchozí strom (země bez vlastního stromu)
-export const DEFAULT_BIG = big([
+const DEFAULT_B = [
   { prio: 0, list: [
     ['def_ind', 'Průmyslová expanze', 35, [], [civ()], { ai: 1, info: 'Nová civilní továrna.' }],
     ['def_arm', 'Zbrojní výroba', 35, ['def_ind'], [mil()], { ai: 2, info: 'Nová vojenská továrna.' }],
@@ -621,4 +627,5 @@ export const DEFAULT_BIG = big([
     ['def_jednota', 'Pevná vláda', 35, [], [spirit('f_narodni_jednota')], { any: ['def_demo', 'def_auth', 'def_left', 'def_neutral'] }],
     ['def_spy', 'Zpravodajská služba', 35, ['def_unity'], [pp(40)]],
   ] },
-]);
+];
+export const DEFAULT_BIG = big([...DEFAULT_B, ...XL_DEFAULT]);   // M98: další větve

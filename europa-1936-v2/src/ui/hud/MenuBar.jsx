@@ -16,6 +16,7 @@ const ITEMS = [
   { id: 'logistics', name: 'Logistika', icon: 'supply', key: 'I' },
   { id: 'spy', name: 'Zpravodajská agentura', icon: 'eye', key: 'G' },
   { id: 'doctrine', name: 'Důstojnický sbor (doktríny)', icon: 'general', key: 'K' },
+  { id: 'design', name: 'Konstrukční kancelář (návrhy tanků, lodí a letadel)', icon: 'edit', key: 'B' },
   { id: 'air', name: 'Letectvo', icon: 'air', key: 'A' },
   { id: 'army', name: 'Armáda', icon: 'army', key: 'V' },
   { id: 'navy', name: 'Námořnictvo', icon: 'navy', key: 'M' },

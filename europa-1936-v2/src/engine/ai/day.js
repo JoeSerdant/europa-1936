@@ -9,6 +9,7 @@ import { aiDiplomacy } from './diplomacy.js';
 import { aiNavy } from './navy.js';
 import { aiAir } from './air.js';
 import { aiDoctrine } from './doc.js';
+import { aiDesign } from './design.js';
 import { aiDecisions } from './decisions.js';
 import { aiSpy } from './spy.js';
 import { aiForts } from './forts.js';
@@ -54,6 +55,7 @@ export function aiDay(state) {
     state = aiNavy(state, o);
     state = aiAir(state, o);
     state = aiDoctrine(state, o);
+    state = aiDesign(state, o);   // M97: návrhy variant tanků, lodí a letadel
     state = aiLend(state, o);
     state = aiFuel(state, o);    // M87: dovoz ropy při nedostatku paliva
     state = aiPara(state, o);    // M87: výsadkové divize a výsadky

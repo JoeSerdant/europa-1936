@@ -6,6 +6,7 @@ import { sameFaction } from '../dip/core.js';
 import { SHIPS, SHIP_IDS } from '../../data/navy/index.js';
 import { PLANES } from '../../data/air/planes.js';
 import { NAV } from './constants.js';
+import { multOf, ONE } from '../design/core.js';
 
 const graphCache = new WeakMap();
 
@@ -35,6 +36,20 @@ export const isSeaLabel = (l) => { const w = getWorld(); return Number.isInteger
 export function powerOf(ships) {
   let hp = 0, atk = 0, n = 0;
   for (const id of SHIP_IDS) { const c = ships[id] || 0; hp += c * SHIPS[id].hp; atk += c * SHIPS[id].atk; n += c; }
+  return { hp, atk, n };
+}
+
+/** Síla lodí země `o` s úrovní techniky typů lodí (M96, `mil.lv[o][typ]`): palba +`NAV.LV_ATK` a odolnost +`NAV.LV_HP` za úroveň nad první. */
+export function fleetPower(state, o, ships) {
+  const lv = state.mil.lv && state.mil.lv[o];
+  if (!lv) return powerOf(ships);
+  let hp = 0, atk = 0, n = 0;
+  for (const id of SHIP_IDS) {
+    const c = ships[id] || 0;
+    if (!c) continue;
+    const l = (lv[id] || 1) - 1, dm = lv.des ? multOf(lv, id) : ONE;   // M97: návrh varianty lodi
+    hp += c * SHIPS[id].hp * (1 + NAV.LV_HP * l) * dm.hp; atk += c * SHIPS[id].atk * (1 + NAV.LV_ATK * l) * dm.atk; n += c;
+  }
   return { hp, atk, n };
 }
 

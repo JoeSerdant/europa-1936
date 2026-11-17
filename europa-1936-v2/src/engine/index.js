@@ -6,6 +6,7 @@ export { countryTable, worldTension } from './overview.js';
 export * from './nav/index.js';
 export * from './air/index.js';
 export * from './doc/index.js';
+export * from './design/index.js';
 export * from './occ/index.js';
 export * from './spy/index.js';
 export { weatherIn, weatherAt, climateOfProv, WEATHER } from './weather.js';

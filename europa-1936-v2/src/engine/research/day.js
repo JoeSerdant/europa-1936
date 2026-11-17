@@ -13,7 +13,7 @@ export function aiPick(own, year, taken) {
   let best = null, bk = Infinity;
   for (const id of TECH_IDS) {
     if (taken.has(id) || !isAvailable(own, id) || TECHS[id].year > year) continue;
-    const k = TECHS[id].year * 1000 + TECHS[id].days + hash(own.o || 0, id);
+    const k = TECHS[id].year * 1000 + TECHS[id].days + hash(own.o || 0, id) + (TECHS[id].minor ? 600 : 0);   // M96: drobné technologie až po hlavních téhož roku
     if (k < bk) { bk = k; best = id; }
   }
   return best;

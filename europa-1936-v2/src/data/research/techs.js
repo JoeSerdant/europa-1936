@@ -5,6 +5,8 @@
 //  fx     účinky: lv { výzbroj: úroveň } | mod { effCap, build, extract, research, fuel } | slot: +1
 // Technologie, jejichž id je klíč `unlock` v datech praporů, rot a výzbroje (mech, mtank, htank, spoj, log, nem), tu jednotku odemykají.
 
+import { MORE_TECHS, MORE_CATS } from './techs_more.js';
+
 export const CATS = {
   pesi: { n: 'Pěchota' },
   zbran: { n: 'Dělostřelectvo' },
@@ -12,6 +14,7 @@ export const CATS = {
   podpora: { n: 'Podpora a logistika' },
   letectvo: { n: 'Letectvo' },
   prumysl: { n: 'Průmysl a věda' },
+  ...MORE_CATS,
 };
 export const CAT_IDS = Object.keys(CATS);
 
@@ -84,20 +87,28 @@ export const TECHS = {
   lab1: t('prumysl', 'Výzkumná pracoviště I', 1938, 100, ['vyz1'], { slot: 1 }, 'Další slot výzkumu.'),
   lab2: t('prumysl', 'Výzkumná pracoviště II', 1941, 140, ['lab1', 'vyz2'], { slot: 1 }, 'Další slot výzkumu.'),
   lab3: t('prumysl', 'Výzkumná pracoviště III', 1944, 170, ['lab2'], { slot: 1 }, 'Další slot výzkumu.'),
+  ...MORE_TECHS,   // M96: námořnictvo, elektronika a další technologie
 };
 export const TECH_IDS = Object.keys(TECHS);
 
 /** Národní úpravy rychlosti výzkumu (násobek; chybějící = 1). */
 export const RESEARCH_NATIONAL = { GER: 1.1, ENG: 1.1, FRA: 1.05, SOV: 0.9, ITA: 0.9, CZE: 1.05, SWI: 1.05, SWE: 1.05 };
 
-const MOD_TEXT = { effCap: 'strop efektivity linek', build: 'body stavby', extract: 'těžba surovin', research: 'rychlost výzkumu' };
-const EQ_TEXT = { pusky: 'Pušky', dela: 'Polní děla', pdela: 'Protitanková děla', auta: 'Nákladní automobily', vozy: 'Obrněná vozidla', ltanky: 'Lehké tanky', mtanky: 'Střední tanky', htanky: 'Těžké tanky', podpora: 'Podpůrná výzbroj' };
+const MOD_TEXT = { effCap: 'strop efektivity linek', build: 'body stavby', extract: 'těžba surovin', research: 'rychlost výzkumu', fuel: 'výroba paliva', air: 'síla letectva', nav: 'palba loďstva' };
+const EQ_TEXT = {
+  pusky: 'Pušky', dela: 'Polní děla', pdela: 'Protitanková děla', auta: 'Nákladní automobily', vozy: 'Obrněná vozidla', ltanky: 'Lehké tanky', mtanky: 'Střední tanky', htanky: 'Těžké tanky', podpora: 'Podpůrná výzbroj',
+  sti: 'Stíhací letouny', bit: 'Bitevní letouny', tac: 'Taktické bombardéry', str: 'Strategické bombardéry', rak: 'Rakety', pal: 'Palubní letouny',
+  dd: 'Torpédoborce', ca: 'Křižníky', bb: 'Bitevní lodě', ss: 'Ponorky', cv: 'Letadlové lodě', tr: 'Transportní lodě',
+};
+const ARMY_TEXT = { atk: 'útok divizí', def: 'obrana divizí', atkInf: 'útok pěchoty', defInf: 'obrana pěchoty', atkArm: 'útok tanků', speed: 'rychlost pochodu', orgRegen: 'obnova organizace', supUse: 'spotřeba zásob', planGain: 'rychlost plánování', planCap: 'strop plánování', hillAtk: 'útok v horách', hillDef: 'obrana v horách' };
+const sgn = (v) => `${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)} %`;
 
 /** Krátký výčet účinků technologie pro rozhraní. */
 export function fxLines(id) {
   const fx = TECHS[id].fx, out = [];
-  for (const e in fx.lv || {}) out.push(`${EQ_TEXT[e]}: úroveň ${fx.lv[e]}`);
-  for (const m in fx.mod || {}) out.push(`${MOD_TEXT[m]} +${Math.round(fx.mod[m] * 100)} %`);
+  for (const e in fx.lv || {}) out.push(`${EQ_TEXT[e] || e}: úroveň ${fx.lv[e]}`);
+  for (const m in fx.mod || {}) out.push(`${MOD_TEXT[m] || m} ${sgn(fx.mod[m])}`);
+  for (const a in fx.army || {}) out.push(`${ARMY_TEXT[a] || a} ${sgn(fx.army[a])}`);
   if (fx.slot) out.push(`+${fx.slot} slot výzkumu`);
   return out;
 }

@@ -13,7 +13,7 @@ import {
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   orderDrop, dropBlock, AIR, dropNuke, nukeBlock, confClaim, confClaimsDone,
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf,
-  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, setDesign, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { achievedNow, ACH_BY_ID } from './achievements/list.js';
@@ -979,6 +979,8 @@ export function lendTo(tag, eq) {
 
 // ============================================================ doktríny (M34)
 export const adoptDoc = (id) => !!playerIdx() && run(adoptDoctrine, playerIdx(), id);
+/** M97: zavede návrh varianty výzbroje hráčovy země. */
+export const applyDesign = (type, mods, nm) => !!playerIdx() && run(setDesign, playerIdx(), type, mods, nm);
 
 // ============================================================ rozhodnutí (M35)
 export const useDecision = (id) => { const ok = !!playerIdx() && run(takeDecision, playerIdx(), id); if (ok) toast('Rozhodnutí provedeno.'); return ok; };

@@ -25,6 +25,7 @@ import { LogisticsPanel } from '../logistics/LogisticsPanel.jsx';
 import { SpyPanel } from '../spy/SpyPanel.jsx';
 import { DecisionsPanel } from '../decisions/DecisionsPanel.jsx';
 import { DoctrinePanel } from '../doctrine/DoctrinePanel.jsx';
+import { DesignPanel } from '../design/DesignPanel.jsx';
 import { AirPanel } from '../air/AirPanel.jsx';
 import { MenuBar } from './MenuBar.jsx';
 import { Alerts } from './Alerts.jsx';
@@ -59,6 +60,7 @@ export function Hud() {
       {panel === 'logistics' && <LogisticsPanel />}
       {panel === 'air' && <AirPanel />}
       {panel === 'doctrine' && <DoctrinePanel />}
+      {panel === 'design' && <DesignPanel />}
       {panel === 'decisions' && <DecisionsPanel />}
       {panel === 'spy' && <SpyPanel />}
       <MenuBar />

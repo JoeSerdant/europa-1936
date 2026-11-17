@@ -4,6 +4,21 @@ import { abilityMods } from '../cmd/index.js';
 import { armyMods, ZERO_MODS, MOD_KEYS } from './leaders.js';
 import { docMods } from '../doc/core.js';
 import { spiritArmyMods, NO_SPIRIT_MODS } from '../nat/spirits.js';
+import { techArmyMods, NO_TECH_ARMY } from '../research/core.js';
+
+const extraCache = new WeakMap();   // bonusy duchů → Map(bonusy technologií → součet)
+/** Vojenské bonusy duchů a technologií země dohromady (M96). */
+function extraMods(state, o) {
+  const sp = state.nat ? spiritArmyMods(state.nat.own[o] && state.nat.own[o].sp) : NO_SPIRIT_MODS;
+  const tm = state.tech ? techArmyMods(state.tech.own[o] && state.tech.own[o].done) : NO_TECH_ARMY;
+  if (tm === NO_TECH_ARMY) return sp;
+  if (sp === NO_SPIRIT_MODS) return tm;
+  let m = extraCache.get(sp);
+  if (!m) { m = new Map(); extraCache.set(sp, m); }
+  let r = m.get(tm);
+  if (!r) { r = { ...sp }; for (const k in tm) r[k] = (r[k] || 0) + tm[k]; m.set(tm, r); }
+  return r;
+}
 
 /** Odvozené statistiky šablony divize. */
 /** Statistiky šablony včetně úrovně výzbroje jejího vlastníka (M20). */
@@ -36,8 +51,8 @@ function baseMods(ctx, d) {
     r = m.get(doc);
     if (!r) { r = { ...lead }; for (const k of MOD_KEYS) r[k] = (lead[k] || 0) + (doc[k] || 0); m.set(doc, r); }
   }
-  const sp = o && ctx.state.nat ? spiritArmyMods(ctx.state.nat.own[o] && ctx.state.nat.own[o].sp) : NO_SPIRIT_MODS;   // M88: vojenské bonusy národních duchů
-  if (sp === NO_SPIRIT_MODS) return r;
+  const sp = o ? extraMods(ctx.state, o) : NO_SPIRIT_MODS;   // M88: vojenské bonusy národních duchů; M96: a technologií
+  if (sp === NO_SPIRIT_MODS || sp === NO_TECH_ARMY) return r;
   let m = spiritCache.get(r);
   if (!m) { m = new Map(); spiritCache.set(r, m); }
   let q = m.get(sp);

@@ -4,6 +4,7 @@
 const F = (id, n, x, y, days, req, fx, extra = {}) => ({ id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', ...extra });
 import { MORE_TREES, EXTRA } from './focuses_more.js';
 import { BIG_TREES, GROW, DEFAULT_BIG, grow } from './focuses_big.js';
+import { XL_GROW, XL_SMALL } from './focuses_xl.js';
 const civ = (n = 1) => ({ t: 'factory', k: 'civ', n });
 const mil = (n = 1) => ({ t: 'factory', k: 'mil', n });
 
@@ -91,6 +92,8 @@ for (const tag in EXTRA) FOCUS_TREES[tag] = [...BASE_TREES[tag], ...EXTRA[tag]];
 // M94: velké stromy velmocí (nahrazují původní, id původních cílů zůstávají), rozšíření zajímavých zemí a velký výchozí strom
 Object.assign(FOCUS_TREES, BIG_TREES);
 for (const tag in GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], GROW[tag]);
+for (const tag in XL_GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], XL_GROW[tag]);   // M98: druhé rozšíření zajímavých zemí
+for (const tag in XL_SMALL) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], XL_SMALL[tag]);   // M98: rozšíření malých zemí
 FOCUS_TREES.DEFAULT = DEFAULT_BIG;
 
 /** Vyhledání cíle podle id (unikátní napříč stromy). */

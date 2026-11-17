@@ -12,6 +12,8 @@
 //  noEnter      (s `from`/`until`) AI zatím neútočí na původní (předválečné) území země `noEnter` – tempo postupu podle historie
 //  armistice    (s `from`/`until`) země v okně kapituluje, jakmile země `armistice` nebo její spojenec drží aspoň `held` provincií jejího původního území
 //               (Itálie 1943: pád režimu po vylodění Spojenců); od dne `force` kapituluje i bez toho
+//               s `conf` = bezpodmínečná kapitulace s mírovou konferencí (bez exilu)
+//  holdout      (s `from`/`until`) země bojuje do posledního: kapituluje až při `DIP.HOLDOUT_SHARE` území v rukou nepřítele (M98)
 //  invade       operace vylodění (s `from`/`until`): země se v okně vylodí u země `invade` i bez převahy na moři, z větší dálky a v plné síle sboru (Sicílie, Normandie);
 //               `at` = vylodění jen na původním území této země (Normandie: Němci držená Francie)
 export const HIST_STRATEGIES = [
@@ -60,7 +62,11 @@ export const HIST_STRATEGIES = [
   { id: 'ger_east_def', tag: 'GER', war: 'SOV', from: 2760, until: 3800, defend: true },
   { id: 'bagration', tag: 'SOV', from: 3094, until: 3200, needWar: 'GER', spirit: 'bagration' },
   { id: 'ger_collapse', tag: 'GER', from: 3150, until: 3800, spirit: 'rozpad_front' },
+  { id: 'ger_ruin', tag: 'GER', from: 3260, until: 3800, needWar: 'SOV', spirit: 'zhroucene_hospodarstvi' },   // M96: bombardované továrny, ztracená ropa
   // vylodění Spojenců: Sicílie a Itálie 1943, Normandie 1944
+  // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
+  { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3400, holdout: true },
+  { id: 'ger_surrender', tag: 'GER', from: 3400, until: 3800, armistice: 'SOV', held: 20, force: 3470, conf: true },
   { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },
   { id: 'husky', tag: 'ENG', from: 2650, until: 2950, invade: 'ITA', at: 'ITA' },
   { id: 'overlord', tag: 'ENG', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },

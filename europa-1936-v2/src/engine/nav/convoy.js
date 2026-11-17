@@ -3,7 +3,7 @@
 // Čisté funkce nad stavem; trasy se cachují podle pole `ctrl`.
 import { getWorld } from '../world.js';
 import { NAV } from './constants.js';
-import { seaRoute, homeSea, powerOf } from './core.js';
+import { seaRoute, homeSea, powerOf, fleetPower } from './core.js';
 import { atWar } from '../army/war.js';
 import { sameFaction } from '../dip/core.js';
 import { docMods } from '../doc/core.js';
@@ -66,7 +66,7 @@ export function routeRisk(state, route, from, to) {
   const seas = new Set(route.seas);
   for (const f of state.nav.fleets) {
     if (!f || !seas.has(f.p)) continue;
-    const atk = powerOf(f.ships).atk;
+    const atk = fleetPower(state, f.o, f.ships).atk;   // M96: úrovně lodí
     if (!atk) continue;
     const dm = docMods(state, f.o);
     if (atWar(state.mil, to, f.o) || atWar(state.mil, from, f.o)) {

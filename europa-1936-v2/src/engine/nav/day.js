@@ -9,7 +9,8 @@ import { NAV } from './constants.js';
 import { tradeRoute, routeRisk, needOf } from './convoy.js';
 import { docMods } from '../doc/core.js';
 import { fuelNavMult } from '../fuel/index.js';
-import { seaGraph, seaKm, powerOf, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf, deckOf, planesOf } from './core.js';
+import { seaGraph, seaKm, powerOf, fleetPower, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf, deckOf, planesOf } from './core.js';
+import { modsOf as techModsOf } from '../research/core.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
 
@@ -116,9 +117,9 @@ function combat(state) {
     const idsA = ids.filter((i) => sideA.includes(f0[i].o)), idsB = ids.filter((i) => sideB.includes(f0[i].o));
     // M81: mise (hlídka střílí lépe, nájezdníci uhýbají), palubní letouny (první úder) a ponorky (zasáhnou je jen torpédoborce a letadlové lodě)
     const mis = (i) => (f0[i].m === 'patrol' ? 1 + NAV.MISSION_PATROL : f0[i].m === 'raid' ? NAV.MISSION_EVADE : 1);
-    const fire = (i) => (1 + docMods(state, f0[i].o).fire) * mis(i);
+    const fire = (i) => (1 + docMods(state, f0[i].o).fire) * (1 + techModsOf(state, f0[i].o).nav) * mis(i);   // M96: námořní technologie
     const sum = (list) => list.reduce((a, i) => {
-      const sh = f0[i].ships, p = powerOf(sh);
+      const sh = f0[i].ships, p = fleetPower(state, f0[i].o, sh);
       return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i), air: a.air + airPower(sh, f0[i].pl || 0) * fire(i), asw: a.asw + aswOf(sh), ss: a.ss + (sh.ss || 0), pl: a.pl + planesOf(f0[i]) };
     }, { hp: 0, atk: 0, air: 0, asw: 0, ss: 0, pl: 0 });
     const pa = sum(idsA), pb = sum(idsB);
