@@ -71,7 +71,7 @@ export function dipDay(state) {
     if (h.total && (h.share >= lim.share || (h.capHeld && h.share >= lim.capital))) state = capitulate(state, o);
     else {
       const ar = armisticeRow(state, o);
-      if (ar) state = capitulate(state, o, ar.conf ? { noExile: true } : { armistice: true });   // M93: příměří (bez exilu a konference); M98: bezpodmínečná kapitulace (konference bez exilu)
+      if (ar) state = capitulate(state, o, ar.conf ? { noExile: true, victor: w.ownerIdx[ar.armistice] } : { armistice: true });   // M93: příměří (bez exilu a konference); M98: bezpodmínečná kapitulace (konference bez exilu)
     }
   }
   // vypršelá ospravedlnění

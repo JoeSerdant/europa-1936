@@ -127,8 +127,9 @@ describe('konec války v Evropě (M98)', () => {
     const r = armisticeRow(at(s, 3480), GER);
     expect(r && r.conf).toBeTruthy();
     const t = dipDay(at(s, 3480));
-    expect(t.dip.cap[GER]).toBe(1);
+    expect(t.dip.cap[GER] === 1 || t.dip.sub[GER] === SOV).toBe(true);   // bez okupace: SSSR jako hlavní vítěz rozhodne o Německu (AI: loutka)
     expect((t.dip.exile || [])[GER] || 0).toBe(0);
+    expect(t.dip.conf).toHaveLength(0);
   });
 });
 

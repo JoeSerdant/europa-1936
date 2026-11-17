@@ -603,6 +603,8 @@ Každá z 35 zemí má vlastní strom národních cílů (`data/nat/focuses_more
 - **Rozhraní:** záložka Cíle kreslí strom jako mřížku karet s pevnou velikostí (sloupce = větve, řádky = hloubka) se spojnicemi předpokladů (SVG, `any` čárkovaně, splněné zlatě) a vodorovným posuvem; plné účinky, vylučující a chybějící cíle jsou v nápovědě karty.
 Testy: `test/focus-big.test.js`, `test/nat.test.js`.
 
+**Další cíle (M98, `data/nat/focuses_xl.js`).** Velmoci mají nové větve (`XL_BRANCHES` – hospodářství, pozdní armáda, letectvo a námořnictvo II, elektronika, politika II) přidané k jejich `big` stromům (Německo 88, SSSR 83, Británie 78, Francie a Itálie 73 cílů); zajímavé země druhé rozšíření `XL_GROW` (27–30 cílů), malé země rozšíření `XL_SMALL` (14–16) a výchozí strom další větve `XL_DEFAULT` (55). Celkem 1066 cílů. Nové cíle většinou urychlují výzkum nových technologií (M96); továren přidávají málo, aby se nezměnilo vyvážení války.
+
 ## 4zj. Oznámení a vyskakovací okna (M58)
 
 Upozornění (`engine/alerts.js`) mají `n` (počet) a `lines` (podrobnosti) a přibyla dvě: divize bez armády (`divs`, otevře panel Armáda) a dostupná rozhodnutí (`decisions`). `ui/hud/Alerts.jsx` je kreslí jako vodorovnou řadu vedle lišty nabídek: ikona s počtem, po najetí tooltip s podrobnostmi, klik otevře okno, pravé tlačítko upozornění odloží do změny počtu. Důležité záznamy deníku hráče (`focus`, `tech`, `built`, `doctrine`, válka hráče, kapitulace, osamostatnění loutky) se v `useGameLoop` (`ui/hooks.js`) přes `popupFor` (`ui/popups.js`) změní na vyskakovací karty (`ui.popups`, `pushPopup`/`closePopup` v `ui/actions.js`, vykresluje `ui/hud/Popups.jsx`): název, text a seznam účinků cíle. Karty mizí po `POPUP_MS` (14 s), válka a kapitulace hráče zůstávají do zavření; nejvýš `POPUP_MAX` (4) najednou. Ostatní důležité záznamy zůstávají krátkým oznámením. Test: `test/popups.test.js`.
@@ -809,6 +811,8 @@ Koleje pokračují až do konce války. Nové druhy řádků `HIST_STRATEGIES` (
 - **Zámořská pomoc** smí dodávat i lodě (`SHIPS` → `nav.pool`): americké transportní lodě Británii 1943–1944; SSSR od roku 1942 silnější půjčka a pronájem.
 
 Obecné opravy objevené při ladění (platí pro AI i hráče): hlad divizi oslabí nejvýš na `C.SUP_ATTR_FLOOR` síly (zničit ji může jen boj); strop linek `I.LINES_MAX` je 30 (lodní a letecké linky dřív vytlačily pozemní výrobu); AI `demandSplit(…, res)` váží výzbroj dostupností její nejvzácnější suroviny (`AI.RES_AVAIL_MIN`) a `rebalanceLines` při plném stropu linek přepne celou linku dárce na chybějící výzbroj – Německo tak v roce 1942 přestalo vyrábět lehké tanky bez chromu místo pušek. Tvar stavu se nemění.
+
+**Konec války v Evropě (M98).** Řádek `holdout` (okno): země kapituluje až při `DIP.HOLDOUT_SHARE` (95 %) území v rukou nepřítele (`holdoutOf`; Německo do 23. 4. 1945). Řádek `armistice` s `conf: true` = **bezpodmínečná kapitulace** s mírovou konferencí bez exilu (`armisticeRow`; kapitulace s `{ noExile: true, victor }` – když nikdo nic neokupuje, vede konferenci země `armistice`): Německo od 23. 4. 1945 kapituluje, jakmile SSSR nebo spojenci drží 20 jeho provincií, nejpozději 30. 6. 1945. Výsledek války je chaotický (drobné změny vyvážení přehodí, které semínko vybočí), proto konec války zajišťuje kolej.
 
 Ověření pozorovatelskou hrou z roku 1936 se třemi semínky (snímek z 30. 11. 1941 a dál): příměří Itálie 27. 8. – 22. 10. 1943, vylodění v Normandii 7.–28. 6. 1944, kapitulace Německa 20. 2. – 18. 3. 1945; francouzské a polské tažení beze změny. Test `test/hist-late.test.js`.
 
@@ -1076,6 +1080,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M95** | **Mírová konference ve stylu HOI4**: okupované státy jdou na stůl, vítězové se střídají a za body si berou státy (okupované za polovinu, sousední za plnou cenu), pas; o zbytku rozhodne hlavní vítěz | **hotovo** |
 | **M96** | **Rozšířený výzkum**: 149 technologií v osmi oborech (námořnictvo, elektronika), vojenské bonusy technologií, úrovně lodí v námořním boji, bonusy letectva a loďstva | **hotovo** |
 | **M97** | **Návrhář tanků, lodí a letadel**: 13 typů, 41 modulů, násobky statistik a ceny, přezbrojení linek za zkušenosti, AI návrhy, okno Konstrukční kancelář | **hotovo** |
+| **M98** | **Mnohem víc národních cílů a konec války**: 1066 cílů (velmoci 73–88), rozšíření všech zemí, vytrvání a bezpodmínečná kapitulace Německa v roce 1945 | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
