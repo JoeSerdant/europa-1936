@@ -51,7 +51,7 @@ export function capitulate(state, loser, opts = {}) {
   }
   // M88: cizí území, které poražený sám okupoval, se vrací vlastníkům (jeho divize tam pak zaniknou nebo odejdou domů)
   for (let p = 1; p <= w.L; p++) if (ctrl[p] === loser) { const own = stateOwner[w.provState[p]]; if (own !== loser) ctrl[p] = own; }
-  const host = opts.armistice ? 0 : exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje (M93: ne po historickém příměří)
+  const host = opts.armistice || opts.noExile ? 0 : exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje (M93: ne po historickém příměří)
   const allies = host ? state.dip.facs[state.dip.fac[loser]].mem.slice() : [];
   const wars = state.mil.wars.filter(([a, b]) => a !== loser && b !== loser);
   const cap = state.dip.cap.slice();

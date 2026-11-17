@@ -10,11 +10,12 @@ const idx = (t) => W.ownerIdx[t];
 
 describe('rozsah stromů', () => {
   it('velmoci mají přes 40 cílů, zajímavé země aspoň 16, výchozí strom přes 30; celkem přes 600', () => {
-    for (const t of ['GER', 'SOV', 'ENG', 'FRA', 'ITA']) expect(FOCUS_TREES[t].length, t).toBeGreaterThan(40);
+    for (const t of ['GER', 'SOV', 'ENG', 'FRA', 'ITA']) expect(FOCUS_TREES[t].length, t).toBeGreaterThan(70);   // M98
     for (const t of Object.keys(GROW)) expect(FOCUS_TREES[t].length, t).toBeGreaterThanOrEqual(16);
     expect(FOCUS_TREES.DEFAULT).toBe(DEFAULT_BIG);
-    expect(DEFAULT_BIG.length).toBeGreaterThan(30);
-    expect(Object.values(FOCUS_TREES).reduce((a, t) => a + t.length, 0)).toBeGreaterThan(600);
+    expect(DEFAULT_BIG.length).toBeGreaterThan(50);
+    expect(Object.values(FOCUS_TREES).reduce((a, t) => a + t.length, 0)).toBeGreaterThan(1000);   // M98
+    for (const t of ['IRE', 'LUX', 'EGY', 'OMA']) expect(FOCUS_TREES[t].length, t).toBeGreaterThanOrEqual(14);
   });
   it('původní cíle velmocí zůstaly (stejná id a první cíl dostupný hned)', () => {
     for (const id of ['ger_plan', 'ger_rearm', 'ger_luft', 'sov_plan', 'sov_conscr', 'eng_ind', 'eng_empire', 'fra_front', 'fra_spy', 'ita_ind', 'ita_navy', 'def_ind', 'def_def']) expect(FOCUS_BY_ID[id], id).toBeTruthy();

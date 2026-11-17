@@ -6,7 +6,7 @@ import { HIST_STRATEGIES, CAP_LIMITS } from '../src/data/ai/strategies.js';
 import { SPIRITS } from '../src/data/nat/spirits.js';
 import { MOD_KEYS } from '../src/engine/army/leaders.js';
 import { NO_POL } from '../src/engine/politics/core.js';
-import { armisticeDue, dipDay } from '../src/engine/dip/day.js';
+import { armisticeDue, armisticeRow, holdoutOf, dipDay } from '../src/engine/dip/day.js';
 import { defendOnlyOf, pushOf, noEnterOf, invadeOpOf, invadeTargetOf } from '../src/engine/ai/hist.js';
 import { landingSites } from '../src/engine/ai/invasion.js';
 import { landZones } from '../src/engine/army/zones.js';
@@ -114,6 +114,21 @@ describe('příměří Itálie', () => {
     expect(s.stateOwner[capState]).toBe(ITA);
     expect((s.dip.exile || [])[ITA] || 0).toBe(0);
     expect(validateState(s)).toBeNull();
+  });
+});
+
+describe('konec války v Evropě (M98)', () => {
+  it('Německo do jara 1945 vytrvá, pak bezpodmínečně kapituluje s konferencí (nejpozději v létě)', () => {
+    const s = war(at(base(), 3000), GER, SOV);
+    expect(holdoutOf(s, GER)).toBe(true);
+    expect(holdoutOf(at(s, 3450), GER)).toBe(false);
+    expect(holdoutOf(noHist(s), GER)).toBe(false);
+    expect(armisticeRow(at(s, 3420), GER)).toBeNull();   // Sověti zatím nedrží 20 německých provincií
+    const r = armisticeRow(at(s, 3480), GER);
+    expect(r && r.conf).toBeTruthy();
+    const t = dipDay(at(s, 3480));
+    expect(t.dip.cap[GER]).toBe(1);
+    expect((t.dip.exile || [])[GER] || 0).toBe(0);
   });
 });
 

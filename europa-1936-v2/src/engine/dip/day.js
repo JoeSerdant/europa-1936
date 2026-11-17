@@ -24,19 +24,32 @@ export function capLimitOf(o) {
  * drží aspoň `held` provincií jejího původního území (nebo od dne `force` v každém případě).
  */
 export function armisticeDue(state, o) {
-  if (!state.ai || !state.ai.hist) return false;
+  return !!armisticeRow(state, o);
+}
+
+/** Řádek historického příměří nebo kapitulace, který právě nastal (viz `armisticeDue`), nebo null. Řádek s `conf` = bezpodmínečná kapitulace s konferencí. */
+export function armisticeRow(state, o) {
+  if (!state.ai || !state.ai.hist) return null;
   const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
-  if (state.player && w.ownerIdx[state.player] === o) return false;   // hráčova země se rozhoduje sama
+  if (state.player && w.ownerIdx[state.player] === o) return null;   // hráčova země se rozhoduje sama
   for (const s of HIST_STRATEGIES) {
     if (s.tag !== tag || !s.armistice || day < s.from || day >= s.until) continue;
     const foe = w.ownerIdx[s.armistice];
     if (!foe || !atWar(state.mil, o, foe)) continue;
-    if (s.force && day >= s.force) return true;   // pojistka: režim padne i bez úspěšného vylodění
+    if (s.force && day >= s.force) return s;   // pojistka: režim padne i bez úspěšného vylodění
     const camp = new Set([foe, ...friendsOf(state.dip, foe)]);
     let n = 0;
-    for (let p = 1; p <= w.L; p++) if (w.provOwner0[p] === o && camp.has(state.ctrl[p]) && ++n >= s.held) return true;
+    for (let p = 1; p <= w.L; p++) if (w.provOwner0[p] === o && camp.has(state.ctrl[p]) && ++n >= s.held) return s;
   }
-  return false;
+  return null;
+}
+
+/** Vytrvá země `o` podle historické strategie (`holdout` v okně, M98)? Pak kapituluje až při `DIP.HOLDOUT_SHARE` území v rukou nepřítele. */
+export function holdoutOf(state, o) {
+  if (!state.ai || !state.ai.hist) return false;
+  const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
+  if (state.player && w.ownerIdx[state.player] === o) return false;
+  return HIST_STRATEGIES.some((s) => s.tag === tag && s.holdout && day >= s.from && day < s.until);
 }
 
 export function dipDay(state) {
@@ -54,9 +67,12 @@ export function dipDay(state) {
       if (h.total && h.share >= DIP.CIVIL_CAP_SHARE) state = capitulate(state, o);
       continue;
     }
-    const lim = capLimitOf(o);   // M92: hranice kapitulace podle země
+    const lim = holdoutOf(state, o) ? { share: DIP.HOLDOUT_SHARE, capital: DIP.HOLDOUT_SHARE } : capLimitOf(o);   // M92: hranice kapitulace podle země; M98: vytrvání do konce
     if (h.total && (h.share >= lim.share || (h.capHeld && h.share >= lim.capital))) state = capitulate(state, o);
-    else if (armisticeDue(state, o)) state = capitulate(state, o, { armistice: true });   // M93: příměří – vláda nejde do exilu a zbytek země zůstane neutrální
+    else {
+      const ar = armisticeRow(state, o);
+      if (ar) state = capitulate(state, o, ar.conf ? { noExile: true } : { armistice: true });   // M93: příměří (bez exilu a konference); M98: bezpodmínečná kapitulace (konference bez exilu)
+    }
   }
   // vypršelá ospravedlnění
   let just = state.dip.just;
