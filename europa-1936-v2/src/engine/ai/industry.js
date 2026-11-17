@@ -116,5 +116,36 @@ export function aiIndustry(state, o) {
     free--;
   }
   void producibleEquip;
-  return state;
+  return rebalanceLines(state, o, split);
+}
+
+/**
+ * Přesun výroby (M89): jednou za `AI.REBAL_DAYS` dní AI přesune až `AI.REBAL_STEP` továren z druhu výzbroje, který má proti rozdělení `split` nejvíc továren navíc,
+ * na druh, kterému jich nejvíc chybí (obojí víc než `AI.REBAL_MARGIN` pozemních linek). Bere z linky s nejnižší efektivitou; přidané továrny zředí efektivitu
+ * cílové linky (`setLineFactories`), nová linka začíná od nuly. Lodě a letadla se nepřesouvají. Stejné příkazy jako hráč; beze změny vrací tentýž stav.
+ */
+export function rebalanceLines(state, o, split) {
+  if ((Math.floor(state.tick / 24) + o) % AI.REBAL_DAYS !== 0) return state;
+  const lines = state.ind.lines.filter((l) => l.o === o && split[l.eq] !== undefined);
+  const tot = lines.reduce((a, l) => a + l.fac, 0);
+  if (tot < AI.REBAL_MIN) return state;
+  const eqs = Object.keys(split).filter((e) => isUnlocked(state, o, EQUIP[e].unlock));
+  const sw = eqs.reduce((a, e) => a + split[e], 0);
+  if (sw <= 0) return state;
+  const have = {};
+  for (const l of lines) have[l.eq] = (have[l.eq] || 0) + l.fac;
+  let give = '', take = '', gv = -Infinity, tv = Infinity;
+  for (const e of eqs.slice().sort()) {
+    const d = (have[e] || 0) / tot - split[e] / sw;
+    if (have[e] && d > gv) { gv = d; give = e; }
+    if (d < tv) { tv = d; take = e; }
+  }
+  if (!give || !take || give === take || gv < AI.REBAL_MARGIN || tv > -AI.REBAL_MARGIN) return state;
+  const from = lines.filter((l) => l.eq === give).sort((a, b) => a.eff - b.eff || a.id - b.id)[0];
+  const k = Math.min(AI.REBAL_STEP, from.fac, Math.floor(gv * tot), Math.floor(-tv * tot));
+  if (k < 1) return state;
+  const to = lines.filter((l) => l.eq === take && l.fac + k <= I.LINE_MAX_FAC).sort((a, b) => b.eff - a.eff || a.id - b.id)[0];
+  const freed = setLineFactories(state, from.id, from.fac - k);
+  const next = to ? setLineFactories(freed, to.id, to.fac + k) : addLine(freed, o, take, k);
+  return next === freed ? state : next;
 }

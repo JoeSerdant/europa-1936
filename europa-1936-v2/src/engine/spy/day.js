@@ -9,6 +9,7 @@ import { grantTech } from '../research/commands.js';
 import { TECH_IDS } from '../../data/research/index.js';
 import { logAdd } from '../log.js';
 import { ideologyOf } from '../politics/parties.js';
+import { POL } from '../politics/constants.js';
 
 /** Šance operace země `o` proti `t`. */
 export function chanceOf(state, o, t) {
@@ -38,7 +39,7 @@ function resolve(state, o, op) {
     } else if (op.k === 'steal') {
       const ahead = doneTechs(s, op.t) > doneTechs(s, o);
       s = applyFx(s, o, [{ t: 'boostslot', v: ahead ? SPY.STEAL_BEHIND : SPY.STEAL }]);
-    } else if (op.k === 'subvert') s = applyFx(s, op.t, [{ t: 'party', i: ideologyOf(s, o), v: SPY.SUBVERT }]);
+    } else if (op.k === 'subvert') s = applyFx(s, op.t, [{ t: 'party', i: ideologyOf(s, o), v: POL.SPY_SUBVERT }]);   // M89: oprava – konstanta je v `POL` (dřív `SPY.SUBVERT` neexistovala a operace neměla účinek)
     else if (op.k === 'unrest') s = applyFx(s, op.t, [{ t: 'stab', v: -SPY.UNREST_STAB }, { t: 'ws', v: -SPY.UNREST_WS }]);
     log('spy', 1);
   } else {
