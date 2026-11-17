@@ -107,6 +107,7 @@ export function useHotkeys() {
       else if (k === 'i') togglePanel('logistics');
       else if (k === 'a') togglePanel('air');
       else if (k === 'k') togglePanel('doctrine');
+      else if (k === 'b') togglePanel('design');   // M97: Konstrukční kancelář
       else if (k === 'j') togglePanel('decisions');
       else if (k === 'g') togglePanel('spy');
       else if (k === 'c') togglePanel('nat');

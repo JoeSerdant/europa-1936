@@ -26,7 +26,7 @@ describe('rozsah', () => {
       for (const k in TECHS[id].fx.mod || {}) expect(k in NO_MODS).toBe(true);
       for (const r of TECHS[id].req) expect(TECHS[r].year).toBeLessThanOrEqual(TECHS[id].year);
     }
-    expect(fxLines('inf_hory')).toEqual(['útok v horách +5 %', 'obrana v horách +5 %']);
+    expect(fxLines('inf_hory')).toEqual(['útok v horách +3 %', 'obrana v horách +3 %']);
     expect(fxLines('dd2')).toEqual(['Torpédoborce: úroveň 2']);
   });
 });
@@ -34,14 +34,14 @@ describe('rozsah', () => {
 describe('účinky', () => {
   it('vojenské bonusy hotových technologií se sečtou do bonusů divizí', () => {
     expect(techArmyMods({})).toBe(NO_TECH_ARMY);
-    expect(techArmyMods({ inf_kul: 1, inf_sam: 1 }).atkInf).toBeCloseTo(0.06, 6);
+    expect(techArmyMods({ inf_kul: 1, inf_sam: 1 }).atkInf).toBeCloseTo(0.03, 6);
     const s = createGame({ player: null });
     const id = s.mil.divs.findIndex((d) => d && d.o === GER);
     const before = modsOf(openCtx(s), s.mil.divs[id]);
     const t = withDone(s, GER, ['inf_kul', 'art_opt']);
     const after = modsOf(openCtx(t), t.mil.divs[id]);
-    expect(after.atkInf).toBeCloseTo((before.atkInf || 0) + 0.03, 6);
-    expect(after.atk).toBeCloseTo((before.atk || 0) + 0.02, 6);
+    expect(after.atkInf).toBeCloseTo((before.atkInf || 0) + 0.015, 6);
+    expect(after.atk).toBeCloseTo((before.atk || 0) + 0.01, 6);
   });
   it('úrovně lodí zvyšují palbu a odolnost flotily; bonusy letectva a loďstva jsou v modech technologií', () => {
     const s = createGame({ player: null });

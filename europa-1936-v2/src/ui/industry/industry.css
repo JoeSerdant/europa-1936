@@ -533,3 +533,22 @@ button.st-row:hover { background: var(--ink-3); }
 .ach-list li.done b { color: var(--brass-hi); }
 .ach-list li div { display: flex; flex-direction: column; gap: 2px; }
 .ach-list li span { font-size: 12.5px; }
+
+/* ------------------------------------------------------------------ konstrukční kancelář (M97) */
+.design-panel .prod-cols { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
+.ds-list ul { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.ds-type { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 8px 10px; border: 0; color: var(--text); text-align: left; background: rgba(22, 34, 45, 0.75); box-shadow: inset 0 0 0 1px var(--rule); cursor: pointer; }
+.ds-type b { font: 600 15px/1.2 var(--display); color: var(--paper); }
+.ds-type .muted { font-size: 12px; }
+.ds-type.on { box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
+.ds-edit { display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
+.ds-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ds-slot, .ds-name { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.ds-slot select, .ds-name input { padding: 6px 8px; color: var(--text); background: var(--ink-3); border: 0; box-shadow: inset 0 0 0 1px var(--rule-hi); font: inherit; }
+.ds-stats { border-collapse: collapse; font-size: 13.5px; }
+.ds-stats th, .ds-stats td { padding: 4px 14px 4px 0; text-align: left; }
+.ds-stats th { color: var(--text-2); font-weight: 500; }
+.ds-stats tr.better td:last-child { color: #8fd18a; }
+.ds-stats tr.worse td:last-child { color: #ff9b86; }
+.design-panel .btn { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; align-self: flex-start; padding: 10px 16px; }
+.design-panel .btn span { font-size: 12.5px; font-weight: 400; opacity: 0.85; }

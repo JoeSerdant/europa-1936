@@ -6,6 +6,7 @@ import { sameFaction } from '../dip/core.js';
 import { SHIPS, SHIP_IDS } from '../../data/navy/index.js';
 import { PLANES } from '../../data/air/planes.js';
 import { NAV } from './constants.js';
+import { multOf, ONE } from '../design/core.js';
 
 const graphCache = new WeakMap();
 
@@ -46,8 +47,8 @@ export function fleetPower(state, o, ships) {
   for (const id of SHIP_IDS) {
     const c = ships[id] || 0;
     if (!c) continue;
-    const l = (lv[id] || 1) - 1;
-    hp += c * SHIPS[id].hp * (1 + NAV.LV_HP * l); atk += c * SHIPS[id].atk * (1 + NAV.LV_ATK * l); n += c;
+    const l = (lv[id] || 1) - 1, dm = lv.des ? multOf(lv, id) : ONE;   // M97: návrh varianty lodi
+    hp += c * SHIPS[id].hp * (1 + NAV.LV_HP * l) * dm.hp; atk += c * SHIPS[id].atk * (1 + NAV.LV_ATK * l) * dm.atk; n += c;
   }
   return { hp, atk, n };
 }
