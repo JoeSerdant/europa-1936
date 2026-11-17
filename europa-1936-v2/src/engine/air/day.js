@@ -10,6 +10,8 @@ import { logAdd } from '../log.js';
 import { rand01 } from '../nat/core.js';
 import { fuelAirMult } from '../fuel/index.js';
 import { nukeProduction } from './nuke.js';
+import { planesOf, coastStatesOf } from '../nav/core.js';
+import { NAV } from '../nav/constants.js';
 
 const key = (o, s) => `${o}:${s}`;
 
@@ -82,6 +84,14 @@ export function airDay(state) {
     const lost = Math.min(wg.n, Math.floor(raw));
     wings[id] = lost || raw !== wg.c || newA !== (wg.a || 0) ? { ...wg, n: wg.n - lost, c: raw - lost, a: newA } : wg;
     if (wings[id].n <= 0) wings[id] = null;
+  }
+  // M90: palubní letouny válčících flotil podporují boje ve státech s pobřežím v mořské oblasti flotily (ne v den, kdy flotila sama bojuje s nepřátelským loďstvem)
+  if (state.nav) for (const f of state.nav.fleets) {
+    if (!f || !(f.pl > 0) || !state.mil.wars.some(([a, b]) => a === f.o || b === f.o)) continue;
+    const pl = planesOf(f);
+    if (!pl || state.nav.fleets.some((x) => x && x.p === f.p && atWar(state.mil, f.o, x.o))) continue;
+    const v = pl * PLANES.pal.cas * NAV.PLANE_CAS * fuelAirMult(state, f.o);
+    for (const s of coastStatesOf(f.p)) sup[key(f.o, s)] = (sup[key(f.o, s)] || 0) + v;   // bonus platí divizím vlastníka flotily v pobřežním státě
   }
   const supOut = {};
   for (const k in sup) supOut[k] = Math.min(AIR.CAS_MAX, sup[k] * AIR.CAS_COEF);

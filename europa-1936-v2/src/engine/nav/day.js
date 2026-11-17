@@ -9,7 +9,7 @@ import { NAV } from './constants.js';
 import { tradeRoute, routeRisk, needOf } from './convoy.js';
 import { docMods } from '../doc/core.js';
 import { fuelNavMult } from '../fuel/index.js';
-import { seaGraph, seaKm, powerOf, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf } from './core.js';
+import { seaGraph, seaKm, powerOf, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf, deckOf, planesOf } from './core.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
 
@@ -119,17 +119,21 @@ function combat(state) {
     const fire = (i) => (1 + docMods(state, f0[i].o).fire) * mis(i);
     const sum = (list) => list.reduce((a, i) => {
       const sh = f0[i].ships, p = powerOf(sh);
-      return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i), air: a.air + airPower(sh) * fire(i), asw: a.asw + aswOf(sh), ss: a.ss + (sh.ss || 0) };
-    }, { hp: 0, atk: 0, air: 0, asw: 0, ss: 0 });
+      return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i), air: a.air + airPower(sh, f0[i].pl || 0) * fire(i), asw: a.asw + aswOf(sh), ss: a.ss + (sh.ss || 0), pl: a.pl + planesOf(f0[i]) };
+    }, { hp: 0, atk: 0, air: 0, asw: 0, ss: 0, pl: 0 });
     const pa = sum(idsA), pb = sum(idsB);
     if (pa.atk + pa.air <= 0 && pb.atk + pb.air <= 0) continue;
     const strikeOnB = lossFrac(pa.air, pb.hp), strikeOnA = lossFrac(pb.air, pa.hp);   // první úder letounů oslabí palbu protivníka
     const fa = lossFrac(pb.atk * (1 - NAV.CV_SUPPRESS * strikeOnB) + pb.air, pa.hp), fb = lossFrac(pa.atk * (1 - NAV.CV_SUPPRESS * strikeOnA) + pa.air, pb.hp);
     const subA = fa * Math.min(1, pb.asw / Math.max(1, pa.ss)), subB = fb * Math.min(1, pa.asw / Math.max(1, pb.ss));
     if (!copy) { fleets = fleets.slice(); copy = true; }
-    for (const [list, frac, sub] of [[idsA, fa, subA], [idsB, fb, subB]]) for (const i of list) {
+    // M90: palubní letouny ubývají protiletadlovou palbou, ve vzdušném souboji s letouny protivníka a se ztrátou letadlových lodí (víc letounů, než unesou paluby, padne)
+    const planeLoss = (own, foe) => Math.min(0.9, NAV.PLANE_LOSS + (foe.pl > 0 ? NAV.PLANE_DUEL * foe.pl / (foe.pl + own.pl) : 0));
+    for (const [list, frac, sub, pl] of [[idsA, fa, subA, planeLoss(pa, pb)], [idsB, fb, subB, planeLoss(pb, pa)]]) for (const i of list) {
       const ev = f0[i].m === 'raid' ? NAV.MISSION_EVADE : 1;
-      fleets[i] = fleets[i] && applyLoss(fleets[i], frac * ev, sub * ev); touched.push(i);
+      let nf = fleets[i] && applyLoss(fleets[i], frac * ev, sub * ev);
+      if (nf && (nf.pl || 0) > 0) nf = { ...nf, pl: Math.min(deckOf(nf.ships), (nf.pl || 0) - Math.ceil((nf.pl || 0) * pl * ev)) };
+      fleets[i] = nf; touched.push(i);
     }
   }
   if (!copy) return state;
@@ -214,7 +218,35 @@ function raids(state) {
   return logAddMany(out, logs);
 }
 
+/**
+ * Denně (M90): flotily v oblasti vlastního přístavu doplní paluby z rezervy palubních letounů (`air.pool[o].pal`), nejvýš `NAV.PLANE_REFILL` za den;
+ * letouny navíc (po ztrátě letadlové lodi) se vrátí do rezervy.
+ */
+export function refillDecks(state) {
+  if (!state.air) return state;
+  let fleets = state.nav.fleets, pool = state.air.pool, fc = false, pc = false;
+  const homes = new Map();
+  for (let i = 1; i < fleets.length; i++) {
+    const f = fleets[i];
+    if (!f) continue;
+    const cap = deckOf(f.ships), pl = f.pl || 0;
+    if (pl === cap || (!cap && !pl)) continue;
+    let h = homes.get(f.o);
+    if (!h) { h = homeSeas(state, f.o); homes.set(f.o, h); }
+    if (!h.has(f.p) || f.path.length) continue;
+    const have = (pool[f.o] && pool[f.o].pal) || 0;
+    const move = pl > cap ? cap - pl : Math.min(NAV.PLANE_REFILL, cap - pl, have);
+    if (!move) continue;
+    if (!fc) { fleets = fleets.slice(); fc = true; }
+    if (!pc) { pool = pool.slice(); pc = true; }
+    fleets[i] = { ...f, pl: pl + move };
+    pool[f.o] = { ...pool[f.o], pal: have - move };
+  }
+  if (!fc) return state;
+  return { ...state, nav: { ...state.nav, fleets, ver: state.nav.ver + 1 }, air: { ...state.air, pool, ver: state.air.ver + 1 } };
+}
+
 export function navDay(state) {
-  return raids(sinkings(combat(state)));
+  return refillDecks(raids(sinkings(combat(state))));
 }
 void SHIPS; void seaGraph;

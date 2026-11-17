@@ -1,6 +1,6 @@
 // Počáteční letectvo (M30): letiště ve státech s nejvíc vítěznými body a křídla podle dat zemí. `ind` je čerstvý a upravuje se (letiště).
 import { COUNTRIES } from '../../data/countries.js';
-import { AIR_NATIONAL, AIR_TIER, PLANE_IDS } from '../../data/air/planes.js';
+import { PLANES, AIR_NATIONAL, AIR_TIER, PLANE_IDS } from '../../data/air/planes.js';
 import { apportion } from '../industry/setup.js';
 import { AIR } from './constants.js';
 
@@ -12,7 +12,8 @@ export function createAir(w, ind) {
   for (let o = 1; o < n; o++) {
     const tag = w.owners[o].tag;
     const def = AIR_NATIONAL[tag] || AIR_TIER[COUNTRIES[tag]?.tier ?? 3];
-    const total = PLANE_IDS.reduce((a, t) => a + (def[t] || 0), 0);
+    for (const t of PLANE_IDS) if (PLANES[t].carrier && def[t]) pool[o][t] += def[t];   // M90: palubní letouny čekají v rezervě na paluby letadlových lodí
+    const total = PLANE_IDS.reduce((a, t) => a + (PLANES[t].carrier ? 0 : def[t] || 0), 0);
     const list = [];
     for (let s = 1; s < w.states.length; s++) if (w.stateOwner0[s] === o) list.push(s);
     if (!total || !list.length) continue;
@@ -29,7 +30,7 @@ export function createAir(w, ind) {
     }
     // křídla: každý druh se rozdělí na letiště podle kapacity
     for (const t of PLANE_IDS) {
-      if (!def[t]) continue;
+      if (!def[t] || PLANES[t].carrier) continue;
       const got = apportion(bases.map((b) => b.cap), def[t], bases.map((b) => b.cap));
       bases.forEach((b, i) => {
         if (got[i] > 0) wings.push({ id: wings.length, o, t, n: got[i], s: b.s, m: null, to: 0, c: 0, a: 0 });

@@ -80,7 +80,7 @@ export function aiAir(state, o) {
   let sum = industryOf(state, o);
   const air = state.air;
   const have = {};
-  for (const t of PLANE_IDS) have[t] = (air.pool[o][t] || 0);
+  for (const t of PLANE_IDS) have[t] = PLANES[t].carrier ? 0 : (air.pool[o][t] || 0);   // M90: palubní letouny nepotřebují letiště
   for (const wg of air.wings) if (wg && wg.o === o) have[wg.t] += wg.n;
   const total = PLANE_IDS.reduce((a, t) => a + have[t], 0);
   const bases = basesOf(state, o);
@@ -101,7 +101,7 @@ export function aiAir(state, o) {
   const airFac = sum.lines.filter((l) => l.air).reduce((a, l) => a + l.fac, 0);
   const target = Math.floor(sum.mil * (war ? AI.AIR_SHARE_WAR : AI.AIR_SHARE) + 0.5);
   if (airFac < target && cap > total) {
-    const want = PLANE_IDS.filter((t) => isUnlocked(state, o, PLANES[t].unlock)).sort((a, b) => {
+    const want = PLANE_IDS.filter((t) => !PLANES[t].carrier && isUnlocked(state, o, PLANES[t].unlock)).sort((a, b) => {
       const k = (t) => (have[t] + 8 * sum.lines.filter((l) => l.eq === t).reduce((x, l) => x + l.fac, 0)) / (t === 'sti' ? 1.4 : t === 'str' ? 0.3 : 1);
       return k(a) - k(b);
     })[0];
@@ -119,7 +119,7 @@ export function aiAir(state, o) {
   // křídla: rezerva se sestaví do křídel na letišti s největším volným místem
   for (const t of PLANE_IDS) {
     const n = state.air.pool[o][t] || 0;
-    if (n < 12) continue;
+    if (n < 12 || PLANES[t].carrier) continue;   // M90: palubní letouny doplňují paluby, ne křídla
     const b = basesOf(state, o).sort((x, y) => y.free - x.free)[0];
     if (b && b.free >= 12) state = formWing(state, o, t, Math.min(n, b.free, 120), b.s);
   }

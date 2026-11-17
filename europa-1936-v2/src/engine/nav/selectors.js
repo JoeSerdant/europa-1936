@@ -1,7 +1,7 @@
 // Dotazy na námořnictvo pro rozhraní a AI (čisté, bez změn stavu).
 import { getWorld } from '../world.js';
 import { SHIPS, SHIP_IDS } from '../../data/navy/index.js';
-import { powerOf, fleetSpeed, homeSea, seaBlocked } from './core.js';
+import { powerOf, fleetSpeed, homeSea, seaBlocked, deckOf, planesOf } from './core.js';
 import { transportsOf } from './convoy.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
@@ -15,14 +15,16 @@ export function navyOf(state, o) {
     const f = state.nav.fleets[i];
     if (!f || f.o !== o) continue;
     const pw = powerOf(f.ships);
-    fleets.push({ id: i, ...f, hp: pw.hp, atk: pw.atk, count: pw.n, speed: fleetSpeed(f.ships), at: w.seaName(f.p), moving: f.path.length > 0, dest: f.to ? w.seaName(f.to) : '', blocked: seaBlocked(state, o, f.p) });
+    fleets.push({ id: i, ...f, hp: pw.hp, atk: pw.atk, count: pw.n, speed: fleetSpeed(f.ships), at: w.seaName(f.p), moving: f.path.length > 0, dest: f.to ? w.seaName(f.to) : '', blocked: seaBlocked(state, o, f.p), deck: deckOf(f.ships), planes: planesOf(f) });
   }
   const pool = state.nav.pool[o];
   const sail = state.nav.sail.filter((s) => s.o === o).map((s) => ({ ...s, left: Math.max(0, Math.ceil(s.arrive - state.tick)) }));
   const home = homeSea(state, o);
   const total = { };
   for (const k of SHIP_IDS) total[k] = (pool[k] || 0) + fleets.reduce((a, f) => a + (f.ships[k] || 0), 0);
-  return { o, fleets, pool, total, sail, transports: transportsOf(state, o), home: home ? { ...home, name: w.seaName(home.sea) } : null, ships: SHIPS };
+  const deck = fleets.reduce((a, f) => a + f.deck, 0) + deckOf(pool), aboard = fleets.reduce((a, f) => a + f.planes, 0);   // M90: palubní letouny
+  const spare = (state.air && state.air.pool[o] && state.air.pool[o].pal) || 0;
+  return { o, fleets, pool, total, sail, transports: transportsOf(state, o), home: home ? { ...home, name: w.seaName(home.sea) } : null, ships: SHIPS, carrier: { deck, aboard, spare } };
 }
 
 /** Flotily všech zemí v mořské oblasti `label` (pro tooltip a kartu moře). */

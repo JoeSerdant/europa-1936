@@ -9,7 +9,7 @@ import { fmtInt } from '../format.js';
 
 const MISSIONS = { air: 'Hlídky', cas: 'Podpora boje', bomb: 'Bombardování' };
 const stateName = (s) => getWorld().states[s].n;
-const COLOR = { sti: '#7fb5c9', bit: '#d6b55c', tac: '#d9533a', str: '#b86dd1' };
+const COLOR = { sti: '#7fb5c9', bit: '#d6b55c', tac: '#d9533a', str: '#b86dd1', pal: '#5fa38a' };
 
 function Tile({ t, size = 52 }) {
   return <span className="eq-tile" style={{ '--g': COLOR[t], width: size, height: size }} aria-hidden="true"><b>{PLANES[t].ab}</b></span>;
@@ -58,7 +58,7 @@ function Wing({ wg, state }) {
 }
 
 function NewWing({ a }) {
-  const types = a.types.filter((t) => (a.pool[t] || 0) > 0);
+  const types = a.types.filter((t) => (a.pool[t] || 0) > 0 && !PLANES[t].carrier);   // M90: palubní letouny patří na letadlové lodě (okno Námořnictvo)
   const [t, setT] = useState('');
   const [n, setN] = useState(20);
   const [base, setBase] = useState(0);
