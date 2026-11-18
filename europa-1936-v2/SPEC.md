@@ -899,6 +899,32 @@ AI země zakládá loděnice podle `NAVY_NATIONAL`, staví lodě, z rezervy skl�
 ### Záměrná zjednodušení
 Žádné konvoje a obchodní válka, ponorky jen jako levné lodě bez zvláštních pravidel, žádné letadlové lodě a letecká podpora, palivo od M73 (§ 4zy), žádný palivový dosah, ostřelování pobřeží, miny ani námořní mise (hlídka, eskorta), vylodění jen na nehájenou provincii, jedna transportní loď = jedna divize.
 
+## 4zzt. Odezva hry (M101)
+
+Hra dává najevo, že se něco stalo (obdoba HOI4 „game feel“). Vše je v rozhraní, engine ani tvar stavu se nemění (kromě dat událostí).
+- **Ohlašování deníku:** `useGameLoop` odebírá změny úložiště a nové záznamy deníku (id větší než poslední zpracované) předá `announceLog`. Ohlásí se tak i záznamy z akcí hráče, třeba vyhlášení války z diplomacie; dřív se ohlašovaly jen záznamy vzniklé během posunu času. Po načtení hry nebo skoku v čase delším než 40 dní se ukazatel jen srovná.
+- **Velký pruh** (`bannerFor` v `ui/juice.js`, komponenta `hud/Banner.jsx`, fronta `ui.banners`, `pushBanner` / `closeBanner`):
+  - ohlašuje splněný národní cíl s účinky jako štítky, dokončený výzkum, novou doktrínu, válku a mír hráče, kapitulaci, změnu vlády a anexi;
+  - animace: příjezd, otáčející se paprsky, odlesk, postupně se objevující štítky;
+  - zvuky `fanfare` / `chime` / `drum`, zobrazení po dobu `BANNER_MS`;
+  - cíle, výzkum a doktríny už nemají kartu vpravo.
+- **Noviny ze světa** (`newsFor`, `hud/NewsDialog.jsx`, fronta `ui.news`, `pushNews` / `closeNews`):
+  - zvláštní vydání novin s ilustrací pro velké světové události: válka velmoci nebo hráče, kapitulace, převrat, občanská válka, jaderný úder, exil a osvobození, anexe, nový stát, blok, přijaté ultimátum a vylodění velmoci;
+  - text se vybírá podle id záznamu, takže stejná událost má stejný text;
+  - hra se po dobu čtení pozastaví a po zavření poslední zprávy znovu rozběhne;
+  - konference a události hráče mají přednost;
+  - noviny lze vypnout (`e1936.news` v `localStorage`).
+- **Ilustrace** (`ui/art/Scene.jsx`): vlastní vektorové výjevy v sépiovém dvoutónu (válka, kapitulace, dav, jaderný hřib, mír, loďstvo, smlouva, vylodění, průmysl, věda, letectvo, venkov, prapor). Událost dostane výjev podle pole `art` nebo podle klíčových slov (`artFor`).
+- **Horní lišta:** při změně hodnoty o aspoň `min` (vítězné body, divize, stabilita a podpora války po 3 %, politická moc po 10, továrny, napětí) hodnota blikne zeleně nebo červeně a vyletí z ní rozdíl.
+- **Lišta oken:**
+  - skupiny (Stát, Hospodářství, Vojsko, Deník) s oddělovači a výrazná nápověda s názvem a klávesou;
+  - pulzující tečka u Národních cílů nebo Výzkumu, když neběží cíl nebo je volný slot;
+  - upozornění typu „warn“ jemně září;
+  - lišta a upozornění jsou v jednom řádku (`.menurow`).
+- **Události:** nový rám s ilustrací a zvukem `event`. Po každém cíli se změnou vlády (účinek `gov`) přijde událost „Nová vláda“ (`alt_<id cíle>`) se třemi volbami: pevná ruka, čistky, usmíření.
+
+Testy: `test/juice.test.js`; smoke kontroluje pruh a noviny po vyhlášení války (113 kontrol).
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1100,6 +1126,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M98** | **Mnohem víc národních cílů a konec války**: 1066 cílů (velmoci 73–88), rozšíření všech zemí, vytrvání a bezpodmínečná kapitulace Německa v roce 1945 | **hotovo** |
 | **M99** | **Ofenzivy Rudé armády 1943–1945**: soustředění záloh, stálý druhý sled, střídání armád, Zteče v historických oknech | **hotovo** |
 | **M100** | **Alternativní cesty a modernizace**: 2319 cílů, politické cesty pro všechny země (účinek `gov`), větev modernizace, volba AI bez historie, oprava Normandie | **hotovo** |
+| **M101** | **Odezva hry**: velký pruh (cíl splněn, výzkum, válka), noviny ze světa s ilustracemi, ilustrované události, bliknutí hodnot, přehlednější lišta oken, události po změně vlády | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

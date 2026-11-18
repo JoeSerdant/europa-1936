@@ -3,12 +3,15 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld, confFor } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, pushPopup, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, pushPopup, pushBanner, pushNews, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
 import { logLine, logImportant } from './logText.js';
 import { popupFor } from './popups.js';
+import { bannerFor, newsFor } from './juice.js';
+import { formatDate } from '../engine/time.js';
+const BANNER_ONLY = new Set(['focus', 'tech', 'doctrine']);   // M101: tyhle ohlásí jen velký pruh
 
 const AUTOSAVE_HOURS = 24 * 30;   // automatické uložení jednou za herní měsíc
 
@@ -29,21 +32,46 @@ export function useGameLoop(active) {
         gameStore.update(advance, hours);
         const cur = gameStore.getState();
         const after = cur.dip.cap;
-        if (cur.log !== prev.log) {
-          const me = playerIdx(cur);
-          const fresh = cur.log.items.filter((e) => e.id > prev.log.n && logImportant(e, me));
-          const rest = [];
-          for (const e of fresh) { const card = popupFor(e, me); if (card) pushPopup(card); else rest.push(e); }
-          if (rest.length) toast(logLine(rest[rest.length - 1], me).text);
-        }
         if (cur.player && Math.floor(cur.tick / 24) !== Math.floor(prev.tick / 24)) checkAchievements(cur);   // M86: úspěchy jednou za herní den
         if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) writeSave('auto', cur, new Date().toLocaleString('cs-CZ'));
         void before; void after;
       }
     };
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    // M101: oznámení z deníku – po každé změně stavu (běh času i akce hráče, např. vyhlášení války) se ohlásí nové záznamy;
+    // po načtení hry nebo skoku v čase se jen srovná ukazatel (staré záznamy se znovu neohlašují)
+    let seen = gameStore.getState().log.n, lastTick = gameStore.getState().tick;
+    const announce = () => {
+      const cur = gameStore.getState();
+      const jump = Math.abs(cur.tick - lastTick) > 24 * 40;
+      lastTick = cur.tick;
+      if (cur.log.n < seen || jump) { seen = cur.log.n; return; }
+      if (cur.log.n === seen) return;
+      const from = seen;
+      seen = cur.log.n;
+      announceLog(cur, cur.log.items.filter((e) => e.id > from));
+    };
+    const off = gameStore.subscribe(announce);
+    return () => { cancelAnimationFrame(raf); off(); };
   }, [active]);
+}
+
+/** Ohlásí nové záznamy deníku hráči: velký pruh, noviny ze světa, karta nebo krátké oznámení (M58, M101). */
+function announceLog(cur, all) {
+  const me = playerIdx(cur);
+  const rest = [];
+  for (const e of all) {
+    const b = bannerFor(e, me);
+    if (b) pushBanner(b);
+    const n = cur.player ? newsFor(e, me) : null;
+    if (n) pushNews({ ...n, date: formatDate(e.t ?? cur.tick) });
+  }
+  for (const e of all) {
+    if (!logImportant(e, me) || BANNER_ONLY.has(e.k)) continue;
+    const card = popupFor(e, me);
+    if (card) pushPopup(card); else rest.push(e);
+  }
+  if (rest.length) toast(logLine(rest[rest.length - 1], me).text);
 }
 
 const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;

@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { Scene } from '../art/Scene.jsx';
+import { artFor } from '../juice.js';
 import { useGame } from '../store.js';
 import { play } from '../sound.js';
 import { EVENT_BY_ID, fxLinesOf } from '../../engine/index.js';
@@ -8,13 +10,14 @@ import { playerIdx, decideEvent } from '../actions.js';
 export function EventDialog() {
   const pend = useGame((s) => (s.player ? s.nat.pend.find((p) => p.o === playerIdx(s)) || null : null));
   const pid = pend ? pend.id : null;
-  useEffect(() => { if (pid) play('alert'); }, [pid]);
+  useEffect(() => { if (pid) play('event'); }, [pid]);
   if (!pend) return null;
   const ev = EVENT_BY_ID[pend.id];
   return (
     <div className="scrim" role="presentation">
-      <div className="panel dialog wide event-dialog" role="dialog" aria-label={ev.n} aria-modal="true">
+      <div key={pid} className="panel dialog wide event-dialog" role="dialog" aria-label={ev.n} aria-modal="true">
         <h2>{ev.n}</h2>
+        <Scene kind={ev.art || artFor(ev)} className="ev-art" />
         <p className="ev-text">{ev.text}</p>
         <div className="stack">
           {ev.opts.map((o, i) => {

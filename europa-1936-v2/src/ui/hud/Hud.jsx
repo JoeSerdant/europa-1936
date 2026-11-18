@@ -10,6 +10,8 @@ import { TemplateDesigner } from '../army/TemplateDesigner.jsx';
 import { EventDialog } from '../nat/EventDialog.jsx';
 import { BattleDialog } from './BattleDialog.jsx';
 import { Popups } from './Popups.jsx';
+import { Banner } from './Banner.jsx';
+import { NewsDialog } from './NewsDialog.jsx';
 import { Tutorial } from '../tutorial/Tutorial.jsx';
 import { EndDialog } from './EndDialog.jsx';
 import { ConferenceDialog } from '../nat/ConferenceDialog.jsx';
@@ -63,8 +65,7 @@ export function Hud() {
       {panel === 'design' && <DesignPanel />}
       {panel === 'decisions' && <DecisionsPanel />}
       {panel === 'spy' && <SpyPanel />}
-      <MenuBar />
-      <Alerts />
+      <div className="menurow"><MenuBar /><Alerts /></div>
       <Console />
       <div className="top-mid" style={{ right }}><PlanBar /></div>
       <div className="bottom-mid" style={{ right }}>
@@ -74,10 +75,12 @@ export function Hud() {
         <SelectionBar />
       </div>
       <Popups />
+      <Banner />
       <BattleDialog />
       <GameMenu />
       <TemplateDesigner />
       <EventDialog />
+      <NewsDialog />
       <ConferenceDialog />
       <EndDialog />
       <OverviewDialog />

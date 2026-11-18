@@ -10,6 +10,7 @@ import './ui/theme.css';
 import './ui/army/army.css';
 import './ui/industry/industry.css';
 import './ui/cursors.css';
+import './ui/juice.css';
 import App from './App.jsx';
 import { mapController } from './ui/map/controller.js';
 import { gameStore, uiStore } from './ui/store.js';
