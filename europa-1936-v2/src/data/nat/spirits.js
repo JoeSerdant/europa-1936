@@ -64,6 +64,26 @@ export const SPIRITS = {
   f_tezba: { n: 'Těžební program', info: 'Nová ložiska, hlubší šachty a moderní úpravny rud.', tone: 'good', mod: { extract: 0.08 } },
   f_totalni_mobilizace: { n: 'Totální mobilizace', info: 'Každý muž ke zbrani, každá žena do továrny.', tone: 'mixed', mod: { man: 0.1, prod: 0.05, stab: -0.04 } },
   valecne_usili: { n: 'Válečné úsilí', info: 'Mimořádná kampaň vybičovala výrobu, ale lidé jsou unavení.', tone: 'mixed', mod: { prod: 0.08, stab: -0.03 } },
+  // M100: alternativní cesty národních cílů
+  cisarska_armada: { n: 'Císařská armáda', info: 'Důstojnický sbor stojí za korunou; armáda je řemeslo, ne politika.', tone: 'good', mod: { stab: 0.05 }, army: { def: 0.05, orgRegen: 0.1 } },
+  obnovena_republika: { n: 'Obnovená republika', info: 'Svobodné volby vrátily zemi rovnováhu a sousedé jí znovu věří.', tone: 'good', mod: { stab: 0.08, cons: -0.03, ws: -0.04 } },
+  rude_nemecko: { n: 'Rudé Německo', info: 'Továrny patří radám, sklady armádě a celý národ pochoduje za revolucí.', tone: 'mixed', mod: { prod: 0.05, stab: -0.04, man: 0.05 } },
+  nova_hospodarska_politika: { n: 'Nová hospodářská politika', info: 'Malý obchod a družstva dostaly volnost; obchody jsou plné, zbrojovky méně.', tone: 'mixed', mod: { cons: -0.05, build: 0.05, prod: -0.03, stab: 0.05 } },
+  svobodne_sovety: { n: 'Svobodné sověty', info: 'Rady volí delegáty, ne strana; země dýchá, ale jedná pomaleji.', tone: 'mixed', mod: { stab: 0.06, research: 0.03, ws: -0.04 } },
+  ruska_obroda: { n: 'Ruská obroda', info: 'Staré symboly a pravoslavné zvony – národ místo třídy.', tone: 'good', mod: { ws: 0.05, man: 0.03 } },
+  novy_rad_britanie: { n: 'Nový řád', info: 'Parlament je rozpuštěn a říše se řídí z jediného úřadu.', tone: 'mixed', mod: { prod: 0.05, stab: -0.05, ws: 0.05 } },
+  delnicka_republika: { n: 'Dělnická republika', info: 'Doky, doly a loděnice spravují odbory.', tone: 'mixed', mod: { prod: 0.04, man: 0.04, imp: 0.05 } },
+  imperialni_federace: { n: 'Imperiální federace', info: 'Dominia sdílejí parlament, rozpočet i armádu.', tone: 'good', mod: { man: 0.06, extract: 0.04 } },
+  lidova_fronta: { n: 'Lidová fronta', info: 'Levice vládne s podporou ulic: čtyřicetihodinový týden a znárodněné zbrojovky.', tone: 'mixed', mod: { stab: 0.04, cons: 0.03, prod: 0.03 } },
+  narodni_revoluce: { n: 'Národní revoluce', info: 'Práce, rodina, vlast – parlament nahradil jediný vůdce.', tone: 'mixed', mod: { ws: 0.06, stab: -0.03 }, army: { atk: 0.05 } },
+  obnovena_koruna: { n: 'Obnovená koruna', info: 'Návrat krále uklidnil venkov i armádu.', tone: 'good', mod: { stab: 0.07 } },
+  pad_rezimu: { n: 'Pád režimu', info: 'Starý režim padl bez boje; nová vláda hledá spojence.', tone: 'mixed', mod: { stab: -0.03, cons: -0.03, research: 0.02 } },
+  rude_italie: { n: 'Rudá Itálie', info: 'Severní továrny obsadili dělníci a jih dostal půdu.', tone: 'mixed', mod: { man: 0.05, prod: 0.03, stab: -0.04 } },
+  novy_rezim_dem: { n: 'Demokratický převrat', info: 'Země si zvolila parlament a svobodný tisk.', tone: 'good', mod: { stab: 0.05, ws: -0.03, research: 0.02 } },
+  novy_rezim_com: { n: 'Lidová republika', info: 'Rady dělníků převzaly továrny i půdu.', tone: 'mixed', mod: { prod: 0.03, man: 0.03, stab: -0.03 } },
+  novy_rezim_fas: { n: 'Národní stát', info: 'Jediná strana, jediný vůdce a armáda na prvním místě.', tone: 'mixed', mod: { ws: 0.06, stab: -0.02 }, army: { atk: 0.04 } },
+  novy_rezim_neu: { n: 'Vláda silné ruky', info: 'Kabinet úředníků a generálů vládne dekrety.', tone: 'mixed', mod: { stab: 0.04, ws: 0.02, research: -0.02 } },
+  kontinuita_vlady: { n: 'Kontinuita vlády', info: 'Země zůstala u osvědčeného kurzu a nic ji nerozptyluje.', tone: 'good', mod: { stab: 0.03, build: 0.02 } },
 };
 export const SPIRIT_IDS = Object.keys(SPIRITS);
 

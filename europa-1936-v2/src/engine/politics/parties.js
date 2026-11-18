@@ -109,6 +109,8 @@ function partyStep(o, own, war) {
   const tag = getWorld().owners[o].tag;
   let start = startOf.get(tag);
   if (!start) { start = startParties(tag); startOf.set(tag, start); }
+  const s0 = startIdeology(o);
+  if (own.gov && own.gov !== s0) start = { ...start, [s0]: start[own.gov], [own.gov]: start[s0] };   // M100: nová vláda se zakoření – podpora se vrací k rozložení s jejími a starými podíly prohozenými
   const eco = own.laws && own.laws.eco, con = own.laws && own.laws.con;
   const push = {};
   for (const k of IDEO_ORDER) push[k] = POL.PARTY_REVERT * (start[k] - own.par[k]);

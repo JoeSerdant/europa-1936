@@ -20,6 +20,7 @@ export function fxText(fx) {
     case 'spirit': return `Národní duch: ${SPIRITS[fx.id]?.n || fx.id}${fx.days ? ` (${fx.days} dní)` : ''}`;
     case 'unspirit': return `Zaniká národní duch: ${SPIRITS[fx.id]?.n || fx.id}`;
     case 'party': return `Podpora ${fx.i === 'gov' ? 'vládnoucí strany' : `strany „${IDEOLOGIES[fx.i]?.name || fx.i}“`} ${fx.v > 0 ? '+' : '−'}${Math.abs(fx.v)} b.`;
+    case 'gov': return `Nová vláda: ${IDEOLOGIES[fx.i]?.name || fx.i}`;
     case 'law': return `Zákon: ${LAWS[fx.cat][fx.id].n}`;
     case 'adv': return `Poradce: ${ADVISORS[fx.id].n}`;
     case 'factory': return `${fx.n}× ${fx.k === 'civ' ? 'civilní' : 'vojenská'} továrna`;

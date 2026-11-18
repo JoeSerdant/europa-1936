@@ -116,11 +116,11 @@ export function landingSites(state, o, ports, n) {
   const hop = invadeOpOf(state, o), op = hop ? hop.t : 0;   // M93: historická operace vylodění (Sicílie, Normandie) – cíl má přednost a plavba smí být delší
   if (op) wanted.add(op);
   const opSite = (p, c) => !!op && c === op && (!hop.at || w.provOwner0[p] === hop.at);   // místo v oblasti operace (Normandie = německé území na půdě Francie)
-  const foeAt = new Map(), foeList = [], mine = [];
+  const foeAt = new Map(), foeList = [], opList = [], mine = [];
   for (let id = 1; id < mil.divs.length; id++) {
     const d = mil.divs[id];
     if (!d) continue;
-    if (foes.has(d.o)) { foeAt.set(d.p, (foeAt.get(d.p) || 0) + 1); foeList.push(d.p); } else if (d.o === o) mine.push(d.p);
+    if (foes.has(d.o)) { foeAt.set(d.p, (foeAt.get(d.p) || 0) + 1); foeList.push(d.p); if (d.o === op) opList.push(d.p); } else if (d.o === o) mine.push(d.p);
   }
   const blocked = (l) => seaBlocked(state, o, l);
   const dists = ports.map((p) => seaDists(w.portSea[p], blocked, op ? AI.INV_SEA_KM * 2 : AI.INV_SEA_KM));
@@ -138,9 +138,9 @@ export function landingSites(state, o, ports, n) {
     ports.forEach((q, i) => { for (const s of seas) { const d = dists[i].get(s); if (d !== undefined && d < km) { km = d; from = q; sea = s; } } });
     if (!from) continue;
     let near = 0, own = 0;   // obránci se počítají s váhou klesající se vzdáleností (posily dorazí za pár dní), vlastní divize jen v okolí předmostí
-    for (const q of foeList) { const d = g.distKm(p, q); if (d < AI.INV_FAR_KM) near += 1 - d / AI.INV_FAR_KM; }
-    for (const q of mine) if (g.distKm(p, q) <= AI.INV_NEAR_KM) own++;
     const isOp = enemy && opSite(p, c);   // historická operace se vylodí i proti silnější obraně (sbor plné velikosti, mírnější práh `INV_OP_RATIO`)
+    for (const q of isOp ? opList : foeList) { const d = g.distKm(p, q); if (d < AI.INV_FAR_KM) near += 1 - d / AI.INV_FAR_KM; }   // M100: u operace jen divize cílové země (vichistické jednotky na jihu Normandii nebrání)
+    for (const q of mine) if (g.distKm(p, q) <= AI.INV_NEAR_KM) own++;
     if (beach ? own >= Math.max(AI.INV_HOLD, near * AI.INV_RATIO) || own + n < near * AI.INV_RATIO : n < Math.max(AI.INV_MIN, Math.ceil(near * (isOp ? AI.INV_OP_RATIO : AI.INV_RATIO)))) continue;
     const cap = w.owners[c].cap;
     const sc = (enemy ? AI.INV_PORT * (w.portLevel[p] || 1) + (g.hub[p] ? AI.INV_HUB : 0) + AI.INV_VP * w.vp[p] - AI.INV_CAP * g.distKm(p, cap) / 1000 - AI.INV_DEF * near : AI.INV_REINF + AI.INV_DEF * near) - km / AI.INV_KM;

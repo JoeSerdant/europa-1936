@@ -605,6 +605,17 @@ Testy: `test/focus-big.test.js`, `test/nat.test.js`.
 
 **Další cíle (M98, `data/nat/focuses_xl.js`).** Velmoci mají nové větve (`XL_BRANCHES` – hospodářství, pozdní armáda, letectvo a námořnictvo II, elektronika, politika II) přidané k jejich `big` stromům (Německo 88, SSSR 83, Británie 78, Francie a Itálie 73 cílů); zajímavé země druhé rozšíření `XL_GROW` (27–30 cílů), malé země rozšíření `XL_SMALL` (14–16) a výchozí strom další větve `XL_DEFAULT` (55). Celkem 1066 cílů. Nové cíle většinou urychlují výzkum nových technologií (M96); továren přidávají málo, aby se nezměnilo vyvážení války.
 
+**Alternativní cesty a modernizace (M100, `data/nat/focuses_alt.js`).** Každý strom (35 zemí i výchozí) začíná politickou volbou: jedna **historická cesta** (`path: 'hist'`) a alternativy (`path: 'alt'`), všechny vzájemně výlučné přes `excl`.
+- **Velmoci** mají ručně psané cesty (`ALT_BRANCHES`, 6–8 cílů za cestu): Německo (návrat koruny, obnova republiky, rudá revoluce), SSSR (nová hospodářská politika, demokratizace sovětů, národní obroda), Británie (nový řád, dělnická republika, imperiální federace), Francie (lidová fronta, národní revoluce, obnova monarchie) a Itálie (koruna proti režimu, demokratická obnova, rudá Itálie).
+- **Ostatní země a výchozí strom** mají generované cesty ke všem ostatním ideologiím (`ALT_GROW`: kořen → podpora strany → změna vlády → noví spojenci a hospodářství → duch nového režimu).
+- **Modernizace:** všechny země mají větev pozdních technologií (`MOD_BRANCHES` / `MOD_GROW`, 14 cílů: logistika, železnice, syntetická paliva, radar, výpočetní ústav, rakety, proudová letadla, mechanizace, výsadky, zdravotnictví, vylodění). Celkem 2319 cílů.
+- **Účinek `gov`** (`i` = ideologie, `v` = body podpory): `pushParty` a `changeGov` (ztráta stability, porevoluční chaos, odchod z bloku). Nová vláda se zakoření: denní návrat podpory stran (`partyStep`) míří k výchozímu rozložení s prohozenými podíly výchozí a vládnoucí ideologie (platí i po převratu).
+- **AI:** cesty vybírá jen přes `aiMayFocus` (`nat/day.js`). Historická AI je vynechává, takže průběh války drží koleje. AI bez historie zvolí z dostupných cest jednu podle `rand01(den, země, skupina)` s vahou historické cesty `NAT.ALT_HIST_W` (3) proti 1 u alternativ.
+- **Rozhraní:** karta cesty má barevný proužek a štítek HIST / ALT. Tvar stavu se nemění.
+- **Oprava vylodění:** u historické operace (`invadeOpOf`) se obránci místa vylodění počítají jen z divizí cílové země. Dřív vichistická armáda na jihu Francie „bránila“ Normandii a operace se ve dvou ze tří her vůbec nezahájila.
+
+Ověření pozorovatelskou hrou se třemi semínky: Polsko 1939, Francie červen 1940, příměří Itálie 27. 8. 1943, Normandie 6.–13. 6. 1944 (ve všech třech hrách), kapitulace Německa 23. 4. 1945 s Berlínem v sovětských rukou. Bez historické AI si země v roce 1938 volí cesty a mění vlády; stav zůstává platný. Test `test/focus-alt.test.js`.
+
 ## 4zj. Oznámení a vyskakovací okna (M58)
 
 Upozornění (`engine/alerts.js`) mají `n` (počet) a `lines` (podrobnosti) a přibyla dvě: divize bez armády (`divs`, otevře panel Armáda) a dostupná rozhodnutí (`decisions`). `ui/hud/Alerts.jsx` je kreslí jako vodorovnou řadu vedle lišty nabídek: ikona s počtem, po najetí tooltip s podrobnostmi, klik otevře okno, pravé tlačítko upozornění odloží do změny počtu. Důležité záznamy deníku hráče (`focus`, `tech`, `built`, `doctrine`, válka hráče, kapitulace, osamostatnění loutky) se v `useGameLoop` (`ui/hooks.js`) přes `popupFor` (`ui/popups.js`) změní na vyskakovací karty (`ui.popups`, `pushPopup`/`closePopup` v `ui/actions.js`, vykresluje `ui/hud/Popups.jsx`): název, text a seznam účinků cíle. Karty mizí po `POPUP_MS` (14 s), válka a kapitulace hráče zůstávají do zavření; nejvýš `POPUP_MAX` (4) najednou. Ostatní důležité záznamy zůstávají krátkým oznámením. Test: `test/popups.test.js`.
@@ -1087,6 +1098,8 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M96** | **Rozšířený výzkum**: 149 technologií v osmi oborech (námořnictvo, elektronika), vojenské bonusy technologií, úrovně lodí v námořním boji, bonusy letectva a loďstva | **hotovo** |
 | **M97** | **Návrhář tanků, lodí a letadel**: 13 typů, 41 modulů, násobky statistik a ceny, přezbrojení linek za zkušenosti, AI návrhy, okno Konstrukční kancelář | **hotovo** |
 | **M98** | **Mnohem víc národních cílů a konec války**: 1066 cílů (velmoci 73–88), rozšíření všech zemí, vytrvání a bezpodmínečná kapitulace Německa v roce 1945 | **hotovo** |
+| **M99** | **Ofenzivy Rudé armády 1943–1945**: soustředění záloh, stálý druhý sled, střídání armád, Zteče v historických oknech | **hotovo** |
+| **M100** | **Alternativní cesty a modernizace**: 2319 cílů, politické cesty pro všechny země (účinek `gov`), větev modernizace, volba AI bez historie, oprava Normandie | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

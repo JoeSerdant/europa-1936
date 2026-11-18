@@ -1,10 +1,11 @@
 // Stromy národních cílů (M22). Vlastní obsah a čísla. Každý strom je pole cílů; `x`, `y` = poloha v mřížce rozhraní.
 //  days  dny plnění     req  všechny předpoklady   any  aspoň jeden   excl  vylučující cíle   ai  priorita AI (nižší dřív)
 //  fx    okamžité účinky (viz SPEC § 4e)   mod   trvalé bonusy
-const F = (id, n, x, y, days, req, fx, extra = {}) => ({ id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', ...extra });
+const F = (id, n, x, y, days, req, fx, extra = {}) => ({ id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', path: '', ...extra });
 import { MORE_TREES, EXTRA } from './focuses_more.js';
 import { BIG_TREES, GROW, DEFAULT_BIG, grow } from './focuses_big.js';
 import { XL_GROW, XL_SMALL } from './focuses_xl.js';
+import { ALT_GROW, MOD_GROW } from './focuses_alt.js';
 const civ = (n = 1) => ({ t: 'factory', k: 'civ', n });
 const mil = (n = 1) => ({ t: 'factory', k: 'mil', n });
 
@@ -94,6 +95,8 @@ Object.assign(FOCUS_TREES, BIG_TREES);
 for (const tag in GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], GROW[tag]);
 for (const tag in XL_GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], XL_GROW[tag]);   // M98: druhé rozšíření zajímavých zemí
 for (const tag in XL_SMALL) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], XL_SMALL[tag]);   // M98: rozšíření malých zemí
+for (const tag in ALT_GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], ALT_GROW[tag]);   // M100: politické cesty
+for (const tag in MOD_GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], MOD_GROW[tag]);   // M100: modernizace
 FOCUS_TREES.DEFAULT = DEFAULT_BIG;
 
 /** Vyhledání cíle podle id (unikátní napříč stromy). */
