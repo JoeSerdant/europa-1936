@@ -1,6 +1,6 @@
 // Denní krok národních cílů a událostí (M22): naplánované a podmíněné události, plnění cíle, výběr cíle a voleb AI zemí.
 import { getWorld } from '../world.js';
-import { EVENTS, EVENT_BY_ID } from '../../data/nat/index.js';
+import { EVENTS, EVENT_BY_ID, FOCUS_BY_ID } from '../../data/nat/index.js';
 import { NAT } from './constants.js';
 import { logAdd } from '../log.js';
 import { focusStatus, focusTreeOf, eventReady, rand01 } from './core.js';
@@ -15,6 +15,21 @@ const setOwn = (state, o, own) => {
   return { ...state, nat: { ...state.nat, own: arr } };
 };
 const bump = (state) => ({ ...state, nat: { ...state.nat, ver: state.nat.ver + 1 } });
+
+/**
+ * Smí AI vzít cíl `f`? (M100) Cíle cest (`path`: 'hist' historická, 'alt' alternativní, vzájemně výlučné přes `excl`) historická AI vynechává
+ * (průběh války je dán kolejemi); AI bez historie zvolí z dostupných cest jednu podle deterministického čísla ze dne, země a skupiny.
+ */
+export function aiMayFocus(state, o, own, f) {
+  if (!f.path) return true;
+  if (state.ai && state.ai.hist) return false;
+  const group = [f, ...f.excl.map((id) => FOCUS_BY_ID[id])].filter((x) => x && x.path && focusStatus(own, x) === 'available').sort((a, b) => (a.id < b.id ? -1 : 1));
+  const key = group.map((x) => x.id).join('|');
+  const wt = (x) => (x.path === 'hist' ? NAT.ALT_HIST_W : 1);
+  let r = rand01(state.tick, o, key) * group.reduce((a, x) => a + wt(x), 0);
+  for (const x of group) { r -= wt(x); if (r < 0) return x === f; }
+  return group[group.length - 1] === f;
+}
 
 /** Volba AI: nejvyšší váha `ai` (při shodě první). */
 export function aiOption(ev) {
@@ -60,7 +75,7 @@ export function natDay(state) {
     }
     // AI vybírá cíl
     if (o !== player && !own.cur) {
-      const free = focusTreeOf(o).filter((f) => focusStatus(own, f) === 'available').sort((a, b) => a.ai - b.ai || a.y - b.y || a.x - b.x);
+      const free = focusTreeOf(o).filter((f) => focusStatus(own, f) === 'available' && aiMayFocus(state, o, own, f)).sort((a, b) => a.ai - b.ai || a.y - b.y || a.x - b.x);
       if (free.length) { own = { ...own, cur: { id: free[0].id, p: 0 }, cont: '' }; state = bump(setOwn(state, o, own)); }
       else if (!own.cont && !state.dip.cap[o]) {   // M85: strom je hotový (nebo zablokovaný) – AI drží průběžný cíl
         const want = hasWar(state.mil, o) ? 'vyroba' : 'stavby';

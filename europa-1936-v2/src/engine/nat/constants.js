@@ -4,4 +4,5 @@ export const NAT = {
   PEND_MAX: 4,
   CONT_MIN: 4,        // průběžné cíle (M85): nejméně tolik splněných běžných cílů
   CONT_PP: 0.5,       // denní cena průběžného cíle v politické moci        // nejvýš tolik událostí čeká na volbu hráče
+  ALT_HIST_W: 3,      // M100: váha historické cesty při volbě AI bez historie (alternativy mají váhu 1)
 };

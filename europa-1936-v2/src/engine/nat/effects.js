@@ -10,7 +10,7 @@ import { isAvailable } from '../research/core.js';
 import { countryStats } from '../selectors.js';
 import { addXp } from '../doc/commands.js';
 import { resolveDemand } from '../dip/demand.js';
-import { pushParty, ideologyOf } from '../politics/parties.js';
+import { pushParty, ideologyOf, changeGov } from '../politics/parties.js';
 import { addSpirit, removeSpirit } from './spirits.js';
 import { setRel } from '../dip/core.js';
 import { BUILDINGS } from '../../data/industry/buildings.js';
@@ -63,6 +63,10 @@ function applyOne(state, o, e) {
     case 'stab': return setPol(state, o, (p) => ({ stab: clamp01(p.stab + e.v) }));
     case 'ws': return setPol(state, o, (p) => ({ ws: clamp01(p.ws + e.v) }));
     case 'party': return pushParty(state, o, e.i === 'gov' ? ideologyOf(state, o) : e.i, e.v);   // M72: podpora strany (`i` = ideologie, nebo 'gov' = vládnoucí strana)
+    case 'gov': {   // M100: alternativní cesta – nová vládnoucí ideologie (strana dostane podporu, aby se vláda udržela)
+      const s1 = pushParty(state, o, e.i, e.v ?? 30);
+      return changeGov(s1, o, e.i);
+    }
     case 'law': return LAWS[e.cat]?.[e.id] ? setPol(state, o, (p) => ({ laws: { ...p.laws, [e.cat]: e.id } })) : state;
     case 'adv': return ADVISORS[e.id] ? setPol(state, o, (p) => ({ adv: { ...p.adv, [e.slot]: e.id } })) : state;
     case 'factory': {

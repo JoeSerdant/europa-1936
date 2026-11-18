@@ -6,6 +6,7 @@ import { playerIdx, pickFocus, abortFocus, pickContinuous } from '../actions.js'
 import { fmtDays } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
+const PATH = { hist: 'Historická cesta', alt: 'Alternativní cesta' };   // M100
 const STATUS = { done: 'Hotovo', active: 'Plní se', available: 'K dispozici', locked: 'Zamčeno', excluded: 'Vyloučeno' };
 
 // M94: strom cílů jako mřížka (sloupce = větve, řádky = hloubka) s pevnou velikostí karet a spojnicemi předpokladů
@@ -16,10 +17,10 @@ function FocusCard({ f }) {
   const need = f.status === 'locked' ? f.req.filter((r) => FOCUS_BY_ID[r]).map((r) => FOCUS_BY_ID[r].n) : [];
   const any = f.status === 'locked' && f.any.length ? f.any.map((r) => FOCUS_BY_ID[r].n) : [];
   const ex = f.excl.map((r) => FOCUS_BY_ID[r].n);
-  const tip = [f.n, ...lines, f.info, ex.length ? `Vylučuje: ${ex.join(', ')}` : '', need.length ? `Chybí: ${need.join(', ')}` : '', any.length ? `Stačí jeden z: ${any.join(', ')}` : ''].filter(Boolean).join('\n');
+  const tip = [f.n, PATH[f.path] || '', ...lines, f.info, ex.length ? `Vylučuje: ${ex.join(', ')}` : '', need.length ? `Chybí: ${need.join(', ')}` : '', any.length ? `Stačí jeden z: ${any.join(', ')}` : ''].filter(Boolean).join('\n');
   return (
-    <article className={`focus-card ${f.status}`} aria-label={f.n} title={tip} style={{ left: f.x * CW, top: f.y * RH, width: CW - 14, height: CARD_H }}>
-      <header><b>{f.n}</b><span className="muted">{fmtDays(f.days)}</span></header>
+    <article className={`focus-card ${f.status}${f.path ? ` path-${f.path}` : ''}`} aria-label={f.n} title={tip} style={{ left: f.x * CW, top: f.y * RH, width: CW - 14, height: CARD_H }}>
+      <header><b>{f.n}</b><span className="muted">{f.path ? <i className="fc-path" title={PATH[f.path]}>{f.path === 'alt' ? 'ALT' : 'HIST'}</i> : null}{fmtDays(f.days)}</span></header>
       {lines.length ? <ul className="tech-fx">{lines.map((x) => <li key={x}>{x}</li>)}</ul> : null}
       {ex.length ? <p className="muted fc-ex">Vylučuje: {ex.join(', ')}</p> : null}
       <footer>

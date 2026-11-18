@@ -24,9 +24,10 @@ const NAMES = {
 };
 const rel = (tag, v) => ({ t: 'rel', tag, nm: NAMES[tag] || tag, v });
 import { XL_BRANCHES, XL_DEFAULT } from './focuses_xl.js';
+import { ALT_BRANCHES, MOD_BRANCHES, ALT_DEFAULT } from './focuses_alt.js';
 
 function F(id, n, x, y, days, req, fx, extra = {}) {
-  return { id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', ...extra };
+  return { id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', path: '', ...extra };
 }
 
 /**
@@ -139,7 +140,7 @@ const GER_B = [
     ['ger_unity', 'Národní společenství', 35, ['ger_prop'], [spirit('f_narodni_jednota'), party('gov', 10)]],
   ] },
 ];
-const GER = big([...GER_B, ...(XL_BRANCHES.GER || [])]);   // M98: nové větve
+const GER = big([...GER_B, ...(XL_BRANCHES.GER || []), ...ALT_BRANCHES.GER, ...MOD_BRANCHES.GER]);   // M98: nové větve; M100: politické cesty a modernizace
 
 // ---------------------------------------------------------------- SSSR
 const SOV_B = [
@@ -206,7 +207,7 @@ const SOV_B = [
     ['sov_supply', 'Vojenské železnice', 35, ['sov_evac'], [boost('log', 0.4), infra()]],
   ] },
 ];
-const SOV = big([...SOV_B, ...(XL_BRANCHES.SOV || [])]);   // M98: nové větve
+const SOV = big([...SOV_B, ...(XL_BRANCHES.SOV || []), ...ALT_BRANCHES.SOV, ...MOD_BRANCHES.SOV]);   // M98: nové větve; M100: politické cesty a modernizace
 
 // ---------------------------------------------------------------- Británie
 const ENG_B = [
@@ -270,7 +271,7 @@ const ENG_B = [
     ['eng_tactical', 'Taktické letectvo', 35, ['eng_bomber'], [boost('tac2'), xp('air', 15)]],
   ] },
 ];
-const ENG = big([...ENG_B, ...(XL_BRANCHES.ENG || [])]);   // M98: nové větve
+const ENG = big([...ENG_B, ...(XL_BRANCHES.ENG || []), ...ALT_BRANCHES.ENG, ...MOD_BRANCHES.ENG]);   // M98: nové větve; M100: politické cesty a modernizace
 
 // ---------------------------------------------------------------- Francie
 const FRA_B = [
@@ -333,7 +334,7 @@ const FRA_B = [
     ['fra_staff', 'Moderní velení', 70, ['fra_radio', 'fra_republic'], [{ t: 'unspirit', id: 'tezkopadne_veleni' }, xp('land', 20)], { info: 'Konec těžkopádného velení.' }],
   ] },
 ];
-const FRA = big([...FRA_B, ...(XL_BRANCHES.FRA || [])]);   // M98: nové větve
+const FRA = big([...FRA_B, ...(XL_BRANCHES.FRA || []), ...ALT_BRANCHES.FRA, ...MOD_BRANCHES.FRA]);   // M98: nové větve; M100: politické cesty a modernizace
 
 // ---------------------------------------------------------------- Itálie
 const ITA_B = [
@@ -396,7 +397,7 @@ const ITA_B = [
     ['ita_elite', 'Výběrové divize', 35, ['ita_staff', 'ita_para'], [spirit('f_elitni_jednotky')]],
   ] },
 ];
-const ITA = big([...ITA_B, ...(XL_BRANCHES.ITA || [])]);   // M98: nové větve
+const ITA = big([...ITA_B, ...(XL_BRANCHES.ITA || []), ...ALT_BRANCHES.ITA, ...MOD_BRANCHES.ITA]);   // M98: nové větve; M100: politické cesty a modernizace
 
 export const BIG_TREES = { GER, SOV, ENG, FRA, ITA };
 
@@ -628,4 +629,4 @@ const DEFAULT_B = [
     ['def_spy', 'Zpravodajská služba', 35, ['def_unity'], [pp(40)]],
   ] },
 ];
-export const DEFAULT_BIG = big([...DEFAULT_B, ...XL_DEFAULT]);   // M98: další větve
+export const DEFAULT_BIG = big([...DEFAULT_B, ...XL_DEFAULT, ...ALT_DEFAULT]);   // M98: další větve; M100: politické cesty a modernizace
