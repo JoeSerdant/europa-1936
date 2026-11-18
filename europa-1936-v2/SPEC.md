@@ -986,6 +986,17 @@ Jen rozhraní, tvar stavu se nemění.
 
 Testy: `test/equip-icons.test.js` (ikona a skupina pro každou výzbroj, letoun a loď); smoke kontroluje ikony, klik do řady továren a přetažení ze zásobníku (119 kontrol).
 
+## 4zzx. Výzkum s ikonami a okna u kraje (M105)
+
+Jen rozhraní, tvar stavu se nemění.
+- **Ikony technologií** (`techIconOf` v `ui/research/icons.js`): úroveň výzbroje (`fx.lv`) nebo odemčená jednotka dostane kreslenou ikonu výzbroje (`EquipIcon`); bonusy dostanou ikonu podle druhu (výzkum, stavby, těžba, palivo, letectvo, námořnictvo, zásoby, rychlost, organizace, plánování, obrana, útok); ostatní ikonu oboru.
+- **Karty technologií:** ikona vlevo s barvou podle stavu; dostupnou technologii zahájí klik kamkoli na kartu.
+- **Úrovně výzbroje v záhlaví** jsou ikony s čísly. Oprava: dřív se v záhlaví vypisovalo „undefined [object Object]“, protože `mil.lv` obsahuje i návrhy `des`.
+- **Okna u kraje** (`DOCKED` v `ui/army/SidePanel.jsx`): Vláda, Diplomacie, Rozhodnutí, Zpravodajství, Doktríny, Logistika a Letectvo se otevírají jako panel vlevo (šířka do 640 px, jeden sloupec) a mapa zůstává vidět. Minimapa a mapové režimy se mezitím schovají.
+- **Přes celou obrazovku zůstávají** národní cíle, výzkum, průmysl (výroba a obchod), nábor a konstrukční kancelář.
+
+Test: `test/tech-icons.test.js`.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1191,6 +1202,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M102** | **Armády jako v HOI4**: lišta karet armád s portréty velitelů a proužky, rozkazy ikonami, výběr divizí jako mřížka mini karet, údaje jako ikony s čísly | **hotovo** |
 | **M103** | **Stavby jako v HOI4, plány na mapě, přiblížení cílů**: volba budovy a klikání na státy (režim mapy Stavby), barevné linie front a velké šípy útoku, přiblížení stromu cílů | **hotovo** |
 | **M104** | **Výroba jako v HOI4**: kreslené ikony výzbroje, řada továren u linky (klik a tažení), zásobník volných továren s přetahováním | **hotovo** |
+| **M105** | **Výzkum s ikonami a okna u kraje**: kreslené ikony technologií, klik na kartu zahájí výzkum, sedm oken jako panel vlevo nad mapou | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

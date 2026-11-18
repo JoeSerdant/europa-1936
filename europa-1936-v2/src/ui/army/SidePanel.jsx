@@ -6,6 +6,8 @@ import { ArmyPanel } from './ArmyPanel.jsx';
 import { LogPanel } from '../log/LogPanel.jsx';
 import { NavyPanel } from '../navy/NavyPanel.jsx';
 
+/** M105: okna vlevo u kraje (mapa zůstává vidět); ostatní z FULL jsou přes celou obrazovku. */
+export const DOCKED = ['politics', 'dip', 'decisions', 'spy', 'doctrine', 'logistics', 'air'];
 export const FULL = ['industry', 'recruit', 'research', 'politics', 'nat', 'dip', 'logistics', 'air', 'doctrine', 'decisions', 'spy', 'design'];   // okna přes celou obrazovku (vykresluje je Hud)
 const TABS = [
   { id: null, name: 'Oblast', icon: 'provinces' },
