@@ -105,6 +105,65 @@ export function routesOf(game) {
   return [...map.values()];
 }
 
+/** Barvy plánů armád na mapě (M103): každá armáda podle id jinou. */
+export const PLAN_COLORS = ['#ffb347', '#7ec8ff', '#c792ea', '#9be564', '#ff8a7a', '#f6e05e', '#5eead4', '#f0abfc'];
+const PLAN_GAP = 160;   // mezera v linii (svět. jednotky), nad kterou se čára přeruší
+const PLAN_ARROWS = 4;  // nejvýš šípů útoku na armádu
+
+/**
+ * Plány armád země `me` pro mapu (M103, jako v HOI4): { id, color, segs: [[[x,y]…]…] (linie fronty jako lomené čáry), arrows: [{ fx, fy, tx, ty }] }.
+ * Linie se řadí od konce (provincie s nejméně sousedy v linii) k nejbližší další; šípy vedou z nejbližší provincie linie k cílům, které ještě drží nepřítel.
+ */
+export function planMarks(game, me, g) {
+  if (!me) return [];
+  const out = [];
+  const armies = game.mil.armies;
+  for (let id = 1; id < armies.length; id++) {
+    const a = armies[id];
+    if (!a || a.o !== me || !a.plan || a.plan.k !== 'front' || !a.plan.line.length) continue;
+    const line = a.plan.line.filter((p) => game.ctrl[p] === me || game.ctrl[p] === 0 || !atWar(game, me, game.ctrl[p]));
+    if (!line.length) continue;
+    const d = (p, q) => Math.hypot(g.cx[p] - g.cx[q], g.cy[p] - g.cy[q]);
+    const left = new Set(line), segs = [];
+    // začátek: nejzápadnější/nejsevernější krajní provincie (stabilní pořadí)
+    let cur = line.slice().sort((p, q) => g.cx[p] + g.cy[p] - (g.cx[q] + g.cy[q]) || p - q)[0];
+    let seg = [];
+    while (cur) {
+      left.delete(cur); seg.push([g.cx[cur], g.cy[cur]]);
+      let nx = 0, nd = Infinity;
+      for (const q of left) { const x = d(cur, q); if (x < nd || (x === nd && q < nx)) { nd = x; nx = q; } }
+      if (nx && nd > PLAN_GAP) { segs.push(seg); seg = []; }
+      cur = nx;
+    }
+    if (seg.length) segs.push(seg);
+    // vyhlazení lomené čáry (klouzavý průměr se sousedy, konce zůstávají) – linie se nekroutí mezi provinciemi dvou řad
+    const smooth = (pts) => pts.map((pt, i) => (i === 0 || i === pts.length - 1 ? pt : [(pts[i - 1][0] + pt[0] * 2 + pts[i + 1][0]) / 4, (pts[i - 1][1] + pt[1] * 2 + pts[i + 1][1]) / 4]));
+    const to = a.plan.to.filter((t) => game.ctrl[t] && game.ctrl[t] !== me && atWar(game, me, game.ctrl[t]));
+    // M103: velké šípy jako v HOI4 – cíle po skupinách (podél osy linie) a za každou skupinu jeden šíp zpoza linie přes ni k cílům
+    const arrows = [];
+    if (to.length) {
+      const pts = line.map((p) => [g.cx[p], g.cy[p]]);
+      let ax = 1, ay = 0;
+      if (pts.length > 1) { const [p0, p1] = [pts[0], pts.reduce((b, q) => (Math.hypot(q[0] - pts[0][0], q[1] - pts[0][1]) > Math.hypot(b[0] - pts[0][0], b[1] - pts[0][1]) ? q : b), pts[0])]; const l = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) || 1; ax = (p1[0] - p0[0]) / l; ay = (p1[1] - p0[1]) / l; }
+      const sorted = to.slice().sort((p, q) => (g.cx[p] * ax + g.cy[p] * ay) - (g.cx[q] * ax + g.cy[q] * ay) || p - q);
+      const k = Math.min(PLAN_ARROWS, Math.max(1, Math.round(sorted.length / 3)));
+      for (let c = 0; c < k; c++) {
+        const grp = sorted.slice(Math.floor((c * sorted.length) / k), Math.floor(((c + 1) * sorted.length) / k));
+        if (!grp.length) continue;
+        const tx = grp.reduce((x, t) => x + g.cx[t], 0) / grp.length, ty = grp.reduce((y, t) => y + g.cy[t], 0) / grp.length;
+        let bx = 0, by = 0, bd = Infinity;
+        for (const [x, y] of pts) { const dd = Math.hypot(x - tx, y - ty); if (dd < bd) { bd = dd; bx = x; by = y; } }
+        if (bd > PLAN_GAP * 1.4) continue;
+        const ux = (tx - bx) / (bd || 1), uy = (ty - by) / (bd || 1), back = Math.max(34, bd * 1.1);
+        arrows.push({ fx: bx - ux * back, fy: by - uy * back, tx: tx + ux * 10, ty: ty + uy * 10 });
+      }
+    }
+    for (let i = 0; i < segs.length; i++) segs[i] = smooth(segs[i]);
+    out.push({ id, color: PLAN_COLORS[id % PLAN_COLORS.length], segs, arrows, mode: a.plan.mode });
+  }
+  return out;
+}
+
 /** Bitvy pro mapu: { p, from: [provincie], adv } (adv = podíl útočníků na zásazích 0–1). */
 export const battlesOf = (game) => game.mil.battles.filter((b) => !fogOn(game) || visibleLand(game, getWorld().ownerIdx[game.player])[b.p]).map((b) => ({ id: b.id, p: b.p, from: b.from, adv: b.adv, att: b.att.length, dep: b.dep.length }));
 
@@ -178,6 +237,7 @@ export class UnitLayer {
     }
     if (game.nav && (game.nav.fleets !== this.fleetSrc || game.rules !== this.fleetRules)) { this.fleetSrc = game.nav.fleets; this.fleetRules = game.rules; this.fleetTokens = buildFleetTokens(game, this.world); this.fleetRoutes = buildFleetRoutes(game, this.world); changed = true; }
     if (game.air && (game.air.wings !== this.airSrc || game.player !== this.airPlayer)) { this.airSrc = game.air.wings; this.airPlayer = game.player; this.air = buildAirMarks(game, this.world); changed = true; }
+    if (mil.armies !== this.armiesSrc || game.ctrl !== this.planCtrl) { this.armiesSrc = mil.armies; this.planCtrl = game.ctrl; this.plans = planMarks(game, game.player ? this.world.ownerIdx[game.player] : 0, this.g); changed = true; }   // M103
     if (mil.battles !== this.battlesSrc || changed) { this.battlesSrc = mil.battles; this.battles = battlesOf(game); changed = true; }
     this.game = game;
     return changed;
@@ -272,6 +332,23 @@ export class UnitLayer {
         if (l.m !== 'air') { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(l.b[0], l.b[1], 4 * px, 0, Math.PI * 2); ctx.fill(); }
         ctx.globalAlpha = 1;
       }
+    }
+
+    // M103: plány armád hráče – barevná linie fronty a velké šípy k cílům útoku (upravovaná armáda se kreslí podrobně v drawPlan)
+    for (const pm of this.plans || []) {
+      if (planView && planView.army === pm.id) continue;
+      for (const seg of pm.segs) {
+        if (seg.length < 2) continue;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        for (const pass of [0, 1]) {
+          ctx.lineWidth = (pass ? 4 : 7.5) * px; ctx.strokeStyle = pass ? pm.color : 'rgba(6,10,14,0.8)'; ctx.globalAlpha = pass ? 0.92 : 0.75;
+          ctx.beginPath(); ctx.moveTo(seg[0][0], seg[0][1]);
+          for (let i = 1; i < seg.length; i++) ctx.lineTo(seg[i][0], seg[i][1]);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+      for (const ar of pm.arrows) drawAttackArrow(ctx, ar.fx, ar.fy, ar.tx, ar.ty, 7 * px, px, pm.color);
     }
 
     // bitvy: červené šípy z výchozích provincií a značka ve sporné provincii

@@ -19,6 +19,7 @@ import { ConferenceDialog } from '../nat/ConferenceDialog.jsx';
 import { OverviewDialog } from '../log/OverviewDialog.jsx';
 import { AchievementsDialog } from '../achievements/AchievementsDialog.jsx';
 import { IndustryPanel } from '../industry/IndustryPanel.jsx';
+import { BuildPanel } from '../industry/BuildPanel.jsx';
 import { RecruitPanel } from '../army/RecruitPanel.jsx';
 import { ResearchPanel } from '../research/ResearchPanel.jsx';
 import { PoliticsPanel } from '../politics/PoliticsPanel.jsx';
@@ -43,18 +44,21 @@ export function Hud() {
   const fresh = useGame((s) => s.paused && s.tick === 0);
   const side = useUi((s) => !!((s.panel && !FULL.includes(s.panel)) || s.selected));
   const panel = useUi((s) => s.panel);
+  const buildTab = useUi((s) => s.panel === 'industry' && s.indTab === 'build');   // M103: stavby jako úzký panel vlevo nad mapou
   useEffect(() => { mc.setInsets(INSETS.game); }, []);
   const right = side ? 394 : 14;               // střední lišty se středí mezi levým sloupcem a pravým panelem
   return (
     <>
       <TopBar />
-      <MapModes />
-      <div className="bottom-left">
-        <Legend />
-        <div className="panel mini"><Minimap /></div>
-      </div>
+      {!buildTab && <MapModes />}
+      {!buildTab && (
+        <div className="bottom-left">
+          <Legend />
+          <div className="panel mini"><Minimap /></div>
+        </div>
+      )}
       <SidePanel />
-      {panel === 'industry' && <IndustryPanel />}
+      {panel === 'industry' && (buildTab ? <BuildPanel /> : <IndustryPanel />)}
       {panel === 'recruit' && <RecruitPanel />}
       {panel === 'research' && <ResearchPanel />}
       {panel === 'politics' && <PoliticsPanel />}

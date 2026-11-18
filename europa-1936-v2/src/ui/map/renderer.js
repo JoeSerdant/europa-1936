@@ -160,6 +160,9 @@ export class MapRenderer {
     this.lastOccSt = occSt;
     if (!ownerChanged && occChanged && (this.mode === 'resistance' || this.mode === 'compliance')) { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     if (!ownerChanged && indChanged && this.mode === 'industry') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
+    const bq = game.ind ? game.ind.build : null;   // M103: režim Stavby se překreslí po zadání stavby
+    if (!ownerChanged && this.mode.startsWith('build:') && (bq !== this.lastBuildQ || indChanged)) { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
+    this.lastBuildQ = bq;
     this.units.player = game.player ? this.world.ownerIdx[game.player] : 0;
     if (this.units.player !== this.player) { this.player = this.units.player; this.rebuildBorders(); this.invalidate(); }   // M91: záře hranic země hráče
     if (this.showUnits) this.units.setGame(game);

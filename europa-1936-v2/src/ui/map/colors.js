@@ -5,6 +5,8 @@ import { supplyFlow } from '../../engine/army/supply.js';
 import { seaPorts } from '../../engine/nav/core.js';
 import { friendsOf } from '../../engine/dip/accessCore.js';
 import { infraOf } from '../../engine/industry/infra.js';
+import { buildRoom, fortRoom } from '../../engine/industry/selectors.js';
+import { BUILDINGS } from '../../data/industry/buildings.js';
 
 export const SEA_COLOR = '#17364f';
 export const LAKE_COLOR = '#3f6d8f';
@@ -83,9 +85,26 @@ export function fillColors(world, game, mode, focus = 0) {
   const terr = TERRAIN_COLORS.map(hexToRgb);
   const me = game && game.player ? world.ownerIdx[game.player] : 0;
   const reach = mode === 'supply' && me ? supplyFlow(game.ctrl, me, infraOf(game), friendsOf(game.dip, me), seaPorts(game, me)) : null;
+  // M103: režim „Stavby“ – kde jde zvolená budova postavit (zelená podle volného místa), kde je plno (hnědá), cizí ztlumené
+  const bk = mode.startsWith('build:') ? mode.slice(6) : '';
+  const room = new Map();
+  const roomOf = (p) => {
+    if (BUILDINGS[bk] && BUILDINGS[bk].province) return fortRoom(game, p, me).n;
+    const s = world.provState[p];
+    if (!room.has(s)) room.set(s, buildRoom(game, s, bk, me).n);
+    return room.get(s);
+  };
   for (let p = 1; p <= L; p++) {
     const o = ownerOf(p);
     let c;
+    if (bk && game && me) {
+      const base = mix(ownerRgb[o], terr[world.terrain[p]], 0.16);
+      if (o !== me || game.ctrl[p] !== me) c = dim(base);
+      else { const n = roomOf(p); c = n ? mix([96, 150, 72], [150, 214, 104], clamp01(n / 6)) : [128, 92, 60]; }
+      if (focus) c = o === focus ? c : dim(c);
+      out[p] = rgbCss(c);
+      continue;
+    }
     switch (mode) {
       case 'terrain': c = terr[world.terrain[p]]; break;
       case 'states': {

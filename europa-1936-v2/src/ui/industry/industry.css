@@ -95,7 +95,16 @@ li.on > .pol-opt { opacity: 1; box-shadow: inset 3px 0 0 var(--brass), inset 0 0
 
 /* ------------------------------------------------------------------ národní cíle a události (M22) */
 .focus-scroll { display: block; overflow: auto; }
-.focus-tree { position: relative; margin: 4px 6px 12px; }
+.focus-tree { position: relative; margin: 4px 6px 12px; transform-origin: 0 0; }
+/* M103: přiblížení stromu cílů */
+.focus-wrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.focus-wrap .focus-scroll { flex: 1; min-height: 0; cursor: grab; }
+.focus-wrap .focus-scroll.dragging { cursor: grabbing; user-select: none; }
+.focus-zoom { position: relative; }
+.focus-tree.far .tech-fx, .focus-tree.far .fc-ex { display: none; }
+.focus-tree.far .focus-card header b { font-size: 22px; }
+.focus-zbar { position: absolute; right: 18px; top: 10px; z-index: 3; display: flex; align-items: center; gap: 4px; padding: 4px 6px; background: rgba(10, 17, 24, 0.94); box-shadow: inset 0 0 0 1px var(--rule-hi), 0 6px 18px rgba(0, 0, 0, 0.5); }
+.fz-v { min-width: 44px; text-align: center; font: 600 13px/1 var(--display); color: var(--brass-hi); font-variant-numeric: tabular-nums; }
 .focus-links { position: absolute; left: 0; top: 0; pointer-events: none; }
 .focus-links path { fill: none; stroke: var(--rule-hi); stroke-width: 1.5; }
 .focus-links path.done { stroke: var(--brass); }
@@ -559,3 +568,35 @@ button.st-row:hover { background: var(--ink-3); }
 .ds-stats tr.worse td:last-child { color: #ff9b86; }
 .design-panel .btn { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; align-self: flex-start; padding: 10px 16px; }
 .design-panel .btn span { font-size: 12.5px; font-weight: 400; opacity: 0.85; }
+
+/* ---- M103: stavby jako v HOI4 – úzký panel vlevo, mapa zůstává vidět ---- */
+.build-panel { position: absolute; left: 0; top: calc(var(--top-h) + 46px); bottom: 0; z-index: 8; width: 330px; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; overflow: hidden; animation: bp-in 0.18s ease-out; }
+@keyframes bp-in { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: none; } }
+.bp-head { display: flex; align-items: center; gap: 8px; color: var(--brass); }
+.bp-head h2 { margin: 0; flex: 1; font: 600 18px/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--paper); }
+.bp-pts { font: 700 18px/1 var(--display); color: var(--brass-hi); }
+.bp-pts small { margin-left: 2px; font-size: 11px; color: var(--text-3); }
+.bp-tabs { display: flex; gap: 2px; }
+.bp-tabs button { flex: 1; padding: 6px 0; border: 0; font: 600 13px/1 var(--display); color: var(--text-2); background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); cursor: pointer; }
+.bp-tabs button.on { color: var(--paper); background: var(--ink-3); box-shadow: inset 0 -2px 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
+.bp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.bp-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px 5px; border: 0; color: var(--text-2); background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule-hi); cursor: pointer; transition: transform 0.1s ease; }
+.bp-tile span { font: 600 11px/1.1 var(--display); text-align: center; color: var(--text); }
+.bp-tile small { font-size: 10.5px; color: var(--text-3); }
+.bp-tile:hover { color: var(--brass-hi); box-shadow: inset 0 0 0 1px var(--brass); transform: translateY(-1px); }
+.bp-tile.on { color: var(--ink-0); background: linear-gradient(180deg, var(--brass-hi), var(--brass)); box-shadow: 0 0 14px rgba(240, 217, 142, 0.45); }
+.bp-tile.on span, .bp-tile.on small { color: var(--ink-0); }
+.bp-hint { margin: 0; font-size: 13px; line-height: 1.35; color: var(--text-2); }
+.bp-hint p { margin: 0 0 6px; }
+.bp-best { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.bp-best button { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px; width: 100%; padding: 4px 8px; border: 0; text-align: left; color: var(--text); background: var(--ink-2); cursor: pointer; }
+.bp-best button:hover { background: var(--ink-3); color: var(--brass-hi); }
+.bp-best em { font: 600 12px/1 var(--display); font-style: normal; color: #9fd47c; }
+.bp-qhead h3 { margin: 4px 0 0; font: 600 14px/1 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--brass); }
+.bp-queue { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.bp-queue li { display: grid; grid-template-columns: 18px 1fr auto auto; align-items: center; gap: 6px; padding: 5px 6px 3px; background: var(--ink-2); color: var(--text-3); }
+.bp-queue .bq-nm { display: flex; justify-content: space-between; gap: 6px; min-width: 0; }
+.bp-queue .bq-nm b { overflow: hidden; font-weight: 600; color: var(--text); white-space: nowrap; text-overflow: ellipsis; }
+.bp-queue .bq-nm i { font-style: normal; font-size: 12px; white-space: nowrap; }
+.bp-queue .bar { grid-column: 1 / -1; height: 3px; }
+@media (prefers-reduced-motion: reduce) { .build-panel { animation: none; } }

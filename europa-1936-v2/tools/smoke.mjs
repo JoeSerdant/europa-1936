@@ -321,17 +321,41 @@ try {
   check('bílý mír s protivníky po zkoušce války', peace === 0, `zbývá válek hráče: ${peace}`);
   // průmysl (M19): panel Průmysl (I), stavba, linky výroby, obchod, režim mapy 8, tři dny hry
   await page.keyboard.press('t');
-  await page.waitForSelector('.industry-panel', { timeout: 3000 });
-  const sum = await page.locator('.ind-sum').innerText();
-  check('klávesa I otevře panel Průmysl se souhrnem továren', (await ui()).panel === 'industry' && /Civilní/.test(sum) && /Vojenské/.test(sum), sum.replace(/\s+/g, ' '));
-  const b0 = await E(() => { const g = window.__e1936.gameStore.getState(); return g.ind.build.filter((b) => b.o === window.__e1936.engine.getWorld().ownerIdx.GER).length; });
-  await page.locator('.ind-new').getByRole('button', { name: 'Civilní továrna' }).click();
-  await page.waitForSelector('.ind-queue li', { timeout: 3000 });
-  const b1 = await E(() => { const g = window.__e1936.gameStore.getState(); return g.ind.build.filter((b) => b.o === window.__e1936.engine.getWorld().ownerIdx.GER).length; });
-  check('stavba: „Civilní továrna“ přidá projekt do fronty', b1 === b0 + 1 && (await page.locator('.ind-queue li').count()) === b1, `fronta ${b0} → ${b1}`);
+  await page.waitForSelector('.build-panel', { timeout: 3000 });
+  // M103: stavby jako v HOI4 – úzký panel vlevo, mapa zůstává vidět; budova se zvolí a staví se klikem na stát na mapě
+  check('klávesa T otevře panel Stavby vlevo (mapa zůstane vidět) s volbou budov', (await ui()).panel === 'industry' && (await page.locator('.build-panel .bp-tile').count()) === 7 && (await page.locator('.industry-panel').count()) === 0);
+  const nb = () => E(() => { const g = window.__e1936.gameStore.getState(); return g.ind.build.filter((b) => b.o === window.__e1936.engine.getWorld().ownerIdx.GER).length; });
+  const b0 = await nb();
+  await page.locator('.build-panel').getByRole('radio', { name: 'Civilní továrna' }).click();
+  await page.waitForTimeout(200);
+  check('volba budovy přepne mapu do režimu Stavby', (await E(() => window.__e1936.uiStore.getState().mode)) === 'build:civ');
+  const spots = await E(() => {
+    const { engine, gameStore } = window.__e1936; const s = gameStore.getState(), w = engine.getWorld(), me = w.ownerIdx.GER, out = [];
+    for (let st = 1; st < w.states.length; st++) if (s.stateOwner[st] === me && engine.buildRoom(s, st, 'civ', me).n > 0) for (const p of w.states[st].v) if (s.ctrl[p] === me) out.push(p);
+    return out.slice(0, 40);
+  });
+  let xy = null;
+  for (const p of spots) {
+    await E((q) => window.__e1936.map.flyToLabel(q, 0), p);
+    await page.waitForTimeout(250);
+    xy = await provinceXY(p);
+    if (xy) break;
+  }
+  await page.mouse.click(xy.x, xy.y);
+  await page.waitForTimeout(250);
+  const b1 = await nb();
+  await page.locator('.bp-best button').first().click();
+  await page.waitForTimeout(250);
+  const b2 = await nb();
+  check('klik na stát na mapě i na doporučené místo zadá stavbu do fronty', b1 === b0 + 1 && b2 === b1 + 1 && (await page.locator('.bp-queue li').count()) === b2, `fronta ${b0} → ${b1} → ${b2}`);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  check('Esc ukončí stavění a vrátí mapový režim', (await E(() => window.__e1936.uiStore.getState().buildKind)) === null && (await E(() => window.__e1936.uiStore.getState().mode)) !== 'build:civ');
   await shot('industry-build');
   await page.getByRole('tab', { name: 'Výroba' }).click();
   await page.waitForSelector('.ind-line', { timeout: 3000 });
+  const sum = await page.locator('.ind-sum').innerText();
+  check('záložka Výroba otevře okno Průmysl se souhrnem továren', /Civilní/.test(sum) && /Vojenské/.test(sum), sum.replace(/\s+/g, ' '));
   const nLines = await page.locator('.ind-line').count();
   const fac0 = await E(() => window.__e1936.gameStore.getState().ind.lines.filter((l) => l.o === window.__e1936.engine.getWorld().ownerIdx.GER).reduce((a, l) => a + l.fac, 0));
   await page.locator('.ind-line').first().getByRole('button', { name: 'Ubrat továrnu' }).click();
@@ -343,7 +367,7 @@ try {
   await page.waitForSelector('.ind-res', { timeout: 3000 });
   check('obchod: tabulka šesti surovin a smlouvy', (await page.locator('.ind-res tbody tr').count()) === 6 && (await page.locator('.ind-trades li').count()) >= 1);
   await shot('industry-trade');
-  await page.getByRole('tab', { name: 'Stavby' }).click();
+  await page.keyboard.press('Escape');   // M103: panel Stavby by překryl mapové režimy vlevo dole
   await page.keyboard.press('8');
   await page.waitForTimeout(500);
   check('režim 8 = Průmysl s vysvětlivkami', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Průmysl' && (await page.locator('.legend').innerText()).includes('továren'));
@@ -497,6 +521,19 @@ try {
   await page.waitForSelector('.nat-panel .rs-slot:not(.empty)', { timeout: 3000 });
   check('„Zahájit“ spustí plnění cíle', (await page.locator('.focus-card.active').count()) === 1);
   await shot('nat');
+  // M103: přiblížení stromu cílů – oddálit tlačítkem i kolečkem, celý strom
+  await page.getByRole('button', { name: 'Oddálit' }).click();
+  const z1 = await page.locator('.fz-v').innerText();
+  const box = await page.locator('.focus-scroll').boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, 300);
+  await page.waitForTimeout(150);
+  const z2 = await page.locator('.fz-v').innerText();
+  await page.getByRole('button', { name: 'Celý strom' }).click();
+  await page.waitForTimeout(150);
+  check('strom cílů jde oddálit tlačítkem, kolečkem i na celý strom', z1 === '80 %' && parseInt(z2, 10) < 80 && (await page.locator('.focus-tree.far').count()) === 1, `${z1} → ${z2} → ${await page.locator('.fz-v').innerText()}`);
+  await shot('nat-zoom');
+  await page.getByRole('button', { name: 'Přiblížit' }).click();
   await E(() => { const { gameStore, engine } = window.__e1936; const s = engine.applyFx(gameStore.getState(), engine.getWorld().ownerIdx.GER, [{ t: 'event', id: 'harvest', days: 1 }]); gameStore.setState(engine.advance({ ...s, paused: false }, 48)); });
   await page.waitForSelector('.event-dialog', { timeout: 3000 });
   check('událost hráče otevře dialog a pozastaví hru', (await page.locator('.event-dialog .ev-opt').count()) >= 1 && (await E(() => window.__e1936.gameStore.getState().paused)));

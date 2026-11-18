@@ -3,7 +3,7 @@
 export const STEPS = [
   { id: 'time', text: 'Spusťte čas mezerníkem nebo tlačítkem v horní liště. Rychlost měníte klávesami + a −.', done: (g) => !g.paused || g.tick > 0 },
   { id: 'select', text: 'Klikněte na provincii na mapě: vpravo se ukážou údaje o oblasti. Mapu posouváte tažením nebo šipkami, přibližujete kolečkem.', done: (g, u) => u.selected > 0 },
-  { id: 'build', text: 'Otevřete Stavby (T), vyberte svůj stát a zadejte stavbu továrny: civilní továrny staví, vojenské vyrábějí.', done: (g, u, me) => g.ind.build.some((b) => b.o === me) },
+  { id: 'build', text: 'Otevřete Stavby (T), vyberte budovu (třeba civilní továrnu) a klikněte na zelený stát na mapě: civilní továrny staví, vojenské vyrábějí.', done: (g, u, me) => g.ind.build.some((b) => b.o === me) },
   { id: 'prod', text: 'Ve Výrobě (Y) přidělte volné vojenské továrny linkám: bez výzbroje nejde nabírat divize.', done: (g, u) => u.indTab === 'prod' && u.panel === 'industry' },
   { id: 'research', text: 'Ve Výzkumu (W) zahajte technologii. Každý slot zkoumá jednu.', done: (g, u, me) => g.tech.own[me].slots.some(Boolean) },
   { id: 'focus', text: 'V Národních cílech (C) zahajte cíl: dává trvalé bonusy a události.', done: (g, u, me) => !!g.nat.own[me].cur || Object.keys(g.nat.own[me].done).length > 0 },

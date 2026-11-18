@@ -74,3 +74,33 @@ export function projectEta(state, o, buildId) {
   days = Math.ceil((B.cost - b.prog) / mine);
   return days;
 }
+
+/**
+ * Kolik staveb `kind` lze ještě zadat ve státě `s` zemí `o` (M103, stavění klikáním na mapu jako v HOI4): { n, why }.
+ * `n` = volné místo (sloty, nebo strop budovy minus postavené a rozestavěné), `why` = důvod nuly česky. Pevnost (stavba v provincii) viz `fortRoom`.
+ * Pravidla odpovídají příkazu `build`.
+ */
+export function buildRoom(state, s, kind, o) {
+  const w = getWorld(), ind = state.ind, B = BUILDINGS[kind];
+  if (!B || B.province || !(s >= 1 && s < w.states.length)) return { n: 0, why: 'Neplatná stavba.' };
+  if (state.stateOwner[s] !== o || state.ctrl[w.states[s].cap] !== o) return { n: 0, why: 'Stavět lze jen ve vlastním, neokupovaném státě.' };
+  if (B.port && !w.states[s].v.some((p) => w.portLevel[p] > 0)) return { n: 0, why: 'Loděnice potřebuje přístav.' };
+  if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return { n: 0, why: 'Fronta staveb je plná.' };
+  if (B.slot) {
+    const n = slotsOf(ind, s) - slotsUsed(ind, s);
+    return n > 0 ? { n, why: '' } : { n: 0, why: 'Ve státě není volný stavební slot (rozestavěné se počítají).' };
+  }
+  const have = kind === 'inf' ? ind.inf[s] || 0 : ind.st[s][kind] || 0;
+  const n = (B.max ?? I.INF_MAX) - have - ind.build.filter((b) => b.s === s && b.k === kind).length;
+  return n > 0 ? { n, why: '' } : { n: 0, why: `${B.n}: stát má nejvyšší úroveň.` };
+}
+
+/** Kolik úrovní pevnosti lze ještě zadat v provincii `p` zemí `o` (pravidla příkazu `buildFort`): { n, why }. */
+export function fortRoom(state, p, o) {
+  const w = getWorld(), ind = state.ind, B = BUILDINGS.fort;
+  if (!(p >= 1 && p <= w.L)) return { n: 0, why: 'Neplatná provincie.' };
+  if (state.stateOwner[w.provState[p]] !== o || state.ctrl[p] !== o) return { n: 0, why: 'Pevnost lze stavět jen ve vlastní, neokupované provincii.' };
+  if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return { n: 0, why: 'Fronta staveb je plná.' };
+  const n = B.max - (ind.fort[p] || 0) - ind.build.filter((b) => b.p === p).length;
+  return n > 0 ? { n, why: '' } : { n: 0, why: 'Pevnost má nejvyšší úroveň.' };
+}

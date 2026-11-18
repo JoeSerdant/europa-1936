@@ -951,6 +951,31 @@ Ovládání armád obrázky místo textu. Engine ani tvar stavu se nemění.
 
 Testy: `test/armybar.test.js`; smoke kontroluje karty armád s portrétem (114 kontrol).
 
+## 4zzv. Stavby jako v HOI4, plány na mapě a přiblížení stromu cílů (M103)
+
+Tvar stavu se nemění.
+- **Stavby** (`ui/industry/BuildPanel.jsx`): klávesa T nebo tlačítko Stavby otevře úzký panel vlevo, ne okno přes celou obrazovku, takže mapa zůstává vidět.
+  - **Volba budovy:** 7 dlaždic (civilní a vojenská továrna, loděnice, infrastruktura, letiště, radar, pevnost) s ikonou a cenou. Volba nastaví `ui.buildKind` a mapový režim `build:<druh>`, takže na mapě je hned vidět, kde se dá stavět.
+  - **Stavění klikem:** klik na stát na mapě (u pevnosti na provincii) zadá stavbu (`buildAt` v `ui/actions.js`), Shift + klik zaplní všechna volná místa; neúspěch řekne důvod.
+  - **Doporučená místa:** seznam až 6 států s nejvíc volného místa (u pevnosti provincie s vítěznými body).
+  - **Fronta** staveb s ikonami, posunem na začátek a zrušením; záložky Výroba a Obchod otevřou okno Průmysl.
+  - Esc ukončí stavění a vrátí předchozí mapový režim. Ovládání mapových režimů a minimapa jsou při otevřeném panelu schované.
+- **Volné místo pro stavbu:** čisté dotazy `buildRoom(state, s, kind, o)` a `fortRoom(state, p, o)` (`engine/industry/selectors.js`) vracejí `{ n, why }` podle stejných pravidel jako příkazy `build` a `buildFort`.
+- **Režim mapy Stavby** (`fillColors` s režimem `build:<druh>`): vlastní stát s místem je zelený (sytost podle počtu volných míst), plný stát hnědý, cizí území ztlumené. Barvy se přepočítají po každé změně fronty staveb.
+- **Plány armád na mapě** (`planMarks` v `ui/map/units.js`, kreslí `UnitLayer.drawWorld`):
+  - každá armáda hráče s linií fronty má barvu z `PLAN_COLORS` (podle id);
+  - linie fronty je vyhlazená lomená čára, přerušená v mezerách nad 160 jednotek;
+  - cíle útoku jsou seskupené podél osy linie a každá skupina (nejvýš 4) má velký zahnutý šíp zpoza linie přes ni k cílům;
+  - šípy jen k cílům, které drží nepřítel;
+  - armádu, jejíž plán se upravuje nebo je vybraná, kreslí podrobně `drawPlan`.
+- **Přiblížení stromu cílů** (`NatPanel`):
+  - kolečko myši přibližuje ke kurzoru (25–140 %), Shift + kolečko posouvá vodorovně a tažením myší se strom posouvá;
+  - tlačítka −/+, Celý strom a K plněnému cíli;
+  - pod 60 % se skryjí účinky karet a zvětší se názvy;
+  - úroveň přiblížení se pamatuje po dobu hry.
+
+Testy: `test/build-map.test.js`; smoke kontroluje panel Stavby, režim mapy, stavbu klikem na mapu i z doporučených míst, Esc a přiblížení stromu cílů (118 kontrol).
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1154,6 +1179,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M100** | **Alternativní cesty a modernizace**: 2319 cílů, politické cesty pro všechny země (účinek `gov`), větev modernizace, volba AI bez historie, oprava Normandie | **hotovo** |
 | **M101** | **Odezva hry**: velký pruh (cíl splněn, výzkum, válka), noviny ze světa s ilustracemi, ilustrované události, bliknutí hodnot, přehlednější lišta oken, události po změně vlády | **hotovo** |
 | **M102** | **Armády jako v HOI4**: lišta karet armád s portréty velitelů a proužky, rozkazy ikonami, výběr divizí jako mřížka mini karet, údaje jako ikony s čísly | **hotovo** |
+| **M103** | **Stavby jako v HOI4, plány na mapě, přiblížení cílů**: volba budovy a klikání na státy (režim mapy Stavby), barevné linie front a velké šípy útoku, přiblížení stromu cílů | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
