@@ -1,5 +1,5 @@
 // Rozložení stromu výzkumu jako časové osy (M60): sloupec = rok technologie, dráha = větev. Čistá funkce bez Reactu.
-export const COLW = 206, NODEW = 176, NODEH = 64, ROWH = 74, Y0 = 1936;
+export const COLW = 232, NODEW = 204, NODEH = 64, ROWH = 74, Y0 = 1936;
 
 /** Řádky (dráhy) technologií oboru: dráha prvního předpokladu, je-li ve sloupci roku volná, jinak první volná. Vrací { id → { col, lane }, lanes }. */
 export function layoutOf(items) {

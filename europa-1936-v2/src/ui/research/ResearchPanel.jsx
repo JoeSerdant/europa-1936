@@ -5,6 +5,8 @@ import { researchOf, techList, CATS, CAT_IDS, TECHS, EQUIP, fxLines, BATTALIONS,
 import { playerIdx, closeSide, researchTech, stopResearch, setTechCat } from '../actions.js';
 import { fmtDays, fmtNum } from '../format.js';
 import { layoutOf, COLW, NODEW, NODEH, ROWH, Y0 } from './layout.js';
+import { techIconOf } from './icons.js';
+import { EquipIcon } from '../industry/EquipIcon.jsx';
 
 const pct = (v) => `${Math.round(Math.max(0, Math.min(1, v)) * 100)} %`;
 const STATUS = { done: 'Hotovo', active: 'Zkoumá se', available: 'K dispozici', locked: 'Zamčeno' };
@@ -37,8 +39,11 @@ const maxYear = Math.max(...Object.values(TECHS).map((t) => t.year));
 function Node({ t, x, y }) {
   const fx = fxLines(t.id).concat(unlocks(t.id).map((n) => `Odemyká: ${n}`));
   const can = t.status === 'available';
+  const ic = techIconOf(t.id, TECHS[t.id] || t);   // M105: kreslená ikona technologie
   return (
-    <article className={`tech-card tn ${t.status}`} style={{ left: x, top: y, width: NODEW, height: NODEH }} aria-label={`${t.n} – ${STATUS[t.status]}`} tabIndex={0}>
+    <article className={`tech-card tn ${t.status}`} style={{ left: x, top: y, width: NODEW, height: NODEH }} aria-label={`${t.n} – ${STATUS[t.status]}`} tabIndex={0}
+      onClick={(e) => { if (can && !e.target.closest('button')) researchTech(t.id); }}>
+      <span className="tn-ic" aria-hidden="true">{ic.eq ? <EquipIcon eq={ic.eq} size={40} /> : <Icon name={ic.icon} size={24} />}</span>
       <b title={t.n}>{t.n}</b>
       <span className="tn-line">
         <span className={`tech-st ${t.status}`}>{STATUS[t.status]}{t.status === 'active' ? ` ${pct(t.p)}` : t.p > 0 && can ? ` · ${pct(t.p)}` : ''}</span>
@@ -97,7 +102,7 @@ export function ResearchPanel() {
   const r = useMemo(() => (me ? researchOf(state, me) : null), [state.tech, state.tick, me]);
   const list = useMemo(() => (me ? techList(state, me) : []), [state.tech, state.tick, me]);
   if (!me) return <div className="prod-screen research-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádný výzkum.</p></div></div>;
-  const lv = Object.entries(r.levels);
+  const lv = Object.entries(r.levels).filter(([, n]) => typeof n === 'number' && n > 1);   // M105: jen číselné úrovně (mil.lv obsahuje i návrhy `des`)
   const cats = cat === 'all' ? CAT_IDS : [cat];
   return (
     <div className="prod-screen research-panel" role="dialog" aria-label="Výzkum">
@@ -110,7 +115,7 @@ export function ResearchPanel() {
         <div className="rs-sum">
           <span className="stat-cell" title="Dny výzkumu za den (bez předstihu)"><i>Rychlost</i><b>{fmtNum(r.speed, 2)}×</b></span>
           <span className="stat-cell"><i>Hotovo</i><b>{r.done}/{r.total}</b></span>
-          <span className="stat-cell" title="Úrovně výzbroje nad první"><i>Výzbroj</i><b>{lv.length ? lv.map(([e, n]) => `${LV_NAMES[e]} ${n}`).join(' · ') : 'základní'}</b></span>
+          <span className="stat-cell" title="Úrovně výzbroje nad první"><i>Výzbroj</i><b className="rs-lv">{lv.length ? lv.map(([e, n]) => <span key={e} title={`${LV_NAMES[e] || (EQUIP[e] || {}).n || e}: úroveň ${n}`}><EquipIcon eq={e} size={26} />{n}</span>) : 'základní'}</b></span>
         </div>
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít okno" title="Zavřít (Esc)"><Icon name="close" size={20} /></button>
       </header>

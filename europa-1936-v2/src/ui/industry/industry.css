@@ -485,7 +485,14 @@ button.st-row:hover { background: var(--ink-3); }
 .tl-links path { fill: none; stroke: var(--rule-hi); stroke-width: 2; }
 .tl-links path.on { stroke: var(--brass); }
 .tl-links path.done { stroke: var(--brass-hi); opacity: 0.6; }
-.tech-card.tn { position: absolute; margin: 0; padding: 6px 8px; gap: 3px; overflow: visible; background: rgba(15, 24, 33, 0.95); }
+.tech-card.tn { position: absolute; margin: 0; padding: 6px 8px 6px 56px; gap: 3px; overflow: visible; background: rgba(15, 24, 33, 0.95); }
+/* M105: kreslená ikona technologie vlevo, celá karta je tlačítko „Zkoumat“ */
+.tn-ic { position: absolute; left: 6px; top: 6px; bottom: 6px; width: 44px; display: grid; place-items: center; color: var(--text-3); background: var(--ink-1); box-shadow: inset 0 0 0 1px var(--rule); }
+.tech-card.tn.available { cursor: pointer; }
+.tech-card.tn.available .tn-ic { color: var(--brass-hi); box-shadow: inset 0 0 0 1px var(--brass-lo); }
+.tech-card.tn.active .tn-ic { color: #9fd47c; box-shadow: inset 0 0 0 1px #6aa84f; }
+.tech-card.tn.done .tn-ic { color: var(--brass); }
+.tech-card.tn.locked .tn-ic { opacity: 0.5; }
 .tech-card.tn:hover, .tech-card.tn:focus-within { z-index: 6; box-shadow: inset 0 0 0 1px var(--brass); }
 .tech-card.tn > b { font: 600 13.5px/1.15 var(--display); color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tn-line { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
@@ -623,3 +630,15 @@ button.st-row:hover { background: var(--ink-3); }
 .fp-drag em { font-size: 13px; color: var(--text-3); }
 .fp-dock { display: inline-flex; align-items: center; gap: 3px; color: #7fb5c9; }
 .fp-sum { margin-left: auto; font-size: 12.5px; }
+
+/* ---- M105: okna u kraje – mapa zůstává vidět (jako v HOI4) ---- */
+.prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) { right: auto; width: min(640px, 48vw); top: calc(var(--top-h) + 46px); box-shadow: inset -1px 0 0 var(--rule-hi), 12px 0 40px rgba(0, 0, 0, 0.55); animation: dock-in 0.18s ease-out; }
+.prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) .prod-head { padding: 8px 14px; gap: 12px; }
+.prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) .prod-head h2 { font-size: 19px; }
+.prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) .prod-body { padding: 12px 14px 14px; }
+.prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) .prod-cols { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) .prod-left, .prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) .prod-right { overflow: visible; flex: none; padding: 0; border: 0; }
+@keyframes dock-in { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) { animation: none; } }
+.rs-lv { display: inline-flex; flex-wrap: wrap; gap: 2px 8px; }
+.rs-lv span { display: inline-flex; align-items: center; gap: 2px; }

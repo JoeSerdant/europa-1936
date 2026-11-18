@@ -3,7 +3,7 @@ import { useGame, useUi } from '../store.js';
 import { TopBar } from './TopBar.jsx';
 import { MapModes, Legend } from './MapModes.jsx';
 import { GameMenu } from './GameMenu.jsx';
-import { SidePanel, FULL } from '../army/SidePanel.jsx';
+import { SidePanel, FULL, DOCKED } from '../army/SidePanel.jsx';
 import { SelectionBar } from '../army/SelectionBar.jsx';
 import { ArmyBar } from '../army/ArmyBar.jsx';
 import { PlanBar } from '../army/PlanBar.jsx';
@@ -44,7 +44,7 @@ export function Hud() {
   const fresh = useGame((s) => s.paused && s.tick === 0);
   const side = useUi((s) => !!((s.panel && !FULL.includes(s.panel)) || s.selected));
   const panel = useUi((s) => s.panel);
-  const buildTab = useUi((s) => s.panel === 'industry' && s.indTab === 'build');   // M103: stavby jako úzký panel vlevo nad mapou
+  const buildTab = useUi((s) => (s.panel === 'industry' && s.indTab === 'build') || DOCKED.includes(s.panel));   // M103/M105: panel vlevo nad mapou – minimapa a mapové režimy se schovají
   useEffect(() => { mc.setInsets(INSETS.game); }, []);
   const right = side ? 394 : 14;               // střední lišty se středí mezi levým sloupcem a pravým panelem
   return (
