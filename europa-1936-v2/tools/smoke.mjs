@@ -358,10 +358,17 @@ try {
   check('záložka Výroba otevře okno Průmysl se souhrnem továren', /Civilní/.test(sum) && /Vojenské/.test(sum), sum.replace(/\s+/g, ' '));
   const nLines = await page.locator('.ind-line').count();
   const fac0 = await E(() => window.__e1936.gameStore.getState().ind.lines.filter((l) => l.o === window.__e1936.engine.getWorld().ownerIdx.GER).reduce((a, l) => a + l.fac, 0));
-  await page.locator('.ind-line').first().getByRole('button', { name: 'Ubrat továrnu' }).click();
-  await page.waitForTimeout(250);
-  const fac1 = await E(() => window.__e1936.gameStore.getState().ind.lines.filter((l) => l.o === window.__e1936.engine.getWorld().ownerIdx.GER).reduce((a, l) => a + l.fac, 0));
-  check('výroba: linky jsou vidět a ubrání továrny je uvolní', nLines >= 3 && fac1 === fac0 - 1 && (await page.locator('.ind-note').count()) >= 1, `${nLines} linek, továren ${fac0} → ${fac1}`);
+  // M104: počet továren se nastaví klikem do řady továren (plné = na lince); kreslené ikony výzbroje
+  const line0 = page.locator('.ind-line').first();
+  const lf = Number(await line0.locator('.pl-fac b').innerText());
+  await line0.locator('.fac-slots i').nth(lf - 2).click();
+  await page.waitForTimeout(800);   // okno Průmysl se překresluje nejvýš dvakrát za sekundu
+  const facSum = () => E(() => window.__e1936.gameStore.getState().ind.lines.filter((l) => l.o === window.__e1936.engine.getWorld().ownerIdx.GER).reduce((a, l) => a + l.fac, 0));
+  const fac1 = await facSum();
+  check('výroba: linky s kreslenými ikonami; klik do řady továren jednu uvolní', nLines >= 3 && fac1 === fac0 - 1 && (await page.locator('.ind-line .eq-icon').count()) === nLines && (await page.locator('.fac-pool .fp-drag b').innerText()) === '1', `${nLines} linek, továren ${fac0} → ${fac1}`);
+  await page.locator('.fac-pool .fp-drag').dragTo(line0);
+  await page.waitForTimeout(800);
+  check('továrna ze zásobníku přetažená na linku se přidá', (await facSum()) === fac0, `${await facSum()}`);
   await shot('industry-prod');
   await page.getByRole('tab', { name: 'Obchod' }).click();
   await page.waitForSelector('.ind-res', { timeout: 3000 });

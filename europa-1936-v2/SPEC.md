@@ -976,6 +976,16 @@ Tvar stavu se nemění.
 
 Testy: `test/build-map.test.js`; smoke kontroluje panel Stavby, režim mapy, stavbu klikem na mapu i z doporučených míst, Esc a přiblížení stromu cílů (118 kontrol).
 
+## 4zzw. Výroba jako v HOI4 (M104)
+
+Jen rozhraní, tvar stavu se nemění.
+- **Kreslené ikony výzbroje** (`ui/industry/EquipIcon.jsx`): vlastní siluety v barvě skupiny – puška, podpůrná výzbroj, polní a protitankové dělo, nákladní auto, obrněné vozidlo, lehký, střední a těžký tank, stíhač, bitevník, taktický a strategický bombardér, palubní letoun, raketa, torpédoborec, křižník, bitevní loď, ponorka, letadlová loď a transportní loď. Používají je karty linek, výběr nové linky, Logistika a Letectvo.
+- **Řada továren u linky** (`FacSlots`): plné čtverce jsou továrny (loděnice) na lince, prázdné volné továrny, které lze přidat. Klik nebo tažení po řadě nastaví počet; během tažení je vidět náhled (zelená = přibude, červená = ubude) a uloží se po puštění. Nejméně 1; linku ruší koš. Tlačítka +/− zmizela.
+- **Zásobník volných továren** (`FacPool`) nad linkami: počet volných vojenských továren a loděnic a kolik továren pracuje. Volnou továrnu lze přetáhnout na linku a velké číslo linky do zásobníku (jedna se uvolní).
+- **Skupiny výzbroje** (`data/industry/groups.js`) nově obsahují palubní letoun, raketu a letadlovou loď, takže je jde založit z výběru nové linky.
+
+Testy: `test/equip-icons.test.js` (ikona a skupina pro každou výzbroj, letoun a loď); smoke kontroluje ikony, klik do řady továren a přetažení ze zásobníku (119 kontrol).
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1180,6 +1190,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M101** | **Odezva hry**: velký pruh (cíl splněn, výzkum, válka), noviny ze světa s ilustracemi, ilustrované události, bliknutí hodnot, přehlednější lišta oken, události po změně vlády | **hotovo** |
 | **M102** | **Armády jako v HOI4**: lišta karet armád s portréty velitelů a proužky, rozkazy ikonami, výběr divizí jako mřížka mini karet, údaje jako ikony s čísly | **hotovo** |
 | **M103** | **Stavby jako v HOI4, plány na mapě, přiblížení cílů**: volba budovy a klikání na státy (režim mapy Stavby), barevné linie front a velké šípy útoku, přiblížení stromu cílů | **hotovo** |
+| **M104** | **Výroba jako v HOI4**: kreslené ikony výzbroje, řada továren u linky (klik a tažení), zásobník volných továren s přetahováním | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
