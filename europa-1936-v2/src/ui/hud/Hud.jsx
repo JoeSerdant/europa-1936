@@ -5,6 +5,7 @@ import { MapModes, Legend } from './MapModes.jsx';
 import { GameMenu } from './GameMenu.jsx';
 import { SidePanel, FULL } from '../army/SidePanel.jsx';
 import { SelectionBar } from '../army/SelectionBar.jsx';
+import { ArmyBar } from '../army/ArmyBar.jsx';
 import { PlanBar } from '../army/PlanBar.jsx';
 import { TemplateDesigner } from '../army/TemplateDesigner.jsx';
 import { EventDialog } from '../nat/EventDialog.jsx';
@@ -73,6 +74,7 @@ export function Hud() {
         <Tutorial />
         {fresh && <div className="panel hint" role="status">Čas stojí. Spusťte ho <kbd>mezerníkem</kbd> nebo tlačítkem v horní liště.</div>}
         <SelectionBar />
+        <ArmyBar />
       </div>
       <Popups />
       <Banner />

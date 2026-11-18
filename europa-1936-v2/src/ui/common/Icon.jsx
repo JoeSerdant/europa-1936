@@ -45,6 +45,13 @@ const ICONS = {
   general: 'M12 3l2.4 5 5.4.7-4 3.8 1 5.4L12 15.2 7.2 17.9l1-5.4-4-3.8 5.4-.7z',
   shield: 'M12 3l7 3v5.2c0 4.6-3 8.1-7 9.8-4-1.7-7-5.2-7-9.8V6z',
   attack: 'M4 12h13M12 6.5 18 12l-6 5.5M4 6v12',
+  // M102: armáda
+  speed: 'M3 8h9M5 12h11M3 16h9M14 6l6 6-6 6',
+  dig: 'M14 4l6 6M17 7l-9 9M8 16l-3 3M6 13l5 5',
+  pierce: 'M4 20 15 9M15 9l2-5 3 3-5 2M9 15l-3-3',
+  hardatk: 'M4 15h16l-2 4H6zM7 15V11h10v4M12 11V7h6',
+  xp: 'M7 21l5-3 5 3V4H7z',
+  merge: 'M6 4v6c0 3 3 4 6 4s6 1 6 4v2M18 4v6M12 14v6',
 };
 
 export function Icon({ name, size = 20, className = '' }) {

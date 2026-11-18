@@ -3,15 +3,17 @@ import { useGameSlow, useUi } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { armyTree, divisionView, ARMY, getWorld } from '../../engine/index.js';
+import { Portrait } from './Portrait.jsx';
 import {
-  playerIdx, ownSelected, newArmy, addSelectionToArmy, removeSelectionFromArmy, stopSelected, disbandSelected, focusSelection, clearSelection,
+  playerIdx, ownSelected, newArmy, addSelectionToArmy, removeSelectionFromArmy, stopSelected, disbandSelected, focusSelection, clearSelection, toggleDivision,
 } from '../actions.js';
 import { fmtNum, plural } from '../format.js';
 import { ClsIcon, Bar, Status } from './parts.jsx';
-import { summarize, pct, provName, CLS_NAMES, RANK_NAMES } from './helpers.js';
+import { summarize, pct, CLS_NAMES, RANK_NAMES } from './helpers.js';
 
-function Fact({ label, children, title }) {
-  return <span className="fact" title={title}><i>{label}</i><b>{children}</b></span>;
+/** Údaj jako ikona s číslem (M102: méně textu, název je v nápovědě). */
+function Chip({ icon, title, children, bad = false }) {
+  return <span className={`chip ${bad ? 'bad' : ''}`} title={title}><Icon name={icon} size={15} /><b>{children}</b></span>;
 }
 
 /** Nabídka „Do armády“: seznam armád hráče, do kterých lze vybrané divize přesunout (vložená do lišty, ne plovoucí – panel má seříznuté rohy). */
@@ -39,7 +41,22 @@ function ArmyMenu({ state, me, ids, onClose }) {
   );
 }
 
-/** Dolní lišta s popisem vybraných jednotek a rychlými povely (vlastní jednotky) nebo jen údaji (cizí). */
+/** Mini karta divize v mřížce výběru: značka druhu a proužky síly a organizace; klik vybere jen ji, Shift ji odebere. */
+function MiniDiv({ id, state }) {
+  const v = divisionView(state, id);
+  return (
+    <button className={`mdiv ${v.status}`} title={`${v.name} · ${v.tplName}\nSíla ${pct(v.hpPct)} · organizace ${pct(v.orgPct)}`} aria-label={v.name}
+      onClick={(e) => toggleDivision(id, e.shiftKey || e.ctrlKey || e.metaKey)}>
+      <ClsIcon cls={v.cls} size={22} />
+      <Bar v={v.hpPct} kind="hp" /><Bar v={v.orgPct} kind="org" />
+      {v.status === 'fighting' && <i className="mdiv-f"><Icon name="swords" size={10} /></i>}
+    </button>
+  );
+}
+
+const MINI_MAX = 36;
+
+/** Dolní lišta vybraných jednotek (M102): u jedné divize ikony s čísly, u více mřížka mini karet; povely jen ikonami s nápovědou. */
 export function SelectionBar() {
   const sel = useUi((s) => s.selDivs);
   const state = useGameSlow((s) => s, 300);
@@ -73,60 +90,58 @@ export function SelectionBar() {
         {view ? <ClsIcon cls={view.cls} size={34} /> : <span className="sel-count">{ids.length}</span>}
         <div className="sel-title">
           <b>{view ? view.name : `${ids.length} ${plural(ids.length, 'divize', 'divize', 'divizí')}`}</b>
-          <span>
-            {mixedOwners ? 'Různé země' : <><Flag tag={owner.tag} width={18} /> {owner.name}</>}
-            {view ? ` · ${view.tplName}` : ''}
-            {view ? ` · ${provName(view.p)}` : ''}
-          </span>
+          <span>{mixedOwners ? 'Různé země' : <Flag tag={owner.tag} width={18} />}{view ? ` ${view.tplName}` : ''}</span>
         </div>
+        {view && <Status status={view.status} supply={view.supply} grace={view.graceHours} />}
+        {mine && army && (
+          <span className="sel-army-chip" title={`${army.nm}${cmd ? ` · ${RANK_NAMES[cmd.r]} ${cmd.nm}` : ' · bez velitele'}`}>
+            <Portrait name={cmd ? cmd.nm : ''} rank={cmd ? cmd.r : ''} color={owner.color} w={22} h={27} />{army.nm}
+          </span>
+        )}
         <button className="icon-btn sm" onClick={clearSelection} aria-label="Zrušit výběr" title="Zrušit výběr (Esc)"><Icon name="close" size={16} /></button>
       </header>
       <div className="sel-meters">
-        <div><i>Síla</i><Bar v={sum.hp} kind="hp" title={`Síla ${pct(sum.hp)}`} /><b>{pct(sum.hp)}</b></div>
-        <div><i>Organizace</i><Bar v={sum.org} kind="org" title={`Organizace ${pct(sum.org)}`} /><b>{pct(sum.org)}</b></div>
+        <div title={`Síla ${pct(sum.hp)}`}><Icon name="army" size={15} /><Bar v={sum.hp} kind="hp" /><b>{pct(sum.hp)}</b></div>
+        <div title={`Organizace ${pct(sum.org)}`}><Icon name="flag" size={15} /><Bar v={sum.org} kind="org" /><b>{pct(sum.org)}</b></div>
       </div>
       {view ? (
-        <div className="sel-facts">
-          <Fact label="Útok" title="Útok na měkké / tvrdé cíle">{fmtNum(view.stats.soft, 0)} / {fmtNum(view.stats.hard, 0)}</Fact>
-          <Fact label="Obrana">{fmtNum(view.stats.def, 0)}</Fact>
-          <Fact label="Průraz">{fmtNum(view.stats.brk, 0)}</Fact>
-          <Fact label="Rychlost">{fmtNum(view.stats.speed, 0)}</Fact>
-          <Fact label="Zkušenost">{view.xpName}</Fact>
-          {view.dig >= 1 && <Fact label="Zakopání" title="Stupně zakopání (obrana +4 % za stupeň)">{Math.floor(view.dig)} / 5</Fact>}
-          <Fact label="Zásobování" title="Podíl dodaných zásob"><span className={view.supply < 0.7 ? 'bad' : ''}>{pct(view.supply)}</span></Fact>
-          <Status status={view.status} supply={view.supply} grace={view.graceHours} />
+        <div className="sel-chips">
+          <Chip icon="attack" title="Útok na měkké cíle (pěchota)">{fmtNum(view.stats.soft, 0)}</Chip>
+          <Chip icon="hardatk" title="Útok na tvrdé cíle (tanky)">{fmtNum(view.stats.hard, 0)}</Chip>
+          <Chip icon="shield" title="Obrana">{fmtNum(view.stats.def, 0)}</Chip>
+          <Chip icon="pierce" title="Průraz (útočná výdrž)">{fmtNum(view.stats.brk, 0)}</Chip>
+          <Chip icon="speed" title="Rychlost (km/h)">{fmtNum(view.stats.speed, 0)}</Chip>
+          <Chip icon="xp" title={`Zkušenost: ${view.xpName}`}><span className="xp-pips">{[0, 1, 2, 3, 4].map((i) => <i key={i} className={view.xpLevel >= i ? 'on' : ''} />)}</span></Chip>
+          {view.dig >= 1 && <Chip icon="dig" title="Zakopání (obrana +4 % za stupeň)">{Math.floor(view.dig)}/5</Chip>}
+          <Chip icon="supply" title="Zásobování" bad={view.supply < 0.7}>{pct(view.supply)}</Chip>
         </div>
       ) : (
-        <div className="sel-facts">
-          {Object.entries(sum.classes).map(([k, n]) => <span key={k} className="fact cls" title={CLS_NAMES[k]}><ClsIcon cls={k} size={22} /><b>{n}</b></span>)}
-          {sum.fight > 0 && <Fact label="V boji">{sum.fight}</Fact>}
-          {sum.moving > 0 && <Fact label="Na cestě">{sum.moving}</Fact>}
-          {sum.retreat > 0 && <Fact label="Ústup">{sum.retreat}</Fact>}
-          {sum.lack > 0 && <Fact label="Bez zásob"><span className="bad">{sum.lack}</span></Fact>}
-        </div>
-      )}
-      {mine ? (
         <>
-          <p className="sel-army">
-            {army ? <><Icon name="army" size={14} /> {army.nm}{cmd ? ` · ${RANK_NAMES[cmd.r]} ${cmd.nm}` : ' · bez velitele'}</> : armyId === 0 ? 'Bez armády – neplní žádný plán.' : 'Divize z různých armád.'}
-          </p>
-          <div className="sel-actions">
-            <button className="sbtn" onClick={() => newArmy(true)} title="Vytvoří novou armádu z vybraných divizí"><Icon name="plus" size={14} />Nová armáda</button>
-            <button className="sbtn" onClick={() => setMenu(!menu)} aria-expanded={menu} aria-haspopup="menu"><Icon name="army" size={14} />Do armády<Icon name="chevron" size={14} /></button>
-            <button className="sbtn" disabled={!moving} onClick={() => stopSelected()} title="Zastaví pochod (X)"><Icon name="stop" size={14} />Zastavit</button>
-            <button className="sbtn" onClick={focusSelection} title="Přesune pohled na vybrané divize (F)"><Icon name="focus" size={14} />Zaměřit</button>
-            {armed ? (
-              <>
-                <button className="sbtn danger" onClick={() => { setArmed(false); disbandSelected(); }} autoFocus>Opravdu rozpustit</button>
-                <button className="sbtn" onClick={() => setArmed(false)}>Zpět</button>
-              </>
-            ) : <button className="sbtn" onClick={() => setArmed(true)} title="Rozpustí vybrané divize (lidská síla se vrátí jen z části)"><Icon name="trash" size={14} />Rozpustit</button>}
+          <div className="sel-chips">
+            {Object.entries(sum.classes).map(([k, n]) => <span key={k} className="chip" title={CLS_NAMES[k]}><ClsIcon cls={k} size={20} /><b>{n}</b></span>)}
+            {sum.fight > 0 && <Chip icon="swords" title="V boji">{sum.fight}</Chip>}
+            {sum.moving > 0 && <Chip icon="speed" title="Na pochodu">{sum.moving}</Chip>}
+            {sum.retreat > 0 && <Chip icon="back" title="Ustupují" bad>{sum.retreat}</Chip>}
+            {sum.lack > 0 && <Chip icon="supply" title="Bez zásob" bad>{sum.lack}</Chip>}
           </div>
-          {menu && <ArmyMenu state={state} me={me} ids={ownSelected(state, ids)} onClose={() => setMenu(false)} />}
+          <div className="mdivs">
+            {ids.slice(0, MINI_MAX).map((id) => <MiniDiv key={id} id={id} state={state} />)}
+            {ids.length > MINI_MAX && <span className="mdiv more">+{ids.length - MINI_MAX}</span>}
+          </div>
         </>
-      ) : (
-        <p className="sel-army"><Icon name="flag" size={14} /> Cizí jednotky – jen k prohlídce.</p>
       )}
+      {mine && (
+        <div className="sel-actions icons" role="toolbar" aria-label="Povely">
+          <button className="ib" data-tip="Nová armáda z výběru" aria-label="Nová armáda" onClick={() => newArmy(true)}><Icon name="plus" size={18} /></button>
+          <button className={`ib ${menu ? 'on' : ''}`} data-tip="Přesunout do armády" aria-label="Do armády" onClick={() => setMenu(!menu)} aria-expanded={menu} aria-haspopup="menu"><Icon name="merge" size={18} /></button>
+          <button className="ib" data-tip="Zastavit pochod (X)" aria-label="Zastavit" disabled={!moving} onClick={() => stopSelected()}><Icon name="stop" size={18} /></button>
+          <button className="ib" data-tip="Zaměřit (F)" aria-label="Zaměřit" onClick={focusSelection}><Icon name="focus" size={18} /></button>
+          {armed
+            ? <button className="ib danger on" data-tip="Opravdu rozpustit – klikněte znovu" aria-label="Opravdu rozpustit" autoFocus onClick={() => { setArmed(false); disbandSelected(); }}><Icon name="check" size={18} /></button>
+            : <button className="ib danger" data-tip="Rozpustit divize" aria-label="Rozpustit" onClick={() => setArmed(true)}><Icon name="trash" size={18} /></button>}
+        </div>
+      )}
+      {mine && menu && <ArmyMenu state={state} me={me} ids={ownSelected(state, ids)} onClose={() => setMenu(false)} />}
     </section>
   );
 }

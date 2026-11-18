@@ -925,6 +925,32 @@ Hra dává najevo, že se něco stalo (obdoba HOI4 „game feel“). Vše je v r
 
 Testy: `test/juice.test.js`; smoke kontroluje pruh a noviny po vyhlášení války (113 kontrol).
 
+## 4zzu. Armády jako v HOI4 (M102)
+
+Ovládání armád obrázky místo textu. Engine ani tvar stavu se nemění.
+- **Lišta armád dole** (`ui/army/ArmyBar.jsx`, data `armyCards` v `ui/army/armybar.js`):
+  - karty armád hráče seskupené podle skupin armád a samostatné armády;
+  - karta ukazuje portrét velitele, zkratku armády („1.“), značku hlavního druhu a počet divizí a proužky průměrné síly a organizace;
+  - ikony stavu: plán (štít = hájí oblast, prapor = drží linii, šipka = útočí), boj (karta pulzuje červeně), nedostatek zásob;
+  - klik armádu vybere (Shift přidá), dvojklik na ni zaměří kameru;
+  - zvláštní karty: divize bez armády (výběr) a „+“ (nová armáda z výběru).
+- **Portrét velitele** (`ui/army/Portrait.jsx`): vlastní kreslená silueta. Uniforma má barvu země, rysy (brada, knír, brýle, vlasy) se odvozují z hashe jména a hvězdy podle hodnosti; bez velitele je prázdný rámeček s otazníkem. Žádné fotografie.
+- **Rozkazy armády** (`ArmyOrders`): když vybrané divize patří jediné armádě hráče, nad lištou nebo vedle ní se ukáže řada ikon s nápovědou:
+  - Hájit oblast, Linie fronty;
+  - režim útoku (opatrně / vyváženě / zteče);
+  - zrušit plán;
+  - velitel (otevře správu armád);
+  - schopnosti za velitelskou moc (zkratky) a zůstatek velitelské moci.
+- **Lišta výběru** (`SelectionBar`):
+  - **jedna divize:** značka, název, vlajka a šablona, stav, štítek armády s portrétem; proužky síly a organizace s ikonami; údaje jako ikony s čísly (útok na měkké a tvrdé cíle, obrana, průraz, rychlost, zkušenost jako 5 dílků, zakopání, zásobování) s názvy v nápovědě;
+  - **více divizí:** počty podle druhů, boj, pochod, ústup a zásoby jako ikony a mřížka mini karet divizí s proužky (klik vybere jednu, Shift odebere);
+  - povely jsou jen ikony s nápovědou; rozpuštění se potvrdí druhým klikem.
+- Nové ikony `speed`, `dig`, `pierce`, `hardatk`, `xp`, `merge`.
+- Na nízkých obrazovkách (výška do 820 px) jsou lišty zhuštěné a rozkazy se řadí vedle lišty armád.
+- Panel Armáda (V) zůstává pro jmenování velitelů, přejmenování a přetahování.
+
+Testy: `test/armybar.test.js`; smoke kontroluje karty armád s portrétem (114 kontrol).
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1127,6 +1153,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M99** | **Ofenzivy Rudé armády 1943–1945**: soustředění záloh, stálý druhý sled, střídání armád, Zteče v historických oknech | **hotovo** |
 | **M100** | **Alternativní cesty a modernizace**: 2319 cílů, politické cesty pro všechny země (účinek `gov`), větev modernizace, volba AI bez historie, oprava Normandie | **hotovo** |
 | **M101** | **Odezva hry**: velký pruh (cíl splněn, výzkum, válka), noviny ze světa s ilustracemi, ilustrované události, bliknutí hodnot, přehlednější lišta oken, události po změně vlády | **hotovo** |
+| **M102** | **Armády jako v HOI4**: lišta karet armád s portréty velitelů a proužky, rozkazy ikonami, výběr divizí jako mřížka mini karet, údaje jako ikony s čísly | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
