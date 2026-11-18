@@ -1,4 +1,5 @@
 import { ACE_NAMES } from '../../engine/air/constants.js';
+import { EquipIcon } from '../industry/EquipIcon.jsx';
 import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
@@ -12,7 +13,7 @@ const stateName = (s) => getWorld().states[s].n;
 const COLOR = { sti: '#7fb5c9', bit: '#d6b55c', tac: '#d9533a', str: '#b86dd1', pal: '#5fa38a' };
 
 function Tile({ t, size = 52 }) {
-  return <span className="eq-tile" style={{ '--g': COLOR[t], width: size, height: size }} aria-hidden="true"><b>{PLANES[t].ab}</b></span>;
+  return <span className="eq-tile" style={{ '--g': COLOR[t], width: size, height: size }} aria-hidden="true"><EquipIcon eq={t} size={Math.round(size * 0.8)} color="var(--paper)" /></span>;   // M104
 }
 
 function Wing({ wg, state }) {

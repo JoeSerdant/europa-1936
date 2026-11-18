@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { EquipIcon } from './EquipIcon.jsx';
 import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import {
@@ -43,17 +44,46 @@ const nameOf = (e) => (EQUIP[e] || SHIPS[e] || PLANES[e]).n;
 const abOf = (e) => (EQUIP[e] || SHIPS[e] || PLANES[e]).ab;
 const groupOf = (e) => EQUIP_GROUPS.find((g) => g.items.includes(e)) || EQUIP_GROUPS[0];
 
-/** Dlaždice s zkratkou výzbroje v barvě skupiny. */
+/** Dlaždice výzbroje s kreslenou ikonou v barvě skupiny (M104). */
 function EqTile({ eq, size = 54 }) {
   const g = groupOf(eq);
-  return <span className="eq-tile" style={{ '--g': g.color, width: size, height: size }} aria-hidden="true"><b>{abOf(eq)}</b></span>;
+  return <span className="eq-tile" style={{ '--g': g.color, width: size, height: size }} aria-hidden="true"><EquipIcon eq={eq} size={size - 12} color="var(--paper)" /></span>;
 }
 
-/** Řada čtverečků = továrny na lince (plné = přidělené, prázdné = chybí do stropu). */
-function FacRow({ n }) {
+// M104: továrny se přetahují ze zásobníku volných na linku (a velkým číslem linky zpět do zásobníku)
+let facDrag = null;   // { from: id linky | 0 = zásobník }
+
+/**
+ * Řada továren linky (M104, jako v HOI4): plné čtverce = továrny na lince, prázdné = volné továrny, které lze přidat.
+ * Klik nebo tažení po řadě nastaví počet (náhled během tažení, uloží se po puštění); nejméně 1 – linku ruší koš.
+ */
+function FacSlots({ line, free, naval }) {
+  const max = Math.max(line.fac, Math.min(IND.LINE_MAX_FAC, line.fac + free));
+  const [prev, setPrev] = useState(0);
+  const painting = useRef(false);
+  const commit = () => {
+    if (!painting.current) return;
+    painting.current = false;
+    const n = prev;
+    setPrev(0);
+    if (n && n !== line.fac) setLineFac(line.id, n);
+  };
+  const show = prev || line.fac;
   const cells = [];
-  for (let i = 0; i < Math.min(n, 20); i++) cells.push(<i key={i} />);
-  return <span className="fac-row" aria-hidden="true">{cells}</span>;
+  for (let i = 0; i < max; i++) {
+    const on = i < show, was = i < line.fac;
+    cells.push(
+      <i key={i} className={`${on ? 'on' : ''} ${prev && on !== was ? (on ? 'add' : 'del') : ''}`} role="button" aria-label={`Továren na lince: ${i + 1}`}
+        onPointerDown={(e) => { e.preventDefault(); painting.current = true; setPrev(Math.max(1, i + 1)); }}
+        onPointerEnter={() => { if (painting.current) setPrev(Math.max(1, i + 1)); }} />,
+    );
+  }
+  return (
+    <span className={`fac-slots ${naval ? 'naval' : ''}`} onPointerUp={commit} onPointerLeave={commit}
+      title={`${naval ? 'Loděnice' : 'Vojenské továrny'}: klikněte nebo táhněte po řadě (plné = na lince, prázdné = volné)`}>
+      {cells}
+    </span>
+  );
 }
 
 function LineCard({ line, state, eqs, planes }) {
@@ -61,9 +91,14 @@ function LineCard({ line, state, eqs, planes }) {
   const need = Object.entries(line.need);
   const short = need.filter(([r]) => (state.res[r]?.f ?? 0) < 0.999).map(([r]) => RESOURCES[r].n);
   const stock = state.stock ? (state.stock[line.eq] || 0) : 0;
+  const free = line.naval ? state.dockFree : state.milFree;
+  const [over, setOver] = useState(false);
+  const accepts = () => facDrag && facDrag.from === 0 && free > 0;
   return (
-    <article className={`ind-line prod-line ${warn ? 'lack' : ''}`} aria-label={`Linka ${nameOf(line.eq)}`}>
-      <EqTile eq={line.eq} />
+    <article className={`ind-line prod-line ${warn ? 'lack' : ''} ${over ? 'drop' : ''}`} aria-label={`Linka ${nameOf(line.eq)}`}
+      onDragOver={(e) => { if (accepts()) { e.preventDefault(); setOver(true); } }} onDragLeave={() => setOver(false)}
+      onDrop={(e) => { e.preventDefault(); setOver(false); if (accepts()) setLineFac(line.id, line.fac + 1); facDrag = null; }}>
+      <EqTile eq={line.eq} size={64} />
       <div className="pl-main">
         <select value={line.eq} onChange={(e) => setLineEq(line.id, e.target.value)} aria-label={line.naval ? 'Druh lodi na lince' : 'Druh výzbroje na lince'} title="Změna druhu vynuluje efektivitu">
           {(line.naval ? SHIP_IDS : line.air ? planes : eqs).map((e) => <option key={e} value={e}>{nameOf(e)}</option>)}
@@ -74,10 +109,10 @@ function LineCard({ line, state, eqs, planes }) {
         </div>
       </div>
       <div className="ind-fac pl-fac">
-        <button className="icon-btn sm" onClick={() => setLineFac(line.id, line.fac - 1)} aria-label="Ubrat továrnu" title={line.fac === 1 ? 'Zrušit linku' : 'Ubrat továrnu'}><Icon name={line.fac === 1 ? 'trash' : 'minus'} size={14} /></button>
-        <b title={line.naval ? 'Loděnice na lince' : 'Vojenské továrny na lince'}>{line.fac}</b>
-        <button className="icon-btn sm" disabled={line.fac >= IND.LINE_MAX_FAC || (line.naval ? state.dockFree : state.milFree) < 1} onClick={() => setLineFac(line.id, line.fac + 1)} aria-label="Přidat továrnu nebo loděnici" title="Přidat (zředí efektivitu)"><Icon name="plus" size={14} /></button>
-        <FacRow n={line.fac} />
+        <button className="icon-btn sm" onClick={() => setLineFac(line.id, 0)} aria-label="Zrušit linku" title="Zrušit linku (továrny se uvolní)"><Icon name="trash" size={14} /></button>
+        <b draggable onDragStart={(e) => { facDrag = { from: line.id }; e.dataTransfer.setData('text/plain', 'fac'); e.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { facDrag = null; }}
+          title={`${line.naval ? 'Loděnice' : 'Vojenské továrny'} na lince – přetažením do zásobníku jednu uvolníte`}>{line.fac}</b>
+        <FacSlots line={line} free={free} naval={line.naval} />
       </div>
       <div className="pl-eff" title={`Efektivita roste ke stropu ${pct(state.effCap)}`}>
         <span className="bar prog"><i style={{ width: `${Math.min(100, line.eff * 100).toFixed(1)}%` }} /><u style={{ left: `${Math.min(100, state.effCap * 100)}%` }} /></span>
@@ -93,12 +128,32 @@ function LineCard({ line, state, eqs, planes }) {
   );
 }
 
+/** Zásobník volných továren a loděnic (M104): odsud se táhnou na linky, sem se z linek vracejí. */
+function FacPool({ sum }) {
+  const [over, setOver] = useState(false);
+  const icons = (n, cls) => Array.from({ length: Math.min(n, 30) }, (_, i) => <i key={i} className={cls} />);
+  return (
+    <div className={`fac-pool ${over ? 'drop' : ''}`} aria-label="Volné továrny"
+      onDragOver={(e) => { if (facDrag && facDrag.from) { e.preventDefault(); setOver(true); } }} onDragLeave={() => setOver(false)}
+      onDrop={(e) => { e.preventDefault(); setOver(false); const d = facDrag; facDrag = null; if (d && d.from) { const l = sum.lines.find((x) => x.id === d.from); if (l) setLineFac(l.id, l.fac - 1); } }}>
+      <span className="fp-lbl"><Icon name="industry" size={16} />Volné</span>
+      <span className="fp-drag" draggable={sum.milFree > 0} onDragStart={(e) => { facDrag = { from: 0 }; e.dataTransfer.setData('text/plain', 'fac'); e.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { facDrag = null; }}
+        title={sum.milFree > 0 ? 'Přetáhněte továrnu na linku' : 'Žádná volná vojenská továrna – přetáhněte sem číslo linky, ze které jednu uvolníte'}>
+        {sum.milFree > 0 ? icons(sum.milFree, 'mil') : <em>žádné</em>}
+        <b>{sum.milFree}</b>
+      </span>
+      {sum.dok > 0 && <span className="fp-dock" title="Volné loděnice"><Icon name="navy" size={15} /><b>{sum.dockFree}</b></span>}
+      <span className="fp-sum muted">{sum.mil - sum.milFree} z {sum.mil} továren pracuje</span>
+    </div>
+  );
+}
+
 function NewLinePicker({ sum, eqs, planes }) {
   return (
     <section className="prod-new" aria-label="Nová linka">
       <div className="sec-head"><h3>Nová linka</h3><span className="muted">volné: {sum.milFree} továren{sum.dockFree > 0 ? `, ${sum.dockFree} loděnic` : ''}</span></div>
       {EQUIP_GROUPS.map((g) => {
-        const items = g.items.filter((e) => (g.naval ? true : g.air ? planes.includes(e) : eqs.includes(e)));
+        const items = g.items.filter((e) => (g.naval ? SHIPS[e] : g.air ? planes.includes(e) : eqs.includes(e)));
         if (!items.length) return null;
         const free = g.naval ? sum.dockFree : sum.milFree;
         return (
@@ -108,7 +163,7 @@ function NewLinePicker({ sum, eqs, planes }) {
               {items.map((e) => (
                 <button key={e} className="pn-tile" disabled={free < 1 || sum.lines.length >= IND.LINES_MAX} onClick={() => newLine(e, 1)}
                   title={free < 1 ? (g.naval ? 'Není volná loděnice' : 'Není volná vojenská továrna') : `Založit linku: ${nameOf(e)}`} aria-label={`Nová linka: ${nameOf(e)}`}>
-                  <EqTile eq={e} size={46} /><span>{nameOf(e)}</span>
+                  <EquipIcon eq={e} size={52} color={g.color} /><span>{nameOf(e)}</span>
                 </button>
               ))}
             </div>
@@ -127,7 +182,8 @@ function ProdTab({ state, me, sum }) {
   return (
     <div className="prod-cols">
       <div className="prod-left">
-        <div className="sec-head"><h3>Výrobní linky{sum.lines.length ? ` (${sum.lines.length})` : ''}</h3><span className="muted">{sum.mil - sum.milFree} z {sum.mil} vojenských továren pracuje</span></div>
+        <div className="sec-head"><h3>Výrobní linky{sum.lines.length ? ` (${sum.lines.length})` : ''}</h3></div>
+        <FacPool sum={sum} />
         {!sum.lines.length ? <p className="empty">Žádná výroba. Vyberte vpravo druh výzbroje a založte linku.</p> : sum.lines.map((l) => <LineCard key={l.id} line={l} state={view} eqs={eqs} planes={planes} />)}
         {sum.dockFree > 0 && <p className="muted ind-note">{sum.dockFree} {sum.dockFree === 1 ? 'volná loděnice čeká' : 'volné loděnice čekají'} na lodní linku.</p>}
         {sum.milFree > 0 && <p className="muted ind-note">{sum.milFree} {sum.milFree === 1 ? 'volná továrna čeká' : 'volné továrny čekají'} na přiřazení k lince.</p>}

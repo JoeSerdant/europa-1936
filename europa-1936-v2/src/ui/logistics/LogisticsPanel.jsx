@@ -6,12 +6,13 @@ import { industryOf, fuelOf, EQUIP, EQUIP_IDS, RESOURCES, RES_IDS, SHIPS, SHIP_I
 import { playerIdx } from '../actions.js';
 import { fmtInt, fmtNum } from '../format.js';
 import { EQUIP_GROUPS } from '../../data/industry/groups.js';
+import { EquipIcon } from '../industry/EquipIcon.jsx';
 
 const pct = (v) => `${Math.round(Math.max(0, v) * 100)} %`;
 const groupColor = (e) => (EQUIP_GROUPS.find((g) => g.items.includes(e)) || EQUIP_GROUPS[0]).color;
 
-function Tile({ ab, color }) {
-  return <span className="eq-tile" style={{ '--g': color, width: 38, height: 38 }} aria-hidden="true"><b>{ab}</b></span>;
+function Tile({ eq, color }) {   // M104: kreslená ikona výzbroje
+  return <span className="eq-tile" style={{ '--g': color, width: 38, height: 38 }} aria-hidden="true"><EquipIcon eq={eq} size={30} color="var(--paper)" /></span>;
 }
 
 /** Zásoba paliva (M73): výroba z přebytku ropy, spotřeba motorizovaných divizí, letectva a flotil. */
@@ -73,7 +74,7 @@ export function LogisticsPanel() {
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.e} className={r.lack ? 'bad' : ''}>
-                    <td><Tile ab={r.ab} color={r.color} /></td>
+                    <td><Tile eq={r.e} color={r.color} /></td>
                     <th scope="row">{r.n}</th>
                     <td>{r.lines ? `${r.lines} / ${r.fac}` : '–'}</td>
                     <td>{r.lines ? <span className="bar prog"><i style={{ width: `${Math.min(100, r.eff * 100)}%` }} /></span> : '–'}</td>
