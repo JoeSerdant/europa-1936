@@ -1,7 +1,7 @@
 // Akce rozhraní: přechody mezi obrazovkami, výběr oblasti, mapové režimy a veškeré povely armádě. Jediné místo, které mění zároveň herní stav,
 // stav UI a kameru. Příkazy enginu jsou neutrální (nehlídají, komu jednotka patří) – vlastnictví vůči hráči se kontroluje tady.
 import {
-  createGame, getWorld, provinceOwner, countryName, findPath, geo, ARMY,
+  createGame, getWorld, setPaused, provinceOwner, countryName, findPath, geo, ARMY,
   declareWar, makePeace, orderMove, cancelOrder, disband,
   createArmy, renameArmy, disbandArmy, assignDivisions, createGroup, renameGroup, disbandGroup, assignArmies, assignCommander,
   setPlan, clearPlan, setPlanMode, suggestFront,
@@ -110,6 +110,53 @@ export function closePopup(id) {
   clearTimeout(popupTimers.get(id)); popupTimers.delete(id);
   setUi({ popups: uiStore.getState().popups.filter((p) => p.id !== id) });
 }
+// ---- odezva hry (M101): velký pruh uprostřed a noviny ze světa ----
+export const BANNER_MS = 4600, BANNER_MAX = 3, NEWS_MAX = 3;
+const NEWS_KEY = 'e1936.news';
+let newsOn = true;
+try { newsOn = typeof localStorage === 'undefined' || localStorage.getItem(NEWS_KEY) !== '0'; } catch { newsOn = true; }
+export const newsEnabled = () => newsOn;
+/** Zapne nebo vypne novinové zprávy ze světa (volba se pamatuje). */
+export function setNewsEnabled(v) {
+  newsOn = !!v;
+  try { localStorage.setItem(NEWS_KEY, newsOn ? '1' : '0'); } catch { /* bez úložiště se volba jen neuloží */ }
+  if (!newsOn) { const resume = uiStore.getState().newsResume; setUi({ news: [], newsResume: false }); if (resume && gameStore.getState().paused) gameStore.update(setPaused, false); }
+}
+let bannerSeq = 0, bannerTimer = 0;
+/** Velký pruh uprostřed nahoře (cíl splněn, výzkum, válka…): fronta, každý zůstane `BANNER_MS`. */
+export function pushBanner(card) {
+  const list = [...uiStore.getState().banners, { ...card, id: ++bannerSeq }].slice(-BANNER_MAX);
+  setUi({ banners: list });
+  if (list.length === 1) { play(card.sound || 'notify'); scheduleBanner(); }
+}
+function scheduleBanner() {
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => closeBanner(), BANNER_MS);
+}
+/** Zavře aktuální pruh a ukáže další ve frontě. */
+export function closeBanner() {
+  const rest = uiStore.getState().banners.slice(1);
+  setUi({ banners: rest });
+  if (rest.length) { play(rest[0].sound || 'notify'); scheduleBanner(); } else clearTimeout(bannerTimer);
+}
+/** Novinová zpráva ze světa: hra se pozastaví (jako u událostí) a po zavření poslední zprávy se znovu spustí. */
+export function pushNews(item) {
+  if (!newsOn) return;
+  const ui = uiStore.getState();
+  const list = [...ui.news, item].slice(-NEWS_MAX);
+  const g = gameStore.getState();
+  let resume = ui.newsResume;
+  if (!ui.news.length) { resume = !g.paused; if (!g.paused) gameStore.update(setPaused, true); play('news'); }
+  setUi({ news: list, newsResume: resume });
+}
+/** Zavře nejstarší zprávu; po poslední se čas znovu spustí, pokud běžel. */
+export function closeNews() {
+  const ui = uiStore.getState();
+  const rest = ui.news.slice(1);
+  setUi({ news: rest, newsResume: rest.length ? ui.newsResume : false });
+  if (!rest.length && ui.newsResume && gameStore.getState().paused) gameStore.update(setPaused, false);
+}
+
 let toastSeq = 0, toastTimer = 0;
 /** Krátké oznámení dole uprostřed (zmizí samo). */
 export function toast(text) {

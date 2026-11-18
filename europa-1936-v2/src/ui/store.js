@@ -41,6 +41,9 @@ export const uiStore = createStore({
   edgeScroll: edgeScrollOn(), // posun mapy okrajem obrazovky (M59)
   battle: 0,               // otevřené okno bitvy (id bitvy, 0 = zavřené; M61)
   popups: [],              // vyskakovací karty oznámení (M58): { id, kind, icon, tone, title, text, lines, sticky }
+  banners: [],             // velké pruhy uprostřed (M101): { id, kind, icon, tone, title, text, chips }
+  news: [],                // novinové zprávy ze světa (M101): { id, kind, art, paper, headline, sub, body, date }
+  newsResume: false,       // čas běžel, když se otevřely noviny – po zavření poslední se znovu spustí
 });
 
 const same = Object.is;

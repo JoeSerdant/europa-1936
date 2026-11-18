@@ -1,0 +1,85 @@
+/* Odezva hry (M101): velký pruh, noviny, ilustrace událostí, bliknutí hodnot, lišta oken a upozornění. Vlastní vzhled, bez převzatých obrázků. */
+
+/* ---- řádek lišty oken a upozornění ---- */
+.menurow { position: absolute; left: 0; top: var(--top-h); z-index: 15; display: flex; align-items: flex-start; gap: 8px; pointer-events: none; }
+.menurow > * { pointer-events: auto; }
+.menurow .menubar { position: static; }
+.menurow .alerts { position: static; }
+.mb-sep { width: 1px; margin: 6px 5px 4px; background: linear-gradient(180deg, transparent, var(--rule-hi), transparent); }
+.menubar button[data-tip]:hover::after {
+  content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); z-index: 30; padding: 5px 9px; white-space: nowrap;
+  font: 600 13px/1.2 var(--display); letter-spacing: 0.02em; color: var(--paper); background: var(--ink-1); box-shadow: inset 0 0 0 1px var(--brass-lo), 0 6px 18px rgba(0, 0, 0, 0.5); pointer-events: none;
+}
+.mb-dot { position: absolute; right: 5px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--brass-hi); box-shadow: 0 0 0 0 rgba(240, 217, 142, 0.7); animation: mb-pulse 1.6s ease-out infinite; }
+.menubar button.wait { color: var(--brass-hi); }
+@keyframes mb-pulse { 0% { box-shadow: 0 0 0 0 rgba(240, 217, 142, 0.7); } 80%, 100% { box-shadow: 0 0 0 9px rgba(240, 217, 142, 0); } }
+.alert.warn { animation: alert-glow 2.2s ease-in-out infinite; }
+@keyframes alert-glow { 0%, 100% { box-shadow: inset 0 0 0 1px transparent; } 50% { box-shadow: inset 0 0 0 1px var(--brass), 0 0 12px rgba(214, 181, 92, 0.45); } }
+
+/* ---- horní lišta: změna hodnoty ---- */
+.stat { position: relative; }
+.stat.up b { animation: stat-up 1.2s ease-out; }
+.stat.down b { animation: stat-down 1.2s ease-out; }
+@keyframes stat-up { 0% { color: #c6f0a8; text-shadow: 0 0 10px rgba(134, 184, 109, 0.9); transform: scale(1.18); } 100% { color: var(--text); text-shadow: none; transform: none; } }
+@keyframes stat-down { 0% { color: #ffb4a3; text-shadow: 0 0 10px rgba(217, 83, 58, 0.9); transform: scale(1.18); } 100% { color: var(--text); text-shadow: none; transform: none; } }
+.stat-fly { position: absolute; left: 26px; top: 40px; font: 700 14px/1 var(--display); font-style: normal; white-space: nowrap; pointer-events: none; animation: stat-fly 1.7s ease-out forwards; z-index: 20; }
+.stat-fly.up { color: #b9e89a; text-shadow: 0 1px 2px #000; }
+.stat-fly.down { color: #ff9c86; text-shadow: 0 1px 2px #000; }
+@keyframes stat-fly { 0% { opacity: 0; transform: translateY(-4px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(26px); } }
+
+/* ---- velký pruh uprostřed ---- */
+.banner-wrap { position: absolute; left: 0; right: 0; top: 118px; z-index: 14; display: flex; justify-content: center; pointer-events: none; }
+.banner {
+  position: relative; overflow: hidden; pointer-events: auto; cursor: pointer; display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 16px; align-items: center;
+  min-width: 460px; max-width: 640px; padding: 16px 30px 16px 18px;
+  background: linear-gradient(90deg, rgba(10, 16, 22, 0) 0, rgba(14, 22, 30, 0.97) 9%, rgba(18, 28, 38, 0.97) 50%, rgba(14, 22, 30, 0.97) 91%, rgba(10, 16, 22, 0) 100%);
+  border-top: 2px solid var(--brass); border-bottom: 2px solid var(--brass);
+  animation: banner-in 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.banner.bad { border-color: var(--red); }
+.banner.good .banner-ic { color: #fbe8a6; }
+.banner-ic { position: relative; display: grid; place-items: center; width: 76px; height: 76px; color: var(--brass-hi); background: radial-gradient(circle, rgba(214, 181, 92, 0.25), rgba(214, 181, 92, 0) 70%); animation: banner-ic 0.9s ease-out both 0.1s; }
+.banner.bad .banner-ic { color: #ff9c86; background: radial-gradient(circle, rgba(217, 83, 58, 0.3), rgba(217, 83, 58, 0) 70%); }
+.banner-body h3 { margin: 0; font: 600 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.22em; color: var(--brass); }
+.banner.bad .banner-body h3 { color: #ff9c86; }
+.banner-body p { margin: 3px 0 6px; font: 700 26px/1.1 var(--display); color: var(--paper); text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
+.banner-body ul { display: flex; flex-wrap: wrap; gap: 5px 8px; margin: 0; padding: 0; list-style: none; }
+.banner-body li { padding: 2px 8px; font-size: 13px; color: var(--brass-hi); background: rgba(214, 181, 92, 0.1); box-shadow: inset 0 0 0 1px rgba(214, 181, 92, 0.35); animation: chip-in 0.4s ease-out both; }
+.banner-shine { position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; background: linear-gradient(100deg, transparent, rgba(255, 240, 200, 0.16), transparent); animation: banner-shine 1.4s ease-out 0.35s both; pointer-events: none; }
+.banner-rays { position: absolute; left: 56px; top: 50%; width: 240px; height: 240px; margin: -120px 0 0 -120px; background: repeating-conic-gradient(rgba(214, 181, 92, 0.07) 0 8deg, transparent 8deg 22deg); border-radius: 50%; animation: banner-rays 6s linear infinite; pointer-events: none; }
+.banner.bad .banner-rays { background: repeating-conic-gradient(rgba(217, 83, 58, 0.08) 0 8deg, transparent 8deg 22deg); }
+@keyframes banner-in { 0% { opacity: 0; transform: translateY(-30px) scaleX(0.6); } 100% { opacity: 1; transform: none; } }
+@keyframes banner-ic { 0% { transform: scale(0.2) rotate(-25deg); opacity: 0; } 60% { transform: scale(1.25); opacity: 1; } 100% { transform: none; } }
+@keyframes banner-shine { 0% { left: -40%; } 100% { left: 120%; } }
+@keyframes banner-rays { to { transform: rotate(360deg); } }
+@keyframes chip-in { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: none; } }
+
+/* ---- noviny ze světa ---- */
+.news-scrim { z-index: 40; }
+.news-paper {
+  width: 640px; max-width: calc(100vw - 48px); max-height: calc(100vh - 80px); overflow: auto; padding: 18px 26px 18px; color: #2a2118;
+  background: radial-gradient(ellipse at 30% 20%, #f3ead2, #e3d6b2 70%, #cdbd92); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), inset 0 0 60px rgba(120, 90, 40, 0.35);
+  transform-origin: 50% 40%; animation: news-in 0.7s cubic-bezier(0.2, 1.1, 0.35, 1) both;
+}
+.news-mast { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 10px; padding-bottom: 6px; border-bottom: 3px double #2a2118; font: 500 12px/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.08em; }
+.news-mast span:last-child { text-align: right; }
+.news-mast b { font: 700 30px/1 Georgia, 'Times New Roman', serif; letter-spacing: 0.02em; text-transform: none; }
+.news-head { margin: 12px 0 10px; font: 800 30px/1.08 Georgia, 'Times New Roman', serif; color: #1b140d; text-align: center; }
+.news-art { display: block; width: 100%; height: 200px; filter: sepia(0.35) contrast(1.05); box-shadow: 0 0 0 1px #2a2118; }
+.news-sub { margin: 10px 0 4px; font: italic 600 17px/1.3 Georgia, serif; text-align: center; }
+.news-body { margin: 6px 0 0; font: 15px/1.45 Georgia, serif; column-count: 2; column-gap: 22px; column-rule: 1px solid rgba(42, 33, 24, 0.35); text-align: justify; }
+.news-paper footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(42, 33, 24, 0.5); }
+.news-off { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #5a4a35; cursor: pointer; }
+@keyframes news-in { 0% { opacity: 0; transform: rotate(-14deg) scale(0.3); } 70% { opacity: 1; transform: rotate(2deg) scale(1.03); } 100% { transform: none; } }
+
+/* ---- události s ilustrací ---- */
+.event-dialog { animation: ev-in 0.4s ease-out both; }
+.event-dialog h2 { font-size: 24px; letter-spacing: 0.01em; }
+.ev-art { display: block; width: 100%; height: 170px; margin: 2px 0 10px; box-shadow: 0 0 0 1px var(--brass-lo), 0 6px 18px rgba(0, 0, 0, 0.45); }
+.ev-opt { transition: transform 0.12s ease, background 0.12s ease; }
+.ev-opt:hover { transform: translateX(4px); }
+@keyframes ev-in { 0% { opacity: 0; transform: translateY(18px) scale(0.97); } 100% { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .banner, .banner-ic, .banner-shine, .banner-rays, .banner-body li, .news-paper, .event-dialog, .stat-fly, .stat.up b, .stat.down b, .mb-dot, .alert.warn { animation: none !important; }
+}

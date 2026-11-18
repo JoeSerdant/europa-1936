@@ -130,7 +130,8 @@ try {
   // ------------------------------------------------------------------------------------------------ armáda (M18)
   const E = (fn, arg) => page.evaluate(fn, arg);
   // události hráče (M22) pozastaví hru a blokují klávesy: po každém skoku v čase je vyřídíme první volbou
-  const clearEvents = async () => { for (let i = 0; i < 6 && (await page.locator('.event-dialog').count()); i++) { await page.locator('.event-dialog .ev-opt').first().click(); await page.waitForTimeout(150); } };
+  const clearNews = async () => { for (let i = 0; i < 8 && (await page.locator('.news-paper').count()); i++) { await page.locator('.news-paper footer .btn').click(); await page.waitForTimeout(120); } };   // M101
+  const clearEvents = async () => { await clearNews(); for (let i = 0; i < 6 && (await page.locator('.event-dialog').count()); i++) { await page.locator('.event-dialog .ev-opt').first().click(); await page.waitForTimeout(150); } await clearNews(); };
   const ui = () => E(() => { const u = window.__e1936.uiStore.getState(); return { panel: u.panel, selDivs: u.selDivs, planEdit: !!u.planEdit, designer: !!u.designer, armyFocus: u.armyFocus, selected: u.selected, fleetSel: u.fleetSel }; });
   /** Souřadnice stránky bodu uvnitř provincie `p` nejblíž těžišti, ověřeno přes pick a mimo žetony (ty by klik zachytily). */
   const provinceXY = (p) => E((p) => {
@@ -238,7 +239,12 @@ try {
   await page.waitForTimeout(300);
   const wars = await E(() => window.__e1936.gameStore.getState().mil.wars.length);
   check('vyhlášení války z karty oblasti po ospravedlnění (zapojí se bloky)', wars >= 1, `${wars} válek`);
+  // M101: válka hráče ohlásí velký pruh a noviny (hra stojí, dokud je hráč nezavře)
+  await page.waitForTimeout(300);
+  check('válka: velký pruh a noviny ze světa s ilustrací', (await page.locator('.banner').count()) === 1 && (await page.locator('.news-paper .scene').count()) === 1);
   await shot('war');
+  await clearNews();
+  check('noviny se zavřou', (await page.locator('.news-paper').count()) === 0);
 
   // plán fronty: Linie fronty → Použít aktuální frontu → Potvrdit
   await page.keyboard.press('v');

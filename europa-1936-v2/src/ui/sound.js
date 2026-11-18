@@ -38,6 +38,13 @@ export const SFX = {
   notify: () => { tone(740, 0.1, 'sine', 0.035); tone(988, 0.16, 'sine', 0.03, 0.09); },
   alert: () => { tone(392, 0.14, 'triangle', 0.05); tone(392, 0.14, 'triangle', 0.05, 0.18); tone(523, 0.3, 'triangle', 0.05, 0.36); },
   war: () => { tone(90, 0.5, 'sawtooth', 0.06, 0, -40); tone(70, 0.6, 'square', 0.04, 0.15, -30); },
+  // M101: odezva hry
+  fanfare: () => { tone(392, 0.12, 'triangle', 0.05); tone(523, 0.12, 'triangle', 0.05, 0.11); tone(659, 0.12, 'triangle', 0.05, 0.22); tone(784, 0.42, 'triangle', 0.055, 0.33); tone(392, 0.5, 'sine', 0.03, 0.33); },
+  chime: () => { tone(880, 0.25, 'sine', 0.035); tone(1320, 0.35, 'sine', 0.025, 0.08); tone(1760, 0.4, 'sine', 0.015, 0.16); },
+  drum: () => { tone(70, 0.35, 'sine', 0.09, 0, -30); tone(70, 0.35, 'sine', 0.09, 0.22, -30); tone(110, 0.6, 'sawtooth', 0.03, 0.44, -50); },
+  news: () => { for (let i = 0; i < 7; i++) tone(1800 + (i % 3) * 140, 0.025, 'square', 0.012, i * 0.06); tone(1567, 0.5, 'sine', 0.03, 0.5); },
+  event: () => { tone(196, 0.5, 'triangle', 0.04); tone(247, 0.5, 'triangle', 0.035, 0.12); tone(294, 0.7, 'triangle', 0.03, 0.24); },
+  tick: () => tone(1200, 0.03, 'sine', 0.012),
   end: () => { tone(330, 0.3, 'triangle', 0.05); tone(262, 0.3, 'triangle', 0.05, 0.28); tone(196, 0.6, 'triangle', 0.05, 0.56); },
 };
 

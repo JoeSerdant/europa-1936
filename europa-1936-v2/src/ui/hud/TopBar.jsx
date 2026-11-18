@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { gameStore, useGame } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
@@ -35,11 +35,30 @@ function Clock() {
 
 const getWorldIdx = (s) => getWorld().ownerIdx[s.player];
 
-function Stat({ icon, label, value, opt = false, hint = '' }) {
+/** M101: změna číselné hodnoty – krátké bliknutí a vyletující rozdíl (jen když je změna aspoň `min`). */
+function useDelta(num, min) {
+  const prev = useRef(num), seq = useRef(0);
+  const [fx, setFx] = useState(null);
+  useEffect(() => {
+    const p = prev.current;
+    prev.current = num;
+    if (num == null || p == null || Math.abs(num - p) < min) return undefined;
+    const k = ++seq.current;
+    setFx({ k, d: num - p });
+    const t = setTimeout(() => setFx((f) => (f && f.k === k ? null : f)), 1700);
+    return () => clearTimeout(t);
+  }, [num, min]);
+  return fx;
+}
+
+function Stat({ icon, label, value, opt = false, hint = '', num = null, min = 1, unit = '' }) {
+  const fx = useDelta(num, min);
+  const sign = fx ? (fx.d > 0 ? 'up' : 'down') : '';
   return (
-    <div className={`stat ${opt === 'wide' ? 'opt wide' : opt ? 'opt' : ''}`} title={hint || label}>
+    <div className={`stat ${opt === 'wide' ? 'opt wide' : opt ? 'opt' : ''} ${sign}`} title={hint || label}>
       <Icon name={icon} size={18} />
-      <span><i>{label}</i><b>{value}</b></span>
+      <span><i>{label}</i><b key={fx ? fx.k : 0}>{value}</b></span>
+      {fx && <em key={fx.k} className={`stat-fly ${sign}`}>{fx.d > 0 ? '+' : '−'}{fmtInt(Math.abs(fx.d))}{unit}</em>}
     </div>
   );
 }
@@ -63,6 +82,7 @@ export function TopBar() {
     const x = industryOf(s, s.player);
     return `${x.civ} / ${x.mil} / ${x.dok}`;
   }, [tag, owner, ind, ctrl]);
+  const facN = fac ? fac.split(' / ').reduce((a, x) => a + Number(x), 0) : null;
   const convoys = useGame((s) => (s.player ? transportsOf(s, getWorldIdx(s)).free : 0));
   const xp = useGame((s) => { const e = s.player ? s.doc.own[getWorld().ownerIdx[s.player]] : null; return e ? `${Math.floor(e.xp.land)} / ${Math.floor(e.xp.air)} / ${Math.floor(e.xp.sea)}` : ''; });
   const fuel = useGame((s) => { if (!s.player) return ''; const f = fuelOf(s, getWorldIdx(s)); return `${Math.floor(f.stock)}|${f.gain.toFixed(1)}|${f.use.toFixed(1)}|${f.low ? 1 : 0}`; });
@@ -83,18 +103,18 @@ export function TopBar() {
           <div className="stats">
             <Stat icon="population" label="Obyvatelé" value={fmtPop(stats.pop)} opt="wide" />
             <Stat icon="provinces" label="Provincie" value={fmtInt(stats.provinces)} opt="wide" />
-            <Stat icon="victory" label="Vítězné body" value={fmtInt(stats.vp)} />
-            <Stat icon="army" label="Divize" value={fmtInt(divisions)} />
+            <Stat icon="victory" label="Vítězné body" value={fmtInt(stats.vp)} num={stats.vp} />
+            <Stat icon="army" label="Divize" value={fmtInt(divisions)} num={divisions} />
             <Stat icon="recruit" label="Lidská síla" value={fmtPop(manpower / 1000)} />
-            <Stat icon="shield" label="Stabilita" value={`${stab} %`} opt />
-            <Stat icon="swords" label="Podpora války" value={`${ws} %`} opt />
-            <Stat icon="general" label="Politická moc" value={fmtInt(pp)} />
+            <Stat icon="shield" label="Stabilita" value={`${stab} %`} num={stab} min={3} unit=" %" opt />
+            <Stat icon="swords" label="Podpora války" value={`${ws} %`} num={ws} min={3} unit=" %" opt />
+            <Stat icon="general" label="Politická moc" value={fmtInt(pp)} num={pp} min={10} />
             <Stat icon="army" label="Velitelská moc" value={fmtInt(cp)} opt />
-            <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} opt />
+            <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} num={facN} opt />
             <Stat icon="general" label="Zkušenosti: armáda / letectvo / námořnictvo" value={xp} opt="wide" />
             <Stat icon="navy" label="Volné transporty" value={fmtInt(convoys)} opt />
             {fuel && <Stat icon="supply" label="Palivo" hint={`Palivo: zásoba ${fuelStock}, výroba ${fuelGain} a spotřeba ${fuelUse} za den${fuelLow === '1' ? ' (nedostatek)' : ''}`} value={fuelStock} opt />}
-            <Stat icon="regions" label="Napětí ve světě" value={`${tension} %`} opt />
+            <Stat icon="regions" label="Napětí ve světě" value={`${tension} %`} num={tension} min={3} unit=" %" opt />
           </div>
         )}
         <button className="icon-btn" onClick={openOverview} aria-label="Přehled zemí" title="Přehled zemí (O)"><Icon name="population" /></button>

@@ -2,6 +2,8 @@
 //  cond  tags, from/until (den hry), flag, noFlag, focus, war, stabBelow/Above, wsBelow/Above, law { obor: id }   mtth  střední doba do spuštění (dny)   cool  odstup opakování (dny), jinak jednorázová
 //  opts  [{ n, fx, ai }]  ai = váha volby pro země bez hráče
 import { HIST_EVENTS } from './events_hist.js';
+import { FOCUS_TREES } from './focuses.js';
+import { IDEOLOGIES } from '../countries.js';
 const E = (id, n, text, cond, opts, extra = {}) => ({ id, n, text, cond, opts, mtth: 1, cool: 0, ...extra });
 const stab = (v) => ({ t: 'stab', v });
 const ws = (v) => ({ t: 'ws', v });
@@ -76,5 +78,24 @@ const BASE_EVENTS = [
     { n: 'Odmítnout.', fx: [pp(30), { t: 'flag', id: 'pol_reform' }], ai: 1 },
   ], { mtth: 30 }),
 ];
-export const EVENTS = [...BASE_EVENTS, ...HIST_EVENTS];
+// M101: po změně vlády alternativní cestou (cíl s účinkem `gov`) přijde událost „Nová vláda“ – jak upevnit moc
+const ALT_TEXT = {
+  democracy: 'Parlament se sešel poprvé po letech. Noví ministři slibují svobodné volby, ale úředníci starého režimu zůstávají na svých místech.',
+  communism: 'Rudé prapory vlají nad ministerstvy. Rady dělníků čekají na první dekrety a staré elity se chystají k odchodu.',
+  fascism: 'Uniformované oddíly pochodují hlavním městem. Nová vláda žádá poslušnost a slibuje velikost národa.',
+  neutrality: 'Generálové a úředníci převzali správu země dekrety. Ulice jsou klidné, ale nikdo neví, jak dlouho.',
+};
+const ALT_EVENTS = [];
+for (const tag in FOCUS_TREES) for (const f of FOCUS_TREES[tag]) {
+  const g = f.fx.find((e) => e.t === 'gov');
+  if (!g || ALT_EVENTS.some((e) => e.id === `alt_${f.id}`)) continue;
+  const ideo = IDEOLOGIES[g.i]?.name || g.i;
+  ALT_EVENTS.push(E(`alt_${f.id}`, `Nová vláda: ${ideo}`, ALT_TEXT[g.i] || ALT_TEXT.neutrality, { ...(tag !== 'DEFAULT' ? { tags: [tag] } : {}), focus: f.id }, [
+    { n: 'Upevnit moc pevnou rukou.', fx: [stab(0.06), pp(-40)], ai: 2 },
+    { n: 'Čistky ve státní správě.', fx: [pp(60), stab(-0.04), { t: 'party', i: g.i, v: 6 }], ai: 1 },
+    { n: 'Nabídnout opozici usmíření.', fx: [stab(0.03), ws(-0.03), { t: 'party', i: g.i, v: -4 }], ai: 0 },
+  ], { art: 'crowd' }));
+}
+
+export const EVENTS = [...BASE_EVENTS, ...HIST_EVENTS, ...ALT_EVENTS];
 export const EVENT_BY_ID = Object.fromEntries(EVENTS.map((e) => [e.id, e]));
