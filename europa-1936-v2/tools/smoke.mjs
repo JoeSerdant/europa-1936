@@ -186,7 +186,9 @@ try {
   await page.mouse.click(own1.x, own1.y);
   await page.waitForSelector('.selbar', { timeout: 3000 });
   const st1 = await ui();
-  check('klik na vlastní žeton vybere divize a ukáže dolní lištu', st1.selDivs.length > 0 && (await page.locator('.selbar').innerText()).includes('Organizace'), `${st1.selDivs.length} divizí`);
+  check('klik na vlastní žeton vybere divize a ukáže dolní lištu', st1.selDivs.length > 0 && (await page.locator('.selbar .sel-meters .bar').count()) === 2, `${st1.selDivs.length} divizí`);
+  // M102: lišta armád dole – karty s portrétem, proužky a rozkazy vybrané armády jen ikonami
+  check('lišta armád ukazuje karty armád s portrétem a proužky', (await page.locator('.armybar .acard .portrait').count()) >= 1 && (await page.locator('.armybar .acard .bar').count()) >= 2);
   await shot('selected');
 
   // pravé tlačítko: pochod do sousední vlastní provincie
