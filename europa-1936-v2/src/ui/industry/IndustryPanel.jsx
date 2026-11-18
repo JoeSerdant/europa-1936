@@ -36,85 +36,7 @@ function Header({ sum }) {
   );
 }
 
-// ------------------------------------------------------------------ stavby
-function StatesList({ state, states, sel, setPick }) {
-  return (
-    <div className="st-list" role="listbox" aria-label="Státy">
-      <div className="st-row st-head"><span>Stát</span><span title="Obsazené sloty / všechny sloty">Sloty</span><span title="Civilní továrny">Civ.</span><span title="Vojenské továrny">Voj.</span><span title="Loděnice">Děl.</span><span title="Infrastruktura">Inf.</span></div>
-      {states.map((s) => {
-        const i = stateIndustry(state, s);
-        return (
-          <button key={s} role="option" aria-selected={s === sel} className={`st-row ${s === sel ? 'on' : ''} ${i.used >= i.slots ? 'full' : ''}`} onClick={() => setPick(s)}>
-            <span className="nm">{stateName(s)}</span>
-            <span className="sl"><span className="bar prog"><i style={{ width: `${i.slots ? Math.min(100, (i.used / i.slots) * 100) : 0}%` }} /></span>{i.used}/{i.slots}</span>
-            <span>{i.civ}</span><span>{i.mil}</span><span>{i.port ? i.dok : '–'}</span><span>+{i.inf}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function NewBuild({ state, sel, info }) {
-  if (!sel) return null;
-  return (
-    <section className="ind-new" aria-label="Nová stavba">
-      <div className="sec-head"><h3>{stateName(sel)}</h3><span className="muted">{info.cat.n}</span></div>
-      <p className="muted">Sloty {info.used}/{info.slots} · továrny {info.civ} civ. + {info.mil} vojen. · infrastruktura +{info.inf}</p>
-      <div className="ind-btns bld-btns">
-        {BUILDING_IDS.filter((k) => !BUILDINGS[k].province && (k !== 'dok' || info.port)).map((k) => (
-          <button key={k} className="sbtn bld" onClick={() => buildIn(sel, k)} title={`${BUILDINGS[k].info} Cena ${BUILDINGS[k].cost} bodů, nejdřív za ${BUILDINGS[k].days} dní.`}>
-            <Icon name="plus" size={14} />{BUILDINGS[k].n}<small>{BUILDINGS[k].cost} b.</small>
-          </button>
-        ))}
-        <button className="sbtn" onClick={() => selectLabel(getWorld().states[sel].cap, true)} title="Ukázat stát na mapě"><Icon name="target" size={14} />Ukázat</button>
-      </div>
-    </section>
-  );
-}
-
-function BuildTab({ state, me, sum }) {
-  const list = sum.build;
-  const [pick, setPick] = useState(0);
-  const states = useMemo(() => {
-    const w = getWorld(), out = [];
-    for (let s = 1; s < w.states.length; s++) if (state.stateOwner[s] === me && state.ctrl[w.states[s].cap] === me) out.push(s);
-    return out;
-  }, [state.stateOwner, state.ctrl, me]);
-  const sel = states.includes(pick) ? pick : (states.find((s) => slotsUsed(state.ind, s) < slotsOf(state.ind, s)) || states[0] || 0);
-  const info = sel ? stateIndustry(state, sel) : null;
-  return (
-    <div className="prod-cols">
-      <div className="prod-left">
-        <div className="sec-head"><h3>Státy ({states.length})</h3><span className="muted">klikněte na stát a zadejte stavbu</span></div>
-        <StatesList state={state} states={states} sel={sel} setPick={setPick} />
-      </div>
-      <aside className="prod-right">
-        <NewBuild state={state} sel={sel} info={info} />
-        <div className="sec-head"><h3>Fronta staveb{list.length ? ` (${list.length})` : ''}</h3><span className="muted">{fmtNum(sum.points, 0)} bodů za den</span></div>
-        {!list.length ? <p className="empty">Nic se nestaví. Vyberte stát vlevo a zadejte stavbu.</p> : (
-          <ul className="queue ind-queue">
-            {list.map((b, i) => {
-              const B = BUILDINGS[b.k];
-              const eta = projectEta(state, me, b.id);
-              return (
-                <li key={b.id}>
-                  <div className="q-top">
-                    <b>{B.n}</b>
-                    <span className="muted">{stateName(b.s)} · {eta < 0 ? 'bez bodů' : `za ${fmtDays(eta)}`}</span>
-                    <button className="icon-btn sm" disabled={i === 0} onClick={() => moveProject(b.id, -Infinity)} aria-label="Na začátek fronty" title="Na začátek fronty"><Icon name="back" size={14} className="rot90" /></button>
-                    <button className="icon-btn sm" onClick={() => cancelProject(b.id)} aria-label={`Zrušit stavbu ${B.n} ve státě ${stateName(b.s)}`} title="Zrušit (body se nevracejí)"><Icon name="close" size={14} /></button>
-                  </div>
-                  <span className="bar prog"><i style={{ width: `${((b.prog / B.cost) * 100).toFixed(1)}%` }} /></span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </aside>
-    </div>
-  );
-}
+// Stavby jsou od M103 úzký panel vlevo nad mapou (`BuildPanel.jsx`).
 
 // ------------------------------------------------------------------ výroba
 const nameOf = (e) => (EQUIP[e] || SHIPS[e] || PLANES[e]).n;
@@ -327,7 +249,7 @@ export function IndustryPanel() {
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít okno" title="Zavřít (Esc)"><Icon name="close" size={20} /></button>
       </header>
       <div className="prod-body">
-        {tab === 'prod' ? <ProdTab state={state} me={me} sum={sum} /> : tab === 'trade' ? <TradeTab state={state} me={me} sum={sum} /> : <BuildTab state={state} me={me} sum={sum} />}
+        {tab === 'prod' ? <ProdTab state={state} me={me} sum={sum} /> : tab === 'trade' ? <TradeTab state={state} me={me} sum={sum} /> : null}
       </div>
     </div>
   );

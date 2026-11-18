@@ -13,7 +13,7 @@ import {
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   orderDrop, dropBlock, AIR, dropNuke, nukeBlock, confClaim, confClaimsDone,
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf,
-  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, setDesign, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS,
+  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, setDesign, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS, buildRoom, fortRoom,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { achievedNow, ACH_BY_ID } from './achievements/list.js';
@@ -387,6 +387,7 @@ export function routePreview(to) {
 export function mapClick(l, { shift = false } = {}) {
   const u = uiStore.getState();
   if (u.planEdit) { planPaint(l, { shift }); return; }
+  if (u.buildKind) { buildAt(l, { shift }); return; }   // M103: stavění klikáním na mapu
   if (!shift && u.selDivs.length) clearSelection();
   selectLabel(l);
 }
@@ -666,6 +667,32 @@ export function buildIn(stateId, kind) {
   if (!run(build, stateId, kind)) { toast('Stavbu se nepodařilo zadat (fronta je plná).'); return false; }
   toast(`${BUILDINGS[kind].n}: stavba zadána.`);
   return true;
+}
+
+// ---- M103: stavění jako v HOI4 – nejdřív budova, pak klik na stát (pevnost na provincii) ----
+/** Zvolí budovu ke stavění klikáním na mapu (null = konec); mapa přejde do režimu „Stavby“ a po skončení se vrátí předchozí režim. */
+export function pickBuild(kind) {
+  const u = uiStore.getState();
+  if (!kind) { if (u.buildKind) setUi({ buildKind: null, mode: u.buildPrev || 'political', buildPrev: '' }); return; }
+  if (!BUILDINGS[kind]) return;
+  setUi({ buildKind: kind, mode: `build:${kind}`, buildPrev: u.buildKind ? u.buildPrev : u.mode });
+}
+/** Klik na mapu při zvolené budově: jedna stavba (Shift = zaplnit všechna volná místa státu / úrovně pevnosti). */
+export function buildAt(l, { shift = false } = {}) {
+  const u = uiStore.getState(), s = gameStore.getState(), me = playerIdx(s), w = getWorld(), kind = u.buildKind;
+  if (!me || !kind || !w.isLand(l)) return 0;
+  const fort = BUILDINGS[kind].province;
+  const room = fort ? fortRoom(s, l, me) : buildRoom(s, w.provState[l], kind, me);
+  if (!room.n) { toast(room.why); play('error'); return 0; }
+  let n = 0;
+  const want = shift ? room.n : 1;
+  for (let i = 0; i < want; i++) {
+    const ok = fort ? run(buildFort, l) : run(build, w.provState[l], kind);
+    if (!ok) break;
+    n++;
+  }
+  if (n) { play('click'); toast(`${BUILDINGS[kind].n}${n > 1 ? ` ×${n}` : ''}: ${fort ? w.provName(l) : w.states[w.provState[l]].n}`); }
+  return n;
 }
 
 const ownProject = (s, id) => { const b = s.ind.build.find((x) => x.id === id); return !!b && b.o === playerIdx(s); };

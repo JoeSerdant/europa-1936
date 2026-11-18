@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld, confFor } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, pushPopup, pushBanner, pushNews, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, pushPopup, pushBanner, pushNews, pickBuild, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { writeSave } from './saves.js';
@@ -109,6 +109,7 @@ export function useHotkeys() {
           if (ui.menuOpen) setMenuOpen(false);
           else if (ui.designer) closeDesigner();
           else if (ui.planEdit) cancelPlanEdit();
+          else if (ui.buildKind) pickBuild(null);   // M103: konec stavění klikáním
           else if (ui.selDivs.length) clearSelection();
           else if (ui.fleetSel) selectFleet(0);
           else if (ui.selected || ui.panel) closeSide();
