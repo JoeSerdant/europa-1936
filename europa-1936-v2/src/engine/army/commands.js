@@ -230,7 +230,7 @@ export function orderMove(state, divIds, prov, append = false) {
     if (!seg) continue;
     const path = queued ? d.path.concat(seg) : seg;
     if (!divs) divs = mil.divs.slice();
-    divs[id] = { ...d, path, prog: queued || d.path[0] === path[0] ? d.prog : 0 };
+    divs[id] = { ...d, path, prog: queued || d.path[0] === path[0] ? d.prog : 0, mo: prov };   // F3: `mo` = cíl přímého rozkazu – plán armády ho nechá doběhnout
   }
   return divs ? { ...state, mil: { ...mil, divs } } : state;
 }
@@ -408,6 +408,22 @@ export function setPlan(state, armyId, plan) {
   armies[armyId] = { ...a, plan: p };
   const s = { ...state, mil: bump(mil, { armies }) };
   return withCtx(s, (ctx) => planNow(ctx, armyId));
+}
+
+/**
+ * F3: armády přejdou do ručního velení (`man: 1`): automatický plán (`auto`, pomoc nováčkovi) se zruší a automatická obrana je už nepřebírá.
+ * Vlastní plán armády zůstává. Rozhraní volá po přímém rozkazu divizím a po zrušení plánu hráčem.
+ */
+export function takeCommand(state, armyIds) {
+  const mil = state.mil;
+  let armies = null;
+  for (const id of uniq(armyIds)) {
+    const a = armyOf(mil, id);
+    if (!a || (a.man && !(a.plan && a.plan.auto))) continue;
+    if (!armies) armies = mil.armies.slice();
+    armies[id] = { ...a, man: 1, plan: a.plan && a.plan.auto ? null : a.plan };
+  }
+  return armies ? { ...state, mil: bump(mil, { armies }) } : state;
 }
 
 /** Zruší plán (divize zůstanou, kde jsou). */

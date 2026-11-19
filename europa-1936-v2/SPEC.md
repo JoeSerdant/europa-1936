@@ -1043,6 +1043,24 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   a posuvník „Hlasitost efektů“ 0–100 % (`setVolume` / `soundVolume` v `ui/sound.js`, `localStorage` `e1936.volume`; 80 % = původní hlasitost;
   hra nemá hudbu, jen syntetizované efekty). Panel Politika u kraje je širší (`min(700px, 52vw)`) s hlavičkou ve dvou řádcích.
 
+## 4zzz. Pohyb divizí jako v HOI4 (F3, `GAME_VERSION = 48`)
+
+- **Přímý rozkaz má přednost**: `orderMove` zapíše divizi cíl rozkazu `mo` (provincie). Plánovač armád (`planArmy`) divizi, jejíž cesta končí v `mo`,
+  nechá rozkaz doběhnout a teprve po příchodu (prázdná cesta) ji vrátí k plánu armády – jako v HOI4. Cizí cesty (plán, ústup) `mo` neruší, jen se
+  s ním nekryjí. AI rozkazy `orderMove` nevydává, průběh historie se nemění.
+- **Ruční velení armády** (`army.man = 1`, příkaz `takeCommand(state, armyIds)`): automatický plán (`auto`) zmizí a automatická obrana hráče
+  (`aiPlanCountry`, `playerFront`) armádu už nepřebírá; vlastní plán armády zůstává. Rozhraní ho volá, když hráč dá přímý rozkaz divizím armády
+  s automatickým plánem (oznámení „automatická obrana zrušena“), a po zrušení plánu hráčem. Upozornění „rozkaz má přednost, pak se divize vrátí
+  k plánu“ se ukáže jednou za spuštění hry.
+- **Odhad příjezdu** (`army/march.js`): `marchEta(state, ids)` → `{ hours, dest, moving, fighting }` (nejpomalejší divize, bitvy se nepočítají)
+  a `marchPreview(state, ids, to, append)` → `{ routes: [{ nodes, ids, hours, prog }], hours, attack }` se stejnými pravidly jako `orderMove`
+  (nejvýš 12 různých výchozích provincií). Počítá jako `movementStep` (rychlost, terén, počasí, infrastruktura, železnice ve vlastním území, zásoby,
+  palivo) bez úbytku organizace cestou – je to odhad (test: do 30 % skutečné doby).
+- **Mapa**: čáry rozkazů začínají u žetonu, který je už na cestě (`routeStart`, stejná interpolace jako `buildCounters`); červeně jen vlastní útoky,
+  cizí rozkazy šedě a s mlhou války jen vlastní a spojenecké. Vybrané divize mají v cíli kroužek a štítek s odhadem příjezdu (`etaPill`, červený
+  okraj = útok, „boj“ = část divizí bojuje). Náhled pod kurzorem vede čárkovaně od každého vybraného žetonu (společné úseky jednou) se štítkem
+  „čas · útok“. Lišta výběru má řádek „Pochod do … · příjezd asi za …“ a bublina nad vlastním žetonem totéž. Formát `fmtEta` (`5 h`, `2 d 4 h`, `12 d`).
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
