@@ -14,6 +14,8 @@ it('milníky války', () => {
     ['válka Německo–Polsko', (l) => l.k === 'war' && pair(l, 'GER', 'POL')],
     ['kapitulace Polska', (l) => l.k === 'cap' && l.o === I('POL')],
     ['zimní válka', (l) => l.k === 'war' && pair(l, 'SOV', 'FIN')],
+    ['moskevský mír', (l) => l.k === 'cede' && l.o === I('FIN')],   // F3: územní mír Finska
+    ['pokračovací válka', (l) => l.k === 'war' && l.a === I('FIN') && l.b === I('SOV')],
     ['válka Německo–Nizozemsko', (l) => l.k === 'war' && pair(l, 'GER', 'HOL')],
     ['kapitulace Francie', (l) => l.k === 'cap' && l.o === I('FRA')],
     ['válka Itálie–Řecko', (l) => l.k === 'war' && pair(l, 'ITA', 'GRE')],

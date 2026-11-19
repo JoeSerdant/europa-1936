@@ -12,7 +12,8 @@
 //  noEnter      (s `from`/`until`) AI zatím neútočí na původní (předválečné) území země `noEnter` – tempo postupu podle historie
 //  armistice    (s `from`/`until`) země v okně kapituluje, jakmile země `armistice` nebo její spojenec drží aspoň `held` provincií jejího původního území
 //               (Itálie 1943: pád režimu po vylodění Spojenců); od dne `force` kapituluje i bez toho
-//               s `conf` = bezpodmínečná kapitulace s mírovou konferencí (bez exilu)
+//               s `conf` = bezpodmínečná kapitulace s mírovou konferencí (bez exilu); s `peace` = územní mír (F3): obsazené státy připadnou
+//               okupantovi, ale země nekapituluje – dál vede vlastní politiku a války (moskevský mír Finska 1940)
 //  holdout      (s `from`/`until`) země bojuje do posledního: kapituluje až při `DIP.HOLDOUT_SHARE` území v rukou nepřítele (M98)
 //  invade       operace vylodění (s `from`/`until`): země se v okně vylodí u země `invade` i bez převahy na moři, z větší dálky a v plné síle sboru (Sicílie, Normandie);
 //               `at` = vylodění jen na původním území této země (Normandie: Němci držená Francie)
@@ -21,6 +22,14 @@ export const HIST_STRATEGIES = [
   { id: 'blitz_ger', tag: 'GER', from: 1585, until: 1680, needWar: 'FRA', spirit: 'bleskova_valka' },
   { id: 'fra_morale', tag: 'FRA', from: 1585, until: 1720, needWar: 'GER', spirit: 'podivna_valka' },
   { id: 'fra_reserve', tag: 'FRA', from: 1300, until: 1750, holdBack: 0.2 },
+  // F3: zimní válka 1939/40 – Finové se drží, Rudá armáda po čistkách útočí neobratně; moskevský mír (13. 3. 1940) – Finsko odstoupí
+  // obsazené státy a zůstane samostatné (příměří bez konference a bez loutky)
+  { id: 'winter_fin', tag: 'FIN', war: 'SOV', after: 0, upto: 3, spirit: 'zimni_valka', days: 110 },
+  { id: 'winter_sov', tag: 'SOV', war: 'FIN', after: 0, upto: 3, spirit: 'armada_po_cistkach', days: 70 },
+  { id: 'fin_peace', tag: 'FIN', from: 1430, until: 1700, armistice: 'SOV', held: 12, force: 1533, peace: true },
+  // pokračovací válka 1941–1944: finská fronta stojí (SSSR proti Finsku jen brání), moskevské příměří 19. 9. 1944 – opět územní mír
+  { id: 'sov_fin_hold', tag: 'SOV', war: 'FIN', from: 2000, until: 3150, defend: true },
+  { id: 'fin_peace44', tag: 'FIN', from: 3184, until: 3400, armistice: 'SOV', held: 1, force: 3184, peace: true },
   // příprava na východ: válečné hospodářství Německa od podzimu 1940
   { id: 'ger_war_eco', tag: 'GER', from: 1730, until: 2400, spirit: 'valecne_hospodarstvi' },
   // Barbarossa: překvapivý úder, šok z napadení a sovětská armáda, která zprvu jen brání; po půl roce vlastenecká válka

@@ -41,6 +41,8 @@ export const SPIRITS = {
   rozklad_rezimu: { n: 'Rozklad režimu', info: 'Porážky v Africe podlomily víru v režim; vojáci se vzdávají po celých plucích.', tone: 'bad', mod: { stab: -0.1, ws: -0.15 }, army: { atk: -0.25, def: -0.25 } },
   prekvapivy_uder: { n: 'Překvapivý úder', info: 'Útok přišel bez varování: nepřítel je zaskočený a vlastní armáda postupuje rychle.', tone: 'good', mod: {}, army: { atk: 0.2, def: 0.1, speed: 0.2, planGain: 0.5, supUse: -0.3 } },
   sok_z_napadeni: { n: 'Šok z napadení', info: 'Pohraniční armády byly zaskočené, spojení selhává a velení se teprve sbírá.', tone: 'bad', mod: { stab: -0.05 }, army: { atk: -0.3, def: -0.3, orgRegen: -0.4 } },
+  zimni_valka: { n: 'Duch zimní války', info: 'Lyžaři v bílém, Mannerheimova linie a mráz: malá armáda drží útočníka mnohonásobně silnějšího.', tone: 'good', mod: { stab: 0.05 }, army: { def: 0.35, atk: 0.1, orgRegen: 0.25 } },
+  armada_po_cistkach: { n: 'Armáda po čistkách', info: 'Zkušení velitelé zmizeli v táborech; útoky v hlubokém sněhu vázne a nová taktika se rodí až z porážek.', tone: 'bad', mod: {}, army: { atk: -0.3, planGain: -0.3 } },
   vlastenecka_valka: { n: 'Vlastenecká válka', info: 'Celá země se semkla k obraně vlasti: odvody rostou a vojáci se nevzdávají.', tone: 'good', mod: { man: 0.15, ws: 0.15, stab: 0.05 }, army: { def: 0.12, orgRegen: 0.1 } },
   // M94: duchové z národních cílů (trvalé; každá země je může získat jen jednou)
   f_motorizovana_valka: { n: 'Motorizovaná válka', info: 'Pěchota jezdí na nákladních autech a zásobovací kolony drží krok s tanky.', tone: 'good', mod: {}, army: { speed: 0.05, supUse: -0.03 } },

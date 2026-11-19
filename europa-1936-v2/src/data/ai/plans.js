@@ -3,6 +3,7 @@
 //  force       po tolika dnech od začátku okna země plán spustí, i když je zaneprázdněná jinou válkou (M87; jinak čeká, až se uvolní)
 //  war         plán platí jen pro válku, která už běží (M88): země si proti cíli vyhlásí válečný cíl a přejde do útoku, sama ji ale nezačne
 //  quiet       F2: záložní válka – platí jen, když spolu žádné velmoci neválčí (světová válka se nekoná, např. hráč za Německo ji nezačne)
+//  with        F3: válku začne jen tehdy, když s cílem už válčí země `with` (ospravedlňuje předem)
 // Válčí-li už země s cílem plánu (zatáhla ji záruka nebo spojenec), vyhlásí proti němu v okně plánu válečný cíl (`claimGoal`) – do té doby jen drží frontu.
 export const HIST_WARS = [
   { tag: 'GER', target: 'CZE', from: 1010, until: 1500, ratio: 0.9 },   // M68: záložní válka, když ultimáta (data/dip/demands.js) selžou
@@ -24,6 +25,7 @@ export const HIST_WARS = [
   { tag: 'ITA', target: 'ALB', from: 1250, until: 1800, ratio: 1.0 },
   { tag: 'ITA', target: 'GRE', from: 1730, until: 2200, ratio: 1.0 },
   { tag: 'SOV', target: 'FIN', from: 1400, until: 1900, ratio: 0.8 },
+  { tag: 'FIN', target: 'SOV', from: 1972, until: 2400, ratio: 0.02, with: 'GER' },   // F3: pokračovací válka – Finsko po boku Německa (25. 6. 1941)
   { tag: 'SOV', target: 'EST', from: 1720, until: 2100, ratio: 0.6 },
   { tag: 'SOV', target: 'LAT', from: 1720, until: 2100, ratio: 0.6 },
   { tag: 'SOV', target: 'LIT', from: 1720, until: 2100, ratio: 0.6 },

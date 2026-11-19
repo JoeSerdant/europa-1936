@@ -65,7 +65,7 @@ export function capitulate(state, loser, opts = {}) {
   const allies = host && state.dip.facs[state.dip.fac[loser]] ? state.dip.facs[state.dip.fac[loser]].mem.slice() : [];
   const wars = state.mil.wars.filter(([a, b]) => a !== loser && b !== loser);
   const cap = state.dip.cap.slice();
-  cap[loser] = 1;
+  cap[loser] = opts.peace ? 0 : 1;   // F3: územní mír (`peace`, s příměřím) – země odstoupí obsazené státy, ale žije dál (AI, vlastní války)
   // z bloku vypadne
   let fac = state.dip.fac, facs = state.dip.facs;
   const id = fac[loser];
@@ -89,7 +89,7 @@ export function capitulate(state, loser, opts = {}) {
   let done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
   if (host) done = playable ? markExile(done, loser, host) : goIntoExile(done, loser, host, allies, ctrl);   // F2 B3: hráčovi jednotky a lodě zůstanou
   done = dropExiles(done, loser, host);   // exily u poražené země odcházejí s ní k jejímu hostiteli (F2), bez hostitele zanikají
-  done = logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser });
+  done = logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), opts.peace ? { k: 'cede', o: loser, x: top } : { k: 'cap', o: loser });
   done = opts.armistice ? done : conference(done, loser, by, val, occ, foes);   // M93: po historickém příměří zbytek země zůstane samostatný a neutrální (bez konference)
   return playable && host ? fightOn(done, loser) : done;
 }

@@ -19,6 +19,7 @@ import { upkeepStep } from '../src/engine/army/upkeep.js';
 import { statsOf } from '../src/engine/army/unit.js';
 import { C } from '../src/engine/army/constants.js';
 import { pairKey } from '../src/engine/dip/core.js';
+import { atWar } from '../src/engine/army/war.js';
 
 const W = getWorld();
 const idx = (t) => W.ownerIdx[t];
@@ -122,6 +123,34 @@ describe('příměří Itálie', () => {
     const capState = W.provState[W.owners[ITA].cap];
     expect(s.stateOwner[capState]).toBe(ITA);
     expect((s.dip.exile || [])[ITA] || 0).toBe(0);
+    expect(validateState(s)).toBeNull();
+  });
+});
+
+describe('zimní válka a moskevský mír (F3)', () => {
+  const FIN = idx('FIN');
+  /** SSSR drží `n` finských provincií, nejdřív celé státy Viipuri a Sortavala (nejblíž hranici). */
+  const held = (s, n) => {
+    const ctrl = s.ctrl.slice(), list = [];
+    for (let p = 1; p <= W.L; p++) if (W.provOwner0[p] === FIN && p !== W.owners[FIN].cap) list.push(p);
+    const first = (p) => (['Viipuri', 'Sortavala'].includes(W.states[W.provState[p]].n) ? 0 : 1);
+    list.sort((a, b) => first(a) - first(b) || a - b);
+    for (const p of list.slice(0, n)) ctrl[p] = SOV;
+    return { ...s, ctrl, ownerVer: s.ownerVer + 1 };
+  };
+  it('Finsko uzavře mír, odstoupí obsazené státy a žije dál (bez kapitulace a bez loutky)', () => {
+    const s0 = war(at(base(), 1460), SOV, FIN);
+    expect(armisticeRow(held(s0, 11), FIN)).toBeNull();
+    expect(armisticeRow(held(s0, 12), FIN)).toMatchObject({ id: 'fin_peace', peace: true });
+    expect(armisticeRow(at(s0, 1533), FIN)).toMatchObject({ id: 'fin_peace' });   // moskevský mír nejpozději 13. 3. 1940
+    const s = dipDay(held(s0, 12));
+    expect(s.dip.cap[FIN]).toBe(0);
+    expect(s.dip.sub[FIN]).toBe(0);
+    expect(atWar(s.mil, FIN, SOV)).toBe(false);
+    const viipuri = W.states.findIndex((x) => x && x.n === 'Viipuri');
+    expect(s.stateOwner[viipuri]).toBe(SOV);
+    expect(s.stateOwner[W.provState[W.owners[FIN].cap]]).toBe(FIN);
+    expect(s.log.items.some((e) => e.k === 'cede' && e.o === FIN && e.x === SOV)).toBe(true);
     expect(validateState(s)).toBeNull();
   });
 });

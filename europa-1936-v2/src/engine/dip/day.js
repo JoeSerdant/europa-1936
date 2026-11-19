@@ -60,6 +60,7 @@ export function dipDay(state) {
   state = overseasDay(state);   // M79: zámořská pomoc
   state = exileDay(state);   // M83: obnova exilových zemí
   // kapitulace
+  const player = state.player ? w.ownerIdx[state.player] || 0 : 0;
   for (let o = 1; o < w.owners.length; o++) {
     if (state.dip.cap[o] || !hasWar(state.mil, o)) continue;
     const h = vpHeld(state, o);
@@ -68,10 +69,11 @@ export function dipDay(state) {
       continue;
     }
     const lim = holdoutOf(state, o) ? { share: DIP.HOLDOUT_SHARE, capital: DIP.HOLDOUT_SHARE } : capLimitOf(o);   // M92: hranice kapitulace podle země; M98: vytrvání do konce
-    if (h.total && (h.share >= lim.share || (h.capHeld && h.share >= lim.capital))) state = capitulate(state, o);
+    const capRule = o !== player;   // F3: hráčova země po pádu hlavního města nekapituluje hned – jako v HOI4 rozhoduje jen podíl ztraceného území
+    if (h.total && (h.share >= lim.share || (capRule && h.capHeld && h.share >= lim.capital))) state = capitulate(state, o);
     else {
       const ar = armisticeRow(state, o);
-      if (ar) state = capitulate(state, o, ar.conf ? { noExile: true, victor: w.ownerIdx[ar.armistice] } : { armistice: true });   // M93: příměří (bez exilu a konference); M98: bezpodmínečná kapitulace (konference bez exilu)
+      if (ar) state = capitulate(state, o, ar.conf ? { noExile: true, victor: w.ownerIdx[ar.armistice] } : { armistice: true, peace: !!ar.peace });   // M93: příměří (bez exilu a konference); M98: bezpodmínečná kapitulace (konference bez exilu)
     }
   }
   // vypršelá ospravedlnění

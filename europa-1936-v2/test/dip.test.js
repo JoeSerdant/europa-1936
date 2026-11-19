@@ -127,6 +127,27 @@ describe('mír', () => {
 
 describe('kapitulace a anexe', () => {
   const s0 = createGame({ player: 'GER' });
+  it('F3: hráčova země po pádu hlavního města nekapituluje hned (rozhoduje podíl území), AI země ano', () => {
+    /** Válka a nepřítel drží hlavní město Polska a provincie s nejvíc body až do podílu `share`. */
+    const fall = (player, share) => {
+      let w = declareWar(createGame({ player }), 'GER', 'POL');
+      const ctrl = w.ctrl.slice(), prov = [];
+      for (let p = 1; p <= W.L; p++) if (w.stateOwner[W.provState[p]] === POL) prov.push(p);
+      prov.sort((a, b) => (b === W.owners[POL].cap) - (a === W.owners[POL].cap) || W.vp[b] - W.vp[a]);
+      w = { ...w, ctrl };
+      for (const p of prov) { if (vpHeld(w, POL).share >= share) break; ctrl[p] = GER; }
+      return w;
+    };
+    const ai = fall('GER', 0.4), me = fall('POL', 0.4);
+    expect(vpHeld(me, POL)).toMatchObject({ capHeld: true });
+    expect(vpHeld(me, POL).share).toBeGreaterThanOrEqual(DIP.CAP_CAPITAL_SHARE);
+    expect(vpHeld(me, POL).share).toBeLessThan(DIP.CAP_SHARE);
+    expect(hasCapitulated(day(ai, 1), POL)).toBe(true);    // AI Polsko po pádu Varšavy kapituluje
+    expect(hasCapitulated(day(me, 1), POL)).toBe(false);   // hráč bojuje dál
+    const lost = day(fall('POL', DIP.CAP_SHARE), 1);       // při většině území ano (hráč případně pokračuje v exilu)
+    expect(atWar(lost, GER, POL)).toBe(false);
+    expect(lost.dip.cap[POL] || lost.dip.exile[POL] || lost.dip.sub[POL] || !lost.stateOwner.includes(POL)).toBeTruthy();
+  });
   it('země kapituluje po ztrátě většiny území; okupované státy připadnou okupantovi', () => {
     let w = declareWar(s0, 'POL', 'GER');
     w = takeAll(w, GER, POL, 0.8);

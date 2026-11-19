@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS } from '../../engine/index.js';
+import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS, capLimitOf } from '../../engine/index.js';
 import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, offerPactTo, breakPactWith, answerPactFrom, improveWith, demandFrom, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
@@ -97,7 +97,7 @@ export function DiplomacyPanel() {
   const list = [...d.list].sort((a, b) => (b.war - a.war) || (b.ally - a.ally) || (b.rel - a.rel));
   const f = d.faction;
   return (
-    <Screen cls="dip-panel" title="Diplomacie" icon="dip" head={<p className="muted pol-sum dip-held">Území držené nepřáteli: {fmtNum(d.held.share * 100, 0)} % bodů (kapitulace od {Math.round(DIP.CAP_SHARE * 100)} %).</p>}>
+    <Screen cls="dip-panel" title="Diplomacie" icon="dip" head={<p className="muted pol-sum dip-held">Území držené nepřáteli: {fmtNum(d.held.share * 100, 0)} % bodů (kapitulace od {Math.round(capLimitOf(me).share * 100)} %).</p>}>
       <div className="prod-body">
         <div className="prod-cols">
           <div className="prod-left">
