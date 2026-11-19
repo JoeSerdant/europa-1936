@@ -10,6 +10,7 @@ import { logAdd } from '../log.js';
 import { ideologyOf } from '../politics/parties.js';
 import { pactOf, voidPacts } from './pact.js';
 import { joiningGuarantors, breakGuarantees } from './guarantee.js';
+import { heldBack, skipsWar } from './entry.js';
 import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey, formerAlly } from './core.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
@@ -65,15 +66,17 @@ export const justReady = (state, a, b) => state.dip.just.some((j) => j.a === a &
  */
 export function startWar(state, a, b, free = false) {
   if (warBlock(state, a, b) || (!free && !justReady(state, a, b))) return state;
-  const attackers = campOf(state, a).filter((x) => !hasCapitulated(state, x));
-  let defenders = (free ? [b] : campOf(state, b)).filter((x) => !hasCapitulated(state, x));
+  // F2 B1: do útočné války táhne členy jen vedoucí bloku (válku člena vede člen sám); členové podle `HIST_ENTRY` se zapojují až od historického data
+  const leads = (() => { const f = state.dip.facs[state.dip.fac[a]]; return !f || f.ldr === a; })();
+  const attackers = (leads ? campOf(state, a) : [a]).filter((x) => !hasCapitulated(state, x) && (x === a || !heldBack(state, x)));
+  let defenders = (free ? [b] : campOf(state, b)).filter((x) => !hasCapitulated(state, x) && (x === b || !heldBack(state, x)));
   const guard = free ? [] : joiningGuarantors(state, b, attackers);   // M48: zaručitelé obránce se přidají i s bloky
-  for (const g of guard) for (const x of campOf(state, g)) if (!hasCapitulated(state, x) && !attackers.includes(x) && !defenders.includes(x)) defenders = [...defenders, x];
+  for (const g of guard) for (const x of campOf(state, g)) if (!hasCapitulated(state, x) && !attackers.includes(x) && !defenders.includes(x) && (x === g || !heldBack(state, x))) defenders = [...defenders, x];
   let s = free ? state : breakGuarantees(state, b, attackers);
   s = joinGuarantor(s, b, guard);   // M88: napadená země bez bloku vstoupí do bloku svého zaručitele (sdílí s ním území a zásobování)
   const since = { ...state.dip.since };
   for (const x of attackers) for (const y of defenders) {
-    if (x === y || atWar(s.mil, x, y)) continue;
+    if (x === y || atWar(s.mil, x, y) || ((x !== a || y !== b) && skipsWar(state, x, y))) continue;   // F2 B1: `skip` (např. Bulharsko × SSSR)
     s = declareWar(s, tagOf(x), tagOf(y));
     since[pairKey(x, y)] = state.tick;
   }

@@ -13,7 +13,7 @@ import { BattleDialog } from './BattleDialog.jsx';
 import { Popups } from './Popups.jsx';
 import { Banner } from './Banner.jsx';
 import { NewsDialog } from './NewsDialog.jsx';
-import { Tutorial } from '../tutorial/Tutorial.jsx';
+import { Tutorial, useTutorialOn } from '../tutorial/Tutorial.jsx';
 import { EndDialog } from './EndDialog.jsx';
 import { ConferenceDialog } from '../nat/ConferenceDialog.jsx';
 import { OverviewDialog } from '../log/OverviewDialog.jsx';
@@ -47,12 +47,22 @@ export function Hud() {
   const buildTab = useUi((s) => (s.panel === 'industry' && s.indTab === 'build') || DOCKED.includes(s.panel));   // M103/M105: panel vlevo nad mapou – minimapa a mapové režimy se schovají
   useEffect(() => { mc.setInsets(INSETS.game); }, []);
   const right = side ? 394 : 14;               // střední lišty se středí mezi levým sloupcem a pravým panelem
+  const tutOn = useTutorialOn();
+  // F2 B5: průvodce a nápověda „Čas stojí“ jsou v levém sloupci (nad minimapou), s otevřeným panelem vlevo vedle něj – nikdy nad lištou armád;
+  // nápověda se ukáže jen s vypnutým průvodcem (jeho první krok říká totéž)
+  const tips = (
+    <>
+      {fresh && !tutOn && <div className="panel hint" role="status">Čas stojí. Spusťte ho <kbd>mezerníkem</kbd> nebo tlačítkem v horní liště.</div>}
+      <Tutorial />
+    </>
+  );
   return (
     <>
       <TopBar />
       {!buildTab && <MapModes />}
       {!buildTab && (
         <div className="bottom-left">
+          {tips}
           <Legend />
           <div className="panel mini"><Minimap /></div>
         </div>
@@ -73,10 +83,9 @@ export function Hud() {
       <div className="menurow"><MenuBar /><Alerts /></div>
       <Console />
       <div className="top-mid" style={{ right }}><PlanBar /></div>
+      {buildTab && <div className={`tut-dock ${panel === 'industry' ? 'by-build' : 'by-dock'}`}>{tips}</div>}
       <div className="bottom-mid" style={{ right }}>
         <Toast />
-        <Tutorial />
-        {fresh && <div className="panel hint" role="status">Čas stojí. Spusťte ho <kbd>mezerníkem</kbd> nebo tlačítkem v horní liště.</div>}
         <SelectionBar />
         <ArmyBar />
       </div>

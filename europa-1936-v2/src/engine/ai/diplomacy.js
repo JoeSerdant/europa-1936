@@ -17,6 +17,9 @@ import { COUNTRIES } from '../../data/countries.js';
 import { playerOf } from './core.js';
 import { theatersOf } from './strategy.js';
 import { keepsCourse, shiftOf, quietWorld } from './free.js';
+import { entryOf, heldBack, skipsWar } from '../dip/entry.js';
+import { declareWar } from '../army/commands.js';
+import { logAdd } from '../log.js';
 
 export function aiDiplomacy(state, o) {
   const w = getWorld(), tag = w.owners[o].tag;
@@ -37,6 +40,20 @@ export function aiDiplomacy(state, o) {
       const want = (weary && (losing || days >= AI.PEACE_MIN_DAYS)) || stalled || (losing && days >= AI.PEACE_MIN_DAYS && score < -AI.PEACE_LOSING * 2);
       if (want && score <= AI.PEACE_WINNING) state = proposePeace(state, o, e);   // vítěz o bílý mír nežádá
       else if (days >= AI.FROZEN_DAYS && state.tick % (24 * 7) === 0 && !theatersOf(state, o, new Set([e])).length) state = proposePeace(state, o, e);   // M68: zamrzlá válka bez styku (např. spojenecký spor na druhém konci Evropy) se ukončí i vítězi
+    }
+  }
+  // F2 B1: člen bloku s historickým datem vstupu (Itálie 1940, Bulharsko a Maďarsko 1941) se od toho dne přidá k válkám vedoucího bloku
+  if (entryOf(o) && !heldBack(state, o) && !hasCapitulated(state, o) && !state.dip.sub[o]) {
+    const f = state.dip.facs[state.dip.fac[o]];
+    if (f && f.ldr !== o && !hasCapitulated(state, f.ldr)) {
+      const foes = enemiesOf(state.mil, f.ldr).filter((e) => !hasCapitulated(state, e) && !atWar(state.mil, o, e) && !skipsWar(state, o, e) && !warBlock(state, o, e));
+      if (foes.length) {
+        const since = { ...state.dip.since };
+        for (const e of foes) { state = declareWar(state, tag, w.owners[e].tag); since[pairKey(o, e)] = state.tick; }
+        state = { ...state, dip: { ...state.dip, since, ver: state.dip.ver + 1 } };
+        const main = foes.filter((e) => (COUNTRIES[w.owners[e].tag]?.tier ?? 3) === 1);
+        for (const e of main.length ? main : foes.slice(0, 1)) state = logAdd(state, { k: 'war', a: o, b: e });
+      }
     }
   }
   // historické bloky: založení a zvaní členů (F2: i ve volné historii – s posunem podle semínka a jen s historickou vládou)

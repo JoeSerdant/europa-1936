@@ -74,7 +74,7 @@ export function logImportant(e, me) {
   if (e.k === 'war') return e.a === me || e.b === me;
   if (e.k === 'goal') return e.b === me;   // M88: někdo si vyhlásil válečný cíl proti hráči
   if (e.k === 'gov' || e.k === 'nuke' || e.k === 'nukeready' || e.k === 'restore') return true;
-  if (e.k === 'exile') return e.x === me;
+  if (e.k === 'exile') return e.x === me || e.o === me;   // F2 B3: i vlastní exil hráče
   if (e.k === 'aid') return e.y === 1 || (e.o === me && e.y === 0);
   if (e.k === 'napq' || e.k === 'napend') return e.b === me;
   if (e.k === 'nap') return !!e.y && (e.a === me || e.b === me);

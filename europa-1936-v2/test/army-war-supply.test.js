@@ -31,7 +31,7 @@ describe('války', () => {
     expect(s.mil.wars).toEqual([]);                                     // původní stav se nezměnil
   });
 
-  it('obranná AI dostane po vyhlášení války plán Hájit oblast, hráč ne', () => {
+  it("obranná AI dostane po vyhlášení války plán Hájit oblast, hráč ne (bez AI zemí; s AI viz test/player-front.test.js)", () => {
     const s = declareWar(createGame({ player: 'GER' }), 'GER', 'POL');
     const polish = s.mil.armies.filter((a) => a && a.o === idx('POL'));
     expect(polish.length).toBeGreaterThan(0);

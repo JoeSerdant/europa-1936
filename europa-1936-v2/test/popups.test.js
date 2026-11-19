@@ -31,6 +31,18 @@ describe('vyskakovací karty (M58)', () => {
   });
 });
 
+describe('vlastní exil hráče (F2 B3)', () => {
+  it('kapitulace hráčovy země s exilovou vládou je trvalá karta a důležitý záznam', () => {
+    const W2 = getWorld(), FRA = W2.ownerIdx.FRA, ENG = W2.ownerIdx.ENG;
+    const e = { k: 'exile', o: FRA, x: ENG, y: 0 };
+    const c = popupFor(e, FRA);
+    expect(c).toMatchObject({ kind: 'exile', title: 'Vláda v exilu', sticky: true });
+    expect(c.text).toMatch(/bojuje dál/);
+    expect(logImportant(e, FRA)).toBe(true);
+    expect(popupFor(e, ENG).title).toBe('Exilová vláda');
+  });
+});
+
 describe('nová upozornění (M58)', () => {
   it('divize bez armády se započítají a mají počet', () => {
     const s = createGame({ player: 'GER' });

@@ -251,18 +251,42 @@ function frontBelt(ctx, o, enemies) {
   return [...belt].sort((a, b) => a - b);
 }
 
-/** Plány „Hájit oblast“ pro armády dané země (jen armády bez vlastního plánu nebo s plánem AI). */
-export function aiPlanCountry(ctx, o, byArmy) {
+/**
+ * Plány „Hájit oblast“ pro armády dané země (jen armády bez vlastního plánu nebo s plánem AI). F2 B2: pro hráče s `onlyAuto` jen armády,
+ * které automatický plán už mají (hráč ho nezměnil ani nezrušil) – hráčova volba se nepřepisuje.
+ */
+export function aiPlanCountry(ctx, o, byArmy, onlyAuto = false, threats = null) {
   const w = getWorld(), g = geo(w);
-  const enemies = new Set(enemiesOf(ctx.mil, o));
+  const enemies = new Set(threats || enemiesOf(ctx.mil, o));   // F2 B2: `threats` = země, které proti hráči ospravedlňují válku (fronta ještě před válkou)
   if (!enemies.size) return;
   const mine = [];
   for (let id = 1; id < ctx.armies.length; id++) {
     const a = ctx.armies[id];
-    if (a && a.o === o && byArmy.has(id) && (!a.plan || a.plan.auto)) mine.push(id);
+    if (a && a.o === o && byArmy.has(id) && (onlyAuto ? a.plan && a.plan.auto : !a.plan || a.plan.auto)) mine.push(id);
   }
   if (!mine.length) return;
   const belt = frontBelt(ctx, o, enemies);
+  // F2 B2: hráčova automatická obrana drží i hlavní město – armáda, která je k němu nejblíž, hájí metropoli a její okolí (je-li armád víc)
+  const player = ctx.state.player ? w.ownerIdx[ctx.state.player] : 0;
+  const capP = w.owners[o].cap;
+  if (o === player && mine.length > 1 && ctx.ctrl[capP] === o) {
+    let gi = -1, gd = Infinity;
+    mine.forEach((id, i) => {
+      const ds = byArmy.get(id).filter((x) => ctx.divs[x]);
+      if (!ds.length) return;
+      let x = 0, y = 0;
+      for (const d of ds) { x += g.cx[ctx.divs[d].p]; y += g.cy[ctx.divs[d].p]; }
+      const dd = Math.hypot(x / ds.length - g.cx[capP], y / ds.length - g.cy[capP]);
+      if (dd < gd) { gd = dd; gi = i; }
+    });
+    if (gi >= 0) {
+      const guard = mine[gi];
+      const ring = [capP, ...adjacency(w)[capP].filter((e) => e.kind !== 2 && ctx.ctrl[e.to] === o).map((e) => e.to)].sort((a, b) => a - b);
+      const cur = ctx.armies[guard].plan;
+      if (!(cur && cur.k === 'area' && cur.area.length === ring.length && cur.area.every((p, j) => p === ring[j]))) editArmy(ctx, guard).plan = { k: 'area', area: ring, auto: true };
+      mine.splice(gi, 1);
+    }
+  }
   const centers = mine.map((id) => {
     const ds = byArmy.get(id).filter((x) => ctx.divs[x]);
     let x = 0, y = 0;
@@ -294,7 +318,8 @@ export function* plansSteps(ctx) {
   const player = ctx.state.player ? w.ownerIdx[ctx.state.player] : 0;
   const weekly = ctx.tick % (24 * 7) === 0;
   for (let o = 1; o < w.owners.length; o++) {
-    if (o === player || !hasWar(ctx.mil, o)) continue;
+    if (o === player) { playerFront(ctx, o, byArmy, weekly); continue; }
+    if (!hasWar(ctx.mil, o)) continue;
     let need = weekly;
     if (!need) for (let id = 1; id < ctx.armies.length && !need; id++) { const a = ctx.armies[id]; if (a && a.o === o && !a.plan && byArmy.has(id)) need = true; }
     if (need) aiPlanCountry(ctx, o, byArmy);
@@ -303,6 +328,19 @@ export function* plansSteps(ctx) {
   for (let id = 1; id < ctx.armies.length; id++) if (ctx.armies[id] && ctx.armies[id].plan) { planArmy(ctx, id, byArmy, pathOf); yield; }
 }
 export function plansStep(ctx) { for (const _ of plansSteps(ctx)) void _; }
+
+/**
+ * F2 B2: základní fronta hráče. Ve válce se automatické plány (`auto`) týdně posunou s frontou. V míru, jakmile proti hráči někdo ospravedlňuje
+ * válku, dostanou armády bez plánu (a s automatickým plánem) obranu hranice s touto zemí – nováček tak není zaskočen. Vlastní plán hráče se nemění.
+ */
+function playerFront(ctx, o, byArmy, weekly) {
+  if (!ctx.state.ai || !ctx.state.ai.level) return;   // pomoc nováčkovi jen ve hře s AI zemí (engine bez AI – testy ostatních systémů – hráčovy armády nehýbe)
+  if (hasWar(ctx.mil, o)) { if (weekly) aiPlanCountry(ctx, o, byArmy, true); return; }
+  const threats = [...new Set((ctx.state.dip ? ctx.state.dip.just : []).filter((j) => j.b === o).map((j) => j.a))];
+  if (!threats.length) return;
+  const fresh = (() => { for (let id = 1; id < ctx.armies.length; id++) { const a = ctx.armies[id]; if (a && a.o === o && !a.plan && byArmy.has(id)) return true; } return false; })();
+  if (weekly || fresh) aiPlanCountry(ctx, o, byArmy, false, threats);
+}
 
 /** Naplánuje jednu armádu hned (po zadání plánu). */
 export function planNow(ctx, armyId) {
@@ -316,7 +354,12 @@ export function aiNow(ctx, owners) {
   const player = ctx.state.player ? w.ownerIdx[ctx.state.player] : 0;
   const pathOf = makePathCache(ctx);
   for (const o of owners) {
-    if (o === player) continue;
+    if (o === player) {   // F2 B2: hráčovy armády bez plánu dostanou při vstupu do války základní obranu (automatický plán „Hájit oblast“)
+      if (!ctx.state.ai || !ctx.state.ai.level) continue;
+      aiPlanCountry(ctx, o, byArmy);
+      for (let id = 1; id < ctx.armies.length; id++) { const a = ctx.armies[id]; if (a && a.o === o && a.plan && a.plan.auto) planArmy(ctx, id, byArmy, pathOf); }
+      continue;
+    }
     aiPlanCountry(ctx, o, byArmy);
     for (let id = 1; id < ctx.armies.length; id++) if (ctx.armies[id] && ctx.armies[id].o === o && ctx.armies[id].plan) planArmy(ctx, id, byArmy, pathOf);
   }

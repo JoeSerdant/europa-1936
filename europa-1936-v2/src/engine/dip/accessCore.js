@@ -7,6 +7,8 @@ export function hasAccess(dip, o, c) {
   const f = dip.fac[o];
   if (f && f === dip.fac[c]) return true;
   if (dip.sub[o] === c || dip.sub[c] === o) return true;
+  const host = dip.exile && dip.exile[o];   // F2 B3: exilová vláda smí na území hostitele a jeho bloku
+  if (host && (c === host || (dip.fac[host] && dip.fac[host] === dip.fac[c]))) return true;
   const acc = dip.acc;
   if (acc) for (let i = 0; i < acc.length; i++) if (acc[i].g === c && acc[i].r === o) return true;
   return false;

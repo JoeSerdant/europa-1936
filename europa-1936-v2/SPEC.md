@@ -1026,6 +1026,19 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   (velmoc `ALT_MIN_SUPPORT_MAJOR`) a s vahou historické cesty `ALT_HIST_W = 8`; převrat jen pod stabilitou `POL.COUP_STAB = 0,30`
   a nejvýš jednou za `COUP_COOL = 1095` dní. `GAME_VERSION = 47`.
 
+- **Vstup spojenců do války (B1)**: `HIST_ENTRY` (`data/ai/plans.js`) – člen bloku se do válek bloku zapojí až od `from` (Itálie 10. 6. 1940,
+  Bulharsko 1. 3. 1941 se `skip: ['SOV']`, Maďarsko 27. 6. 1941; Rumunsko a Jugoslávie `Infinity` – Malá dohoda Československo nebrání); čte jen
+  `dip/entry.js` (`heldBack`, `skipsWar` – i pro loutky země ze `skip`) a platí se zapnutou AI. Do útočné války (`startWar`) táhne členy jen vedoucí
+  bloku; od data vstupu se AI člen přidá k válkám vedoucího sám (`aiDiplomacy`, záznam `war` jen u velmocí).
+- **Základní fronta hráče (B2)**: armády hráče bez plánu dostanou automatický plán „Hájit oblast“ (`auto: true`) při vstupu do války (`aiNow`)
+  a už v míru, jakmile proti hráči někdo ospravedlňuje válku (`playerFront`); armáda nejblíž hlavnímu městu hájí metropoli. Automatické plány se
+  týdně posunou s frontou; plán, který hráč zadá nebo zruší, se nepřepisuje.
+- **Hráč v exilu (B3)**: kapituluje-li hráčova země a ještě bojuje spojenec z bloku nebo z `dip.ally0`, vláda odejde do exilu (`markExile` – jednotky,
+  lodě a zásoby zůstanou hráči); když jí nezbylo území, bojuje dál (`fightOn`: `cap` = 0, blok hostitele, války s jeho nepřáteli). Exilová vláda smí
+  na území hostitele a jeho bloku (`hasAccess`). Hra končí prohrou jen bez území a bez exilové vlády (`endDay`). AI země beze změny.
+- **Rozhraní (B4–B6)**: horní lišta pod 2200 px ve dvou řádcích (ikona + hodnota, popis v nápovědě) – vždy všech 14 ukazatelů; průvodce
+  a nápověda „Čas stojí“ v levém sloupci nad minimapou (s panelem vlevo vedle něj, `.tut-dock`); panel státu bez tlačítek staveb (odkaz do panelu Stavby).
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.

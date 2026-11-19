@@ -1,14 +1,15 @@
 // Kapitulace (M23): okupované státy jdou na mírovou konferenci (M95; okupant je získá levněji), válečné stavy země skončí, jednotky v anektovaných provinciích odejdou domů nebo zaniknou.
 import { getWorld } from '../world.js';
-import { atWar, enemiesOf } from '../army/war.js';
-import { withCtx, settleAfterPeace, makePeace } from '../army/commands.js';
+import { atWar, enemiesOf, hasWar } from '../army/war.js';
+import { withCtx, settleAfterPeace, makePeace, declareWar } from '../army/commands.js';
 import { COUNTRIES } from '../../data/countries.js';
 import { pairKey, alliesAtFall } from './core.js';
 import { DIP } from './constants.js';
 import { logAdd } from '../log.js';
 import { conference, stateValue } from './subjects.js';
 import { addSpirit } from '../nat/spirits.js';
-import { exileCandidate, goIntoExile, dropExiles } from './exile.js';
+import { exileCandidate, goIntoExile, dropExiles, markExile, exileHost } from './exile.js';
+import { divisionCount } from '../army/selectors.js';
 
 /**
  * Konec války bloku (M88): padne-li vedoucí bloku, jeho malí členové, kteří válčili jen kvůli bloku (nikdo proti nim nemá válečný cíl ani oni proti nikomu),
@@ -56,8 +57,12 @@ export function capitulate(state, loser, opts = {}) {
   if (opts.victor && !Object.keys(by).length) by[opts.victor] = 1;   // M98: bezpodmínečná kapitulace bez okupace – konferenci vede země z koleje
   // M88: cizí území, které poražený sám okupoval, se vrací vlastníkům (jeho divize tam pak zaniknou nebo odejdou domů)
   for (let p = 1; p <= w.L; p++) if (ctrl[p] === loser) { const own = stateOwner[w.provState[p]]; if (own !== loser) ctrl[p] = own; }
-  const host = opts.armistice || opts.noExile ? 0 : exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje (M93: ne po historickém příměří)
-  const allies = host ? state.dip.facs[state.dip.fac[loser]].mem.slice() : [];
+  // F2 B3: hráčova země pokračuje v exilu – hostitelem může být i spojenec mimo blok, který ještě bojuje (Británie po pádu Francie)
+  const playerIdx = state.player ? w.ownerIdx[state.player] : 0;
+  const playable = loser === playerIdx && !opts.armistice && !opts.noExile;
+  let host = opts.armistice || opts.noExile ? 0 : exileCandidate(state, loser);   // M83: exilová vláda u člena bloku, který ještě bojuje (M93: ne po historickém příměří)
+  if (!host && playable && friends) host = strongestFighting(state, friends, loser);
+  const allies = host && state.dip.facs[state.dip.fac[loser]] ? state.dip.facs[state.dip.fac[loser]].mem.slice() : [];
   const wars = state.mil.wars.filter(([a, b]) => a !== loser && b !== loser);
   const cap = state.dip.cap.slice();
   cap[loser] = 1;
@@ -82,8 +87,42 @@ export function capitulate(state, loser, opts = {}) {
   let top = 0;   // M74: země, která dobyla nejvíc provincií poraženého, dostane dočasného ducha „Vítězná nálada“
   for (const c in by) if (!top || by[c] > by[top]) top = +c;
   let done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
-  if (host) done = goIntoExile(done, loser, host, allies, ctrl);
+  if (host) done = playable ? markExile(done, loser, host) : goIntoExile(done, loser, host, allies, ctrl);   // F2 B3: hráčovi jednotky a lodě zůstanou
   done = dropExiles(done, loser, host);   // exily u poražené země odcházejí s ní k jejímu hostiteli (F2), bez hostitele zanikají
   done = logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser });
-  return opts.armistice ? done : conference(done, loser, by, val, occ, foes);   // M93: po historickém příměří zbytek země zůstane samostatný a neutrální (bez konference)
+  done = opts.armistice ? done : conference(done, loser, by, val, occ, foes);   // M93: po historickém příměří zbytek země zůstane samostatný a neutrální (bez konference)
+  return playable && host ? fightOn(done, loser) : done;
+}
+
+/** Nejsilnější (podle divizí) z `list`, kdo nekapituloval, není loutkou a válčí; 0 = nikdo. */
+function strongestFighting(state, list, not) {
+  const ok = list.filter((c) => c !== not && !state.dip.cap[c] && !(state.dip.sub && state.dip.sub[c]) && hasWar(state.mil, c));
+  ok.sort((a, b) => divisionCount(state, b) - divisionCount(state, a) || a - b);
+  return ok[0] || 0;
+}
+
+/**
+ * F2 B3: hráčova země po kapitulaci bojuje dál jako exilová vláda – jen když jí nezbylo území (jinak je loutkou nebo samostatná, jako dřív):
+ * znovu „žije“ (`cap` = 0), vstoupí do bloku hostitele a je ve válce s jeho nepřáteli. Jednotky na území hostitele a lodě jí zůstaly (`markExile`).
+ * Obnovu území zařídí `restoreCountry`, až blok hostitele získá stát s hlavním městem.
+ */
+function fightOn(state, o) {
+  const host = exileHost(state, o);
+  if (!host || state.dip.cap[host] || (state.dip.sub && state.dip.sub[o]) || state.stateOwner.some((x) => x === o)) return state;
+  const w = getWorld();
+  const cap = state.dip.cap.slice(); cap[o] = 0;
+  let fac = state.dip.fac, facs = state.dip.facs;
+  const fid = fac[host];
+  if (fid && facs[fid] && !facs[fid].mem.includes(o)) {
+    fac = fac.slice(); fac[o] = fid;
+    facs = facs.slice(); facs[fid] = { ...facs[fid], mem: [...facs[fid].mem, o] };
+  }
+  let s = { ...state, dip: { ...state.dip, cap, fac, facs, ver: state.dip.ver + 1 } };
+  const since = { ...s.dip.since };
+  for (const e of enemiesOf(s.mil, host)) {
+    if (e === o || atWar(s.mil, o, e) || s.dip.cap[e]) continue;
+    s = declareWar(s, w.owners[o].tag, w.owners[e].tag);
+    since[pairKey(o, e)] = s.tick;
+  }
+  return { ...s, dip: { ...s.dip, since, ver: s.dip.ver + 1 } };
 }
