@@ -22,6 +22,7 @@ export function logLine(e, me = 0) {
     case 'goal': return { icon: 'swords', tone: 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} vyhlašuje válečný cíl proti zemi ${nm(e.b)}: z držení fronty přechází do útoku.` };   // M88
     case 'peace': return { icon: 'check', tone: 'good', world: true, mine: e.a === me || e.b === me, text: `Bílý mír mezi zeměmi ${nm(e.a)} a ${nm(e.b)}.` };
     case 'cap': return { icon: 'flag', tone: 'bad', world: true, mine: e.o === me, text: `Kapitulace: ${nm(e.o)}.` };
+    case 'cede': return { icon: 'flag', tone: e.o === me ? 'bad' : 'info', world: true, mine: e.o === me || e.x === me, text: `Mír: ${nm(e.o)} odstupuje obsazená území${e.x ? ` – získává je ${nm(e.x)}` : ''}.` };   // F3: územní mír
     case 'faction': return { icon: 'dip', tone: 'info', world: true, mine: e.o === me, text: `Nový blok „${e.x}“ (zakladatel: ${nm(e.o)}).` };
     case 'join': return { icon: 'dip', tone: 'info', world: true, mine: e.o === me, text: `${nm(e.o)} vstupuje do bloku „${e.x}“.` };
     case 'tech': return { icon: 'research', tone: 'good', world: false, mine: true, text: `Výzkum dokončen: ${TECHS[e.x]?.n || e.x}.` };
@@ -79,5 +80,5 @@ export function logImportant(e, me) {
   if (e.k === 'napq' || e.k === 'napend') return e.b === me;
   if (e.k === 'nap') return !!e.y && (e.a === me || e.b === me);
   if (e.k === 'inv') return e.b === me && !!e.a;
-  return e.k === 'cap' || e.k === 'tech' || e.k === 'focus' || e.k === 'sunk' || e.k === 'landing' || e.k === 'lands' || e.k === 'drop' || e.k === 'built' || e.k === 'doctrine' || e.k === 'free';
+  return e.k === 'cap' || e.k === 'cede' || e.k === 'tech' || e.k === 'focus' || e.k === 'sunk' || e.k === 'landing' || e.k === 'lands' || e.k === 'drop' || e.k === 'built' || e.k === 'doctrine' || e.k === 'free';
 }

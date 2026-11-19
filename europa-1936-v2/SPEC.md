@@ -1060,6 +1060,13 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   cizí rozkazy šedě a s mlhou války jen vlastní a spojenecké. Vybrané divize mají v cíli kroužek a štítek s odhadem příjezdu (`etaPill`, červený
   okraj = útok, „boj“ = část divizí bojuje). Náhled pod kurzorem vede čárkovaně od každého vybraného žetonu (společné úseky jednou) se štítkem
   „čas · útok“. Lišta výběru má řádek „Pochod do … · příjezd asi za …“ a bublina nad vlastním žetonem totéž. Formát `fmtEta` (`5 h`, `2 d 4 h`, `12 d`).
+- **Kapitulace hráčovy země**: pád hlavního města hráčovu zemi neshodí (pravidlo `CAP_CAPITAL_SHARE` platí jen pro AI země) – jako v HOI4
+  rozhoduje jen podíl území v rukou nepřítele (`capLimitOf(o).share`, výchozí 60 %, Francie 50 %); panel Diplomacie ukazuje mez země.
+- **Zimní válka a moskevský mír** (jen s historickou AI): duchové `zimni_valka` (Finsko, 110 dní od začátku války: obrana +35 %) a
+  `armada_po_cistkach` (SSSR, 70 dní: útok −30 %); řádek `fin_peace` s `peace: true` – jakmile SSSR drží 12 finských provincií (nejpozději
+  13. 3. 1940), Finsko uzavře **územní mír**: `capitulate(…, { armistice, peace })` předá okupantovi obsazené státy (hlavní provincie státu),
+  ale země nekapituluje (`cap` = 0), nestane se loutkou a žije dál jako AI země (záznam deníku `cede`). Pokračovací válka: řádek `HIST_WARS`
+  Finsko → SSSR s `with: 'GER'` – Finsko ospravedlňuje od 1. 5. 1941 a válku začne, až když SSSR válčí s Německem.
 
 ## 5. Rozhraní
 

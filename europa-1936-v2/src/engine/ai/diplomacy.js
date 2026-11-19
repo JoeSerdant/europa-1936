@@ -129,6 +129,7 @@ export function aiDiplomacy(state, o) {
     }
     if (!t || hasCapitulated(state, t) || warBlock(state, o, t) || state.dip.goal[`${o}>${t}`]) continue;   // M68: historická válka je jednorázová
     if (justReady(state, o, t)) {
+      if (plan.with && !atWar(state.mil, w.ownerIdx[plan.with], t)) continue;   // F3: válka jen po boku země `with` (pokračovací válka Finska)
       const mine = campOf(state, o).reduce((a, m) => a + divisionCount(state, m), 0);
       const theirs = campOf(state, t).reduce((a, m) => a + divisionCount(state, m), 0);
       if (!theirs || mine / theirs >= plan.ratio) return startWar(state, o, t);
