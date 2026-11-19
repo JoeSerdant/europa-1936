@@ -166,6 +166,13 @@
 .bottom-mid { position: absolute; left: 320px; bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; z-index: 4; }
 .bottom-mid > * { pointer-events: auto; }
 .bottom-mid .hint { position: static; transform: none; }
+/* F2 B5: průvodce a nápověda v levém sloupci nad minimapou, s otevřeným panelem vlevo vedle něj */
+.bottom-left .tutorial, .tut-dock .tutorial { width: 292px; }
+.bottom-left .hint, .tut-dock .hint { position: static; transform: none; width: 292px; white-space: normal; font-size: 13.5px; line-height: 1.4; padding: 9px 12px; }
+.tut-dock { position: absolute; top: calc(var(--top-h) + 58px); z-index: 9; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.tut-dock > * { pointer-events: auto; }
+.tut-dock.by-build { left: 344px; }
+.tut-dock.by-dock { left: calc(min(640px, 48vw) + 14px); }
 .toast { padding: 10px 18px; color: var(--paper); max-width: 560px; text-align: center; animation: rise 0.16s ease-out; }
 .toast.err { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 6px 20px rgba(0, 0, 0, 0.45); }   /* F2: chyba (např. selhalo automatické uložení) */
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }

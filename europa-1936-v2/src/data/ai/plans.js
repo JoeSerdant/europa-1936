@@ -33,6 +33,19 @@ export const HIST_WARS = [
 ];
 
 /** Historické bloky: země `tag` ve dni `from` založí blok a zve `invite` (pozvaný přijme podle vztahů). */
+/**
+ * Vstup členů bloků do válek bloku (F2 B1): člen `tag` se do válek svého bloku zapojí až ode dne `from` (do té doby ho blok nevolá do útoku
+ * ani do obrany – válku, kterou začne sám, vede); od toho dne se AI země sama přidá k válkám vedoucího bloku, kromě zemí ve `skip`.
+ * `from: Infinity` = do válek bloku se nezapojí nikdy (Malá dohoda Československo v roce 1938 nebránila).
+ */
+export const HIST_ENTRY = [
+  { tag: 'ITA', from: 1622 },                     // 10. 6. 1940 – vstup Itálie do války
+  { tag: 'BUL', from: 1886, skip: ['SOV'] },      // 1. 3. 1941 – přistoupení k Ose (se SSSR Bulharsko neválčilo)
+  { tag: 'HUN', from: 2003 },                     // 27. 6. 1941 – Maďarsko proti SSSR
+  { tag: 'ROM', from: Infinity },
+  { tag: 'YUG', from: Infinity },
+];
+
 export const HIST_FACTIONS = [
   { tag: 'GER', nm: 'Osa Berlín–Řím', invite: ['ITA', 'HUN', 'BUL'], from: 270 },
   { tag: 'ENG', nm: 'Britská spolupráce', invite: ['POR', 'GRE', 'EGY', 'IRQ'], from: 200 },

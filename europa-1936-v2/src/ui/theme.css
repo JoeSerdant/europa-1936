@@ -189,10 +189,26 @@ kbd {
 .stat { display: flex; align-items: center; gap: 8px; color: var(--text-3); }
 .stat span { display: flex; flex-direction: column; line-height: 1.05; }
 .stat i { font-size: 12px; color: var(--text-3); }
-.stat b { font: 600 17px/1.15 var(--display); color: var(--text); font-variant-numeric: tabular-nums; }
-/* na užších oknech se méně důležité údaje schovají, aby se střední blok s časem nepřekrýval s pravým */
-@media (max-width: 1799px) { .stat.opt { display: none; } }
-@media (max-width: 2199px) { .stat.wide { display: none; } }
+.stat b { font: 600 17px/1.15 var(--display); color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* F2 B4: pod 2200 px jsou vidět všechny ukazatele – ve dvou řádcích jako ikona + hodnota, popis je v nápovědě (title) */
+@media (max-width: 2199px) {
+  .stats { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 21px); column-gap: 16px; row-gap: 3px; align-items: center; margin-right: 8px; }
+  .stat { gap: 6px; }
+  .stat i { display: none; }
+  .stat b { font: 600 14.5px/1 var(--display); }
+  .stat > svg { width: 15px; height: 15px; flex: none; }
+  .stat-fly { top: 20px; left: 18px; }
+}
+@media (max-width: 1599px) {
+  .stats { column-gap: 11px; }
+  .stat b { font-size: 13.5px; }
+  .tb-name span { display: none; }
+  .tb-name b { font-size: 17px; }
+  .tb-time { margin-left: 14px; gap: 10px; }
+  .tb-date { min-width: 0; }
+  .tb-date b { font-size: 17px; }
+  .tb-date span { font-size: 13px; }
+}
 
 /* ------------------------------------------------------------------ mapové režimy */
 .rail { position: absolute; left: 14px; top: calc(var(--top-h) + 18px); display: flex; flex-direction: column; gap: 6px; z-index: 4; }

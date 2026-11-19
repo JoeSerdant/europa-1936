@@ -5,6 +5,13 @@ import { playerIdx } from '../actions.js';
 import { STEPS, currentStep } from './steps.js';
 import { tutorialOn, setTutorial } from './prefs.js';
 
+/** Je průvodce zapnutý? (sleduje změny volby) */
+export function useTutorialOn() {
+  const [on, setOn] = useState(tutorialOn());
+  useEffect(() => { const h = () => setOn(tutorialOn()); window.addEventListener('e1936-tutorial', h); return () => window.removeEventListener('e1936-tutorial', h); }, []);
+  return on;
+}
+
 /** Průvodce: karta s aktuálním úkolem; kroky se odškrtávají podle toho, co hráč dělá. Vypnout lze křížkem nebo v nabídce. */
 export function Tutorial() {
   const [on, setOn] = useState(tutorialOn());

@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { fogOn, visibleLand, seesDivision, seesFleet, getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, BUILDING_IDS, RESOURCES } from '../../engine/index.js';
-import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, buildIn, buildFortHere, justifyOn, selectFleet, openBattle } from '../actions.js';
+import { fogOn, visibleLand, seesDivision, seesFleet, getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, RESOURCES } from '../../engine/index.js';
+import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, setIndTab, openPanel, pickBuild, justifyOn, selectFleet, openBattle } from '../actions.js';
+
+/** Otevře panel Stavby (bez přepínání – už otevřený zůstane). */
+const openBuild = () => { setIndTab('build'); openPanel('industry'); };
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
 
 const KIND_NOTE = ['', 'přes řeku', 'průliv'];
@@ -78,12 +81,8 @@ function StateIndustry({ s }) {
         {res.length > 0 && <Row label="Těžba">{res.map(([r, n]) => `${RESOURCES[r].n} ${fmtNum(n, 1)}`).join(' · ')}</Row>}
         {info.queued.length > 0 && <Row label="Rozestavěno">{info.queued.length}</Row>}
       </dl>
-      {mine && (
-        <div className="ind-btns">
-          {BUILDING_IDS.filter((k) => !BUILDINGS[k].province && (k !== 'dok' || info.port)).map((k) => (
-            <button key={k} className="sbtn" onClick={() => buildIn(s, k)} title={BUILDINGS[k].info}><Icon name="plus" size={14} />{BUILDINGS[k].n}</button>
-          ))}
-        </div>
+      {mine && (   /* F2 B6: stavby se zadávají jen v panelu Stavby (vybrat budovu, klikat na mapu) – tady jen odkaz */
+        <div className="ind-btns"><button className="sbtn" onClick={openBuild} title="Otevře panel Stavby: vyberte budovu a klikejte na státy na mapě"><Icon name="build" size={14} />Stavby (T)</button></div>
       )}
     </section>
   );
@@ -103,8 +102,8 @@ function ProvinceFort({ p }) {
       <dl className="kv">
         <Row label="Úroveň">{lv} z {BUILDINGS.fort.max}{queued ? ` · rozestavěno ${queued}` : ''}</Row>
       </dl>
-      {mine && lv + queued < BUILDINGS.fort.max && (
-        <div className="ind-btns"><button className="sbtn" onClick={() => buildFortHere(p)} title={BUILDINGS.fort.info}><Icon name="plus" size={14} />Postavit pevnost ({BUILDINGS.fort.cost} b.)</button></div>
+      {mine && lv + queued < BUILDINGS.fort.max && (   /* F2 B6: pevnost se staví v panelu Stavby – odkaz otevře panel s vybranou pevností */
+        <div className="ind-btns"><button className="sbtn" onClick={() => { openBuild(); pickBuild('fort'); }} title={`${BUILDINGS.fort.info} Otevře panel Stavby s vybranou pevností – klikněte na provincii.`}><Icon name="shield" size={14} />Pevnost v panelu Stavby</button></div>
       )}
     </section>
   );
