@@ -26,6 +26,7 @@ export const HIST_STRATEGIES = [
   // obsazené státy a zůstane samostatné (příměří bez konference a bez loutky)
   { id: 'winter_fin', tag: 'FIN', war: 'SOV', after: 0, upto: 3, spirit: 'zimni_valka', days: 110 },
   { id: 'winter_sov', tag: 'SOV', war: 'FIN', after: 0, upto: 3, spirit: 'armada_po_cistkach', days: 70 },
+  { id: 'fin_holdout', tag: 'FIN', from: 1430, until: 1540, holdout: true },   // F3: Finsko se v zimní válce nevzdá – skončí ji územní mír
   { id: 'fin_peace', tag: 'FIN', from: 1430, until: 1700, armistice: 'SOV', held: 12, force: 1533, peace: true },
   // pokračovací válka 1941–1944: finská fronta stojí (SSSR proti Finsku jen brání), moskevské příměří 19. 9. 1944 – opět územní mír
   { id: 'sov_fin_hold', tag: 'SOV', war: 'FIN', from: 2000, until: 3150, defend: true },

@@ -11,6 +11,7 @@ import { C as ARMY } from '../army/constants.js';
 import { hasWar, enemiesOf, nearestControlled } from '../army/war.js';
 import { recruit, createArmy, assignDivisions, assignCommander, setPlan } from '../army/commands.js';
 import { diffRow } from './core.js';
+import { personaOf } from './persona.js';
 import { suggestFront, generalsOf, divisionCount } from '../army/selectors.js';
 import { campOf } from '../dip/core.js';
 import { fuelShort } from './logistics.js';
@@ -78,6 +79,11 @@ export function desiredMix(state, o) {
     const shift = fuelShort(state, o) ? 0 : Math.min(mix.pesi * 0.5, AI.MOTOR_SHIFT * Math.min(1, state.tick / 24 / AI.MOTOR_DAYS));   // M87: bez paliva se dál nemotorizuje
     if (mix.tank || tag === 'GER' || tag === 'SOV' || tag === 'FRA' || tag === 'ENG') { mix.pesi -= shift; mix.tank = (mix.tank || 0) + shift * 0.6; mix.motor = (mix.motor || 0) + shift * 0.4; }
   }
+  // F3: styl velení (`PERSONAS.mix`) – jen druhy, které země už staví; podíly se znovu sečtou na 1
+  const pm = personaOf(state, o).mix;
+  let changed = false, sum = 0;
+  for (const k in mix) { if (pm[k] && mix[k] > 0) { mix[k] *= Math.max(0, 1 + pm[k]); changed = true; } sum += mix[k]; }
+  if (changed && sum > 0) for (const k in mix) mix[k] /= sum;
   return mix;
 }
 

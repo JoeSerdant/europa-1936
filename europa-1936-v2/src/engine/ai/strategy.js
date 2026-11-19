@@ -14,6 +14,7 @@ import { aggrOf } from '../../data/ai/personality.js';
 import { landZones } from '../army/zones.js';
 import { stagingArmies, startInvasion } from './invasion.js';
 import { holdBackOf, defendOnlyOf, pushOf, noEnterOf, invadeOpOf, gatherOf } from './hist.js';
+import { personaOf } from './persona.js';
 import { ruleMult } from '../rules.js';
 import { fortOf } from '../industry/selectors.js';
 import { TERRAIN_RULES } from '../../data/army/terrain.js';
@@ -334,7 +335,8 @@ export function decideStrategy(state, o) {
   // M88: útočníkem je země jen v divadlech, kde stojí proti zemi, proti které má její tábor válečný cíl (jinde jen drží frontu – „podivná válka“ na západě během tažení v Polsku)
   const tag = w.owners[o].tag;
   const aggr = theaters.map((t) => isAggressor(state, o, new Set([...t.defenders, ...t.by.keys()])));
-  const baseNeed = (AI.ATTACK_RATIO[level] ?? 1.3) / (aggrOf(tag) * ruleMult(state, 'aggr'));   // M78: pravidlo hry „Útočnost AI“
+  const persona = personaOf(state, o);   // F3: styl velení
+  const baseNeed = (AI.ATTACK_RATIO[level] ?? 1.3) * persona.atk / (aggrOf(tag) * ruleMult(state, 'aggr'));   // M78: pravidlo hry „Útočnost AI“
   const push = pushOf(state, o);   // M93: historická ofenziva (Stalingrad, Bagration, Normandie) útočí i s menší převahou
   const pushIn = (t) => { let m = 1; for (const c of t.defenders) if (push.has(c)) m = Math.min(m, push.get(c)); return m; };
   const need = aggr.map((a, i) => baseNeed * (a ? 1 : AI.DEFENDER_MULT) * pushIn(theaters[i]));
@@ -345,7 +347,7 @@ export function decideStrategy(state, o) {
   for (const t of theaters) t.zone = t.posts.length ? zones[t.posts[0]] : 0;
   const { got, reserve } = allocateArmies(theaters, armies, { dist: (a, t) => (a.zone && t.zone && a.zone !== t.zone ? AI.UNREACH : Math.hypot(a.x - t.x, a.y - t.y) * g.kmPerPx), sticky, engaged, ratioNeed });
   // M92: záměrná chyba z historické strategie – část armád zůstane v záloze v týlu (nejdřív ty z méně důležitých divadel, z každého divadla nejvzdálenější)
-  const hold = holdBackOf(state, o), held = new Set();
+  const hold = Math.max(holdBackOf(state, o), persona.reserve), held = new Set();   // F3: styl velení „Obrana do hloubky“ drží zálohy
   if (hold > 0) {
     const all = armies.reduce((s, a) => s + a.n, 0);
     let placed = got.reduce((s, ids) => s + ids.reduce((x, id) => x + byId.get(id).n, 0), 0);
@@ -383,7 +385,7 @@ export function decideStrategy(state, o) {
     const opp = committed[i] ? AI.OPPORTUNITY_RATIO * AI.STAY_MULT : AI.OPPORTUNITY_RATIO;
     return ratio[i] >= nd && (aggr[i] || ratio[i] >= opp);
   });
-  return { armies, byId, foes, theaters, got, reserve, held, ratio, attack, aggressor, aggr, ratioNeed, view, sticky, push, gather };
+  return { armies, byId, foes, theaters, got, reserve, held, ratio, attack, aggressor, aggr, ratioNeed, view, sticky, push, gather, op: persona.op };
 }
 
 /** Kvalita armády země očima AI (M88): 1 + průměr bonusů útoku a obrany z pozemní doktríny a národních duchů, v mezích 0,7–1,4. */
@@ -514,14 +516,16 @@ export function aiStrategy(state, o) {
       }
       const score = (tp) => {
         const cap = w.owners[state.ctrl[tp]].cap;
-        return Math.hypot(g.cx[tp] - g.cx[cap], g.cy[tp] - g.cy[cap]) * g.kmPerPx - AI.TARGET_VP * w.vp[tp] + AI.TARGET_FORT * fortOf(state, tp);   // M88: pevnosti se obcházejí
+        const s0 = Math.hypot(g.cx[tp] - g.cx[cap], g.cy[tp] - g.cy[cap]) * g.kmPerPx - AI.TARGET_VP * w.vp[tp] + AI.TARGET_FORT * fortOf(state, tp);   // M88: pevnosti se obcházejí
+        return d.op === 'weak' ? s0 + AI.OP_WEAK_KM * defOf(tp) : s0;   // F3: styl „slabiny“ – slabě hájená místa mají přednost
       };
       let to = [], local = false;
       const fit = cand.length > 0 && fitArmy(state, a) && ![...t.defenders].some((c) => passive.has(c));   // M88: vyčerpaná nebo hladová armáda neútočí; M92: ani armáda s historickou strategií obrany
       if (fit && attack[i]) {
         // celková ofenziva: úder se soustředí na několik cílů (zaměřených k hlavnímu městu nepřítele), ne na celou šířku fronty
         cand.sort((p, q) => score(p) - score(q) || p - q);
-        to = cand.slice(0, Math.max(AI.TARGETS_MIN, Math.ceil(a.n / AI.DIVS_PER_TARGET)));
+        const per = AI.DIVS_PER_TARGET * (d.op === 'focus' ? AI.OP_FOCUS_MULT : d.op === 'wide' ? AI.OP_WIDE_MULT : 1);   // F3: soustředěný úder / útok po celé šíři
+        to = cand.slice(0, Math.max(d.op === 'focus' ? 1 : AI.TARGETS_MIN, Math.ceil(a.n / per)));
       } else if (fit) {
         // M88: na ofenzivu síly nestačí – armáda aspoň udeří tam, kde má místní převahu (slabě hájené nebo prázdné provincie); průlom frontu natáhne a obranu zředí.
         // Obránce (země bez válečného cíle proti protivníkovi v divadle) takhle jen osvobozuje území svého tábora.
@@ -534,7 +538,8 @@ export function aiStrategy(state, o) {
       const pick = new Set(to);
       const line = slice.filter((p) => adj[p].some((e) => pick.has(e.to)));
       if (line.length < AI.SLICE_MIN) for (const p of slice) if (!line.includes(p) && line.length < AI.SLICE_MIN) line.push(p);
-      const mode = local ? (to.every((tp) => defOf(tp) === 0) ? 'rush' : 'balanced') : ratio[i] >= AI.RUSH_RATIO || pushed ? 'rush' : 'balanced';
+      const rushAt = AI.RUSH_RATIO * (d.op === 'focus' ? AI.OP_FOCUS_RUSH : 1);   // F3: soustředěný úder dřív „Zteče“, metodický postup nikdy (mimo historickou ofenzivu)
+      const mode = local ? (to.every((tp) => defOf(tp) === 0) ? 'rush' : 'balanced') : pushed || (d.op !== 'methodical' && ratio[i] >= rushAt) ? 'rush' : 'balanced';
       const pl = { k: 'front', line: line.sort((p, q) => p - q), to: to.sort((p, q) => p - q), mode };
       if (local) pl.loc = 1;
       state = plan(state, id, pl);

@@ -12,7 +12,11 @@ it('zimní válka', () => {
   simulate(cfg, +(process.env.END || 2100), (s, d) => {
     const war = atWar(s, 'SOV', 'FIN');
     if (war && !started) { started = d; out.push(`${dateOf(s)}: válka SSSR–Finsko (den ${d})`); }
-    if (started && !capDay && !war && !s.dip.cap[F] && !out.some((x) => x.includes('konec války'))) out.push(`${dateOf(s)}: konec války bez kapitulace (den ${d}); pán ${tagOf(s.dip.sub[F])}, cap ${s.dip.cap[F]}`);
+    if (started && !capDay && !war && !s.dip.cap[F] && !out.some((x) => x.includes('konec války'))) {
+      const states = new Set(); for (const p of own0) states.add(w.provState[p]);
+      const lost = [...states].filter((x) => s.stateOwner[x] !== F).map((x) => `${w.states[x].n}→${tagOf(s.stateOwner[x])}`);
+      out.push(`${dateOf(s)}: konec války bez kapitulace (den ${d}); pán ${tagOf(s.dip.sub[F])}, hlavní město ${tagOf(s.stateOwner[w.provState[w.owners[F].cap]])}; ztracené státy: ${lost.join(', ') || 'žádné'}`);
+    }
     if (started && !capDay && (war || s.dip.cap[F])) {
       const held = own0.filter((p) => s.ctrl[p] === S).length;
       const line = `drží SSSR ${held}/${own0.length} provincií`;

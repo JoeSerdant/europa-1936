@@ -86,7 +86,12 @@ export function natDay(state) {
     }
     // AI vybírá cíl
     if (o !== player && !own.cur) {
-      const free = focusTreeOf(o).filter((f) => focusStatus(own, f) === 'available' && aiMayFocus(state, o, own, f)).sort((a, b) => a.ai - b.ai || a.y - b.y || a.x - b.x);
+      // F3: ve volné historii se pořadí cílů každou hru trochu promíchá (náhodný posun váhy podle semínka hry) – AI nejde pokaždé stejnou cestou
+      const jit = state.ai && !state.ai.hist && state.ai.level ? (f) => NAT.FREE_FOCUS_JITTER * rand01(0, o, `${f.id}:${saltOf(state)}`) : () => 0;
+      const key = new Map();
+      const free = focusTreeOf(o).filter((f) => focusStatus(own, f) === 'available' && aiMayFocus(state, o, own, f));
+      for (const f of free) key.set(f, f.ai + jit(f));
+      free.sort((a, b) => key.get(a) - key.get(b) || a.y - b.y || a.x - b.x);
       if (free.length) { own = { ...own, cur: { id: free[0].id, p: 0 }, cont: '' }; state = bump(setOwn(state, o, own)); }
       else if (!own.cont && !state.dip.cap[o]) {   // M85: strom je hotový (nebo zablokovaný) – AI drží průběžný cíl
         const want = hasWar(state.mil, o) ? 'vyroba' : 'stavby';

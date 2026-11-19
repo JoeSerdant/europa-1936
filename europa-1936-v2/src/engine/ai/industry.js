@@ -11,6 +11,7 @@ import { slotsOf, slotsUsed } from '../industry/core.js';
 import { I } from '../industry/constants.js';
 import { isUnlocked } from '../research/core.js';
 import { AI } from './constants.js';
+import { personaOf } from './persona.js';
 
 const WAR_SPLIT = { pusky: 0.4, dela: 0.2, auta: 0.15, podpora: 0.1, pdela: 0.06, ltanky: 0.05, vozy: 0.04 };
 
@@ -30,6 +31,7 @@ export function demandSplit(state, o, war, res = null) {
     for (const e in st.need) need[e] = (need[e] || 0) + mix[k] * st.need[e];
   }
   const base = war ? WAR_SPLIT : DEFAULT_SPLIT;
+  const pp = personaOf(state, o).prod;   // F3: priority výroby podle stylu velení
   const stock = state.mil.stock[o] || {};
   const w = {};
   let sum = 0;
@@ -39,12 +41,13 @@ export function demandSplit(state, o, war, res = null) {
     const f = cover > 2 ? 0.25 : cover > 1 ? 0.6 : cover < 0.3 ? 1.6 : 1;
     let avail = 1;
     if (res && PROD[e]) for (const r in PROD[e].res) avail = Math.min(avail, res[r] ? res[r].f : 0);
-    w[e] = need[e] * cost * f * Math.max(AI.RES_AVAIL_MIN, avail);
+    w[e] = need[e] * cost * f * Math.max(AI.RES_AVAIL_MIN, avail) * (pp[e] || 1);
     sum += w[e];
   }
   const out = {};
-  const bs = Object.values(base).reduce((a, b) => a + b, 0) || 1;
-  for (const e in base) out[e] = (1 - AI.DEMAND_BLEND) * base[e] / bs;
+  let bs = 0;
+  for (const e in base) bs += base[e] * (pp[e] || 1);
+  for (const e in base) out[e] = (1 - AI.DEMAND_BLEND) * base[e] * (pp[e] || 1) / (bs || 1);
   if (sum > 0) for (const e in w) out[e] = (out[e] || 0) + AI.DEMAND_BLEND * w[e] / sum;
   return out;
 }

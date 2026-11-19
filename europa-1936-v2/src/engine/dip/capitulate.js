@@ -45,6 +45,7 @@ export function capitulate(state, loser, opts = {}) {
   const ctrl = state.ctrl.slice();
   const foes = enemiesOf(state.mil, loser).filter((c) => !state.dip.cap[c]);   // M95: účastníci mírové konference
   const by = {}, val = {}, occ = {};
+  const capState = w.provState[w.owners[loser].cap];   // F3: územní mír – hlavní město zůstane poraženému
   for (let s = 1; s < w.states.length; s++) {
     if (stateOwner[s] !== loser) continue;
     const c = ctrl[w.states[s].cap];
@@ -52,9 +53,10 @@ export function capitulate(state, loser, opts = {}) {
     occ[s] = c;   // M95: okupovaný stát jde na konferenční stůl (okupant ho získá levněji)
     by[c] = (by[c] || 0) + 1;
     val[c] = (val[c] || 0) + stateValue(state, s);   // M84: hodnota dobytých států = body vítěze v mírové konferenci
-    if (opts.armistice) { stateOwner[s] = c; for (const p of w.states[s].v) ctrl[p] = c; }   // M93: po příměří připadnou okupované státy okupantům hned
+    if (opts.armistice && !(opts.peace && s === capState)) { stateOwner[s] = c; for (const p of w.states[s].v) ctrl[p] = c; }   // M93: po příměří připadnou okupované státy okupantům hned
   }
   if (opts.victor && !Object.keys(by).length) by[opts.victor] = 1;   // M98: bezpodmínečná kapitulace bez okupace – konferenci vede země z koleje
+  if (opts.peace) for (let p = 1; p <= w.L; p++) if (stateOwner[w.provState[p]] === loser && ctrl[p] !== loser) ctrl[p] = loser;   // F3: územní mír – zbytek země se vyklidí
   // M88: cizí území, které poražený sám okupoval, se vrací vlastníkům (jeho divize tam pak zaniknou nebo odejdou domů)
   for (let p = 1; p <= w.L; p++) if (ctrl[p] === loser) { const own = stateOwner[w.provState[p]]; if (own !== loser) ctrl[p] = own; }
   // F2 B3: hráčova země pokračuje v exilu – hostitelem může být i spojenec mimo blok, který ještě bojuje (Británie po pádu Francie)

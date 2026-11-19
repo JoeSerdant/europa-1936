@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { fogOn, visibleLand, seesDivision, seesFleet, getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, RESOURCES } from '../../engine/index.js';
+import { fogOn, visibleLand, seesDivision, seesFleet, getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, RESOURCES, personaOf } from '../../engine/index.js';
 import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, setIndTab, openPanel, pickBuild, justifyOn, selectFleet, openBattle } from '../actions.js';
 
 /** Otevře panel Stavby (bez přepínání – už otevřený zůstane). */
@@ -196,6 +196,8 @@ function LandDossier({ p, owner, ctrl }) {
   const cap = w.owners[owner[o.s]].cap === p;
   const tick = useGameSlow((g) => g.tick, 5000);
   const weather = weatherAt(tick, p);
+  const ai = useGame((g) => g.ai), me = useGame((g) => g.player);
+  const style = ai && ai.level && own.tag !== me ? personaOf({ ai }, owner[o.s]) : null;   // F3: styl velení AI země
   return (
     <>
       <div className="head">
@@ -205,6 +207,7 @@ function LandDossier({ p, owner, ctrl }) {
       <div className="body">
         <dl className="kv">
           <Row label="Vlastník"><span className="who"><Flag tag={own.tag} width={22} />{own.name}</span></Row>
+          {style && <Row label="Velení AI"><span title={style.info}>{style.n}</span></Row>}
           {ctrl[p] !== owner[o.s] && <Row label="Kontrola"><span className="who"><Flag tag={ctl.tag} width={22} />{ctl.name}</span></Row>}
           {cap && <Row label="Postavení">hlavní město</Row>}
           <Row label="Terén">{TERRAIN_CS[o.t]}</Row>

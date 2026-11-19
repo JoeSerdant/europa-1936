@@ -153,6 +153,17 @@ describe('zimní válka a moskevský mír (F3)', () => {
     expect(s.log.items.some((e) => e.k === 'cede' && e.o === FIN && e.x === SOV)).toBe(true);
     expect(validateState(s)).toBeNull();
   });
+  it('při územním míru zůstane Finsku hlavní město a neobsazený zbytek země se vyklidí', () => {
+    const capS = W.provState[W.owners[FIN].cap];
+    let s0 = held(war(at(base(), 1460), SOV, FIN), 12);
+    const ctrl = s0.ctrl.slice();
+    for (const p of W.states[capS].v) ctrl[p] = SOV;   // Sověti drží i Helsinky
+    s0 = { ...s0, ctrl };
+    const s = dipDay(s0);
+    expect(s.dip.cap[FIN]).toBe(0);
+    expect(s.stateOwner[capS]).toBe(FIN);
+    for (let p = 1; p <= W.L; p++) if (s.stateOwner[W.provState[p]] === FIN) expect(s.ctrl[p]).toBe(FIN);
+  });
 });
 
 describe('konec války v Evropě (M98)', () => {
