@@ -16,6 +16,10 @@ export const AI = {
   ATTACK_RATIO: { 1: 2.0, 2: 1.3, 3: 1.0 },    // nejmenší poměr vlastních divizí k účinné síle nepřítele v divadle, aby AI útočila (M66)
   TARGETS_MIN: 2,                   // nejméně cílů útoku armády
   DIVS_PER_TARGET: 3,               // cílů útoku na tolik divizí armády
+  OP_FOCUS_MULT: 1.75,              // F3: styl „soustředěný úder“ – víc divizí na jeden cíl (méně cílů)
+  OP_FOCUS_RUSH: 0.85,              // F3: … a režim „Zteče“ už při menší převaze
+  OP_WIDE_MULT: 0.7,                // F3: styl „útok po celé šíři“ – méně divizí na cíl (víc cílů)
+  OP_WEAK_KM: 60,                   // F3: styl „slabiny“ – cíl se horší o tolik km za každou bránící divizi
   REAR_DEPTH: 7,                    // jak hluboko za frontou (kroky po vlastním území) se hledá týl pro druhý sled (M88)
   FRONT_FILL: 1.0,                  // podíl zásobovací kapacity postů divadla, který smí obsadit první sled (M88)
   PUSH_FILL: 1.5,                   // za historické ofenzivy (`push`) smí první sled obsadit tolikrát víc zásobovací kapacity postů (M99)

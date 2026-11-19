@@ -2,6 +2,8 @@
 export { AI } from './constants.js';
 export { aiMult, isAi, playerOf, diffOf } from './core.js';
 export { DIFFICULTY, DIFF_IDS } from '../../data/ai/difficulty.js';
+export { personaId, personaOf } from './persona.js';
+export { PERSONAS } from '../../data/ai/personas.js';
 export { targetDivs, scanArmies } from './army.js';
 export { aiDay } from './day.js';
 export { HIST_WARS, HIST_FACTIONS, HIST_ENTRY } from '../../data/ai/plans.js';

@@ -1073,6 +1073,15 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   (války a mír, diplomacie, výzkum a doktríny, národní cíle a události, stavby, vojenské operace, ostatní); u každé hráč volí „Jen deník“,
   „Oznámit“ (výchozí) nebo „Oznámit a pozastavit“. Čte je jen `announceLog` (`ui/hooks.js`) přes `notifyMode(e.k)`; pauzu dělá `pauseForNotice`
   (zavření novin ji pak nezruší). Noviny ze světa mají vlastní přepínač. Volby jsou v localStorage `e1936.notify`, ne v herním stavu.
+- **Styly velení AI** (`data/ai/personas.js`, `engine/ai/persona.js`): každá AI země má styl `PERSONAS` – vyvážené velení, pohyblivá válka,
+  masová armáda, palebná převaha, obrana do hloubky, hledání slabin. Styl se neukládá: s historickou AI podle `HIST_PERSONA` (Německo pohyblivá
+  válka, SSSR masová armáda, Francie obrana do hloubky, Británie palebná převaha, ostatní vyvážené), ve volné historii los `personaId` podle
+  `saltOf` a země (historický styl má dvojnásobnou váhu). Účinky: `mix` v `desiredMix` (složení armády, jen druhy, které země staví), `prod`
+  v `demandSplit` (priority výroby), `atk` násobí převahu potřebnou k útoku a `reserve` zálohy v `decideStrategy`, `op` v `aiStrategy`:
+  `focus` = méně cílů na armádu (`AI.OP_FOCUS_MULT`) a dřívější „Zteče“, `wide` = víc cílů (`AI.OP_WIDE_MULT`), `methodical` = bez „Zteče“
+  mimo historické ofenzivy, `weak` = cíle podle slabé obrany (`AI.OP_WEAK_KM` za bránící divizi). Karta provincie ukazuje „Velení AI“.
+- **Volná historie pestřeji**: pořadí národních cílů AI se posune náhodně o 0–`NAT.FREE_FOCUS_JITTER` váhy podle semínka hry;
+  váha historické politické cesty `NAT.ALT_HIST_W` 8 → 5.
 - **Zimní válka a moskevský mír** (jen s historickou AI): duchové `zimni_valka` (Finsko, 110 dní od začátku války: obrana +35 %) a
   `armada_po_cistkach` (SSSR, 70 dní: útok −30 %); řádek `fin_peace` s `peace: true` – jakmile SSSR drží 12 finských provincií (nejpozději
   13. 3. 1940), Finsko uzavře **územní mír**: `capitulate(…, { armistice, peace })` předá okupantovi obsazené státy (hlavní provincie státu),
