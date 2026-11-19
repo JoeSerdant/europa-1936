@@ -8,3 +8,4 @@ export { PLAN_MODES, MODE_NAMES } from './plans.js';
 export { genLevel, xpForLevel, genMods } from './leaders.js';
 export { supplyFlow } from './supply.js';
 export { geo, adjacency } from './geo.js';
+export { marchEta, marchPreview } from './march.js';

@@ -1,10 +1,11 @@
 // Vrstva jednotek na mapě: z herního stavu staví žetony (divize ve stejné provincii se sloučí), shlukuje je při oddálení,
 // hledá žeton pod kurzorem a v obdélníku a kreslí žetony, šipky rozkazů, značky bitev a plány armád.
 // Data (buildCounters, clusterCounters, routesOf, ...) jsou čistá a jdou testovat bez plátna; kreslení používá Canvas 2D jen v metodách UnitLayer.
-import { geo, deriveStats, atWar, fogOn, visibleLand, sameFaction, getWorld } from '../../engine/index.js';
+import { geo, deriveStats, atWar, fogOn, visibleLand, sameFaction, getWorld, marchEta } from '../../engine/index.js';
+import { fmtEta } from '../format.js';
 import { labelPath } from './geometry.js';
 import { worldToScreen } from './camera.js';
-import { drawCounter, counterLook, counterScale, counterSize, arrowHead, COUNTER } from './counters.js';
+import { drawCounter, counterLook, counterScale, counterSize, arrowHead, etaPill, COUNTER } from './counters.js';
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const SUP_WARN_HOURS = 48;       // žeton ukáže varování, když divize bez zásob čerpá batoh a zbývá méně hodin
@@ -86,23 +87,44 @@ export function clusterCell(zoom, minPx) {
   return 2 ** Math.ceil(Math.log2(Math.max(1e-3, minPx / zoom)));
 }
 
-/** Rozkazy k pohybu: pro každou jedinečnou cestu { o, nodes: [provincie…], ids, attack }. Útok = cílová provincie patří nepříteli. */
+/**
+ * Rozkazy k pohybu: pro každou jedinečnou cestu { o, nodes: [provincie…], ids, attack, prog }. Útok = cílová provincie patří nepříteli.
+ * `prog` = průměrný postup (0–100) pochodujících divizí na první úsek – čára pak začíná u posunutého žetonu (F3).
+ * F3: s mlhou války hráč vidí jen rozkazy svých a spojeneckých divizí (cizí rozkazy v HOI4 vidět nejsou).
+ */
 export function routesOf(game) {
-  const mil = game.mil;
+  const mil = game.mil, w = getWorld();
+  const fog = fogOn(game), me = fog ? w.ownerIdx[game.player] : 0;
+  const seen = fog ? new Int8Array(w.owners.length) : null;   // 1 = vidět, -1 = skryté (spočítá se líně)
   const map = new Map();
   for (let id = 1; id < mil.divs.length; id++) {
     const d = mil.divs[id];
     if (!d || !d.path.length) continue;
+    if (fog && d.o !== me) {
+      if (!seen[d.o]) seen[d.o] = sameFaction(game, me, d.o) ? 1 : -1;
+      if (seen[d.o] < 0) continue;
+    }
     const sig = `${d.o}:${d.p}:${d.path.join(',')}`;
     let r = map.get(sig);
     if (!r) {
       const last = d.path[d.path.length - 1];
-      r = { o: d.o, nodes: [d.p, ...d.path], ids: [], attack: game.ctrl[last] !== d.o && atWar(game, d.o, game.ctrl[last]) };
+      r = { o: d.o, nodes: [d.p, ...d.path], ids: [], attack: game.ctrl[last] !== d.o && atWar(game, d.o, game.ctrl[last]), prog: 0, np: 0 };
       map.set(sig, r);
     }
     r.ids.push(id);
+    if (d.b === 0 && d.prog >= MOVING_MIN_PROG) { r.prog += d.prog; r.np++; }
   }
-  return [...map.values()];
+  const out = [];
+  for (const r of map.values()) { r.prog = r.np ? r.prog / r.np : 0; delete r.np; out.push(r); }
+  return out;
+}
+
+/** F3: začátek čáry rozkazu – u žetonu, který už je na cestě k první provincii (stejná interpolace jako `buildCounters`). */
+export function routeStart(g, r) {
+  const a = r.nodes[0];
+  if (!r.prog || r.nodes.length < 2) return [g.cx[a], g.cy[a]];
+  const b = r.nodes[1], t = clamp(r.prog / 100, 0, 1);
+  return [g.cx[a] + (g.cx[b] - g.cx[a]) * t, g.cy[a] + (g.cy[b] - g.cy[a]) * t];
 }
 
 /** Barvy plánů armád na mapě (M103): každá armáda podle id jinou. */
@@ -214,6 +236,7 @@ export class UnitLayer {
     this.player = 0;
     this.cluster = { cell: 0, src: null, list: [] };
     this.hits = [];                 // žetony z posledního snímku: { x0, y0, x1, y1, c }
+    this.routeView = null; this.etaList = []; this.etaSrc = null; this.etaSel = null;   // F3: náhled rozkazu a odhady příjezdu vybraných
     this.fleetSrc = null; this.fleetTokens = []; this.fleetRoutes = []; this.fleetSel = 0; this.fleetHits = [];   // M27: flotily
     this.airSrc = null; this.airPlayer = null; this.air = { lines: [], bases: [] };   // M30: letectvo
     this.stats = { counters: 0, shown: 0, ms: 0 };
@@ -282,21 +305,21 @@ export class UnitLayer {
       if (!inView(r.nodes)) continue;
       const mine = r.ids.some((id) => sel.has(id));
       const rel = this.relation(r.o);
-      if (mine) lines.sel.push(r); else if (r.attack) lines.atk.push(r); else if (rel === 'own') lines.own.push(r); else lines.enemy.push(r);
+      if (mine) lines.sel.push(r); else if (rel !== 'own') lines.enemy.push(r); else if (r.attack) lines.atk.push(r); else lines.own.push(r);   // F3: červeně jen vlastní útoky, cizí rozkazy šedě
     }
     const strokeRoutes = (list, width, color, alpha, head) => {
       if (!list.length) return;
       ctx.globalAlpha = alpha;
       ctx.lineWidth = (width + 2.4) * px; ctx.strokeStyle = 'rgba(6,10,14,0.85)';
       ctx.beginPath();
-      for (const r of list) { ctx.moveTo(g.cx[r.nodes[0]], g.cy[r.nodes[0]]); for (let i = 1; i < r.nodes.length; i++) ctx.lineTo(g.cx[r.nodes[i]], g.cy[r.nodes[i]]); }
+      for (const r of list) { const [sx, sy] = routeStart(g, r); ctx.moveTo(sx, sy); for (let i = 1; i < r.nodes.length; i++) ctx.lineTo(g.cx[r.nodes[i]], g.cy[r.nodes[i]]); }
       ctx.stroke();
       ctx.lineWidth = width * px; ctx.strokeStyle = color;
       ctx.stroke();
       ctx.fillStyle = color;
       for (const r of list) {
         const n = r.nodes.length;
-        const bx = g.cx[r.nodes[n - 2]], by = g.cy[r.nodes[n - 2]], ex = g.cx[r.nodes[n - 1]], ey = g.cy[r.nodes[n - 1]];
+        const [bx, by] = n > 2 ? [g.cx[r.nodes[n - 2]], g.cy[r.nodes[n - 2]]] : routeStart(g, r), ex = g.cx[r.nodes[n - 1]], ey = g.cy[r.nodes[n - 1]];
         ctx.lineWidth = 1.2 * px; ctx.strokeStyle = 'rgba(6,10,14,0.85)';
         arrowHead(ctx, ex, ey, ex - bx, ey - by, head * px);
         ctx.fill(); ctx.stroke();
@@ -307,6 +330,17 @@ export class UnitLayer {
     strokeRoutes(lines.own, 2.2, '#8fdc72', 0.9, 9);
     strokeRoutes(lines.atk, 2.8, '#ff6a47', 0.95, 10);
     strokeRoutes(lines.sel, 3.2, '#ffd25a', 1, 11);
+    // F3: cíle vybraných divizí – kroužek v cílové provincii (štítek s odhadem příjezdu kreslí drawScreen)
+    if (lines.sel.length) {
+      const done = new Set();
+      ctx.lineWidth = 2.2 * px; ctx.strokeStyle = '#ffd25a';
+      for (const r of lines.sel) {
+        const t = r.nodes[r.nodes.length - 1];
+        if (done.has(t)) continue;
+        done.add(t);
+        ctx.beginPath(); ctx.arc(g.cx[t], g.cy[t], 9 * px, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
     // cesty flotil po moři (čárkovaně, vybraná zlatě)
     if (this.fleetRoutes.length) {
       ctx.setLineDash([8 * px, 6 * px]);
@@ -359,15 +393,82 @@ export class UnitLayer {
       for (const f of b.from) drawAttackArrow(ctx, g.cx[f], g.cy[f], tx, ty, w, px, '#ff5a38');
     }
 
-    if (route && route.nodes && route.nodes.length > 1) {
+    // náhled rozkazu pod kurzorem (F3: od každého vybraného žetonu, s hrotem v cíli; odhad příjezdu kreslí drawScreen)
+    this.routeView = route && route.routes && route.routes.length ? route : null;
+    if (this.routeView) {
+      const col = route.attack ? '#ff6a47' : '#fff3c4';
       ctx.setLineDash([7 * px, 5 * px]);
-      ctx.lineWidth = 2.6 * px; ctx.strokeStyle = route.attack ? '#ff6a47' : '#fff3c4';
-      ctx.beginPath();
-      ctx.moveTo(g.cx[route.nodes[0]], g.cy[route.nodes[0]]);
-      for (let i = 1; i < route.nodes.length; i++) ctx.lineTo(g.cx[route.nodes[i]], g.cy[route.nodes[i]]);
-      ctx.stroke();
+      ctx.lineWidth = 4.6 * px; ctx.strokeStyle = 'rgba(6,10,14,0.55)';
+      const path = () => {   // společné úseky tras se kreslí jednou (překryté čárkované čáry by splynuly v plnou)
+        ctx.beginPath();
+        const seen = new Set();
+        for (const r of route.routes) {
+          const [sx, sy] = routeStart(g, r);
+          ctx.moveTo(sx, sy); ctx.lineTo(g.cx[r.nodes[1]], g.cy[r.nodes[1]]);
+          for (let i = 2; i < r.nodes.length; i++) {
+            const k = r.nodes[i - 1] * 65536 + r.nodes[i];
+            if (seen.has(k)) continue;
+            seen.add(k);
+            ctx.moveTo(g.cx[r.nodes[i - 1]], g.cy[r.nodes[i - 1]]); ctx.lineTo(g.cx[r.nodes[i]], g.cy[r.nodes[i]]);
+          }
+        }
+      };
+      path(); ctx.stroke();
+      ctx.lineWidth = 2.6 * px; ctx.strokeStyle = col;
+      path(); ctx.stroke();
       ctx.setLineDash([]);
+      ctx.fillStyle = col; ctx.lineWidth = 1.2 * px; ctx.strokeStyle = 'rgba(6,10,14,0.85)';
+      for (const r of route.routes) {
+        const n = r.nodes.length;
+        const [bx, by] = n > 2 ? [g.cx[r.nodes[n - 2]], g.cy[r.nodes[n - 2]]] : routeStart(g, r), ex = g.cx[r.nodes[n - 1]], ey = g.cy[r.nodes[n - 1]];
+        arrowHead(ctx, ex, ey, ex - bx, ey - by, 10 * px);
+        ctx.fill(); ctx.stroke();
+      }
     }
+  }
+
+  /**
+   * F3: odhady příjezdu vybraných vlastních divizí – pro každý cíl { dest, hours (-1 = všechny v boji), fighting, attack }.
+   * Přepočítá se jen se změnou divizí nebo výběru.
+   */
+  selMarks() {
+    if (this.etaSrc === this.divs && this.etaSel === this.selected) return this.etaList;
+    this.etaSrc = this.divs; this.etaSel = this.selected;
+    const game = this.game, byDest = new Map();
+    if (game && this.player) {
+      for (const id of this.selected) {
+        const d = game.mil.divs[id];
+        if (!d || d.o !== this.player || !d.path.length) continue;
+        const t = d.path[d.path.length - 1];
+        if (!byDest.has(t)) byDest.set(t, []);
+        byDest.get(t).push(id);
+      }
+    }
+    this.etaList = [...byDest].map(([dest, ids]) => {
+      const e = marchEta(game, ids);
+      return { dest, hours: e.hours, fighting: e.fighting, attack: game.ctrl[dest] !== this.player && atWar(game, this.player, game.ctrl[dest]) };
+    });
+    return this.etaList;
+  }
+
+  /** F3: štítky s odhadem příjezdu (vybrané rozkazy a náhled pod kurzorem) v obrazovkovém prostoru. */
+  drawEta(ctx, cam, view, s) {
+    const g = this.g;
+    const [vx0, vy0, vx1, vy1] = view;
+    const above = COUNTER.H * s / 2 + 6;
+    const pill = (p, text, tone) => {
+      const x = g.cx[p], y = g.cy[p];
+      if (x < vx0 - 80 || x > vx1 + 80 || y < vy0 - 40 || y > vy1 + 60) return;
+      const [sx, sy] = worldToScreen(cam, x, y);
+      etaPill(ctx, text, sx, sy - above, tone);
+    };
+    const prev = this.routeView;
+    const prevDest = prev ? prev.routes[0].nodes[prev.routes[0].nodes.length - 1] : 0;
+    for (const m of this.selMarks()) {
+      if (m.dest === prevDest) continue;   // náhled do téhož cíle má přednost
+      pill(m.dest, m.hours < 0 ? 'v boji' : `${fmtEta(m.hours)}${m.fighting ? ' · boj' : ''}`, m.attack ? '#ff6a47' : '#ffd25a');
+    }
+    if (prev && prev.hours >= 0) pill(prevDest, `${fmtEta(prev.hours)}${prev.attack ? ' · útok' : ''}`, prev.attack ? '#ff6a47' : '#fff3c4');
   }
 
   /** Plán armády: provincie ke hájení (modře), linie a cíle útoku (červeně), šipky z linie k cílům. */
@@ -434,6 +535,7 @@ export class UnitLayer {
       drawCounter(ctx, c, sx, sy, this.looks[c.o], { s, rel: this.relation(c.o), sel: sc === 0 ? 0 : sc >= c.n ? 2 : 1, hover: this.isHover(c) });
       this.hits.push({ x0: sx - w / 2 - 1, y0: sy - COUNTER.H * s / 2 - 1, x1: sx + w / 2 + 1, y1: sy - COUNTER.H * s / 2 + total, c });
     }
+    this.drawEta(ctx, cam, view, s);   // F3: odhady příjezdu nad žetony
     // flotily: žetony ve středech mořských oblastí
     this.fleetHits.length = 0;
     if (this.fleetTokens.length) {

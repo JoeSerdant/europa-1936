@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
-import { getWorld, TERRAIN_CS, divisionView } from '../../engine/index.js';
+import { getWorld, TERRAIN_CS, divisionView, marchEta } from '../../engine/index.js';
+import { fmtEta } from '../format.js';
 import { summarize, pct, CLS_NAMES, STATUS_NAMES } from '../army/helpers.js';
 
 // poslední poloha kurzoru (sleduje se vždy, aby bublina při zobrazení nevyskočila v rohu)
@@ -19,12 +20,15 @@ function UnitLines({ ids, state }) {
   const sum = summarize(state, ids);
   const view = ids.length === 1 ? divisionView(state, ids[0]) : null;
   const mixed = sum.owners.size > 1;
+  // F3: u vlastních divizí na pochodu cíl a odhad příjezdu (cizí rozkazy hráč nevidí)
+  const march = state.player && first.o === w.ownerIdx[state.player] ? marchEta(state, ids) : null;
   return (
     <>
       <b>{view ? view.name : `${ids.length} ${ids.length < 5 ? 'divize' : 'divizí'}`}</b>
       <span>{mixed ? 'Různé země' : <><Flag tag={owner.tag} width={20} /> {owner.name}</>}{view ? ` · ${view.tplName}` : ''}</span>
       <span>Síla {pct(sum.hp)} · Organizace {pct(sum.org)}</span>
       <span>{view ? STATUS_NAMES[view.status] : Object.entries(sum.classes).map(([k, n]) => `${CLS_NAMES[k]} ${n}`).join(', ')}</span>
+      {march && march.hours >= 0 ? <span className="tip-march">Pochod do {w.provName(march.dest)} · příjezd asi za {fmtEta(march.hours)}</span> : null}
       <i className="tip-sep" />
     </>
   );

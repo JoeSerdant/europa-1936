@@ -428,3 +428,10 @@
   .acard { height: 44px; width: 98px; }
   .acard .portrait { width: 30px; height: 36px; }
 }
+
+/* ---- F3: pohyb jako v HOI4 – cíl a odhad příjezdu vybraných divizí ---- */
+.sel-march { display: flex; align-items: center; gap: 7px; padding: 5px 8px; font-size: 13px; color: var(--text-3); background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+.sel-march .icon { color: #ffd25a; flex: none; }
+.sel-march b { color: var(--text); font-weight: 600; }
+.sel-march em { margin-left: auto; font-style: normal; color: #ff9c86; white-space: nowrap; }
+.tooltip .tip-march { color: #ffe39a; }

@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { armyTree, divisionView, ARMY, getWorld } from '../../engine/index.js';
+import { armyTree, divisionView, ARMY, getWorld, marchEta } from '../../engine/index.js';
 import { Portrait } from './Portrait.jsx';
 import {
   playerIdx, ownSelected, newArmy, addSelectionToArmy, removeSelectionFromArmy, stopSelected, disbandSelected, focusSelection, clearSelection, toggleDivision,
 } from '../actions.js';
-import { fmtNum, plural } from '../format.js';
+import { fmtNum, plural, fmtEta } from '../format.js';
 import { ClsIcon, Bar, Status } from './parts.jsx';
 import { summarize, pct, CLS_NAMES, RANK_NAMES } from './helpers.js';
 
@@ -83,6 +83,7 @@ export function SelectionBar() {
   const army = armyId > 0 ? state.mil.armies[armyId] : null;
   const cmd = army && army.cmd ? state.mil.gens[army.cmd] : null;
   const mixedOwners = sum.owners.size > 1;
+  const march = mine && moving ? marchEta(state, ids) : null;   // F3: cíl a odhad příjezdu nejpomalejší divize
 
   return (
     <section className="panel selbar" aria-label="Vybrané jednotky">
@@ -129,6 +130,13 @@ export function SelectionBar() {
             {ids.length > MINI_MAX && <span className="mdiv more">+{ids.length - MINI_MAX}</span>}
           </div>
         </>
+      )}
+      {march && (march.hours >= 0 || march.fighting > 0) && (
+        <div className="sel-march" title="Odhad podle rychlosti, terénu, počasí a železnice; bitvy cestou pochod prodlouží">
+          <Icon name="speed" size={15} />
+          {march.hours >= 0 ? <span>Pochod do <b>{w.provName(march.dest)}</b> · příjezd asi za <b>{fmtEta(march.hours)}</b></span> : <span>Útok probíhá</span>}
+          {march.fighting > 0 && march.hours >= 0 ? <em>{march.fighting} v boji</em> : null}
+        </div>
       )}
       {mine && (
         <div className="sel-actions icons" role="toolbar" aria-label="Povely">

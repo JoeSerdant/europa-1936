@@ -197,6 +197,7 @@ export function planArmy(ctx, armyId, byArmy, pathOf) {
     for (const id of ids) {
       const d = ctx.divs[id];
       if (d.b !== 0) continue;                                             // v boji
+      if (d.mo && d.path.length && d.path[d.path.length - 1] === d.mo) continue;   // F3: ruční rozkaz hráče doběhne, pak se divize vrátí k plánu (jako v HOI4)
       const last = d.path.length ? d.path[d.path.length - 1] : d.p;
       if (targetSet.has(last)) continue;                                   // útočí na cíl plánu
       if (want.has(last) && (have.get(last) || 0) < want.get(last)) have.set(last, (have.get(last) || 0) + 1);
@@ -262,7 +263,7 @@ export function aiPlanCountry(ctx, o, byArmy, onlyAuto = false, threats = null) 
   const mine = [];
   for (let id = 1; id < ctx.armies.length; id++) {
     const a = ctx.armies[id];
-    if (a && a.o === o && byArmy.has(id) && (onlyAuto ? a.plan && a.plan.auto : !a.plan || a.plan.auto)) mine.push(id);
+    if (a && a.o === o && !a.man && byArmy.has(id) && (onlyAuto ? a.plan && a.plan.auto : !a.plan || a.plan.auto)) mine.push(id);   // F3: `man` = armáda v ručním velení hráče
   }
   if (!mine.length) return;
   const belt = frontBelt(ctx, o, enemies);
@@ -338,7 +339,7 @@ function playerFront(ctx, o, byArmy, weekly) {
   if (hasWar(ctx.mil, o)) { if (weekly) aiPlanCountry(ctx, o, byArmy, true); return; }
   const threats = [...new Set((ctx.state.dip ? ctx.state.dip.just : []).filter((j) => j.b === o).map((j) => j.a))];
   if (!threats.length) return;
-  const fresh = (() => { for (let id = 1; id < ctx.armies.length; id++) { const a = ctx.armies[id]; if (a && a.o === o && !a.plan && byArmy.has(id)) return true; } return false; })();
+  const fresh = (() => { for (let id = 1; id < ctx.armies.length; id++) { const a = ctx.armies[id]; if (a && a.o === o && !a.plan && !a.man && byArmy.has(id)) return true; } return false; })();
   if (weekly || fresh) aiPlanCountry(ctx, o, byArmy, false, threats);
 }
 

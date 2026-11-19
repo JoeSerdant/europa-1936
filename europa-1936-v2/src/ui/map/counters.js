@@ -148,6 +148,26 @@ export function drawCounter(ctx, c, x, y, look, opts) {
   if (c.retreat && !c.fight) badge(ctx, 'retreat', bx, by, r);
 }
 
+/**
+ * F3: štítek s odhadem příjezdu (jako v HOI4) se středem dole v bodě (x, y): tmavé tělo, barevný okraj, ikona hodin a text.
+ * `tone` = barva okraje a ikony (zlatá pro vybrané rozkazy, červená pro útok).
+ */
+export function etaPill(ctx, text, x, y, tone) {
+  ctx.font = `700 11px ${FONT_TEXT}`;
+  const tw = ctx.measureText(text).width, h = 17, w = tw + 25;
+  const x0 = Math.round(x - w / 2), y0 = Math.round(y - h);
+  ctx.fillStyle = 'rgba(8,12,16,0.92)';
+  roundRect(ctx, x0, y0, w, h, 4); ctx.fill();
+  ctx.strokeStyle = tone; ctx.lineWidth = 1.3; ctx.stroke();
+  // hodiny
+  const cx = x0 + 9.5, cy = y0 + h / 2;
+  ctx.beginPath(); ctx.arc(cx, cy, 4.6, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy - 2.8); ctx.lineTo(cx, cy); ctx.lineTo(cx + 2.2, cy + 1.2); ctx.stroke();
+  ctx.fillStyle = '#fff6dc'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, x0 + 17, cy + 0.5);
+  return { x0, y0, x1: x0 + w, y1: y0 + h };
+}
+
 /** Šipka na konci čáry: hrot v bodě (x, y) ve směru (dx, dy). */
 export function arrowHead(ctx, x, y, dx, dy, size) {
   const len = Math.hypot(dx, dy) || 1;

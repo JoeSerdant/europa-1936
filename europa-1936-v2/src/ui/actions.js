@@ -1,10 +1,10 @@
 // Akce rozhraní: přechody mezi obrazovkami, výběr oblasti, mapové režimy a veškeré povely armádě. Jediné místo, které mění zároveň herní stav,
 // stav UI a kameru. Příkazy enginu jsou neutrální (nehlídají, komu jednotka patří) – vlastnictví vůči hráči se kontroluje tady.
 import {
-  createGame, getWorld, setPaused, provinceOwner, countryName, findPath, geo, ARMY,
+  createGame, getWorld, setPaused, provinceOwner, countryName, geo, ARMY,
   declareWar, makePeace, orderMove, cancelOrder, disband,
   createArmy, renameArmy, disbandArmy, assignDivisions, createGroup, renameGroup, disbandGroup, assignArmies, assignCommander,
-  setPlan, clearPlan, setPlanMode, suggestFront,
+  setPlan, clearPlan, setPlanMode, suggestFront, takeCommand, marchPreview,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
   justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, warBlock, peaceBlock, inviteBlock, justReady,
   formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, setFleetMission, orderSail, sailBlock, navyOf, SHIPS,
@@ -338,20 +338,38 @@ export function orderSelected(prov, { queue = false } = {}) {
   const s = gameStore.getState();
   const ids = ownSelected(s);
   if (!ids.length || !getWorld().isLand(prov)) return false;
-  if (!run(orderMove, ids, prov, queue)) {
-    if (ids.every((id) => s.mil.divs[id].p === prov || (queue && s.mil.divs[id].path.includes(prov)))) return false;
-    if (queue) { toast('Další bod trasy se nepodařilo najít.'); return false; }
-    // po souši to nejde: zkusit lodní přepravu (M27)
-    const why = sailBlock(s, ids, prov);
-    if (!why) {
-      if (run(orderSail, ids, prov)) { toast('Divize vyplouvají na moře.'); pruneSelection(); return true; }
-      toast('Trasu přes moře se nepodařilo najít (blokáda nebo příliš daleko).');
-      return false;
-    }
-    toast(`Tam se jednotky nedostanou po souši. Lodí: ${why}`);
+  if (run(orderMove, ids, prov, queue)) { afterManualOrder(s, ids); return true; }
+  if (ids.every((id) => s.mil.divs[id].p === prov || (queue && s.mil.divs[id].path.includes(prov)))) return false;
+  if (queue) { toast('Další bod trasy se nepodařilo najít.'); return false; }
+  // po souši to nejde: zkusit lodní přepravu (M27)
+  const why = sailBlock(s, ids, prov);
+  if (!why) {
+    if (run(orderSail, ids, prov)) { toast('Divize vyplouvají na moře.'); pruneSelection(); return true; }
+    toast('Trasu přes moře se nepodařilo najít (blokáda nebo příliš daleko).');
     return false;
   }
-  return true;
+  toast(`Tam se jednotky nedostanou po souši. Lodí: ${why}`);
+  return false;
+}
+
+let planHint = false;   // F3: upozornění „rozkaz má přednost před plánem“ jen jednou za spuštění hry
+/**
+ * F3 (pohyb jako v HOI4): přímý rozkaz má přednost. Armády divizí s automatickým plánem přejdou do ručního velení (plán se zruší,
+ * automatická obrana je už nepřebírá); u vlastního plánu hráče divize rozkaz doběhnou a pak se k plánu vrátí.
+ */
+function afterManualOrder(before, ids) {
+  const armies = [...new Set(ids.map((id) => before.mil.divs[id].army).filter((a) => a && before.mil.armies[a]))];
+  const auto = armies.filter((a) => before.mil.armies[a].plan && before.mil.armies[a].plan.auto);
+  if (auto.length) {
+    run(takeCommand, auto);
+    const names = auto.map((a) => before.mil.armies[a].nm).join(', ');
+    toast(`${names}: automatická obrana zrušena, armáda je ve vašem velení. Plán jí můžete dát v liště armády.`);
+    return;
+  }
+  if (!planHint && armies.some((a) => before.mil.armies[a].plan)) {
+    planHint = true;
+    toast('Přímý rozkaz má přednost – po příchodu do cíle se divize vrátí k plánu své armády.');
+  }
 }
 
 export function stopSelected() {
@@ -368,16 +386,15 @@ export function disbandSelected() {
   return ok;
 }
 
-/** Náhled trasy pro vedoucí vybranou divizi do provincie `to`: { nodes, attack } nebo null. */
+/**
+ * Náhled rozkazu vybraným divizím do provincie `to` (F3, jako v HOI4): trasy od každého žetonu a odhad příjezdu nejpomalejší divize.
+ * { routes: [{ nodes, ids, hours, prog }], hours, attack } nebo null (po souši se tam nikdo nedostane).
+ */
 export function routePreview(to) {
   const s = gameStore.getState();
   const ids = ownSelected(s);
   if (!ids.length || !to || !getWorld().isLand(to)) return null;
-  const d = s.mil.divs[ids[0]];
-  if (!d || d.p === to) return null;
-  const path = findPath(s.mil, s.ctrl, d.o, d.p, to, { dip: s.dip });
-  if (!path) return null;
-  return { nodes: [d.p, ...path], attack: s.ctrl[to] !== d.o };
+  return marchPreview(s, ids, to);
 }
 
 // ============================================================ klik na mapu
@@ -592,7 +609,7 @@ export function confirmPlan() {
   return true;
 }
 
-export const clearArmyPlan = (armyId) => run(clearPlan, armyId);
+export const clearArmyPlan = (armyId) => { const ok = run(clearPlan, armyId); run(takeCommand, [armyId]); return ok; };   // F3: zrušený plán se automatickou obranou nenahradí
 export const setArmyPlanMode = (armyId, mode) => run(setPlanMode, armyId, mode);
 
 // ============================================================ nábor a šablony

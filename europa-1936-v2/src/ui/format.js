@@ -16,3 +16,10 @@ export const fmtNum = (n, digits = 1) => {
 };
 /** Doba ve dnech: 1 den, 2 dny, 5 dní. */
 export const fmtDays = (d) => `${fmtInt(d)} ${plural(Math.round(d), 'den', 'dny', 'dní')}`;
+/** F3: odhad doby pochodu z hodin – „5 h“, „2 d 4 h“, od 10 dní jen dny („12 d“). */
+export const fmtEta = (hours) => {
+  const h = Math.max(0, Math.round(hours));
+  if (h < 24) return `${h}${NBSP}h`;
+  const d = Math.floor(h / 24), r = h % 24;
+  return d >= 10 || !r ? `${d}${NBSP}d` : `${d}${NBSP}d ${r}${NBSP}h`;
+};
