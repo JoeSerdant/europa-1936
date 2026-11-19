@@ -20,7 +20,7 @@ import { achievedNow, ACH_BY_ID } from './achievements/list.js';
 import { markAch } from './achievements/store.js';
 import { play } from './sound.js';
 import { mapController as mc } from './map/controller.js';
-import { writeSave, readSave, deleteSave, slotName } from './saves.js';
+import { writeSave, readSave, deleteSave, slotName, nextAutoSlot } from './saves.js';
 
 /** Plochy zakryté panely na jednotlivých obrazovkách (CSS pixely) – kamera středí pohledy do zbytku. */
 export const INSETS = {
@@ -156,6 +156,14 @@ export function closeNews() {
   setUi({ news: rest, newsResume: rest.length ? ui.newsResume : false });
   if (!rest.length && ui.newsResume && gameStore.getState().paused) gameStore.update(setPaused, false);
 }
+
+/** F3: pozastaví hru kvůli zprávě (nastavení upozornění „Oznámit a pozastavit“); zavření novin ji pak znovu nespustí. */
+export function pauseForNotice() {
+  if (!gameStore.getState().paused) gameStore.update(setPaused, true);
+  if (uiStore.getState().newsResume) setUi({ newsResume: false });
+}
+/** F3: okno Nastavení upozornění. */
+export const setNotifyOpen = (v) => setUi({ notifyOpen: !!v, menuOpen: false });
 
 let toastSeq = 0, toastTimer = 0;
 /** Krátké oznámení dole uprostřed (zmizí samo). */
@@ -841,7 +849,8 @@ let autoWarnAt = -Infinity;
  * (nejvýš jednou za minutu skutečného času, aby se při rychlém běhu neopakovalo každou chvíli). Vrací Promise<boolean>.
  */
 export async function autoSave(state, now = Date.now()) {
-  const err = await writeSave('auto', state, new Date(now).toLocaleString('cs-CZ'));
+  const slot = await nextAutoSlot();   // F3: tři automatická uložení na střídačku
+  const err = await writeSave(slot, state, new Date(now).toLocaleString('cs-CZ'), now);
   if (!err) { setUi({ autoSaveErr: '' }); return true; }
   setUi({ autoSaveErr: err });
   if (now - autoWarnAt >= 60000) { autoWarnAt = now; toast(`Automatické uložení selhalo: ${err} Uložte hru ručně (F6) nebo smažte staré sloty.`, 'error'); }

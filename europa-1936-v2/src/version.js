@@ -1,2 +1,2 @@
 // Označení verze hry zobrazené v hlavním menu (při dokončení milníku se zvedne).
-export const VERSION_LABEL = 'Verze 0.89 · F3 Obtížnost a rychlost hry';
+export const VERSION_LABEL = 'Verze 0.90 · F3 Ukládání a upozornění';

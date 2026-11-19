@@ -716,6 +716,22 @@ try {
     await nb.click(); await page.waitForTimeout(100);
     check('nabídka: posuvník hlasitosti a přepínač novin', (await page.getByRole('slider', { name: 'Hlasitost efektů' }).count()) === 1 && before !== after && (await nb.innerText()) === before);
   }
+  {   // F3: interval automatického ukládání a okno Nastavení upozornění
+    const ab = page.getByRole('button', { name: /Automatické ukládání:/ });
+    const a0 = await ab.innerText();
+    await ab.click(); await page.waitForTimeout(100);
+    const a1 = await ab.innerText();
+    for (let i = 0; i < 3; i++) { await ab.click(); await page.waitForTimeout(60); }   // dokola zpět na původní volbu
+    check('nabídka: interval automatického ukládání', a0.includes('každý měsíc') && a1.includes('každý rok') && (await ab.innerText()) === a0);
+    await page.getByRole('button', { name: /Nastavení upozornění/ }).click();
+    await page.waitForSelector('.notify-dialog');
+    await shot('notify');
+    const rows = await page.locator('.notify-row').count();
+    await page.keyboard.press('Escape'); await page.waitForTimeout(150);
+    check('okno Nastavení upozornění: skupiny zpráv a zavření Esc', rows >= 6 && (await page.locator('.notify-dialog').count()) === 0);
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('.dialog');
+  }
   await page.getByRole('button', { name: 'Hlavní menu' }).click();
   await page.getByRole('button', { name: 'Odejít do menu' }).click();
   await page.waitForSelector('.menu');

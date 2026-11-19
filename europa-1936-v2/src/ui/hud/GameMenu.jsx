@@ -7,7 +7,8 @@ import { setUi } from '../store.js';
 import { edgeScrollOn, setEdgeScroll } from '../edge.js';
 import { mapEffectsOn, setMapEffects } from '../map/prefs.js';
 import { mapController } from '../map/controller.js';
-import { goMenu, setHelp, setMenuOpen, openSaveDialog, setAchOpen, newsEnabled, setNewsEnabled } from '../actions.js';
+import { goMenu, setHelp, setMenuOpen, openSaveDialog, setAchOpen, newsEnabled, setNewsEnabled, setNotifyOpen } from '../actions.js';
+import { AUTOSAVE_OPTS, autoSaveEvery, setAutoSaveEvery } from '../saves.js';
 
 /** Nabídka ve hře (Esc): pokračovat, ovládání, zpět do hlavního menu. */
 export function GameMenu() {
@@ -20,6 +21,7 @@ export function GameMenu() {
   const [fx, setFx] = useState(mapEffectsOn());
   const [news, setNews] = useState(newsEnabled());
   const [vol, setVol] = useState(Math.round(soundVolume() * 100));
+  const [auto, setAuto] = useState(autoSaveEvery());   // F3: interval automatického ukládání
   useEffect(() => { if (open) setNews(newsEnabled()); }, [open]);
   useEffect(() => { if (!open) setConfirm(false); }, [open]);
   if (!open) return null;
@@ -31,6 +33,9 @@ export function GameMenu() {
           <button className="btn primary" onClick={() => setMenuOpen(false)} autoFocus>Pokračovat ve hře</button>
           <button className="btn" onClick={() => { setMenuOpen(false); openSaveDialog('save'); }}>Uložit hru</button>
           <button className="btn" onClick={() => { setMenuOpen(false); openSaveDialog('load'); }}>Načíst hru</button>
+          <button className="btn" title="Tři automatická uložení na střídačku – přepisuje se nejstarší. Kliknutím změníte interval."
+            onClick={() => { const i = AUTOSAVE_OPTS.findIndex(([id]) => id === auto); const next = AUTOSAVE_OPTS[(i + 1) % AUTOSAVE_OPTS.length][0]; setAutoSaveEvery(next); setAuto(next); }}>
+            Automatické ukládání: {AUTOSAVE_OPTS.find(([id]) => id === auto)[1]}</button>
           <button className="btn" onClick={() => { setMenuOpen(false); setHelp(true); }}>Ovládání</button>
           <button className="btn" onClick={() => setAchOpen(true)}>Úspěchy</button>
           <button className="btn" aria-pressed={tut} onClick={() => { setTutorial(!tut); setTut(!tut); }}>Průvodce: {tut ? 'zapnutý' : 'vypnutý'}</button>
@@ -42,6 +47,7 @@ export function GameMenu() {
               onChange={(e) => { const v = +e.target.value; setVol(v); setVolume(v / 100); }} onPointerUp={() => play('notify')} onKeyUp={() => play('click')} />
             <b>{vol} %</b>
           </label>
+          <button className="btn" title="U každé skupiny zpráv: jen deník, oznámit, nebo oznámit a pozastavit hru" onClick={() => setNotifyOpen(true)}>Nastavení upozornění…</button>
           <button className="btn" aria-pressed={news} title="Noviny ze světa (válka, kapitulace, změny vlád) – hra se při nich zastaví" onClick={() => { setNewsEnabled(!news); setNews(!news); }}>Noviny ze světa: {news ? 'zapnuté' : 'vypnuté'}</button>
           <button className="btn" aria-pressed={fx} title="Reliéf terénu, hloubka moře, den a noc a ztmavení mimo dohled" onClick={() => { setMapEffects(!fx); setFx(!fx); mapController.setEffects(!fx); }}>Efekty mapy: {fx ? 'zapnuté' : 'vypnuté'}</button>
           <p className="muted menu-rules" aria-label="Pravidla hry">Pravidla: {RULE_IDS.map((id) => `${RULES[id].n.toLowerCase()} ${(RULES[id].opts.find(([v]) => v === ruleOf({ rules }, id)) || [0, '?'])[1]}`).join(' · ')}</p>
