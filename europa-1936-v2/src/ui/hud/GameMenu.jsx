@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useUi, useGame } from '../store.js';
 import { RULES, RULE_IDS, ruleOf } from '../../engine/index.js';
-import { soundOn, setSound } from '../sound.js';
+import { soundOn, setSound, soundVolume, setVolume, play } from '../sound.js';
 import { tutorialOn, setTutorial } from '../tutorial/prefs.js';
 import { setUi } from '../store.js';
 import { edgeScrollOn, setEdgeScroll } from '../edge.js';
 import { mapEffectsOn, setMapEffects } from '../map/prefs.js';
 import { mapController } from '../map/controller.js';
-import { goMenu, setHelp, setMenuOpen, openSaveDialog, setAchOpen } from '../actions.js';
+import { goMenu, setHelp, setMenuOpen, openSaveDialog, setAchOpen, newsEnabled, setNewsEnabled } from '../actions.js';
 
 /** Nabídka ve hře (Esc): pokračovat, ovládání, zpět do hlavního menu. */
 export function GameMenu() {
@@ -18,6 +18,9 @@ export function GameMenu() {
   const [tut, setTut] = useState(tutorialOn());
   const [edge, setEdge] = useState(edgeScrollOn());
   const [fx, setFx] = useState(mapEffectsOn());
+  const [news, setNews] = useState(newsEnabled());
+  const [vol, setVol] = useState(Math.round(soundVolume() * 100));
+  useEffect(() => { if (open) setNews(newsEnabled()); }, [open]);
   useEffect(() => { if (!open) setConfirm(false); }, [open]);
   if (!open) return null;
   return (
@@ -33,6 +36,13 @@ export function GameMenu() {
           <button className="btn" aria-pressed={tut} onClick={() => { setTutorial(!tut); setTut(!tut); }}>Průvodce: {tut ? 'zapnutý' : 'vypnutý'}</button>
           <button className="btn" aria-pressed={edge} onClick={() => { setEdgeScroll(!edge); setEdge(!edge); setUi({ edgeScroll: !edge }); }}>Posun okrajem: {edge ? 'zapnutý' : 'vypnutý'}</button>
           <button className="btn" aria-pressed={snd} onClick={() => { setSound(!snd); setSnd(!snd); }}>Zvuk: {snd ? 'zapnutý' : 'vypnutý'}</button>
+          <label className="menu-slider" title="Hlasitost zvukových efektů (hra nemá hudbu)">
+            <span>Hlasitost efektů</span>
+            <input type="range" min="0" max="100" step="5" value={vol} disabled={!snd} aria-label="Hlasitost efektů"
+              onChange={(e) => { const v = +e.target.value; setVol(v); setVolume(v / 100); }} onPointerUp={() => play('notify')} onKeyUp={() => play('click')} />
+            <b>{vol} %</b>
+          </label>
+          <button className="btn" aria-pressed={news} title="Noviny ze světa (válka, kapitulace, změny vlád) – hra se při nich zastaví" onClick={() => { setNewsEnabled(!news); setNews(!news); }}>Noviny ze světa: {news ? 'zapnuté' : 'vypnuté'}</button>
           <button className="btn" aria-pressed={fx} title="Reliéf terénu, hloubka moře, den a noc a ztmavení mimo dohled" onClick={() => { setMapEffects(!fx); setFx(!fx); mapController.setEffects(!fx); }}>Efekty mapy: {fx ? 'zapnuté' : 'vypnuté'}</button>
           <p className="muted menu-rules" aria-label="Pravidla hry">Pravidla: {RULE_IDS.map((id) => `${RULES[id].n.toLowerCase()} ${(RULES[id].opts.find(([v]) => v === ruleOf({ rules }, id)) || [0, '?'])[1]}`).join(' · ')}</p>
           {confirm ? (

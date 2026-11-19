@@ -1,9 +1,12 @@
 // Zvuky rozhraní (M37): vlastní syntetizované zvuky přes Web Audio (žádné nahrávky). Zapnuto lze přepnout v nabídce; volba se pamatuje v `localStorage`.
 // Vše je v try/catch a bez Web Audio nebo před první akcí uživatele se nic nestane.
 const KEY = 'e1936.sound';
+const VOL_KEY = 'e1936.volume';   // F2 C2: hlasitost efektů 0–1
 let ctx = null;
 let on = true;
+let volume = 0.8;
 try { on = typeof localStorage === 'undefined' || localStorage.getItem(KEY) !== '0'; } catch { on = true; }
+try { const v = typeof localStorage === 'undefined' ? null : localStorage.getItem(VOL_KEY); if (v !== null && Number.isFinite(+v)) volume = Math.max(0, Math.min(1, +v)); } catch { /* výchozí hlasitost */ }
 
 const audio = () => {
   if (ctx) return ctx;
@@ -15,6 +18,8 @@ const audio = () => {
 
 /** Jeden tón: frekvence, délka (s), vlna, hlasitost, zpoždění (s) a klouzání frekvence. */
 function tone(freq, dur, type = 'sine', vol = 0.04, delay = 0, slide = 0) {
+  vol *= volume / 0.8;   // F2 C2: 80 % = původní hlasitost
+  if (vol < 1e-4) return;
   const a = audio();
   if (!a) return;
   if (a.state === 'suspended') a.resume();
@@ -49,6 +54,12 @@ export const SFX = {
 };
 
 export const soundOn = () => on;
+/** Hlasitost efektů 0–1 (F2 C2). Hra nemá hudbu – jen syntetizované zvuky rozhraní. */
+export const soundVolume = () => volume;
+export function setVolume(v) {
+  volume = Math.max(0, Math.min(1, Number(v) || 0));
+  try { localStorage.setItem(VOL_KEY, String(volume)); } catch { /* bez úložiště se volba jen neuloží */ }
+}
 export function setSound(v) {
   on = !!v;
   try { localStorage.setItem(KEY, on ? '1' : '0'); } catch { /* bez úložiště se volba jen neuloží */ }

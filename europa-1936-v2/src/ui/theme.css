@@ -314,6 +314,10 @@ kbd {
 .cartouche p { margin-top: 16px; font-size: 19px; letter-spacing: 0.02em; color: var(--text-2); }
 .menu-buttons { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 .menu-buttons .btn { width: 300px; justify-content: flex-start; }
+/* F2 C2: posuvník hlasitosti v nabídce */
+.menu-slider { display: flex; align-items: center; gap: 10px; width: 300px; padding: 4px 2px; color: var(--text-2); font-size: 14px; }
+.menu-slider input { flex: 1; accent-color: var(--brass); }
+.menu-slider b { width: 44px; text-align: right; font: 600 14px/1 var(--display); color: var(--text); font-variant-numeric: tabular-nums; }
 .menu footer { margin-top: 40px; color: var(--text-3); font-size: 14px; }
 
 /* ------------------------------------------------------------------ výběr země */

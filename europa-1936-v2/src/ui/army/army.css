@@ -173,6 +173,7 @@
 .tut-dock > * { pointer-events: auto; }
 .tut-dock.by-build { left: 344px; }
 .tut-dock.by-dock { left: calc(min(640px, 48vw) + 14px); }
+.tut-dock.by-dock.wide { left: calc(min(700px, 52vw) + 14px); }   /* F2 C3: panel Politika je širší */
 .toast { padding: 10px 18px; color: var(--paper); max-width: 560px; text-align: center; animation: rise 0.16s ease-out; }
 .toast.err { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 6px 20px rgba(0, 0, 0, 0.45); }   /* F2: chyba (např. selhalo automatické uložení) */
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }

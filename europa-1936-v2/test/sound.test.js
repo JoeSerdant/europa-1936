@@ -38,4 +38,37 @@ describe('zvuky rozhraní', () => {
     expect(calls.length).toBe(n);
     vi.unstubAllGlobals();
   });
+  it('hlasitost efektů (F2 C2): 0–100 %, pamatuje se, 0 % je ticho', async () => {
+    const store = {}, gains = [];
+    class FakeCtx {
+      constructor() { this.currentTime = 0; this.state = 'running'; this.destination = {}; }
+      createOscillator() { return { type: '', frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {}, start() {}, stop() {} }; }
+      createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime: (v) => gains.push(v) }, connect() {} }; }
+      resume() {}
+    }
+    vi.stubGlobal('localStorage', { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } });
+    vi.stubGlobal('window', { AudioContext: FakeCtx });
+    vi.resetModules();
+    const s = await import('../src/ui/sound.js');
+    expect(s.soundVolume()).toBeCloseTo(0.8);
+    s.play('click');
+    const loud = Math.max(...gains);
+    gains.length = 0;
+    s.setVolume(0.4);
+    expect(store['e1936.volume']).toBe('0.4');
+    s.play('click');
+    expect(Math.max(...gains)).toBeCloseTo(loud / 2, 6);
+    gains.length = 0;
+    s.setVolume(-3);
+    expect(s.soundVolume()).toBe(0);
+    s.play('click');
+    expect(gains).toHaveLength(0);
+    s.setVolume(7);
+    expect(s.soundVolume()).toBe(1);
+    vi.resetModules();
+    store['e1936.volume'] = '0.25';
+    const again = await import('../src/ui/sound.js');
+    expect(again.soundVolume()).toBeCloseTo(0.25);
+    vi.unstubAllGlobals();
+  });
 });
