@@ -1,6 +1,7 @@
 // AI zemí (M24): veřejné rozhraní.
 export { AI } from './constants.js';
-export { aiMult, isAi, playerOf } from './core.js';
+export { aiMult, isAi, playerOf, diffOf } from './core.js';
+export { DIFFICULTY, DIFF_IDS } from '../../data/ai/difficulty.js';
 export { targetDivs, scanArmies } from './army.js';
 export { aiDay } from './day.js';
 export { HIST_WARS, HIST_FACTIONS, HIST_ENTRY } from '../../data/ai/plans.js';

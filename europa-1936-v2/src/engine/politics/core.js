@@ -69,7 +69,7 @@ export const stabMult = (stab) => 1 + (stab - 0.5) * POL.STAB_OUT;
 /** Celkový násobek výroby a staveb země: bonus výroby × stabilita. */
 export const outMult = (state, o) => { const own = state.pol.own[o]; return own ? (1 + polModsOf(state, o).prod) * stabMult(own.stab) * aiMult(state, o) : 1; };
 /** Násobek měsíčního přírůstku lidské síly: odvod a poradci × podpora války. */
-export const manMult = (state, o) => { const own = state.pol.own[o]; return own ? Math.max(0, 1 + polModsOf(state, o).man) * (POL.WS_MAN_BASE + POL.WS_MAN_SLOPE * own.ws) : 1; };
+export const manMult = (state, o) => { const own = state.pol.own[o]; return own ? Math.max(0, 1 + polModsOf(state, o).man) * (POL.WS_MAN_BASE + POL.WS_MAN_SLOPE * own.ws) * aiMult(state, o, 'man') : 1; };   // F3: obtížnost (Elitní +15 % lidské síly AI)
 /** Podíl spotřebního zboží: základ země (`ind.cons`) + zákony a poradci. */
 export const consOf = (state, o) => Math.min(I.CONS_MAX, Math.max(0, state.ind.cons[o] + polModsOf(state, o).cons));
 

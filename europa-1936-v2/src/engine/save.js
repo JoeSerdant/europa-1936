@@ -31,7 +31,8 @@ export function validateState(s) {
   if (!isArr(s.ind.fuel) || s.ind.fuel.length !== w.owners.length) return 'Uložená hra je poškozená (palivo).';
   if (!s.rules || typeof s.rules !== 'object') return 'Uložená hra je poškozená (pravidla hry).';
   if (!isArr(s.ai.inv)) return 'Uložená hra je poškozená (invaze AI).';
-  if (s.ai.salt !== undefined && !Number.isInteger(s.ai.salt)) return 'Uložená hra je poškozená (AI).';   // F2: semínko volné historie
+  if (s.ai.salt !== undefined && !Number.isInteger(s.ai.salt)) return 'Uložená hra je poškozená (AI).';
+  if (s.ai.diff !== undefined && ![-2, -1, 0, 1, 2].includes(s.ai.diff)) return 'Uložená hra je poškozená (obtížnost).';   // F3   // F2: semínko volné historie
   if (!isArr(s.air.nuke) || s.air.nuke.length !== w.owners.length) return 'Uložená hra je poškozená (jaderné zbraně).';
   if (!isArr(s.air.drops)) return 'Uložená hra je poškozená (výsadky).';
   if (!isArr(s.air.wings) || !isArr(s.air.pool) || s.air.pool.length !== w.owners.length) return 'Uložená hra je poškozená (letectvo).';

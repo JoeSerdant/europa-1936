@@ -23,3 +23,9 @@ export const fmtEta = (hours) => {
   const d = Math.floor(h / 24), r = h % 24;
   return d >= 10 || !r ? `${d}${NBSP}d` : `${d}${NBSP}d ${r}${NBSP}h`;
 };
+/** F3: rychlost hry z herních hodin za sekundu – „den za 6 s“, „1,5 dne za sekundu“, „10 dní za sekundu“. */
+export const fmtSpeed = (perSecond) => {
+  if (perSecond < 24) return `den za ${fmtNum(24 / perSecond, 1)}${NBSP}s`;
+  const d = perSecond / 24;
+  return `${fmtNum(d, 1)} ${Number.isInteger(d) ? plural(d, 'den', 'dny', 'dní') : 'dne'} za sekundu`;
+};

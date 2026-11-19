@@ -117,7 +117,7 @@ druhá města ≥ 60 tis. přidávají polovinu, hlavní město +10. Železnice:
 { v, tick, rng, player, speed, paused, stateOwner[], ctrl[], ownerVer, mil, ind, tech, pol, nat, dip, ai, log, nav }
 ```
 `stateOwner[stát] = idx vlastníka` (vlastnictví je po státech), `ctrl[provincie] = idx držitele kontroly` (okupace je po provinciích), `mil` = armáda (§ 4a), `ind` = průmysl (§ 4b), `tech` = výzkum (§ 4c), `pol` = politika (§ 4d), `nat` = národní cíle a události (§ 4e), `dip` = diplomacie (§ 4f), `ai` = nastavení AI (§ 4g), `log` = deník dění (§ 4i), `nav` = námořnictvo (§ 4j).
-Čas: 1 tick = 1 herní hodina, start 1. 1. 1936 00:00; rychlosti 1–5 = `[12, 24, 48, 96, 240]` herních hodin za sekundu (`SPEEDS[0]` = pauza).
+Čas: 1 tick = 1 herní hodina, start 1. 1. 1936 00:00; rychlosti 1–5 = `[4, 12, 36, 96, 240]` herních hodin za sekundu (`SPEEDS[0]` = pauza; F3: rychlost 1 = den za 6 s jako v HOI4, nápověda tlačítek ukazuje tempo přes `fmtSpeed`).
 Hra začíná pozastavená. `hoursForElapsed(state, ms, carry)` přenáší zlomky hodin.
 
 Pravidla:
@@ -420,9 +420,9 @@ Země bez hráče (a při pozorovateli všechny) řídí **AI, která používá
 
 ### Tvar stavu (`state.ai`, `GAME_VERSION = 8`)
 ```
-ai: { level: 0 | 1 | 2 | 3, hist: 0 | 1 }   // 0 AI vypnutá (výchozí v enginu a v testech), 1 lehká, 2 běžná, 3 těžká; hist = historické válečné plány
+ai: { level: 0 | 1 | 2 | 3, diff: -2 … 2, hist: 0 | 1 }   // level 0 = AI vypnutá (výchozí v enginu a v testech), jinak zapnutá; F3: diff = obtížnost (−2 Nováček … 2 Elitní, `DIFFICULTY`); hist = historické válečné plány
 ```
-Nastavuje se při založení hry (`createGame({ aiLevel, hist })`; hra z rozhraní začíná na úrovni 2, výběr je na obrazovce výběru země) a dál se nemění. Engine má AI ve výchozím stavu vypnutou, aby šly testovat ostatní systémy izolovaně.
+Nastavuje se při založení hry (`createGame({ aiLevel, diff, hist })`, F3: `diff` = obtížnost −2…2; hra z rozhraní začíná na úrovni 2, výběr je na obrazovce výběru země) a dál se nemění. Engine má AI ve výchozím stavu vypnutou, aby šly testovat ostatní systémy izolovaně.
 
 ### Co AI dělá
 - **Průmysl** (`ai/industry.js`): fronta staveb nejvýš `QUEUE` projektů; civilní a vojenské továrny v poměru podle války; při plných slotech infrastruktura; volné vojenské továrny přidává na linky podle nedostatku zásob výzbroje (`DEFAULT_SPLIT`, ve válce víc pušek a děl).
@@ -1062,6 +1062,10 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   „čas · útok“. Lišta výběru má řádek „Pochod do … · příjezd asi za …“ a bublina nad vlastním žetonem totéž. Formát `fmtEta` (`5 h`, `2 d 4 h`, `12 d`).
 - **Kapitulace hráčovy země**: pád hlavního města hráčovu zemi neshodí (pravidlo `CAP_CAPITAL_SHARE` platí jen pro AI země) – jako v HOI4
   rozhoduje jen podíl území v rukou nepřítele (`capLimitOf(o).share`, výchozí 60 %, Francie 50 %); panel Diplomacie ukazuje mez země.
+- **Rychlost hry**: `SPEEDS = [0, 4, 12, 36, 96, 240]` – rychlost 1 je den za 6 s jako v HOI4, nejrychlejší beze změny.
+- **Obtížnost** (`ai.diff` −2 Nováček, −1 Snadná, 0 Běžná, 1 Těžká, 2 Elitní; `GAME_VERSION = 49`, součást `validateState`): data `DIFFICULTY`
+  (`prod`, `res`, `divs`, `man`, `army`) platí jen pro AI země – `aiMult(state, o, 'prod' | 'res' | 'man')`, cílový počet divizí v `targetDivs`,
+  vojenské bonusy v `extraMods`. Starší volba `aiLevel` 1/3 odpovídá −1/+1. Hráčovu zemi mění jen pravidlo „Vaše země“ (`bonus`).
 - **Zimní válka a moskevský mír** (jen s historickou AI): duchové `zimni_valka` (Finsko, 110 dní od začátku války: obrana +35 %) a
   `armada_po_cistkach` (SSSR, 70 dní: útok −30 %); řádek `fin_peace` s `peace: true` – jakmile SSSR drží 12 finských provincií (nejpozději
   13. 3. 1940), Finsko uzavře **územní mír**: `capitulate(…, { armistice, peace })` předá okupantovi obsazené státy (hlavní provincie státu),
@@ -1111,7 +1115,7 @@ Zrnění a ztmavení okrajů mapy je **CSS překryv** (`.map-host::after`), ne k
 - **Panel Politika** (`ui/politics/PoliticsPanel.jsx`, M21): stabilita a podpora války s cílem a směrem, politická moc a příjem, souhrn dopadů (výroba, lidská síla, spotřební zboží), zákony po oborech (každý krok s cenou, účinky a důvodem zamčení) a čtyři sloty poradců. Horní lišta ukazuje stabilitu, podporu války a politickou moc.
 - **Panel Cíle** (`ui/nat/NatPanel.jsx`, M22): plněný cíl s postupem a přerušením, strom cílů země jako seznam podle řad (účinky, trvalé bonusy, vylučující cíle, chybějící předpoklady, tlačítko Zahájit). **Dialog události** (`EventDialog`): při čekající události hráče se hra pozastaví, dialog se nedá zavřít a klávesy se ignorují, dokud hráč nezvolí.
 - **Panel Diplomacie** (`ui/dip/DiplomacyPanel.jsx`, M23): blok hráče (členové, opuštění, založení s názvem), podíl území drženého nepřáteli a seznam zemí seřazený podle války, spojenectví a vztahu; řádek se rozbalí s akcemi (ospravedlnit / vyhlásit válku, navrhnout mír, pozvat do bloku) a důvody zamčení. Karta oblasti nabízí totéž pro vlastníka provincie. Po kapitulaci se zobrazí oznámení.
-- **Obrazovka výběru země** (M24): u tlačítka *Začít hru* volba obtížnosti AI zemí (Lehká / Běžná / Těžká) a přepínač *Historické plány*; hodnoty jsou v `uiStore` (`aiLevel`, `aiHist`) a `startGame` je předá `createGame`.
+- **Obrazovka výběru země** (M24, F3): u tlačítka *Začít hru* volba obtížnosti (Nováček / Snadná / Běžná / Těžká / Elitní, nápověda z `DIFFICULTY`) a přepínač *Historické plány*; hodnoty jsou v `uiStore` (`aiDiff`, `aiHist`; `aiLevel` 2 = AI zapnutá) a `startGame` je předá `createGame`.
 - **Uložené hry** (M25): `SaveDialog` (Uložit / Načíst, sloty, smazání, zpráva o výsledku) je v nabídce hry a v hlavním menu; klávesy F6 / F9 = rychlé uložení a načtení; automatické uložení jednou za herní měsíc. Hlavní menu zobrazuje `VERSION_LABEL` (`src/version.js`).
 - **Zprávy a přehled** (M26): záložka *Zprávy* (`L`) a okno *Přehled zemí* (`O`, tlačítko v horní liště) – viz § 4i; nové důležité záznamy se hlásí oznámením.
 - Panely, tooltip a seznamy se při běhu času nepřekreslují každou herní hodinu: používají `useGameSlow(selektor, ms)` (nejvýš jedno překreslení za `ms`).

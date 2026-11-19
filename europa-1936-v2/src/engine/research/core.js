@@ -63,7 +63,7 @@ export function speedOfDone(o, done) {
   const tier = COUNTRIES[tag]?.tier ?? 3;
   return RES.SPEED_BASE * (RESEARCH_NATIONAL[tag] ?? (tier === 3 ? 0.95 : 1)) * (1 + techMods(done).research);
 }
-export const baseSpeed = (state, o) => speedOfDone(o, state.tech.own[o]?.done) * (1 + polModsOf(state, o).research) * aiMult(state, o);
+export const baseSpeed = (state, o) => speedOfDone(o, state.tech.own[o]?.done) * (1 + polModsOf(state, o).research) * aiMult(state, o, 'res');
 
 /** Roky předstihu technologie vůči aktuálnímu datu (0 = už je její čas). */
 export const yearsAhead = (tick, id) => Math.max(0, TECHS[id].year - yearOf(tick));
