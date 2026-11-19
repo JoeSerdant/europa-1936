@@ -68,6 +68,21 @@ export function warScore(state, a, b) {
 }
 
 export const hasCapitulated = (state, o) => !!state.dip.cap[o];
+
+/** Byla země `c` spojencem země `o` v době její kapitulace (F2, `dip.ally0`)? Loutka proti takové zemi nikdy nebojuje. */
+export const formerAlly = (state, o, c) => { const l = state.dip.ally0 && state.dip.ally0[o]; return !!l && l.includes(c); };
+
+/**
+ * Spojenci země `o` těsně před kapitulací (F2): členové jejího bloku a všichni, kdo bojují s některým jejím nepřítelem (a ne s ní).
+ * Vrací seřazené pole indexů, nebo 0, když žádní nejsou.
+ */
+export function alliesAtFall(state, o) {
+  const n = getWorld().owners.length, foes = enemiesOf(state.mil, o);
+  const f = state.dip.facs[state.dip.fac[o]];
+  const set = new Set(f ? f.mem.filter((m) => m !== o) : []);
+  if (foes.length) for (let c = 1; c < n; c++) if (c !== o && !atWar(state.mil, c, o) && foes.some((e) => atWar(state.mil, c, e))) set.add(c);
+  return set.size ? [...set].sort((a, b) => a - b) : 0;
+}
 /** Rezervní země (M69), která ještě nevznikla nebo zanikla: nemá se ukazovat v seznamech ani nic dělat. */
 export const isDormant = (state, o) => !!getWorld().owners[o].dyn && !!state.dip.cap[o];
 export { enemiesOf, atWar };

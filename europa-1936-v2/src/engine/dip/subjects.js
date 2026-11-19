@@ -364,9 +364,11 @@ export function subjectsDay(state) {
   for (let p = 1; p < sub.length; p++) {
     const v = sub[p];
     if (!v) continue;
-    if (state.dip.cap[v] || !statesOf(state, p).length) { state = patch(state, { sub: state.dip.sub.map((x, i) => (i === p ? 0 : x)) }); continue; }
+    if (state.dip.cap[v] || state.dip.cap[p] || !statesOf(state, p).length) { state = patch(state, { sub: state.dip.sub.map((x, i) => (i === p ? 0 : x)) }); continue; }   // F2: ani kapitulovaná loutka už pánovi neslouží
     // války pána: přidat chybějící, ukončit ty, které pán už nevede
-    const foes = new Set(enemiesOf(state.mil, v));
+    // F2: proti spojencům z doby své kapitulace (`dip.ally0`) loutka nikdy nebojuje
+    const old = state.dip.ally0 && state.dip.ally0[p];
+    const foes = new Set(enemiesOf(state.mil, v).filter((e) => !(old && old.includes(e))));
     for (const e of foes) if (e !== p && !atWar(state.mil, p, e) && !state.dip.cap[e]) state = declareWar(state, tagOf(p), tagOf(e));
     for (const e of enemiesOf(state.mil, p)) if (!foes.has(e) && e !== v) state = makePeace(state, tagOf(p), tagOf(e));
     // autonomie roste; při 100 se loutka osamostatní

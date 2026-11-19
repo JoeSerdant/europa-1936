@@ -4,5 +4,5 @@ import { useUi } from '../store.js';
 export function Toast() {
   const t = useUi((s) => s.toast);
   if (!t) return null;
-  return <div className="panel toast" role="status" key={t.id}>{t.text}</div>;
+  return <div className={`panel toast ${t.kind === 'error' ? 'err' : ''}`} role={t.kind === 'error' ? 'alert' : 'status'} key={t.id}>{t.text}</div>;
 }

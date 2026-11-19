@@ -1,7 +1,8 @@
 // Uložené hry (M25): obálka a kontrola stavu, sloty v úložišti (s falešným localStorage), načtení a pokračování hry, chybové stavy a akce rozhraní.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createGame, advance, packGame, unpackGame, validateState, SAVE_FORMAT, GAME_VERSION, startFocus, getWorld } from '../src/engine/index.js';
-import { listSaves, writeSave, readSave, deleteSave, SLOTS, slotName } from '../src/ui/saves.js';
+import { listSaves, writeSave, readSave, deleteSave, SLOTS, slotName, gzip, gunzip, resetSaveDb } from '../src/ui/saves.js';
+import { fakeIndexedDB } from './fakeIdb.js';
 import { gameStore, uiStore } from '../src/ui/store.js';
 import * as A from '../src/ui/actions.js';
 
@@ -16,7 +17,7 @@ const fake = (opts = {}) => {
   };
 };
 let prev;
-beforeEach(() => { prev = globalThis.localStorage; globalThis.localStorage = fake(); });
+beforeEach(() => { prev = globalThis.localStorage; globalThis.localStorage = fake(); resetSaveDb(); });
 afterEach(() => { if (prev === undefined) delete globalThis.localStorage; else globalThis.localStorage = prev; });
 
 describe('obálka a kontrola', () => {
@@ -53,91 +54,162 @@ describe('obálka a kontrola', () => {
   });
 });
 
-describe('sloty v úložišti', () => {
+describe('sloty v úložišti (localStorage, bez IndexedDB)', () => {
   const s = createGame({ player: 'FRA', aiLevel: 1 });
-  it('uložení, výpis, načtení a smazání', () => {
-    expect(listSaves()).toEqual([]);
-    expect(writeSave(3, s, '1. 1. 2026 10:00')).toBeNull();
-    const l = listSaves();
+  it('uložení, výpis, načtení a smazání; data jsou komprimovaná', async () => {
+    expect(await listSaves()).toEqual([]);
+    expect(await writeSave(3, s, '1. 1. 2026 10:00')).toBeNull();
+    const l = await listSaves();
     expect(l).toHaveLength(1);
     expect(l[0]).toMatchObject({ slot: 3, player: 'FRA', name: 'Francie', savedAt: '1. 1. 2026 10:00' });
     expect(l[0].size).toBeGreaterThan(50000);
+    expect(l[0].zip).toBeGreaterThan(0);
+    expect(l[0].zip).toBeLessThan(l[0].size / 4);   // gzip zmenší uložení aspoň čtyřikrát
     expect(l[0].date).toMatch(/1936/);
-    const r = readSave(3);
+    const raw = globalThis.localStorage.getItem('e1936:save:3');
+    expect(raw.startsWith('gz1:')).toBe(true);
+    expect(raw.length).toBeLessThan(l[0].size / 3);
+    const r = await readSave(3);
     expect(r.state).toEqual(s);
-    deleteSave(3);
-    expect(listSaves()).toEqual([]);
-    expect(readSave(3).error).toMatch(/prázdný/);
+    await deleteSave(3);
+    expect(await listSaves()).toEqual([]);
+    expect((await readSave(3)).error).toMatch(/prázdný/);
   });
-  it('pozorovatel se uloží s popisem; sloty jsou v pořadí a mají jména', () => {
-    writeSave('quick', createGame({ player: null }));
-    expect(listSaves()[0].name).toBe('Pozorovatel');
-    writeSave('auto', s); writeSave(1, s);
-    expect(listSaves().map((x) => x.slot)).toEqual(['auto', 'quick', 1]);
+  it('starší nekomprimovaný slot jde dál načíst', async () => {
+    globalThis.localStorage.setItem('e1936:save:5', JSON.stringify(packGame(s)));
+    globalThis.localStorage.setItem('e1936:meta:5', JSON.stringify({ player: 'FRA', name: 'Francie', date: '1. 1. 1936', tick: 0, savedAt: '', size: 1 }));
+    expect((await listSaves()).map((x) => x.slot)).toEqual([5]);
+    expect((await readSave(5)).state).toEqual(s);
+  });
+  it('pozorovatel se uloží s popisem; sloty jsou v pořadí a mají jména', async () => {
+    await writeSave('quick', createGame({ player: null }));
+    expect((await listSaves())[0].name).toBe('Pozorovatel');
+    await writeSave('auto', s); await writeSave(1, s);
+    expect((await listSaves()).map((x) => x.slot)).toEqual(['auto', 'quick', 1]);
     expect(SLOTS).toContain('auto');
     expect(slotName('auto')).toBe('Automatické uložení');
     expect(slotName(2)).toBe('Slot 2');
   });
-  it('chyby úložiště: plné, zakázané, vadná data', () => {
+  it('chyby úložiště: plné, zakázané, vadná data', async () => {
     globalThis.localStorage = fake({ full: true });
-    expect(writeSave(1, s)).toMatch(/plné/);
+    expect(await writeSave(1, s)).toMatch(/plné/);
     delete globalThis.localStorage;
-    expect(writeSave(1, s)).toMatch(/není dostupné/);
-    expect(readSave(1).error).toMatch(/není dostupné/);
-    expect(listSaves()).toEqual([]);
-    deleteSave(1);
+    expect(await writeSave(1, s)).toMatch(/není dostupné/);
+    expect((await readSave(1)).error).toMatch(/není dostupné/);
+    expect(await listSaves()).toEqual([]);
+    await deleteSave(1);
     globalThis.localStorage = fake();
     globalThis.localStorage.setItem('e1936:save:2', '{nesmysl');
-    expect(readSave(2).error).toMatch(/poškozená/);
+    expect((await readSave(2)).error).toMatch(/poškozená/);
+    globalThis.localStorage.setItem('e1936:save:2', 'gz1:QUJDRA==');
+    expect((await readSave(2)).error).toMatch(/rozbalit/);
     globalThis.localStorage.setItem('e1936:meta:2', 'nesmysl');
-    expect(listSaves()).toEqual([]);
+    expect(await listSaves()).toEqual([]);
     globalThis.localStorage.setItem('e1936:save:2', JSON.stringify({ fmt: SAVE_FORMAT, v: 1, state: {} }));
-    expect(readSave(2).error).toMatch(/jiné verze/);
+    expect((await readSave(2)).error).toMatch(/jiné verze/);
+  });
+  it('komprese a rozbalení vrátí stejný text', async () => {
+    const text = JSON.stringify(packGame(s));
+    expect(await gunzip(await gzip(text))).toBe(text);
+  });
+});
+
+describe('sloty v IndexedDB', () => {
+  const s = createGame({ player: 'GER', aiLevel: 1 });
+  beforeEach(() => { globalThis.indexedDB = fakeIndexedDB(); resetSaveDb(); });
+  afterEach(() => { delete globalThis.indexedDB; resetSaveDb(); });
+  it('uloží komprimovaná data do databáze, ne do localStorage; načte a smaže', async () => {
+    expect(await writeSave(2, s, 'teď')).toBeNull();
+    const db = globalThis.indexedDB._dbs.get('e1936');
+    expect(db.get('data').get('2')).toBeInstanceOf(Uint8Array);
+    expect(db.get('meta').get('2')).toMatchObject({ slot: 2, player: 'GER', savedAt: 'teď' });
+    expect(globalThis.localStorage.getItem('e1936:save:2')).toBeNull();
+    expect((await listSaves()).map((x) => x.slot)).toEqual([2]);
+    expect((await readSave(2)).state).toEqual(s);
+    await deleteSave(2);
+    expect(await listSaves()).toEqual([]);
+    expect((await readSave(2)).error).toMatch(/prázdný/);
+  });
+  it('starý slot z localStorage se zobrazí a načte; nové uložení ho z localStorage smaže', async () => {
+    globalThis.localStorage.setItem('e1936:save:1', JSON.stringify(packGame(s)));
+    globalThis.localStorage.setItem('e1936:meta:1', JSON.stringify({ player: 'GER', name: 'Německo', date: '1. 1. 1936', tick: 0, savedAt: '', size: 1 }));
+    expect((await listSaves()).map((x) => x.slot)).toEqual([1]);
+    expect((await readSave(1)).state).toEqual(s);
+    expect(await writeSave(1, s)).toBeNull();
+    expect(globalThis.localStorage.getItem('e1936:save:1')).toBeNull();
+    expect((await listSaves())[0].zip).toBeGreaterThan(0);
+  });
+  it('plná databáze vrátí českou chybu', async () => {
+    globalThis.indexedDB = fakeIndexedDB({ full: true }); resetSaveDb();
+    expect(await writeSave(3, s)).toMatch(/plné/);
+  });
+  it('zápisy jdou za sebou ve stejném pořadí', async () => {
+    const a = writeSave('auto', s, 'první'), b = writeSave('auto', s, 'druhý');
+    expect(await a).toBeNull(); expect(await b).toBeNull();
+    expect((await listSaves())[0].savedAt).toBe('druhý');
   });
 });
 
 describe('akce rozhraní', () => {
   beforeEach(() => { A.goMenu(); });
-  it('uložení a načtení z rozehrané hry vrátí stav, výběr se vyčistí a hra se přepne', () => {
+  it('uložení a načtení z rozehrané hry vrátí stav, výběr se vyčistí a hra se přepne', async () => {
     A.startGame('GER');
     gameStore.setState(startFocus(gameStore.getState(), W.ownerIdx.GER, 'def_ind') || gameStore.getState());
     gameStore.setState(advance(gameStore.getState(), 24 * 5));
     const saved = gameStore.getState();
-    expect(A.saveGame(2)).toBe(true);
+    expect(await A.saveGame(2)).toBe(true);
     expect(uiStore.getState().saveMsg).toMatch(/uložena/);
     gameStore.setState(advance(saved, 24 * 30));
     A.goMenu();
     expect(uiStore.getState().screen).toBe('menu');
-    expect(A.loadGame(2)).toBe(true);
+    expect(await A.loadGame(2)).toBe(true);
     expect(uiStore.getState().screen).toBe('game');
     expect(uiStore.getState().saveDialog).toBeNull();
     expect(gameStore.getState()).toEqual(saved);
     expect(gameStore.getState().tick).toBe(saved.tick);
   });
-  it('načtení prázdného nebo poškozeného slotu nic nezmění a ohlásí důvod', () => {
+  it('načtení prázdného nebo poškozeného slotu nic nezmění a ohlásí důvod', async () => {
     A.startGame('GER');
     const before = gameStore.getState();
-    expect(A.loadGame(4)).toBe(false);
+    expect(await A.loadGame(4)).toBe(false);
     expect(uiStore.getState().saveMsg).toMatch(/prázdný/);
     expect(gameStore.getState()).toBe(before);
     globalThis.localStorage.setItem('e1936:save:4', '[]');
-    expect(A.loadGame(4)).toBe(false);
+    expect(await A.loadGame(4)).toBe(false);
     expect(uiStore.getState().saveMsg).toMatch(/není uložená hra|poškozená/);
     expect(gameStore.getState()).toBe(before);
   });
-  it('rychlé uložení a načtení; dialog se otevře a zavře', () => {
-    expect(A.quickSave()).toBe(false);                    // mimo hru nic
+  it('rychlé uložení a načtení; dialog se otevře a zavře', async () => {
+    expect(await A.quickSave()).toBe(false);                    // mimo hru nic
     A.startGame('FRA');
-    expect(A.quickSave()).toBe(true);
+    expect(await A.quickSave()).toBe(true);
     const saved = gameStore.getState();
     gameStore.setState(advance(saved, 24));
-    expect(A.quickLoad()).toBe(true);
+    expect(await A.quickLoad()).toBe(true);
     expect(gameStore.getState().tick).toBe(saved.tick);
     A.openSaveDialog('load');
     expect(uiStore.getState().saveDialog).toBe('load');
-    A.removeSave('quick');
-    expect(listSaves()).toEqual([]);
+    const rev = uiStore.getState().saveRev;
+    await A.removeSave('quick');
+    expect(uiStore.getState().saveRev).toBe(rev + 1);
+    expect(await listSaves()).toEqual([]);
     A.closeSaveDialog();
     expect(uiStore.getState().saveDialog).toBeNull();
+  });
+  it('selhání automatického uložení ukáže červené upozornění (nejvýš jednou za minutu)', async () => {
+    A.startGame('FRA');
+    expect(await A.autoSave(gameStore.getState(), 1000)).toBe(true);
+    expect(uiStore.getState().autoSaveErr).toBe('');
+    globalThis.localStorage = fake({ full: true });
+    expect(await A.autoSave(gameStore.getState(), 10 * 60000)).toBe(false);
+    expect(uiStore.getState().autoSaveErr).toMatch(/plné/);
+    expect(uiStore.getState().toast).toMatchObject({ kind: 'error' });
+    expect(uiStore.getState().toast.text).toMatch(/Automatické uložení selhalo/);
+    const id = uiStore.getState().toast.id;
+    expect(await A.autoSave(gameStore.getState(), 10 * 60000 + 5000)).toBe(false);
+    expect(uiStore.getState().toast.id).toBe(id);   // znovu se neopakuje hned
+    globalThis.localStorage = fake();
+    expect(await A.autoSave(gameStore.getState(), 12 * 60000)).toBe(true);
+    expect(uiStore.getState().autoSaveErr).toBe('');
   });
 });

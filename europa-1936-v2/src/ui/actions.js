@@ -159,12 +159,13 @@ export function closeNews() {
 
 let toastSeq = 0, toastTimer = 0;
 /** Krátké oznámení dole uprostřed (zmizí samo). */
-export function toast(text) {
+/** Krátké oznámení dole na obrazovce; `kind` 'error' = červené a déle viditelné (F2). */
+export function toast(text, kind = '') {
   play('notify');
   const id = ++toastSeq;
-  setUi({ toast: { id, text } });
+  setUi({ toast: { id, text, kind } });
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { const t = uiStore.getState().toast; if (t && t.id === id) setUi({ toast: null }); }, 4200);
+  toastTimer = setTimeout(() => { const t = uiStore.getState().toast; if (t && t.id === id) setUi({ toast: null }); }, kind === 'error' ? 9000 : 4200);
 }
 
 /** Index země hráče (0 = pozorovatel). */
@@ -804,20 +805,36 @@ export function decideEvent(id, choice) {
 export const openSaveDialog = (mode) => setUi({ saveDialog: mode, saveMsg: '' });
 export const closeSaveDialog = () => setUi({ saveDialog: null, saveMsg: '' });
 
-/** Uloží hru do slotu; při chybě ohlásí důvod. */
-export function saveGame(slot) {
+const bumpSaves = () => setUi({ saveRev: (uiStore.getState().saveRev || 0) + 1 });   // dialog si znovu načte seznam slotů
+
+/** Uloží hru do slotu (asynchronně, F2); při chybě ohlásí důvod. Vrací Promise<boolean>. */
+export async function saveGame(slot) {
   const s = gameStore.getState();
-  const err = writeSave(slot, s, new Date().toLocaleString('cs-CZ'));
-  if (err) { setUi({ saveMsg: err }); toast(err); return false; }
+  const err = await writeSave(slot, s, new Date().toLocaleString('cs-CZ'));
+  bumpSaves();
+  if (err) { setUi({ saveMsg: err }); toast(err, 'error'); return false; }
   setUi({ saveMsg: `Hra uložena: ${slotName(slot)}.` });
   toast(`Hra uložena: ${slotName(slot)}.`);
   return true;
 }
 
-/** Načte hru ze slotu a přepne do hry; při chybě ohlásí důvod a nic nezmění. */
-export function loadGame(slot) {
-  const res = readSave(slot);
-  if (res.error) { setUi({ saveMsg: res.error }); toast(res.error); return false; }
+let autoWarnAt = -Infinity;
+/**
+ * Automatické uložení (F2): zápis běží na pozadí; když selže, hráč dostane viditelné červené upozornění
+ * (nejvýš jednou za minutu skutečného času, aby se při rychlém běhu neopakovalo každou chvíli). Vrací Promise<boolean>.
+ */
+export async function autoSave(state, now = Date.now()) {
+  const err = await writeSave('auto', state, new Date(now).toLocaleString('cs-CZ'));
+  if (!err) { setUi({ autoSaveErr: '' }); return true; }
+  setUi({ autoSaveErr: err });
+  if (now - autoWarnAt >= 60000) { autoWarnAt = now; toast(`Automatické uložení selhalo: ${err} Uložte hru ručně (F6) nebo smažte staré sloty.`, 'error'); }
+  return false;
+}
+
+/** Načte hru ze slotu a přepne do hry; při chybě ohlásí důvod a nic nezmění. Vrací Promise<boolean>. */
+export async function loadGame(slot) {
+  const res = await readSave(slot);
+  if (res.error) { setUi({ saveMsg: res.error }); toast(res.error, 'error'); return false; }
   gameStore.setState(res.state);
   setUi({ screen: 'game', helpOpen: false, ...FRESH_UI });
   mc.setInsets(INSETS.game);
@@ -825,10 +842,10 @@ export function loadGame(slot) {
   toast(`Hra načtena: ${slotName(slot)}.`);
   return true;
 }
-export const removeSave = (slot) => { deleteSave(slot); setUi({ saveMsg: '' }); };
+export const removeSave = async (slot) => { await deleteSave(slot); setUi({ saveMsg: '' }); bumpSaves(); };
 
-/** Rychlé uložení a načtení (F6 / F9). */
-export const quickSave = () => (uiStore.getState().screen === 'game' ? saveGame('quick') : false);
+/** Rychlé uložení a načtení (F6 / F9); obě vrací Promise<boolean>. */
+export const quickSave = () => (uiStore.getState().screen === 'game' ? saveGame('quick') : Promise.resolve(false));
 export const quickLoad = () => loadGame('quick');
 
 // ============================================================ přehled zemí (M26)

@@ -15,7 +15,7 @@ export const HIST_WARS = [
   { tag: 'SOV', target: 'GER', from: 2515, until: 3800, ratio: 1.0, war: true },   // M93: od obratu u Volhy (listopad 1942) útočí Rudá armáda; do té doby jen osvobozuje vlastní území
   { tag: 'ENG', target: 'ITA', from: 2650, until: 3800, ratio: 1.0, war: true },   // od léta 1943 Spojenci
   { tag: 'ENG', target: 'GER', from: 3000, until: 3800, ratio: 1.0, war: true },
-  { tag: 'GER', target: 'SOV', from: 1960, until: 2400, ratio: 0.35, force: 30 },
+  { tag: 'GER', target: 'SOV', from: 1967, until: 2400, ratio: 0.35, force: 1 },   // F2: příprava (výpověď paktu + 30 dní ospravedlnění) začne nejpozději den po začátku okna → válka ~22. 6. 1941 bez ohledu na zaneprázdnění
   { tag: 'ITA', target: 'ALB', from: 1250, until: 1800, ratio: 1.0 },
   { tag: 'ITA', target: 'GRE', from: 1730, until: 2200, ratio: 1.0 },
   { tag: 'SOV', target: 'FIN', from: 1400, until: 1900, ratio: 0.8 },

@@ -152,7 +152,8 @@ export function releaseNation(state, victor, loser) {
   if (s === state) return state;
   const sub = s.dip.sub.slice(); sub[nu] = victor;
   const au = s.dip.au.slice(); au[nu] = DIP.AU_START;
-  s = { ...s, dip: { ...s.dip, sub, au, rel: setRel(s.dip.rel, nu, victor, 30), ver: s.dip.ver + 1 } };
+  const ally0 = (s.dip.ally0 || []).slice(); ally0[nu] = ally0[loser] ? ally0[loser].slice() : 0;   // F2: uvolněný národ nebojuje proti spojencům mateřské země
+  s = { ...s, dip: { ...s.dip, sub, au, ally0, rel: setRel(s.dip.rel, nu, victor, 30), ver: s.dip.ver + 1 } };
   return logAdd(s, { k: 'release', o: victor, x: nu, y: loser });
 }
 

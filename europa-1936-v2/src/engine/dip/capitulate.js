@@ -3,7 +3,7 @@ import { getWorld } from '../world.js';
 import { atWar, enemiesOf } from '../army/war.js';
 import { withCtx, settleAfterPeace, makePeace } from '../army/commands.js';
 import { COUNTRIES } from '../../data/countries.js';
-import { pairKey } from './core.js';
+import { pairKey, alliesAtFall } from './core.js';
 import { DIP } from './constants.js';
 import { logAdd } from '../log.js';
 import { conference, stateValue } from './subjects.js';
@@ -35,6 +35,10 @@ function endBlocWar(state, loser) {
 export function capitulate(state, loser, opts = {}) {
   const w = getWorld();
   if (state.dip.cap[loser]) return state;
+  // F2: spojenci z doby kapitulace – loutka proti nim nikdy nebojuje (při opakované kapitulaci se seznamy slučují)
+  const prev = (state.dip.ally0 && state.dip.ally0[loser]) || [], now = alliesAtFall(state, loser) || [];
+  const all = [...new Set([...prev, ...now])].filter((c) => c !== loser).sort((a, b) => a - b);
+  const friends = all.length ? all : 0;
   state = endBlocWar(state, loser);
   const stateOwner = state.stateOwner.slice();
   const ctrl = state.ctrl.slice();
@@ -71,14 +75,15 @@ export function capitulate(state, loser, opts = {}) {
   const next = {
     ...state, stateOwner, ctrl, ownerVer: state.ownerVer + 1,
     mil: { ...state.mil, wars, ver: state.mil.ver + 1 },
-    dip: { ...state.dip, cap, fac, facs, since: Object.fromEntries(Object.entries(state.dip.since || {}).filter(([k]) => !k.split('-').map(Number).includes(loser))), just: state.dip.just.filter((j) => j.a !== loser && j.b !== loser), ver: state.dip.ver + 1 },
+    // F2: kapitulovaná loutka přestává být loutkou – o zbytku země rozhodne konference (může z ní udělat loutku vítěze)
+    dip: { ...state.dip, cap, fac, facs, sub: state.dip.sub.map((x, i) => (i === loser ? 0 : x)), au: state.dip.au.map((x, i) => (i === loser ? 0 : x)), ally0: (state.dip.ally0 || []).map((x, i) => (i === loser ? friends : x)), since: Object.fromEntries(Object.entries(state.dip.since || {}).filter(([k]) => !k.split('-').map(Number).includes(loser))), just: state.dip.just.filter((j) => j.a !== loser && j.b !== loser), ver: state.dip.ver + 1 },
     pol: { ...state.pol, own: pol },
   };
   let top = 0;   // M74: země, která dobyla nejvíc provincií poraženého, dostane dočasného ducha „Vítězná nálada“
   for (const c in by) if (!top || by[c] > by[top]) top = +c;
   let done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
   if (host) done = goIntoExile(done, loser, host, allies, ctrl);
-  done = dropExiles(done, loser);   // exily u poražené země zanikají
+  done = dropExiles(done, loser, host);   // exily u poražené země odcházejí s ní k jejímu hostiteli (F2), bez hostitele zanikají
   done = logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), { k: 'cap', o: loser });
   return opts.armistice ? done : conference(done, loser, by, val, occ, foes);   // M93: po historickém příměří zbytek země zůstane samostatný a neutrální (bez konference)
 }

@@ -4,7 +4,7 @@
 // (`restoreCountry`): dostane zpět své původní státy, které drží hostitel a jeho spojenci, a vstoupí do jeho bloku. Čisté funkce.
 import { getWorld } from '../world.js';
 import { logAdd } from '../log.js';
-import { atWar, enemiesOf } from '../army/war.js';
+import { atWar, enemiesOf, hasWar } from '../army/war.js';
 import { divisionCount } from '../army/selectors.js';
 import { DIP } from './constants.js';
 
@@ -64,11 +64,24 @@ export function goIntoExile(state, loser, host, mem, ctrl) {
   return logAdd(next, { k: 'exile', o: loser, x: host, y: moved });
 }
 
-/** Zruší exily u hostitele `host` (hostitel sám kapituloval). */
-export function dropExiles(state, host) {
+/**
+ * Hostitel `host` sám kapituloval (F2): jeho exily se přestěhují k jeho vlastnímu hostiteli `to` (vláda utíká s ním dál), jinak k nejsilnějšímu
+ * bývalému spojenci exilové země (`dip.ally0`), který ještě válčí; když takový není, exil zaniká.
+ */
+export function dropExiles(state, host, to = 0) {
   const exile = exileOf(state);
   if (!exile.some((h) => h === host)) return state;
-  return { ...state, dip: { ...state.dip, exile: exile.map((h) => (h === host ? 0 : h)), ver: state.dip.ver + 1 } };
+  const next = exile.map((h, o) => (h !== host ? h : to && to !== o ? to : fallbackHost(state, o, host)));
+  return { ...state, dip: { ...state.dip, exile: next, ver: state.dip.ver + 1 } };
+}
+
+/** Náhradní hostitel exilu země `o` po pádu hostitele `fallen`: nejsilnější (podle divizí) bývalý spojenec, který nekapituloval a válčí; 0 = žádný. */
+function fallbackHost(state, o, fallen) {
+  const l = state.dip.ally0 && state.dip.ally0[o];
+  if (!l) return 0;
+  const ok = l.filter((c) => c !== fallen && c !== o && !state.dip.cap[c] && !(state.dip.sub && state.dip.sub[c]) && hasWar(state.mil, c));
+  ok.sort((a, b) => divisionCount(state, b) - divisionCount(state, a) || a - b);
+  return ok[0] || 0;
 }
 
 /** Státy, které by obnovená země `o` dostala zpět: její původní státy, které teď vlastní hostitel nebo člen jeho bloku. */
@@ -93,6 +106,10 @@ export function restoreCountry(state, o) {
   for (const s of ids) { const prev = stateOwner[s]; stateOwner[s] = o; for (const p of w.states[s].v) if (ctrl[p] === prev) ctrl[p] = o; }
   const cap = state.dip.cap.slice(); cap[o] = 0;
   const exile = exileOf(state).slice(); exile[o] = 0;
+  // F2: obnovená země přestává být loutkou okupanta
+  const sub = state.dip.sub.slice(); sub[o] = 0;
+  const au = state.dip.au.slice(); au[o] = 0;
+  const ally0 = (state.dip.ally0 || []).slice(); ally0[o] = 0;
   let fac = state.dip.fac, facs = state.dip.facs;
   const fid = fac[host];
   if (fid && facs[fid]) {
@@ -105,12 +122,14 @@ export function restoreCountry(state, o) {
   man[o] = Math.max(man[o] || 0, DIP.RESTORE_MAN);
   // válka: obnovená země bojuje po boku hostitele proti jeho nepřátelům
   let wars = state.mil.wars;
+  const side = new Set(fid && facs[fid] ? facs[fid].mem : [host]);   // F2: s blokem hostitele obnovená země nebojuje (třeba jako bývalá loutka)
+  wars = wars.filter(([a, b]) => !((a === o && side.has(b)) || (b === o && side.has(a))));
   for (const e of enemiesOf(state.mil, host)) if (!atWar({ wars }, o, e)) wars = [...wars, o < e ? [o, e] : [e, o]];
   const next = {
     ...state, stateOwner, ctrl, ownerVer: state.ownerVer + 1,
     mil: { ...state.mil, man, wars, ver: state.mil.ver + 1 },
     pol: { ...state.pol, own },
-    dip: { ...state.dip, cap, exile, fac, facs, ver: state.dip.ver + 1 },
+    dip: { ...state.dip, cap, exile, fac, facs, sub, au, ally0, ver: state.dip.ver + 1 },
   };
   return logAdd(next, { k: 'restore', o, x: host, y: ids.length });
 }

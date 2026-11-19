@@ -3,10 +3,9 @@ import { useEffect } from 'react';
 import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld, confFor } from '../engine/index.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, pushPopup, pushBanner, pushNews, pickBuild, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, pushPopup, pushBanner, pushNews, pickBuild, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, autoSave, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
-import { writeSave } from './saves.js';
 import { logLine, logImportant } from './logText.js';
 import { popupFor } from './popups.js';
 import { bannerFor, newsFor } from './juice.js';
@@ -14,6 +13,8 @@ import { formatDate } from '../engine/time.js';
 const BANNER_ONLY = new Set(['focus', 'tech', 'doctrine']);   // M101: tyhle ohlásí jen velký pruh
 
 const AUTOSAVE_HOURS = 24 * 30;   // automatické uložení jednou za herní měsíc
+/** Spustí práci, až bude prohlížeč volný (F2: zabalení automatického uložení nezdrží snímek). */
+const whenIdle = (fn) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(() => fn(), { timeout: 2000 }) : setTimeout(fn, 0));
 
 /** Smyčka času: z reálného času počítá herní hodiny podle rychlosti a posouvá stav. Běží jen na obrazovce hry. */
 export function useGameLoop(active) {
@@ -33,7 +34,7 @@ export function useGameLoop(active) {
         const cur = gameStore.getState();
         const after = cur.dip.cap;
         if (cur.player && Math.floor(cur.tick / 24) !== Math.floor(prev.tick / 24)) checkAchievements(cur);   // M86: úspěchy jednou za herní den
-        if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) writeSave('auto', cur, new Date().toLocaleString('cs-CZ'));
+        if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) whenIdle(() => autoSave(cur));   // F2: na pozadí, chyba se ohlásí
         void before; void after;
       }
     };
