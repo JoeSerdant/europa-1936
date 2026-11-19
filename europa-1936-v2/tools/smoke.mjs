@@ -708,6 +708,14 @@ try {
   await page.keyboard.press('Escape');
   await page.waitForSelector('.dialog');
   check('nabídka má přepínač zvuku a průvodce, stránka vlastní kurzory', (await page.getByRole('button', { name: /Zvuk:/ }).count()) === 1 && (await page.getByRole('button', { name: /Průvodce:/ }).count()) === 1 && /url\(/.test(await page.evaluate(() => getComputedStyle(document.body).cursor)));
+  {   // F2 C1–C2: hlasitost efektů a noviny ze světa jdou zapnout v nabídce
+    const nb = page.getByRole('button', { name: /Noviny ze světa:/ });
+    const before = await nb.innerText();
+    await nb.click(); await page.waitForTimeout(100);
+    const after = await nb.innerText();
+    await nb.click(); await page.waitForTimeout(100);
+    check('nabídka: posuvník hlasitosti a přepínač novin', (await page.getByRole('slider', { name: 'Hlasitost efektů' }).count()) === 1 && before !== after && (await nb.innerText()) === before);
+  }
   await page.getByRole('button', { name: 'Hlavní menu' }).click();
   await page.getByRole('button', { name: 'Odejít do menu' }).click();
   await page.waitForSelector('.menu');

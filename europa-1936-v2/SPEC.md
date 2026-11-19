@@ -1039,6 +1039,10 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
 - **Rozhraní (B4–B6)**: horní lišta pod 2200 px ve dvou řádcích (ikona + hodnota, popis v nápovědě) – vždy všech 14 ukazatelů; průvodce
   a nápověda „Čas stojí“ v levém sloupci nad minimapou (s panelem vlevo vedle něj, `.tut-dock`); panel státu bez tlačítek staveb (odkaz do panelu Stavby).
 
+- **Nastavení (C1–C3)**: nabídka hry (Esc) má přepínač „Noviny ze světa“ (`setNewsEnabled` – po „Nezobrazovat“ v novinách jde zase zapnout)
+  a posuvník „Hlasitost efektů“ 0–100 % (`setVolume` / `soundVolume` v `ui/sound.js`, `localStorage` `e1936.volume`; 80 % = původní hlasitost;
+  hra nemá hudbu, jen syntetizované efekty). Panel Politika u kraje je širší (`min(700px, 52vw)`) s hlavičkou ve dvou řádcích.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.

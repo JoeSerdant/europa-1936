@@ -312,6 +312,13 @@ button.st-row:hover { background: var(--ink-3); }
 .prod-head .pol-head { display: flex; flex-direction: row; align-items: center; gap: 24px; flex: 1; justify-content: flex-end; padding: 0; border: 0; }
 .prod-head .pol-meter { width: 190px; }
 .prod-head .pol-sum { max-width: 300px; }
+/* F2 C3: panel Politika u kraje – širší, hlavička ve dvou řádcích (název + zavřít, pod nimi ukazatele v mřížce a souhrn), nic se neláme */
+.politics-panel .prod-head { flex-wrap: wrap; row-gap: 10px; position: relative; padding-right: 56px; }
+.politics-panel .prod-head .icon-btn.close { position: absolute; right: 12px; top: 8px; }
+.politics-panel .prod-head .pol-head { flex: 1 1 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; column-gap: 22px; row-gap: 6px; }
+.politics-panel .prod-head .pol-meter { width: auto; min-width: 0; }
+.politics-panel .prod-head .pol-sum { grid-column: 1 / -1; max-width: none; }
+.pol-meter i, .pol-meter b, .pol-meter em, .pol-pp b, .pol-pp span { white-space: nowrap; }
 .prod-head .dip-held { flex: 1; text-align: right; }
 .law-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; align-items: start; }
 .law-grid .pol-law { margin: 0; }
@@ -642,3 +649,5 @@ button.st-row:hover { background: var(--ink-3); }
 @media (prefers-reduced-motion: reduce) { .prod-screen:is(.politics-panel, .dip-panel, .decisions-panel, .spy-panel, .doctrine-panel, .logistics-panel, .air-panel) { animation: none; } }
 .rs-lv { display: inline-flex; flex-wrap: wrap; gap: 2px 8px; }
 .rs-lv span { display: inline-flex; align-items: center; gap: 2px; }
+/* F2 C3: panel Politika u kraje je širší než ostatní okna u kraje (hlavička s ukazateli); musí stát až za pravidlem DOCKED výše */
+.prod-screen.politics-panel { width: min(700px, 52vw); }

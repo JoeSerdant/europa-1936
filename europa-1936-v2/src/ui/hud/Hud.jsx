@@ -83,7 +83,7 @@ export function Hud() {
       <div className="menurow"><MenuBar /><Alerts /></div>
       <Console />
       <div className="top-mid" style={{ right }}><PlanBar /></div>
-      {buildTab && <div className={`tut-dock ${panel === 'industry' ? 'by-build' : 'by-dock'}`}>{tips}</div>}
+      {buildTab && <div className={`tut-dock ${panel === 'industry' ? 'by-build' : `by-dock${panel === 'politics' ? ' wide' : ''}`}`}>{tips}</div>}
       <div className="bottom-mid" style={{ right }}>
         <Toast />
         <SelectionBar />
