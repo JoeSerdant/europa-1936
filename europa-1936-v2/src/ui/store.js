@@ -20,6 +20,7 @@ export const uiStore = createStore({
   aiHist: true,            // historické plány AI (války a bloky)
   rules: {},               // pravidla hry zvolená před startem (M76; prázdné = výchozí)
   achOpen: false,          // okno Úspěchy (M86)
+  notifyOpen: false,       // F3: okno Nastavení upozornění
   pickTag: 'GER',          // země vybraná na obrazovce výběru
   helpOpen: false,         // okno s ovládáním
   menuOpen: false,         // nabídka ve hře (Esc)

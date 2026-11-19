@@ -1066,6 +1066,13 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
 - **Obtížnost** (`ai.diff` −2 Nováček, −1 Snadná, 0 Běžná, 1 Těžká, 2 Elitní; `GAME_VERSION = 49`, součást `validateState`): data `DIFFICULTY`
   (`prod`, `res`, `divs`, `man`, `army`) platí jen pro AI země – `aiMult(state, o, 'prod' | 'res' | 'man')`, cílový počet divizí v `targetDivs`,
   vojenské bonusy v `extraMods`. Starší volba `aiLevel` 1/3 odpovídá −1/+1. Hráčovu zemi mění jen pravidlo „Vaše země“ (`bonus`).
+- **Automatické ukládání** (rozhraní, `ui/saves.js`): tři sloty `auto`, `auto2`, `auto3` na střídačku (`nextAutoSlot`: první prázdný, jinak
+  nejstarší podle `meta.stamp`); interval volí hráč v nabídce (`AUTOSAVE_OPTS`: týden, měsíc – výchozí, rok, vypnuto; localStorage
+  `e1936.autosave`), herní smyčka ho čte přes `autoSaveHours()` jednou za herní den.
+- **Nastavení upozornění** (jako v HOI4, `ui/notify.js`, okno `NotifyDialog` z nabídky hry): zprávy deníku jsou ve skupinách `NOTIFY_GROUPS`
+  (války a mír, diplomacie, výzkum a doktríny, národní cíle a události, stavby, vojenské operace, ostatní); u každé hráč volí „Jen deník“,
+  „Oznámit“ (výchozí) nebo „Oznámit a pozastavit“. Čte je jen `announceLog` (`ui/hooks.js`) přes `notifyMode(e.k)`; pauzu dělá `pauseForNotice`
+  (zavření novin ji pak nezruší). Noviny ze světa mají vlastní přepínač. Volby jsou v localStorage `e1936.notify`, ne v herním stavu.
 - **Zimní válka a moskevský mír** (jen s historickou AI): duchové `zimni_valka` (Finsko, 110 dní od začátku války: obrana +35 %) a
   `armada_po_cistkach` (SSSR, 70 dní: útok −30 %); řádek `fin_peace` s `peace: true` – jakmile SSSR drží 12 finských provincií (nejpozději
   13. 3. 1940), Finsko uzavře **územní mír**: `capitulate(…, { armistice, peace })` předá okupantovi obsazené státy (hlavní provincie státu),

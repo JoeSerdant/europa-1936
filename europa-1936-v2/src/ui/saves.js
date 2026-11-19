@@ -4,8 +4,9 @@
 // a načítají; nové uložení do slotu je z localStorage smaže. Všechny funkce jsou asynchronní a nikdy nevyhazují – chyby vrací česky.
 import { packGame, unpackGame, formatDate, getWorld } from '../engine/index.js';
 
-export const SLOTS = ['auto', 'quick', 1, 2, 3, 4, 5];
-export const SLOT_NAMES = { auto: 'Automatické uložení', quick: 'Rychlé uložení' };
+export const AUTO_SLOTS = ['auto', 'auto2', 'auto3'];   // F3: automatická uložení na střídačku (přepisuje se nejstarší)
+export const SLOTS = [...AUTO_SLOTS, 'quick', 1, 2, 3, 4, 5];
+export const SLOT_NAMES = { auto: 'Automatické uložení 1', auto2: 'Automatické uložení 2', auto3: 'Automatické uložení 3', quick: 'Rychlé uložení' };
 export const slotName = (s) => SLOT_NAMES[s] || `Slot ${s}`;
 const key = (slot, kind) => `e1936:${kind}:${slot}`;
 const GZ = 'gz1:';   // předpona komprimovaného slotu v localStorage
@@ -102,21 +103,49 @@ export async function listSaves() {
   return SLOTS.filter((s) => got.has(s)).map((s) => got.get(s));
 }
 
+/** F3: slot pro další automatické uložení – první prázdný, jinak ten s nejstarším uložením (`stamp`; starší záznamy bez něj jsou nejstarší). */
+export async function nextAutoSlot() {
+  const metas = new Map((await listSaves()).map((m) => [m.slot, m]));
+  let best = AUTO_SLOTS[0], bt = Infinity;
+  for (const s of AUTO_SLOTS) {
+    const m = metas.get(s);
+    if (!m) return s;
+    const t = m.stamp || 0;
+    if (t < bt) { bt = t; best = s; }
+  }
+  return best;
+}
+
+// ---- F3: interval automatického ukládání (volba hráče v localStorage) ----
+export const AUTOSAVE_OPTS = [['week', 'každý týden', 24 * 7], ['month', 'každý měsíc', 24 * 30], ['year', 'každý rok', 24 * 365], ['off', 'vypnuto', 0]];
+const AUTO_KEY = 'e1936.autosave';
+/** Zvolený interval automatického ukládání (id z `AUTOSAVE_OPTS`, výchozí měsíc). */
+export function autoSaveEvery() {
+  try { const v = globalThis.localStorage && globalThis.localStorage.getItem(AUTO_KEY); if (AUTOSAVE_OPTS.some(([id]) => id === v)) return v; } catch { /* nic */ }
+  return 'month';
+}
+export function setAutoSaveEvery(id) {
+  if (!AUTOSAVE_OPTS.some(([x]) => x === id)) return;
+  try { globalThis.localStorage && globalThis.localStorage.setItem(AUTO_KEY, id); } catch { /* nic */ }
+}
+/** Herní hodiny mezi automatickými uloženími (0 = vypnuto). */
+export const autoSaveHours = () => AUTOSAVE_OPTS.find(([id]) => id === autoSaveEvery())[2];
+
 // zápisy jdou za sebou (automatické a ruční uložení se nepředbíhají)
 let chain = Promise.resolve();
 
-/** Uloží stav do slotu; vrací null, nebo český popis chyby. `savedAt` je text času uložení (z rozhraní). */
-export function writeSave(slot, state, savedAt = '') {
-  const job = chain.then(() => doWrite(slot, state, savedAt));
+/** Uloží stav do slotu; vrací null, nebo český popis chyby. `savedAt` je text času uložení, `stamp` jeho číselná podoba (z rozhraní, F3: pořadí automatických uložení). */
+export function writeSave(slot, state, savedAt = '', stamp = 0) {
+  const job = chain.then(() => doWrite(slot, state, savedAt, stamp));
   chain = job.catch(() => null);
   return job;
 }
 
-async function doWrite(slot, state, savedAt) {
+async function doWrite(slot, state, savedAt, stamp) {
   let text;
   try { text = JSON.stringify(packGame(state)); } catch { return 'Hru se nepodařilo zabalit.'; }
   const w = getWorld();
-  const meta = { slot, player: state.player, name: state.player ? w.owners[w.ownerIdx[state.player]].name : 'Pozorovatel', date: formatDate(state.tick), tick: state.tick, savedAt, size: text.length, zip: 0 };
+  const meta = { slot, player: state.player, name: state.player ? w.owners[w.ownerIdx[state.player]].name : 'Pozorovatel', date: formatDate(state.tick), tick: state.tick, savedAt, stamp, size: text.length, zip: 0 };
   let bytes = null;
   if (canZip()) { try { bytes = await gzip(text); meta.zip = bytes.length; } catch { bytes = null; } }
   const db = await openDb();

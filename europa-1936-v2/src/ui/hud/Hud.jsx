@@ -3,6 +3,7 @@ import { useGame, useUi } from '../store.js';
 import { TopBar } from './TopBar.jsx';
 import { MapModes, Legend } from './MapModes.jsx';
 import { GameMenu } from './GameMenu.jsx';
+import { NotifyDialog } from './NotifyDialog.jsx';
 import { SidePanel, FULL, DOCKED } from '../army/SidePanel.jsx';
 import { SelectionBar } from '../army/SelectionBar.jsx';
 import { ArmyBar } from '../army/ArmyBar.jsx';
@@ -93,6 +94,7 @@ export function Hud() {
       <Banner />
       <BattleDialog />
       <GameMenu />
+      <NotifyDialog />
       <TemplateDesigner />
       <EventDialog />
       <NewsDialog />

@@ -4,16 +4,17 @@ import { hoursForElapsed, togglePause, changeSpeed, getWorld, confFor, SPEEDS } 
 import { createClock, backlogMax } from './clock.js';
 import { gameStore, uiStore } from './store.js';
 import {
-  toast, pushPopup, pushBanner, pushNews, pickBuild, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, autoSave, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
+  toast, pushPopup, pauseForNotice, setNotifyOpen, pushBanner, pushNews, pickBuild, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, autoSave, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
 } from './actions.js';
 import { MODES } from './map/colors.js';
 import { logLine, logImportant } from './logText.js';
 import { popupFor } from './popups.js';
 import { bannerFor, newsFor } from './juice.js';
 import { formatDate } from '../engine/time.js';
+import { autoSaveHours } from './saves.js';
+import { notifyMode } from './notify.js';
 const BANNER_ONLY = new Set(['focus', 'tech', 'doctrine']);   // M101: tyhle ohlásí jen velký pruh
 
-const AUTOSAVE_HOURS = 24 * 30;   // automatické uložení jednou za herní měsíc
 const FRAME_BUDGET_MS = [0, 10, 10, 12, 14, 16];   // F2: kolik ms ze snímku smí počítat engine podle rychlosti (zbytek patří mapě a rozhraní)
 /** Spustí práci, až bude prohlížeč volný (F2: zabalení automatického uložení nezdrží snímek). */
 const whenIdle = (fn) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(() => fn(), { timeout: 2000 }) : setTimeout(fn, 0));
@@ -41,7 +42,10 @@ export function useGameLoop(active) {
       if (cur === prev) return;
       gameStore.setState(cur);
       if (cur.player && Math.floor(cur.tick / 24) !== Math.floor(prev.tick / 24)) checkAchievements(cur);   // M86: úspěchy jednou za herní den
-      if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) whenIdle(() => autoSave(cur));   // F2: na pozadí, chyba se ohlásí
+      if (cur.player && Math.floor(cur.tick / 24) !== Math.floor(prev.tick / 24)) {   // F3: interval podle volby hráče (týden / měsíc / rok / vypnuto)
+        const every = autoSaveHours();
+        if (every && Math.floor(cur.tick / every) !== Math.floor(prev.tick / every)) whenIdle(() => autoSave(cur));   // F2: na pozadí, chyba se ohlásí
+      }
     };
     raf = requestAnimationFrame(frame);
     // M101: oznámení z deníku – po každé změně stavu (běh času i akce hráče, např. vyhlášení války) se ohlásí nové záznamy;
@@ -62,22 +66,31 @@ export function useGameLoop(active) {
   }, [active]);
 }
 
-/** Ohlásí nové záznamy deníku hráči: velký pruh, noviny ze světa, karta nebo krátké oznámení (M58, M101). */
-function announceLog(cur, all) {
+/**
+ * Ohlásí nové záznamy deníku hráči: velký pruh, noviny ze světa, karta nebo krátké oznámení (M58, M101).
+ * F3: podle nastavení upozornění (`notifyMode`) skupina zpráv jen do deníku, oznámit, nebo oznámit a pozastavit hru. Noviny mají vlastní přepínač.
+ */
+export function announceLog(cur, all) {
   const me = playerIdx(cur);
   const rest = [];
+  let pause = false;
   for (const e of all) {
-    const b = bannerFor(e, me);
-    if (b) pushBanner(b);
+    const mode = notifyMode(e.k);
+    const b = mode === 'log' ? null : bannerFor(e, me);
+    if (b) { pushBanner(b); if (mode === 'pause') pause = true; }
     const n = cur.player ? newsFor(e, me) : null;
     if (n) pushNews({ ...n, date: formatDate(e.t ?? cur.tick) });
   }
   for (const e of all) {
     if (!logImportant(e, me) || BANNER_ONLY.has(e.k)) continue;
+    const mode = notifyMode(e.k);
+    if (mode === 'log') continue;
+    if (mode === 'pause') pause = true;
     const card = popupFor(e, me);
     if (card) pushPopup(card); else rest.push(e);
   }
   if (rest.length) toast(logLine(rest[rest.length - 1], me).text);
+  if (pause && cur.player) pauseForNotice();
 }
 
 const isTyping = (e) => /^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable;
@@ -102,6 +115,7 @@ export function useHotkeys() {
       if (ui.saveDialog) { if (e.key === 'Escape') closeSaveDialog(); return; }
       if (ui.overview && e.key === 'Escape') { closeOverview(); return; }
       if (ui.achOpen) { if (e.key === 'Escape') setAchOpen(false); return; }   // M86: okno Úspěchy
+      if (ui.notifyOpen) { if (e.key === 'Escape') setNotifyOpen(false); return; }   // F3: okno Nastavení upozornění
       if (ui.battle && e.key === 'Escape') { closeBattle(); return; }
       if (e.key === 'F2' || e.key === '`' || e.key === '~' || e.code === 'Backquote') { e.preventDefault(); if (uiStore.getState().screen === 'game') toggleConsole(); return; }
       if (ui.console && e.key === 'Escape') { closeConsole(); return; }

@@ -1,7 +1,7 @@
 // Uložené hry (M25): obálka a kontrola stavu, sloty v úložišti (s falešným localStorage), načtení a pokračování hry, chybové stavy a akce rozhraní.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createGame, advance, packGame, unpackGame, validateState, SAVE_FORMAT, GAME_VERSION, startFocus, getWorld } from '../src/engine/index.js';
-import { listSaves, writeSave, readSave, deleteSave, SLOTS, slotName, gzip, gunzip, resetSaveDb } from '../src/ui/saves.js';
+import { listSaves, writeSave, readSave, deleteSave, SLOTS, slotName, gzip, gunzip, resetSaveDb, AUTO_SLOTS, nextAutoSlot, autoSaveEvery, setAutoSaveEvery, autoSaveHours } from '../src/ui/saves.js';
 import { fakeIndexedDB } from './fakeIdb.js';
 import { gameStore, uiStore } from '../src/ui/store.js';
 import * as A from '../src/ui/actions.js';
@@ -87,8 +87,21 @@ describe('sloty v úložišti (localStorage, bez IndexedDB)', () => {
     await writeSave('auto', s); await writeSave(1, s);
     expect((await listSaves()).map((x) => x.slot)).toEqual(['auto', 'quick', 1]);
     expect(SLOTS).toContain('auto');
-    expect(slotName('auto')).toBe('Automatické uložení');
+    expect(slotName('auto')).toBe('Automatické uložení 1');
     expect(slotName(2)).toBe('Slot 2');
+  });
+  it('F3: tři automatická uložení na střídačku (přepisuje se nejstarší) a volba intervalu', async () => {
+    expect(AUTO_SLOTS).toHaveLength(3);
+    const used = [];
+    for (let i = 1; i <= 5; i++) { const slot = await nextAutoSlot(); used.push(slot); await writeSave(slot, s, `čas ${i}`, i * 1000); }
+    expect(used).toEqual(['auto', 'auto2', 'auto3', 'auto', 'auto2']);
+    expect((await listSaves()).filter((m) => AUTO_SLOTS.includes(m.slot)).map((m) => m.stamp).sort()).toEqual([3000, 4000, 5000]);
+    expect(autoSaveEvery()).toBe('month');
+    expect(autoSaveHours()).toBe(24 * 30);
+    setAutoSaveEvery('week'); expect(autoSaveHours()).toBe(24 * 7);
+    setAutoSaveEvery('off'); expect(autoSaveHours()).toBe(0);
+    setAutoSaveEvery('nesmysl'); expect(autoSaveEvery()).toBe('off');
+    setAutoSaveEvery('month');
   });
   it('chyby úložiště: plné, zakázané, vadná data', async () => {
     globalThis.localStorage = fake({ full: true });

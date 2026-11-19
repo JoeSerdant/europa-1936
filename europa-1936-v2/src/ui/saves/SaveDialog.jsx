@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { listSaves, SLOTS, slotName } from '../saves.js';
+import { listSaves, SLOTS, AUTO_SLOTS, slotName } from '../saves.js';
 import { saveGame, loadGame, removeSave, closeSaveDialog, openSaveDialog } from '../actions.js';
 import { fmtNum } from '../format.js';
 
@@ -34,7 +34,7 @@ export function SaveDialog() {
         <ul className="sv-list" aria-busy={!saves}>
           {SLOTS.map((slot) => {
             const m = saves ? saves.get(slot) : null;
-            const writable = mode === 'save' && slot !== 'auto';
+            const writable = mode === 'save' && !AUTO_SLOTS.includes(slot);
             return (
               <li key={slot} className={m ? 'full' : 'empty'}>
                 <div className="sv-info">
