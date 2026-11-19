@@ -22,8 +22,10 @@ it('milníky války', () => {
     ['kapitulace Německa', (l) => l.k === 'cap' && l.o === I('GER')],
   ];
   const got = new Map(), govs = [], wars = [], caps = [];
-  let seen = 0;
+  let seen = 0, capLost = '';
+  const me = cfg.player ? w.ownerIdx[cfg.player] : 0;
   const last = simulate(cfg, END, (s) => {
+    if (me && !capLost && s.ctrl[w.owners[me].cap] !== me && !s.dip.cap[me]) capLost = dateOf(s);   // F2 B2: hráč poprvé přišel o hlavní město
     for (const l of s.log.items) {
       if (l.id <= seen) continue;
       for (const [nm, f] of marks) if (!got.has(nm) && f(l)) got.set(nm, dateOf(s));
@@ -36,6 +38,7 @@ it('milníky války', () => {
   });
   const out = [`Milníky: semínko ${cfg.seed}, hráč ${cfg.player || 'pozorovatel'}, historická AI ${cfg.hist ? 'ano' : 'ne'}, do ${dateOf(last)}`];
   for (const [nm] of marks) out.push(`  ${nm}: ${got.get(nm) || '–'}`);
+  if (me) out.push(`  hráč ${cfg.player} poprvé ztratil hlavní město: ${capLost || '–'}`);
   out.push(`změny vlád (${govs.length}): ${govs.join('; ') || 'žádné'}`);
   out.push(`vyhlášené války (${wars.length}): ${wars.join('; ') || 'žádné'}`);
   out.push(`kapitulace (${caps.length}): ${caps.join('; ') || 'žádné'}`);

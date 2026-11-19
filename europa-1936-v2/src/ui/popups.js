@@ -43,6 +43,7 @@ export function popupFor(e, me) {
       if (e.o === me) return { kind: 'civil', icon: 'swords', tone: 'bad', title: 'Občanská válka', text: `Část armády a území se postavily proti vládě. Povstalci vyhlásili stát ${nm(e.x)}.`, lines: ['Mír nelze uzavřít – rozhodne se na bojišti.'], sticky: true };
       return null;
     case 'exile':
+      if (e.o === me) return { kind: 'exile', icon: 'flag', tone: 'bad', title: 'Vláda v exilu', text: `Vaše země kapitulovala, ale vláda bojuje dál z území země ${nm(e.x)}.`, lines: ['Jednotky na spojeneckém území a loďstvo vám zůstaly.', 'Po osvobození hlavního města se země obnoví.'], sticky: true };   // F2 B3
       return e.x === me ? { kind: 'exile', icon: 'flag', tone: 'info', title: 'Exilová vláda', text: `Vláda země ${nm(e.o)} našla útočiště u vás.`, lines: [e.y ? `Pod vaše velení přešlo ${e.y} divizí a její loďstvo.` : 'Její loďstvo přešlo pod vaše velení.', 'Po osvobození hlavního města se země obnoví.'], sticky: true } : null;
     case 'restore':
       return { kind: 'restore', icon: 'flag', tone: 'good', title: 'Osvobození', text: `${nm(e.o)} je osvobozena a exilová vláda se vrací.`, lines: [] };

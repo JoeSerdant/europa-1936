@@ -64,6 +64,14 @@ export function goIntoExile(state, loser, host, mem, ctrl) {
   return logAdd(next, { k: 'exile', o: loser, x: host, y: moved });
 }
 
+/** F2 B3: exilová vláda hráčovy země – jen zápis hostitele a záznam do deníku; jednotky, lodě a zásoby zůstávají hráči (bojují dál z území hostitele). */
+export function markExile(state, loser, host) {
+  const exile = exileOf(state).slice();
+  while (exile.length < getWorld().owners.length) exile.push(0);
+  exile[loser] = host;
+  return logAdd({ ...state, dip: { ...state.dip, exile, ver: state.dip.ver + 1 } }, { k: 'exile', o: loser, x: host, y: 0 });
+}
+
 /**
  * Hostitel `host` sám kapituloval (F2): jeho exily se přestěhují k jeho vlastnímu hostiteli `to` (vláda utíká s ním dál), jinak k nejsilnějšímu
  * bývalému spojenci exilové země (`dip.ally0`), který ještě válčí; když takový není, exil zaniká.

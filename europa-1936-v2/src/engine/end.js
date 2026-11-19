@@ -33,6 +33,7 @@ export function endDay(state) {
   const st = standing(state);
   let kind = null;
   if (state.dip.cap[st.me] && !(state.dip.sub && state.dip.sub[st.me])) kind = 'lose';
+  else if (!state.stateOwner.some((x) => x === st.me) && !(state.dip.exile && state.dip.exile[st.me])) kind = 'lose';   // F2 B3: bez území a bez exilové vlády
   else if (st.share >= END.WIN_SHARE) kind = 'win';
   else if (state.tick >= END.TICK) kind = 'time';
   if (!kind) return state;
