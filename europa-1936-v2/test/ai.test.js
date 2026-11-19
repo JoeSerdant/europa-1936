@@ -1,7 +1,9 @@
 // AI zemí (M24): vypnutá ve výchozím stavu, průmysl, armáda (výcvik, armády, útočné plány), diplomacie (mír, historické války), obtížnost, čistota a determinismus.
 import { describe, it, expect } from 'vitest';
+import { openCtx } from '../src/engine/army/ctx.js';
+import { modsOf } from '../src/engine/army/unit.js';
 import {
-  createGame, getWorld, advance, advanceHour, declareWar, atWar, industryOf, divisionCount, targetDivs, scanArmies, aiMult, AI, HIST_WARS, outMult, researchOf,
+  createGame, getWorld, advance, advanceHour, declareWar, atWar, industryOf, divisionCount, targetDivs, scanArmies, aiMult, AI, HIST_WARS, outMult, researchOf, DIFFICULTY, DIFF_IDS, diffOf, manMult,
   startWar, justifyWar, startFocus, factionOf, sameFaction, HIST_FACTIONS, GAME_VERSION, isCivilWar,
 } from '../src/engine/index.js';
 
@@ -15,10 +17,12 @@ const base = (extra = {}) => createGame({ player: 'GER', aiLevel: 2, ...extra })
 describe('nastavení', () => {
   it('výchozí engine nemá AI; hra s aiLevel ji zapne; neplatná úroveň se vrátí na vypnuto', () => {
     expect(GAME_VERSION).toBeGreaterThanOrEqual(8);
-    expect(createGame({ player: 'GER' }).ai).toEqual({ level: 0, hist: 1, inv: [] });
-    expect(base().ai).toEqual({ level: 2, hist: 1, inv: [] });
+    expect(createGame({ player: 'GER' }).ai).toEqual({ level: 0, diff: 0, hist: 1, inv: [] });
+    expect(base().ai).toEqual({ level: 2, diff: 0, hist: 1, inv: [] });
     expect(createGame({ aiLevel: 7 }).ai.level).toBe(0);
-    expect(createGame({ aiLevel: 3, hist: false }).ai).toEqual({ level: 3, hist: 0, inv: [], salt: 1936 });   // F2: volná historie nese semínko hry
+    expect(createGame({ aiLevel: 3, hist: false }).ai).toEqual({ level: 3, diff: 1, hist: 0, inv: [], salt: 1936 });   // F2: volná historie nese semínko hry; F3: těžká = obtížnost +1
+    expect(createGame({ aiLevel: 2, diff: -2 }).ai.diff).toBe(-2);   // F3: pět stupňů obtížnosti
+    expect(createGame({ aiLevel: 2, diff: 9 }).ai.diff).toBe(0);
     expect(JSON.parse(JSON.stringify(base().ai))).toEqual(base().ai);
   });
   it('vypnutá AI nic nemění: stav po dni je totožný s hrou bez nastavení AI', () => {
@@ -143,6 +147,24 @@ describe('obtížnost', () => {
     expect(outMult(createGame({ player: 'GER', aiLevel: 3 }), FRA)).toBeGreaterThan(outMult(createGame({ player: 'GER', aiLevel: 1 }), FRA));
     expect(outMult(createGame({ player: 'GER', aiLevel: 3 }), GER)).toBe(outMult(createGame({ player: 'GER', aiLevel: 1 }), GER));
     expect(researchOf(createGame({ player: 'GER', aiLevel: 3 }), 'FRA').speed).toBeGreaterThan(researchOf(createGame({ player: 'GER', aiLevel: 1 }), 'FRA').speed);
+  });
+  it('F3: pět stupňů obtížnosti – výroba, výzkum, lidská síla, divize a boj AI; hráčova země beze změny', () => {
+    const g = (diff) => createGame({ player: 'GER', aiLevel: 2, diff });
+    const prod = DIFF_IDS.map((d) => aiMult(g(d), FRA));
+    expect(prod).toEqual(DIFF_IDS.map((d) => 1 + DIFFICULTY[d].prod));
+    for (let i = 1; i < prod.length; i++) expect(prod[i]).toBeGreaterThan(prod[i - 1]);
+    expect(aiMult(g(2), FRA, 'res')).toBeCloseTo(1.2, 9);
+    expect(aiMult(g(2), FRA, 'man')).toBeCloseTo(1.15, 9);
+    expect(manMult(g(2), FRA)).toBeCloseTo(manMult(g(0), FRA) * 1.15, 9);
+    for (const d of DIFF_IDS) { expect(aiMult(g(d), GER)).toBe(1); expect(manMult(g(d), GER)).toBe(manMult(g(0), GER)); }
+    expect(targetDivs(g(2), FRA)).toBeGreaterThan(targetDivs(g(0), FRA));
+    expect(targetDivs(g(-2), FRA)).toBeLessThan(targetDivs(g(0), FRA));
+    // bojové bonusy: Elitní AI útočí lépe, hráč ne
+    const mods = (s, o) => { const ctx = openCtx(s); const id = s.mil.divs.findIndex((d) => d && d.o === o); return modsOf(ctx, s.mil.divs[id]); };
+    expect(mods(g(2), FRA).atk).toBeCloseTo(mods(g(0), FRA).atk + 0.1, 9);
+    expect(mods(g(-2), FRA).def).toBeCloseTo(mods(g(0), FRA).def - 0.1, 9);
+    expect(mods(g(2), GER).atk).toBe(mods(g(0), GER).atk);
+    expect(diffOf(createGame({ player: 'GER', aiLevel: 1 }))).toBe(-1);
   });
   it('pozorovatel: všechny země jedou pod AI', () => {
     const a = day(createGame({ player: null, aiLevel: 2 }), 30);

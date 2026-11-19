@@ -50,14 +50,14 @@ try {
   await shot('select');
 
   // AI zemí (M24): výchozí běžná obtížnost s historickými plány, volba těžké a návrat
-  check('výběr země nabízí obtížnost AI (výchozí Běžná) a historické plány', (await page.getByRole('button', { name: 'Běžná' }).getAttribute('aria-pressed')) === 'true' && (await page.getByLabel('Historické plány').isChecked()));
-  await page.getByRole('button', { name: 'Těžká' }).click();
+  check('výběr země nabízí pět stupňů obtížnosti (výchozí Běžná) a historické plány', (await page.locator('.ai-opts .sbtn').count()) === 5 && (await page.getByRole('button', { name: 'Běžná', exact: true }).getAttribute('aria-pressed')) === 'true' && (await page.getByLabel('Historické plány').isChecked()));
+  await page.getByRole('button', { name: 'Těžká', exact: true }).click();
   check('výběr země nabízí dva scénáře', (await page.locator('.scn-opts .sbtn').count()) === 2);
   await page.getByRole('button', { name: 'Začít hru' }).click();
   await page.waitForSelector('.topbar');
   await page.waitForTimeout(1800);
   const top = await page.locator('.topbar').innerText();
-  check('hra začíná s AI zemí na těžké obtížnosti', (await page.evaluate(() => window.__e1936.gameStore.getState().ai)).level === 3);
+  check('hra začíná s AI zemí na těžké obtížnosti', (await page.evaluate(() => window.__e1936.gameStore.getState().ai)).diff === 1);
   check('horní lišta: země a datum', top.includes('Německo') && top.includes('1. ledna 1936'));
   await shot('game');
 

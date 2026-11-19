@@ -3,9 +3,9 @@ import { gameStore, useGame } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { COUNTRIES } from '../../data/countries.js';
-import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension, fuelOf } from '../../engine/index.js';
+import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension, fuelOf, SPEEDS } from '../../engine/index.js';
 import { setHelp, setMenuOpen, openOverview } from '../actions.js';
-import { fmtInt, fmtPop } from '../format.js';
+import { fmtInt, fmtPop, fmtSpeed } from '../format.js';
 
 /** Datum, hodiny a ovládání času. Samostatná komponenta: s během času se překresluje jen ona. */
 function Clock() {
@@ -25,7 +25,7 @@ function Clock() {
         <div className="bars" role="group" aria-label="Rychlost hry">
           {[1, 2, 3, 4, 5].map((i) => (
             <button key={i} className={i <= speed ? (paused ? 'dim' : 'on') : ''} style={{ height: 7 + i * 3.4 }}
-              onClick={() => gameStore.update(setSpeed, i)} aria-label={`Rychlost ${i}`} title={`Rychlost ${i} (+ / −)`} />
+              onClick={() => gameStore.update(setSpeed, i)} aria-label={`Rychlost ${i}`} title={`Rychlost ${i}: ${fmtSpeed(SPEEDS[i])} (+ / −)`} />
           ))}
         </div>
       </div>

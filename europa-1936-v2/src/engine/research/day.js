@@ -46,7 +46,7 @@ export function researchDay(state) {
     if (slots.some(Boolean)) {
       if (slots === cur.slots) slots = slots.slice();
       changed = true;
-      const speed = speedOfDone(o, cur.done) * (1 + polModsOf(state, o).research) * aiMult(state, o);
+      const speed = speedOfDone(o, cur.done) * (1 + polModsOf(state, o).research) * aiMult(state, o, 'res');
       let prog = { ...cur.prog }, done = cur.done;
       for (let i = 0; i < slots.length; i++) {
         const id = slots[i];

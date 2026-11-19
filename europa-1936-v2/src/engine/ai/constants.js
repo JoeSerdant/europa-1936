@@ -9,7 +9,6 @@ export const AI = {
   MOTOR_DAYS: 1500,                 // za kolik dní hry se posun složení dokončí
   TRAIN_DIV: 7,                     // nejvíc divizí ve výcviku = cílový počet / tato hodnota (nejméně TRAIN_MAX)
   WAR_MULT: 1.25,                   // cílový počet divizí ve válce
-  LEVEL_MULT: { 1: 0.9, 2: 1, 3: 1.15 },       // násobek cílového počtu divizí podle obtížnosti
   RECRUIT_BATCH: 1,                 // divizí zařazených do výcviku najednou v míru
   RECRUIT_BATCH_WAR: 3,
   TRAIN_MAX: 4,                     // nejvíc divizí ve výcviku na AI zemi
@@ -137,5 +136,4 @@ export const AI = {
   PEACE_POSTS_MIN: 12,
   PEACE_SPREAD: 40,                 // příplatek (pixely) za každý už přidělený post – rozloží posty mezi armády
   STAB_MIN: 0.4,                    // nejmenší stabilita pro vyhlášení války
-  LEVEL_EFF: 0.1,                   // odchylka výroby, staveb a výzkumu AI za stupeň obtížnosti od běžné
 };

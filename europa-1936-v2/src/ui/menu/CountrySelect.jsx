@@ -6,7 +6,7 @@ import { mapController as mc } from '../map/controller.js';
 import { COUNTRIES, IDEOLOGIES, TIER_NAMES, DIFF_NAMES } from '../../data/countries.js';
 
 const TIER_HEADS = { 1: 'Velmoci', 2: 'Regionální mocnosti', 3: 'Malé státy' };
-import { allCountries, countryStats, getWorld, SCENARIOS, SCENARIO_IDS, RULES, RULE_IDS } from '../../engine/index.js';
+import { allCountries, countryStats, getWorld, SCENARIOS, SCENARIO_IDS, RULES, RULE_IDS, DIFFICULTY, DIFF_IDS } from '../../engine/index.js';
 import { goMenu, pickCountry, startGame, setAiOptions, INSETS } from '../actions.js';
 import { fmtInt, fmtPop, fmtArea } from '../format.js';
 
@@ -21,7 +21,7 @@ function Pips({ n, total = 5 }) {
 /** Obrazovka výběru země: seznam vlevo, mapa uprostřed (klik na zemi ji vybere), karta země vpravo. */
 export function CountrySelect() {
   const pickTag = useUi((s) => s.pickTag);
-  const aiLevel = useUi((s) => s.aiLevel);
+  const aiDiff = useUi((s) => s.aiDiff);   // F3: pět stupňů obtížnosti
   const aiHist = useUi((s) => s.aiHist);
   const scenario = useUi((s) => s.scenario);
   const rules = useUi((s) => s.rules);
@@ -106,9 +106,9 @@ export function CountrySelect() {
           </div>
           <p className="muted scn-info">{sc.info}</p>
           <div className="ai-opts" role="group" aria-label="Chování AI zemí">
-            <span className="muted">AI zemí</span>
-            {[[1, 'Lehká'], [2, 'Běžná'], [3, 'Těžká']].map(([n, t]) => (
-              <button key={n} className={`sbtn ${aiLevel === n ? 'primary' : ''}`} aria-pressed={aiLevel === n} onClick={() => setAiOptions({ aiLevel: n })} title={n === 2 ? 'Běžná obtížnost' : n === 1 ? 'AI zemí je o 10 % slabší v průmyslu a výzkumu' : 'AI zemí je o 10 % silnější v průmyslu a výzkumu'}>{t}</button>
+            <span className="muted">Obtížnost</span>
+            {DIFF_IDS.map((n) => (
+              <button key={n} className={`sbtn ${aiDiff === n ? 'primary' : ''}`} aria-pressed={aiDiff === n} onClick={() => setAiOptions({ aiDiff: n })} title={DIFFICULTY[n].info}>{DIFFICULTY[n].n}</button>
             ))}
             <label className="ai-hist" title="Zapnuto: AI jde po historických kolejích (anšlus, Polsko 1939, Francie 1940, Barbarossa 22. 6. 1941 …). Vypnuto: volná historie – stejné události s posunem až o 4 měsíce, jen když země drží svůj politický kurz; každá hra je jiná."><input type="checkbox" checked={!!aiHist} onChange={(e) => setAiOptions({ aiHist: e.target.checked })} /> Historické plány</label>
           </div>

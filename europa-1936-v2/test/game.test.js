@@ -104,12 +104,14 @@ describe('čas', () => {
     let s = createGame();
     expect(hoursForElapsed(s, 1000).hours).toBe(0);      // pauza
     s = setPaused(s, false);
-    s = setSpeed(s, 2);                                   // 24 h/s
-    const r1 = hoursForElapsed(s, 16);                    // 0,384 h
+    s = setSpeed(s, 2);                                   // 12 h/s
+    const r1 = hoursForElapsed(s, 16);                    // 0,192 h
     expect(r1.hours).toBe(0);
     const r2 = hoursForElapsed(s, 16, r1.carry);
-    expect(r2.hours + r2.carry).toBeCloseTo(0.768, 5);
-    expect(hoursForElapsed(s, 1000).hours).toBe(24);
+    expect(r2.hours + r2.carry).toBeCloseTo(0.384, 5);
+    expect(hoursForElapsed(s, 1000).hours).toBe(12);
+    expect(hoursForElapsed(setSpeed(s, 1), 6000).hours).toBe(24);   // F3: rychlost 1 = den za 6 s
+    expect(hoursForElapsed(setSpeed(s, 5), 1000).hours).toBe(240);  // nejrychlejší beze změny
   });
 });
 

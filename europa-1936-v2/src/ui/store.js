@@ -15,7 +15,8 @@ export const uiStore = createStore({
   selected: 0,             // označená oblast (id provincie nebo mořské oblasti)
   hover: 0,                // oblast pod kurzorem
   scenario: '1936',        // vybraný scénář nové hry (M39)
-  aiLevel: 2,              // obtížnost AI zemí pro novou hru: 1 lehká, 2 běžná, 3 těžká (M24)
+  aiLevel: 2,              // AI zemí zapnutá (M24)
+  aiDiff: 0,               // F3: obtížnost nové hry −2 Nováček … 2 Elitní (`DIFFICULTY`)
   aiHist: true,            // historické plány AI (války a bloky)
   rules: {},               // pravidla hry zvolená před startem (M76; prázdné = výchozí)
   achOpen: false,          // okno Úspěchy (M86)

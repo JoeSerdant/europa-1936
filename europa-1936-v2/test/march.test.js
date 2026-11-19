@@ -164,3 +164,14 @@ describe('rozhraní: rozkaz a čáry na mapě', () => {
     expect(routesOf({ ...s, rules: { ...s.rules, fog: 0 } }).map((r) => r.ids[0]).sort()).toEqual([a, b].sort());   // bez mlhy vidět vše
   });
 });
+
+describe('rychlost hry (F3)', () => {
+  it('popis rychlosti v nápovědě', async () => {
+    const { fmtSpeed } = await import('../src/ui/format.js');
+    expect(fmtSpeed(4)).toBe('den za 6 s');
+    expect(fmtSpeed(12)).toBe('den za 2 s');
+    expect(fmtSpeed(36)).toBe('1,5 dne za sekundu');
+    expect(fmtSpeed(96)).toBe('4 dny za sekundu');
+    expect(fmtSpeed(240)).toBe('10 dní za sekundu');
+  });
+});

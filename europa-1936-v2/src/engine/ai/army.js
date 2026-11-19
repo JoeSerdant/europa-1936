@@ -10,6 +10,7 @@ import { tplStats } from '../army/unit.js';
 import { C as ARMY } from '../army/constants.js';
 import { hasWar, enemiesOf, nearestControlled } from '../army/war.js';
 import { recruit, createArmy, assignDivisions, assignCommander, setPlan } from '../army/commands.js';
+import { diffRow } from './core.js';
 import { suggestFront, generalsOf, divisionCount } from '../army/selectors.js';
 import { campOf } from '../dip/core.js';
 import { fuelShort } from './logistics.js';
@@ -62,7 +63,7 @@ export function sizeFactor(state, o) {
 export function targetDivs(state, o) {
   const tag = getWorld().owners[o].tag;
   const war = hasWar(state.mil, o) ? AI.WAR_MULT : 1;
-  return Math.round(initialDivs(tag) * (AI.BASE_BONUS + rearmFactor(tag, state.tick / 24)) * sizeFactor(state, o) * war * (AI.LEVEL_MULT[state.ai?.level ?? 2] || 1));
+  return Math.round(initialDivs(tag) * (AI.BASE_BONUS + rearmFactor(tag, state.tick / 24)) * sizeFactor(state, o) * war * (1 + diffRow(state).divs));   // F3: obtížnost (`DIFFICULTY`)
 }
 
 /** Žádané složení armády podle druhů šablon (podíly, součet 1): výchozí sestava země, velmoci a regionální mocnosti se postupně motorizují. */

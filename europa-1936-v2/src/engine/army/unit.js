@@ -5,10 +5,23 @@ import { armyMods, ZERO_MODS, MOD_KEYS } from './leaders.js';
 import { docMods } from '../doc/core.js';
 import { spiritArmyMods, NO_SPIRIT_MODS } from '../nat/spirits.js';
 import { techArmyMods, NO_TECH_ARMY } from '../research/core.js';
+import { isAi, diffRow } from '../ai/core.js';
 
 const extraCache = new WeakMap();   // bonusy duchů → Map(bonusy technologií → součet)
-/** Vojenské bonusy duchů a technologií země dohromady (M96). */
+const diffCache = new WeakMap();    // F3: bonusy duchů a technologií → Map(bonusy obtížnosti → součet)
+/** Vojenské bonusy duchů, technologií a obtížnosti (F3: jen AI země, řádek `DIFFICULTY.army`) dohromady. */
 function extraMods(state, o) {
+  const r = spiritTechMods(state, o);
+  const dm = state.ai && state.ai.level && isAi(state, o) ? diffRow(state).army : null;
+  if (!dm) return r;
+  let m = diffCache.get(r);
+  if (!m) { m = new Map(); diffCache.set(r, m); }
+  let q = m.get(dm);
+  if (!q) { q = { ...r }; for (const k in dm) q[k] = (q[k] || 0) + dm[k]; m.set(dm, q); }
+  return q;
+}
+/** Vojenské bonusy duchů a technologií země dohromady (M96). */
+function spiritTechMods(state, o) {
   const sp = state.nat ? spiritArmyMods(state.nat.own[o] && state.nat.own[o].sp) : NO_SPIRIT_MODS;
   const tm = state.tech ? techArmyMods(state.tech.own[o] && state.tech.own[o].done) : NO_TECH_ARMY;
   if (tm === NO_TECH_ARMY) return sp;
