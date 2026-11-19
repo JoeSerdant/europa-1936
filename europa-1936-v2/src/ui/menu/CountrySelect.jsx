@@ -110,7 +110,7 @@ export function CountrySelect() {
             {[[1, 'Lehká'], [2, 'Běžná'], [3, 'Těžká']].map(([n, t]) => (
               <button key={n} className={`sbtn ${aiLevel === n ? 'primary' : ''}`} aria-pressed={aiLevel === n} onClick={() => setAiOptions({ aiLevel: n })} title={n === 2 ? 'Běžná obtížnost' : n === 1 ? 'AI zemí je o 10 % slabší v průmyslu a výzkumu' : 'AI zemí je o 10 % silnější v průmyslu a výzkumu'}>{t}</button>
             ))}
-            <label className="ai-hist" title="Historické sklony AI k válkám a blokům (např. napětí kolem Československa a Polska)"><input type="checkbox" checked={!!aiHist} onChange={(e) => setAiOptions({ aiHist: e.target.checked })} /> Historické plány</label>
+            <label className="ai-hist" title="Zapnuto: AI jde po historických kolejích (anšlus, Polsko 1939, Francie 1940, Barbarossa 22. 6. 1941 …). Vypnuto: volná historie – stejné události s posunem až o 4 měsíce, jen když země drží svůj politický kurz; každá hra je jiná."><input type="checkbox" checked={!!aiHist} onChange={(e) => setAiOptions({ aiHist: e.target.checked })} /> Historické plány</label>
           </div>
           <div className="rule-opts" role="group" aria-label="Pravidla hry">
             {RULE_IDS.map((id) => (

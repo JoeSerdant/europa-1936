@@ -16,6 +16,7 @@ import { AI } from './constants.js';
 import { COUNTRIES } from '../../data/countries.js';
 import { playerOf } from './core.js';
 import { theatersOf } from './strategy.js';
+import { keepsCourse, shiftOf, quietWorld } from './free.js';
 
 export function aiDiplomacy(state, o) {
   const w = getWorld(), tag = w.owners[o].tag;
@@ -38,29 +39,30 @@ export function aiDiplomacy(state, o) {
       else if (days >= AI.FROZEN_DAYS && state.tick % (24 * 7) === 0 && !theatersOf(state, o, new Set([e])).length) state = proposePeace(state, o, e);   // M68: zamrzlá válka bez styku (např. spojenecký spor na druhém konci Evropy) se ukončí i vítězi
     }
   }
-  // historické bloky: založení a zvaní členů
-  if (state.ai && state.ai.hist) {
+  // historické bloky: založení a zvaní členů (F2: i ve volné historii – s posunem podle semínka a jen s historickou vládou)
+  const course = !!state.ai && keepsCourse(state, o), shift = shiftOf(state, o);
+  if (course) {
     const day0 = state.tick / 24;
     for (const f of HIST_FACTIONS) {
-      if (f.tag !== tag || day0 < f.from) continue;
+      if (f.tag !== tag || day0 < f.from + shift) continue;
       if (!state.dip.fac[o]) { state = createFaction(state, o, f.nm); continue; }
       if (state.dip.facs[state.dip.fac[o]].ldr !== o) continue;
       for (const t of f.invite) { const to = w.ownerIdx[t]; if (to && !state.dip.fac[to]) state = inviteToFaction(state, o, to); }
     }
   }
   // historické záruky nezávislosti
-  if (state.ai && state.ai.hist) {
+  if (course) {
     for (const g of HIST_GUARANTEES) {
-      if (g.tag !== tag || state.tick / 24 < g.from) continue;
+      if (g.tag !== tag || state.tick / 24 < g.from + shift) continue;
       const t = w.ownerIdx[g.target];
       if (t) state = guarantee(state, o, t);   // pokud už platí nebo nejde, příkaz nic neudělá
     }
   }
   const day = state.tick / 24;
   // historická ultimáta (M68): vznese je jen země s přesilou, takže cíl obvykle ustoupí; odmítnutí dá ospravedlnění války
-  if (state.ai && state.ai.hist && !hasCapitulated(state, o) && state.pol.own[o].stab >= AI.STAB_MIN) {
+  if (course && !hasCapitulated(state, o) && state.pol.own[o].stab >= AI.STAB_MIN) {
     for (const d of HIST_DEMANDS) {
-      if (d.tag !== tag || day < d.from || day > d.until) continue;
+      if (d.tag !== tag || day < d.from + shift || day > d.until + shift) continue;
       const b = w.ownerIdx[d.target];
       if (!b) continue;
       if (d.after && !(state.dip.ult || []).some((u) => u.id === d.after && u.a === o && u.b === b && u.ok === 1)) continue;
@@ -71,9 +73,9 @@ export function aiDiplomacy(state, o) {
     }
   }
   // historické pakty o neútočení (M75)
-  if (state.ai && state.ai.hist) {
+  if (course) {
     for (const p of HIST_PACTS) {
-      if (p.tag !== tag || day < p.from || day > p.until) continue;
+      if (p.tag !== tag || day < p.from + shift || day > p.until + shift) continue;
       const t = w.ownerIdx[p.target];
       if (!t || pactOf(state, o, t) || pactBlock(state, o, t, true)) continue;
       const next = proposePact(state, o, t, true);
@@ -90,18 +92,20 @@ export function aiDiplomacy(state, o) {
       if (next !== state) return next;
     }
   }
-  // historické válečné plány (drobná válka s okrajovou zemí další tažení nebrání)
-  if (!state.ai || !state.ai.hist || state.pol.own[o].stab < AI.STAB_MIN) return state;
+  // historické válečné plány (drobná válka s okrajovou zemí další tažení nebrání); F2: i ve volné historii (posun, historická vláda);
+  // řádky s `quiet` platí jen, když spolu žádné velmoci neválčí (světová válka se nekoná, např. hráč za Německo ji nezačne)
+  if (!course || state.pol.own[o].stab < AI.STAB_MIN) return state;
   const busy = warBusy(state, o);
   for (const plan of HIST_WARS) {
-    if (plan.tag !== tag || day < plan.from || day > plan.until) continue;
+    if (plan.tag !== tag || day < plan.from + shift || day > plan.until + shift) continue;
+    if (plan.quiet && !quietWorld(state)) continue;
     const t = w.ownerIdx[plan.target];
     if (t && atWar(state.mil, o, t)) {   // M88: s cílem plánu už válčí (zatáhla ho záruka nebo spojenec) – vyhlásí válečný cíl a přejde do útoku
       if (!state.dip.goal[`${o}>${t}`] && !hasCapitulated(state, t)) { const next = claimGoal(state, o, t); if (next !== state) return next; }
       continue;
     }
     if (plan.war) continue;   // plán jen pro válku, která už běží (země ji sama nezačne)
-    if (busy && !(plan.force && day >= plan.from + plan.force)) continue;   // M87: zaneprázdněná země plán odkládá, nejdéle o `force` dní
+    if (busy && !(plan.force && day >= plan.from + shift + plan.force)) continue;   // M87: zaneprázdněná země plán odkládá, nejdéle o `force` dní
     if (t && pactOf(state, o, t) && !state.dip.goal[`${o}>${t}`]) {   // M75: historický útok přes pakt – nejdřív ho vypovědět (až to půjde)
       if (breakBlock(state, o, t)) continue;
       return breakPact(state, o, t);
@@ -119,7 +123,7 @@ export function aiDiplomacy(state, o) {
   if (busy) return state;   // zaneprázdněná země se do oportunistických válek nepouští
   // oportunistické války (M68): země se přidá k zemi, kterou už z velké části dobyli jiní
   for (const j of HIST_JACKALS) {
-    if (j.tag !== tag || day < j.from || day > j.until) continue;
+    if (j.tag !== tag || day < j.from + shift || day > j.until + shift) continue;
     const t = w.ownerIdx[j.target];
     if (!t || hasCapitulated(state, t) || warBlock(state, o, t) || !hasWar(state.mil, t) || state.dip.goal[`${o}>${t}`]) continue;
     if (vpHeld(state, t).share < AI.JACKAL_SHARE || !bordersOn(state, o, t)) continue;

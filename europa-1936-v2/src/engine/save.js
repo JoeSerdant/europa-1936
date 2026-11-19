@@ -31,11 +31,12 @@ export function validateState(s) {
   if (!isArr(s.ind.fuel) || s.ind.fuel.length !== w.owners.length) return 'Uložená hra je poškozená (palivo).';
   if (!s.rules || typeof s.rules !== 'object') return 'Uložená hra je poškozená (pravidla hry).';
   if (!isArr(s.ai.inv)) return 'Uložená hra je poškozená (invaze AI).';
+  if (s.ai.salt !== undefined && !Number.isInteger(s.ai.salt)) return 'Uložená hra je poškozená (AI).';   // F2: semínko volné historie
   if (!isArr(s.air.nuke) || s.air.nuke.length !== w.owners.length) return 'Uložená hra je poškozená (jaderné zbraně).';
   if (!isArr(s.air.drops)) return 'Uložená hra je poškozená (výsadky).';
   if (!isArr(s.air.wings) || !isArr(s.air.pool) || s.air.pool.length !== w.owners.length) return 'Uložená hra je poškozená (letectvo).';
   if (!isArr(s.nav.fleets) || !s.nav.fleets.every((f) => f === null || (Number.isInteger(f.pl) && f.pl >= 0))) return 'Uložená hra je poškozená (palubní letouny).';   // M90
-  if (!isArr(s.dip.fac) || s.dip.fac.length !== w.owners.length || !isArr(s.dip.sub) || !isArr(s.dip.conf) || !isArr(s.dip.gar) || !isArr(s.dip.au) || !isArr(s.dip.acc) || !isArr(s.dip.ult) || !isArr(s.dip.nap) || !isArr(s.dip.napq) || !isArr(s.dip.exile) || !s.dip.goal || typeof s.dip.goal !== 'object') return 'Uložená hra je poškozená (diplomacie).';
+  if (!isArr(s.dip.fac) || s.dip.fac.length !== w.owners.length || !isArr(s.dip.sub) || !isArr(s.dip.conf) || !isArr(s.dip.gar) || !isArr(s.dip.au) || !isArr(s.dip.acc) || !isArr(s.dip.ult) || !isArr(s.dip.nap) || !isArr(s.dip.napq) || !isArr(s.dip.exile) || !isArr(s.dip.ally0) || s.dip.ally0.length !== w.owners.length || !s.dip.goal || typeof s.dip.goal !== 'object') return 'Uložená hra je poškozená (diplomacie).';
   return null;
 }
 

@@ -9,6 +9,7 @@ import {
 } from './camera.js';
 
 const CZ_SAMPLE = 'ěščřžýáíéúůňťďĚŠČŘŽÝÁÍÉÚŮŇŤĎ';
+const GAME_REDRAW_MS = 100;   // F2: změny ve hře (jednotky, dobytí) překreslí mapu nejvýš 10× za sekundu; pohyb kamery hned
 
 export class MapController {
   constructor() {
@@ -84,6 +85,7 @@ export class MapController {
       this.emit();
     }
     if (this.drift) this.stepDrift(t);
+    if (this.gameDue && t - (this.gameAt || 0) >= GAME_REDRAW_MS) { this.gameDue = false; this.gameAt = t; this.dirty = true; }
     if (this.dirty && this.renderer) {
       this.dirty = false;
       this.renderer.draw(this.cam, this.dpr);
@@ -99,12 +101,19 @@ export class MapController {
     const prev = this.renderer.game;
     this.renderer.setGame(game);
     // běžný postup času nic nemění na vzhledu mapy – překreslujeme jen při změně vlastníků, kontroly, jednotek nebo bitev
-    if (!prev || prev.stateOwner !== game.stateOwner || prev.ctrl !== game.ctrl) this.dirty = true;
+    if (!prev || prev.stateOwner !== game.stateOwner || prev.player !== game.player) this.dirty = true;
+    else if (prev.ctrl !== game.ctrl) this.later();   // F2: dobytí provincie – nejvýš ~10× za sekundu (ve válce se mění skoro každou hodinu)
     else if (prev.tick !== game.tick && this.renderer.options.daynight) {   // M91: den a noc – překreslit s postupem hodin, nejvýš asi šestkrát za sekundu
       const now = typeof performance !== 'undefined' ? performance.now() : 0;
       if (now - (this.nightAt || 0) > 160) { this.nightAt = now; this.dirty = true; }
     }
-    else if (this.renderer.showUnits && (prev.mil.divs !== game.mil.divs || prev.mil.battles !== game.mil.battles || prev.mil.wars !== game.mil.wars || prev.nav.fleets !== game.nav.fleets || prev.air.wings !== game.air.wings)) this.dirty = true;
+    else if (this.renderer.showUnits && (prev.mil.divs !== game.mil.divs || prev.mil.battles !== game.mil.battles || prev.mil.wars !== game.mil.wars || prev.nav.fleets !== game.nav.fleets || prev.air.wings !== game.air.wings)) this.later();
+  }
+
+  /** F2: překreslení kvůli změně ve hře (ne kamery) – nejvýš jednou za `GAME_REDRAW_MS`; zbytek dokreslí `step`. */
+  later() {
+    const now = typeof performance !== 'undefined' ? performance.now() : 0;
+    if (now - (this.gameAt || 0) >= GAME_REDRAW_MS) { this.gameAt = now; this.dirty = true; } else this.gameDue = true;
   }
 
   // ---------------------------------------------------------------- jednotky (armáda)

@@ -2,6 +2,7 @@
 //  from/until  okno ve dnech hry (0 = 1. 1. 1936)   ratio  nejmenší poměr divizí útočníkova bloku k obráncovu bloku
 //  force       po tolika dnech od začátku okna země plán spustí, i když je zaneprázdněná jinou válkou (M87; jinak čeká, až se uvolní)
 //  war         plán platí jen pro válku, která už běží (M88): země si proti cíli vyhlásí válečný cíl a přejde do útoku, sama ji ale nezačne
+//  quiet       F2: záložní válka – platí jen, když spolu žádné velmoci neválčí (světová válka se nekoná, např. hráč za Německo ji nezačne)
 // Válčí-li už země s cílem plánu (zatáhla ji záruka nebo spojenec), vyhlásí proti němu v okně plánu válečný cíl (`claimGoal`) – do té doby jen drží frontu.
 export const HIST_WARS = [
   { tag: 'GER', target: 'CZE', from: 1010, until: 1500, ratio: 0.9 },   // M68: záložní válka, když ultimáta (data/dip/demands.js) selžou
@@ -15,7 +16,11 @@ export const HIST_WARS = [
   { tag: 'SOV', target: 'GER', from: 2515, until: 3800, ratio: 1.0, war: true },   // M93: od obratu u Volhy (listopad 1942) útočí Rudá armáda; do té doby jen osvobozuje vlastní území
   { tag: 'ENG', target: 'ITA', from: 2650, until: 3800, ratio: 1.0, war: true },   // od léta 1943 Spojenci
   { tag: 'ENG', target: 'GER', from: 3000, until: 3800, ratio: 1.0, war: true },
-  { tag: 'GER', target: 'SOV', from: 1960, until: 2400, ratio: 0.35, force: 30 },
+  { tag: 'GER', target: 'SOV', from: 1967, until: 2400, ratio: 0.35, force: 1 },   // F2: příprava (výpověď paktu + 30 dní ospravedlnění) začne nejpozději den po začátku okna → válka ~22. 6. 1941 bez ohledu na zaneprázdnění
+  // F2: když se do roku 1940 velká válka nekoná, SSSR rozjede vlastní výboje (Polsko, Rumunsko, od jara 1941 při přesile i Německo)
+  { tag: 'SOV', target: 'POL', from: 1461, until: 1900, ratio: 1.5, quiet: 1 },
+  { tag: 'SOV', target: 'ROM', from: 1552, until: 2000, ratio: 1.5, quiet: 1 },
+  { tag: 'SOV', target: 'GER', from: 1886, until: 2600, ratio: 1.3, quiet: 1 },
   { tag: 'ITA', target: 'ALB', from: 1250, until: 1800, ratio: 1.0 },
   { tag: 'ITA', target: 'GRE', from: 1730, until: 2200, ratio: 1.0 },
   { tag: 'SOV', target: 'FIN', from: 1400, until: 1900, ratio: 0.8 },

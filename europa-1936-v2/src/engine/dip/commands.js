@@ -10,7 +10,7 @@ import { logAdd } from '../log.js';
 import { ideologyOf } from '../politics/parties.js';
 import { pactOf, voidPacts } from './pact.js';
 import { joiningGuarantors, breakGuarantees } from './guarantee.js';
-import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey } from './core.js';
+import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey, formerAlly } from './core.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 const patch = (state, p) => ({ ...state, dip: { ...state.dip, ...p, ver: state.dip.ver + 1 } });
@@ -24,6 +24,7 @@ export function warBlock(state, a, b) {
   if (sameFaction(state, a, b)) return 'Země je ve stejném bloku.';
   if (state.dip.sub && (state.dip.sub[a] === b || state.dip.sub[b] === a)) return 'Pán a jeho loutkový stát spolu nebojují.';
   if (state.dip.sub && state.dip.sub[a]) return 'Loutkový stát nevede vlastní války.';
+  if (state.dip.sub && state.dip.sub[b] && formerAlly(state, b, a)) return 'Loutka nebojuje proti svým bývalým spojencům.';   // F2: spojenci z doby kapitulace
   if (pactOf(state, a, b)) return 'Platí pakt o neútočení – nejdřív ho vypovězte.';   // M75
   return null;
 }

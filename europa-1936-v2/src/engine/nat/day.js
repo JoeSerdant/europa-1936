@@ -8,6 +8,8 @@ import { applyFx } from './effects.js';
 import { expireSpirits } from './spirits.js';
 import { setContinuous } from './commands.js';
 import { hasWar } from '../army/war.js';
+import { COUNTRIES } from '../../data/countries.js';
+import { saltOf } from '../ai/free.js';
 
 const setOwn = (state, o, own) => {
   const arr = state.nat.own.slice();
@@ -24,11 +26,20 @@ export function aiMayFocus(state, o, own, f) {
   if (!f.path) return true;
   if (state.ai && state.ai.hist) return false;
   const group = [f, ...f.excl.map((id) => FOCUS_BY_ID[id])].filter((x) => x && x.path && focusStatus(own, x) === 'available').sort((a, b) => (a.id < b.id ? -1 : 1));
-  const key = group.map((x) => x.id).join('|');
-  const wt = (x) => (x.path === 'hist' ? NAT.ALT_HIST_W : 1);
+  // F2: alternativní cesta jen tam, kde má její strana v zemi oporu (velmoc víc), a s menší vahou – vlády se nemění chaoticky
+  const par = state.pol && state.pol.own[o] && state.pol.own[o].par;
+  const min = (COUNTRIES[getWorld().owners[o].tag]?.tier ?? 3) === 1 ? NAT.ALT_MIN_SUPPORT_MAJOR : NAT.ALT_MIN_SUPPORT;
+  const wt = (x) => (x.path === 'hist' ? NAT.ALT_HIST_W : !par || (par[pathIdeology(x)] || 0) >= min ? 1 : 0);
+  const key = `${group.map((x) => x.id).join('|')}:${saltOf(state)}`;   // F2: semínko hry – každá hra volí jinak
   let r = rand01(state.tick, o, key) * group.reduce((a, x) => a + wt(x), 0);
-  for (const x of group) { r -= wt(x); if (r < 0) return x === f; }
-  return group[group.length - 1] === f;
+  for (const x of group) { if (!wt(x)) continue; r -= wt(x); if (r < 0) return x === f; }
+  return group.filter(wt).pop() === f;
+}
+
+/** Ideologie, ke které vede kořen politické cesty (první účinek `party` nebo `gov`). */
+function pathIdeology(f) {
+  for (const e of f.fx || []) if (e.t === 'party' || e.t === 'gov') return e.i;
+  return '';
 }
 
 /** Volba AI: nejvyšší váha `ai` (při shodě první). */

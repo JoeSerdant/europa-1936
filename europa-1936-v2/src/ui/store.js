@@ -35,6 +35,8 @@ export const uiStore = createStore({
   overview: false,         // okno Přehled zemí (M26)
   saveDialog: null,        // dialog uložených her: null | 'save' | 'load' (M25)
   saveMsg: '',             // zpráva v dialogu uložených her
+  saveRev: 0,              // F2: změna seznamu slotů (dialog si ho znovu načte)
+  autoSaveErr: '',         // F2: poslední chyba automatického uložení ('' = v pořádku)
   indTab: 'build',         // záložka panelu Průmysl: 'build' | 'prod' | 'trade' (M19)
   console: false,          // konzole s cheaty (M29)
   toast: null,             // krátké oznámení: { id, text }

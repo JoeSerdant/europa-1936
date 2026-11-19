@@ -75,10 +75,11 @@ describe('kapitulace s exilem', () => {
     expect(exileHost(a, SWI)).toBe(0);
     expect(a.log.items.some((e) => e.k === 'exile')).toBe(false);
   });
-  it('když kapituluje hostitel, exily u něj zanikají', () => {
+  it('když kapituluje hostitel a nikdo z bloku už nebojuje, exily u něj zanikají', () => {
     const ctrl = t.ctrl.slice();
     for (let p = 1; p <= W.L; p++) if (ctrl[p] === FRA) ctrl[p] = GER;
-    const u = capitulate({ ...t, ctrl }, FRA);
+    const u = capitulate({ ...t, ctrl }, FRA);   // Belgie po pádu vedoucí země bloku uzavře mír, Francie hostitele nemá
+    expect(exileHost(u, FRA)).toBe(0);
     expect(exileHost(u, PLN)).toBe(0);
   });
 });

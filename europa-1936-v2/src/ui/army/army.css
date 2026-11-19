@@ -167,6 +167,7 @@
 .bottom-mid > * { pointer-events: auto; }
 .bottom-mid .hint { position: static; transform: none; }
 .toast { padding: 10px 18px; color: var(--paper); max-width: 560px; text-align: center; animation: rise 0.16s ease-out; }
+.toast.err { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 6px 20px rgba(0, 0, 0, 0.45); }   /* F2: chyba (např. selhalo automatické uložení) */
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 
 .selbar { width: min(640px, 100%); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px; animation: rise 0.14s ease-out; }

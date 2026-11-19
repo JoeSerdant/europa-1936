@@ -19,6 +19,9 @@ Cíl: mechaniky věrné vzoru zhruba z 90 %, deset procent je záměrné zjednod
 | `npm run world` | přegeneruje `src/data/world.json` (≈ 20 s, deterministické) |
 | `npm run world:preview -- owner\|terrain x,y,w,h scale` | PNG náhled **exportovaného** světa do `tools/preview/` |
 | `node tools/smoke.mjs [šířka výška]` | automatická kontrola v prohlížeči (Playwright; viz § 7) |
+| `npm run sim -- <název>` | dlouhá simulace celé hry ze složky `sim/` (není součástí `npm test`); proměnné `SEED`, `PLAYER` (pasivní hráč), `HIST=0` (§ 4zzy) |
+| `npm run sim -- hash` / `perf` | otisky stavu po úsecích hry (optimalizace je nesmí změnit) / výkon enginu po systémech, nejdelší kousek práce (§ 4zzy) |
+| `node tools/perf-browser.mjs [s]` | plynulost v prohlížeči na válečném stavu (`SNAP`, `URL`; `PROF=` uloží profil CPU) |
 
 Proměnné generátoru: `STOP=1..5` (zastaví po kroku a vykreslí náhled), `NO_EXPORT=1`, `SVGMODE=owner\|state\|prov\|sea\|terrain`, `CROP`, `SCALE`, `SHOW_STRAITS=1`.
 
@@ -434,7 +437,7 @@ AI nenavrhuje šablony, nezakládá bloky, nevolí mezi několika národními c�
 ## 4h. Uložené hry (M25)
 
 Hra je jeden serializovatelný JSON, takže uložení je jeho zabalení a načtení jeho kontrola. **Engine** (`src/engine/save.js`) umí `packGame(state)` (obálka `{ fmt: 1, v: GAME_VERSION, tick, player, state }`) a `unpackGame(obj)`, který obálku i stav **zkontroluje** (formát, verze, tvar polí podle světa, přítomnost všech systémů) a vrátí `{ state }` nebo `{ error }` s českým popisem; starší verze stavu se nemigrují (hra je ve vývoji) a hlásí se jako nekompatibilní. Čas uložení patří rozhraní (engine nezná `Date.now`).
-**Rozhraní** (`ui/saves.js`): sloty v `localStorage` (`e1936:save:<slot>` s obálkou, `e1936:meta:<slot>` s popisem pro seznam), sloty `1`–`5` ručně, `auto` (automatické uložení první den každého herního měsíce) a `quick` (klávesa F6 uloží, F9 načte). Všechny přístupy jsou v `try/catch` (soukromé okno, plné úložiště) a chyby se hlásí oznámením; stav ≈ 150–200 kB.
+**Rozhraní** (`ui/saves.js`, od F2 asynchronní): sloty v **IndexedDB** (databáze `e1936`, sklady `meta` a `data`, klíč = slot jako text), data komprimovaná **gzipem** (`CompressionStream`; stav ≈ 550 kB → ≈ 60–90 kB). Bez IndexedDB záložně `localStorage` (`e1936:save:<slot>` = `gz1:` + base64 gzipu, `e1936:meta:<slot>`); starší nekomprimované sloty z `localStorage` se dál zobrazují a načítají a nové uložení do slotu je smaže. Sloty `1`–`5` ručně, `auto` (automatické uložení první den každého herního měsíce, zabalí se až ve volné chvíli prohlížeče) a `quick` (klávesa F6 uloží, F9 načte). Zápisy jdou za sebou (fronta), funkce nikdy nevyhazují a chyby vrací česky; **selhání automatického uložení** ukáže červené oznámení (nejvýš jednou za minutu skutečného času) a zapíše `ui.autoSaveErr`.
 Dialog ukládání a načítání (`SaveDialog`) je v nabídce hry (Uložit / Načíst) a v hlavním menu (Načíst). Načtení vyčistí výběr jednotek a panely, přesune kameru na zemi hráče a zachová pozastavení uložené hry.
 
 ## 4i. Zprávy a přehled zemí (M26)
@@ -467,7 +470,7 @@ Rozšíření § 4f (`GAME_VERSION` 13): `dip.sub[o]` = pán loutkového státu 
 
 - **Konference** (`conference`, volá ji `capitulate`): okupované státy připadnou okupantům jako dřív; hlavní vítěz (ten, kdo z poraženého vzal nejvíc států) rozhodne o zbytku. Hráč-vítěz dostane položku do `dip.conf` (dialog: loutkový stát / anektovat / nechat být – `confPuppet`, `confAnnex`, `confSkip`), AI rozhodne hned (velká nebo významná země = loutka, jinak anexe).
 - **Loutka** (`makePuppet`): kapitulovaná země znovu ožije (`cap = 0`, stabilita aspoň 0,35) a má pána. Pán a loutka spolu nebojují, loutka nevede vlastní války ani diplomacii (`warBlock`, AI přeskočí `aiDiplomacy`).
-- **Denní krok** (`subjectsDay` na začátku `dipDay`): loutka vede války pána (chybějící se vyhlásí, zaniklé skončí), pán denně dostane `SUB_MAN` lidské síly loutky a `SUB_PP` politické moci za loutku.
+- **Denní krok** (`subjectsDay` na začátku `dipDay`): loutka vede války pána (chybějící se vyhlásí, zaniklé skončí) – **kromě válek proti svým spojencům z doby kapitulace** (`dip.ally0`, F2, § 4zzy); pán denně dostane `SUB_MAN` lidské síly loutky a `SUB_PP` politické moci za loutku.
 - **Anexe loutky** (`annexPuppet`): za `ANNEX_PP` politické moci; státy se převedou, jednotky loutky zaniknou, země zanikne.
 - **Rozhraní:** dialog Mírová konference, v Diplomacii štítek „vaše loutka“ / „loutka“ a tlačítko Anektovat loutku; záznamy `puppet`, `annex` v Zprávách.
 
@@ -996,6 +999,32 @@ Jen rozhraní, tvar stavu se nemění.
 - **Přes celou obrazovku zůstávají** národní cíle, výzkum, průmysl (výroba a obchod), nábor a konstrukční kancelář.
 
 Test: `test/tech-icons.test.js`.
+
+## 4zzy. Opravy po průzkumu (F2, `GAME_VERSION = 46`)
+
+Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových velkých systémů.
+
+- **Spojenci z doby kapitulace** (`dip.ally0[o]` = seřazené pole indexů, nebo 0; součást `validateState`): `capitulate` před čímkoli jiným uloží `alliesAtFall` – členy bloku poraženého a všechny, kdo bojují s některým jeho nepřítelem (při opakované kapitulaci se sloučí se starým seznamem). Kapitulovaná loutka přestává být loutkou (`sub`, `au` = 0) a o zbytku rozhodne konference (může z ní udělat loutku vítěze); `subjectsDay` kapitulovanou loutku z pánových válek vyřadí. Loutka (i uvolněný národ, který pole zdědí v `releaseNation`) **nikdy nebojuje proti těmto zemím**: `subjectsDay` je vynechá z válek pána (a případnou válku ukončí), `warBlock` nedovolí bývalému spojenci loutce válku vyhlásit (`formerAlly`). Do jiných válek pána loutka vstupuje dál (např. Polsko jako loutka Německa proti SSSR).
+- **Exilová vláda žije dál**: po kapitulaci a loutkovém zbytku země zůstává `dip.exile[o] = hostitel`. Když kapituluje hostitel, jeho exily se přestěhují k jeho vlastnímu hostiteli (`dropExiles(state, host, to)`), a když ten žádný nemá, k nejsilnějšímu bývalému spojenci exilové země z `dip.ally0`, který ještě válčí (polská vláda po pádu Francie odejde do Británie); jinak zanikají. **Obnova** (`restoreCountry`) zruší i loutkový vztah (`sub`, `au`, `ally0` = 0) a války obnovené země s blokem hostitele.
+- Simulace `npm run sim -- poland` (`sim/poland.sim.js`): pozorovatelská hra (nebo pasivní hráč `PLAYER=POL`) do 5 let po kapitulaci Polska; každých 30 dní kontroluje všechny loutky a vypíše stav Polska při kapitulaci, po roce a po 5 letech.
+- **Uložené hry** (§ 4h): IndexedDB + gzip, záložně `localStorage`; viditelné upozornění při selhání automatického uložení.
+- **Výkon (A2)**: herní hodina je generátor `hourSteps` (`tick.js`) s přestávkami (`yield`) o půlnoci – v denním kroku armády po zásobování a po každé
+  plánované armádě (`dailySteps`, `plansSteps`), mezi skupinami systémů a v AI po částech každé země (`aiDaySteps`). `advanceHour`/`advance` ho doběhnou
+  najednou (stejný výsledek), rozhraní ho počítá po snímcích přes `ui/clock.js` (`createClock`: rozpočet ms na snímek podle rychlosti, strop nevyřízených
+  hodin `backlogMax`, při změně stavu uprostřed hodiny se hodina spočítá znovu). Přesné zrychlení bez změny výsledků: předpočítané hrany cest (`edgeData`:
+  hodiny kroku a železnice), paměť `canEnter` podle země, navazující Dijkstra z jednoho místa pro více cílů (`pathSearch`), měsíc počasí jednou za hodinu,
+  bonusy armád v kontextu hodiny (`ctx.modsMemo`, maže `editArmy`/`editGen`), souhrn průmyslu podle objektu stavu (`industryOf`). Mapa: dobytí provincie
+  nepřekresluje dlaždice „naléhavě“ a změny ve hře ji překreslí nejvýš 10× za sekundu (`GAME_REDRAW_MS`). Výsledek (listopad 1941, 1052 divizí):
+  118 → 59 ms na herní den, nejdelší nepřerušitelný kousek 42 → 11 ms; otisky stavu (`npm run sim -- hash`) zůstaly shodné.
+
+- **Volná historie (A3)**: bez historické AI (`ai.hist = 0`) proběhnou historické události z dat také (`HIST_DEMANDS`, `HIST_WARS`, `HIST_JACKALS`,
+  `HIST_PACTS`, `HIST_FACTIONS`, `HIST_GUARANTEES`, `HIST_CIVIL`), ale s posunem země 0–`AI.FREE_SHIFT` dní podle semínka (`shiftOf`, `engine/ai/free.js`,
+  stejný pro všechny události země) a jen s vládou historické ideologie (`keepsCourse`). Koleje boje (`HIST_STRATEGIES`, výdrž, příměří) a zámořská pomoc
+  zůstávají jen historické AI. Stav `ai.salt` (jen ve volné historii) = semínko hry: přidává se do náhody voleb AI (`aiMayFocus`). Řádky `HIST_WARS`
+  s `quiet` platí v obou režimech jen, když spolu žádné velmoci neválčí (`quietWorld`) – záložní výboje SSSR (Polsko 1940, Rumunsko, od jara 1941
+  Německo), když hráč za Německo válku nezačne. **Vlády**: AI zvolí alternativní politickou cestu jen s podporou strany aspoň `NAT.ALT_MIN_SUPPORT`
+  (velmoc `ALT_MIN_SUPPORT_MAJOR`) a s vahou historické cesty `ALT_HIST_W = 8`; převrat jen pod stabilitou `POL.COUP_STAB = 0,30`
+  a nejvýš jednou za `COUP_COOL = 1095` dní. `GAME_VERSION = 47`.
 
 ## 5. Rozhraní
 

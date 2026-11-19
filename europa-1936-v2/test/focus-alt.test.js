@@ -65,13 +65,23 @@ describe('volba AI', () => {
     expect(roots.some((f) => aiMayFocus(s, GER, own, f))).toBe(false);
     expect(aiMayFocus(s, GER, own, FOCUS_BY_ID.ger_plan)).toBe(true);
     const free = { ...s, ai: { ...s.ai, hist: 0 } };
-    const chosen = new Set();
-    for (let day = 0; day < 40; day++) {
-      const st = { ...free, tick: day * 24 };
-      const ok = roots.filter((f) => aiMayFocus(st, GER, own, f));
-      expect(ok).toHaveLength(1);
-      chosen.add(ok[0].id);
-    }
-    expect(chosen.size).toBeGreaterThan(1);   // různé dny (a hry) dávají různé cesty
+    const pick = (st0) => {
+      const chosen = new Set();
+      for (let day = 0; day < 60; day++) {
+        const st = { ...st0, tick: day * 24 };
+        const ok = roots.filter((f) => aiMayFocus(st, GER, own, f));
+        expect(ok).toHaveLength(1);
+        chosen.add(ok[0].id);
+      }
+      return chosen;
+    };
+    // F2: bez opory v zemi (velmoc pod 30 %) se alternativní cesta nevolí – Německo zůstane na historické
+    expect([...pick(free)]).toEqual(roots.filter((f) => f.path === 'hist').map((f) => f.id));
+    // se silnou komunistickou stranou je komunistická cesta možná (ale vzácná): různé dny a hry dávají různé cesty
+    const pol = free.pol.own.slice();
+    pol[GER] = { ...pol[GER], par: { ...pol[GER].par, communism: 35 } };
+    const strong = pick({ ...free, pol: { ...free.pol, own: pol } });
+    expect(strong.size).toBeGreaterThan(1);
+    expect([...strong].every((id) => FOCUS_BY_ID[id].path === 'hist' || /com/.test(id))).toBe(true);
   });
 });

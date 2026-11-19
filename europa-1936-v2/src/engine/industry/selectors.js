@@ -9,9 +9,21 @@ import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, 
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
 
-/** Souhrn průmyslu země: továrny, spotřební zboží, dostupné továrny, linky (se zkrácením), toky surovin, stavby a smlouvy. */
+/**
+ * Souhrn průmyslu země: továrny, spotřební zboží, dostupné továrny, linky (se zkrácením), toky surovin, stavby a smlouvy.
+ * F2 (výkon): výsledek se pamatuje pro tentýž objekt stavu (stav je neměnný; AI se na stejnou zemi ptá v jednom dni opakovaně). Výsledek se nesmí měnit.
+ */
+const indMemo = new WeakMap();   // stav → Map(země → souhrn)
 export function industryOf(state, o) {
   o = idxOf(o);
+  let m = indMemo.get(state);
+  if (!m) { m = new Map(); indMemo.set(state, m); }
+  let r = m.get(o);
+  if (!r) { r = industrySummary(state, o); m.set(o, r); }
+  return r;
+}
+
+function industrySummary(state, o) {
   const ind = state.ind;
   const t = tallyOwners(state)[o];
   const use = factoryUse(t, consOf(state, o));

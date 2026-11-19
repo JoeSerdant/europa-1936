@@ -12,7 +12,7 @@ import { getWorld } from '../world.js';
 import { C } from './constants.js';
 import { geo, adjacency } from './geo.js';
 import { enemiesOf, hasWar } from './war.js';
-import { findPath } from './paths.js';
+import { pathSearch } from './paths.js';
 import { adjKind } from './paths.js';
 import { editDiv, editArmy } from './ctx.js';
 import { statsOf, modsOf } from './unit.js';
@@ -82,12 +82,16 @@ export function divisionsByArmy(ctx) {
   return m;
 }
 
+/** Cesty pro plánovač: jedno hledání z každého výchozího místa (`pathSearch`) slouží všem cílům (F2, výkon; výsledky jako `findPath`). */
 function makePathCache(ctx) {
-  const cache = new Map();
+  const cache = new Map(), searches = new Map();
   return (o, from, to) => {
     const key = `${o}:${from}:${to}`;
     if (cache.has(key)) return cache.get(key);
-    const path = findPath(ctx.mil, ctx.ctrl, o, from, to, { dip: ctx.state.dip });
+    const sk = o * 1048576 + from;
+    let search = searches.get(sk);
+    if (!search) { search = pathSearch(ctx.mil, ctx.ctrl, o, from, ctx.state.dip); searches.set(sk, search); }
+    const path = search(to);
     cache.set(key, path);
     return path;
   };
@@ -280,8 +284,11 @@ export function aiPlanCountry(ctx, o, byArmy) {
   });
 }
 
-/** Denní krok plánovače: AI plány (týdně a pro armády bez plánu), potom plánování všech armád s plánem. */
-export function plansStep(ctx) {
+/**
+ * Denní krok plánovače: AI plány (týdně a pro armády bez plánu), potom plánování všech armád s plánem. Generátor (F2): po každé armádě
+ * dává přestávku (`yield`), aby rozhraní mohlo denní práci rozložit do více snímků; výsledek je stejný jako při běhu najednou (`plansStep`).
+ */
+export function* plansSteps(ctx) {
   const w = getWorld();
   const byArmy = divisionsByArmy(ctx);
   const player = ctx.state.player ? w.ownerIdx[ctx.state.player] : 0;
@@ -293,8 +300,9 @@ export function plansStep(ctx) {
     if (need) aiPlanCountry(ctx, o, byArmy);
   }
   const pathOf = makePathCache(ctx);
-  for (let id = 1; id < ctx.armies.length; id++) if (ctx.armies[id] && ctx.armies[id].plan) planArmy(ctx, id, byArmy, pathOf);
+  for (let id = 1; id < ctx.armies.length; id++) if (ctx.armies[id] && ctx.armies[id].plan) { planArmy(ctx, id, byArmy, pathOf); yield; }
 }
+export function plansStep(ctx) { for (const _ of plansSteps(ctx)) void _; }
 
 /** Naplánuje jednu armádu hned (po zadání plánu). */
 export function planNow(ctx, armyId) {

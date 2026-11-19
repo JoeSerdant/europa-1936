@@ -143,7 +143,7 @@ describe('AI a historie', () => {
     s = proposePact({ ...s, tick: 1330 * 24 }, GER, SOV, true);
     const early = aiDiplomacy({ ...s, tick: 1500 * 24 }, GER);
     expect(pactOf(early, GER, SOV)).toBeTruthy();
-    let late = pp({ ...s, tick: 1965 * 24 }, GER);
+    let late = pp({ ...s, tick: 1968 * 24 }, GER);   // okno plánu Barbarossa začíná dnem 1967 (F2)
     for (let i = 0; i < 30 && pactOf(late, GER, SOV); i++) late = aiDiplomacy(late, GER);   // AI dělá jeden diplomatický krok denně
     expect(pactOf(late, GER, SOV)).toBeNull();
     expect(late.log.items.some((e) => e.k === 'napend' && e.a === GER)).toBe(true);
