@@ -22,6 +22,7 @@ export function openCtx(state) {
     ver: mil.ver, bn: mil.bn,
     at: null,                              // mapa provincie → pole id divizí (staví se líně)
     entered: [],                           // provincie, do kterých vstoupila divize v této hodině
+    modsMemo: null,                        // F2: bonusy armád (`modsOf`) podle armády a země; maže je editArmy / editGen
     changed: false,
   };
 }
@@ -116,11 +117,13 @@ export function removeBattle(ctx, id) {
 
 // ---- velitelé, armády ----
 export function editGen(ctx, id) {
+  ctx.modsMemo = null;   // F2: bonusy armád závisí na velitelích
   if (!ctx.gensOwn) { ctx.gens = ctx.gens.slice(); ctx.gensOwn = true; ctx.freshGens = new Set(); ctx.changed = true; }
   if (!ctx.freshGens.has(id)) { ctx.gens[id] = { ...ctx.gens[id] }; ctx.freshGens.add(id); }
   return ctx.gens[id];
 }
 export function editArmy(ctx, id) {
+  ctx.modsMemo = null;   // F2: bonusy armád závisí na armádě (velitel, skupina)
   if (!ctx.armiesOwn) { ctx.armies = ctx.armies.slice(); ctx.armiesOwn = true; ctx.freshArmies = new Set(); ctx.changed = true; }
   if (!ctx.freshArmies.has(id)) { ctx.armies[id] = { ...ctx.armies[id] }; ctx.freshArmies.add(id); }
   return ctx.armies[id];

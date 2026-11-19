@@ -201,7 +201,8 @@ export class MapRenderer {
         if (b[0] <= x1 && b[2] >= x0 && b[1] <= y1 && b[3] >= y0) { tile.ver = -1; break; }
       }
     }
-    this.urgent = true;
+    // F2: bez `urgent` – do dokreslení se ukazuje stará dlaždice a nové se kreslí v rozpočtu snímku (TILE_BUDGET_MS); ve válce se kontrola
+    // provincií mění skoro každou hodinu a překreslení všech zasažených dlaždic najednou dělalo snímky přes 50 ms
   }
 
   setMode(mode) {

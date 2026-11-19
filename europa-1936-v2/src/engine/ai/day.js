@@ -37,7 +37,8 @@ function spentOffensive(state, o) {
   return false;
 }
 
-export function aiDay(state) {
+/** Denní krok AI jako generátor (F2): přestávka (`yield`) po každé zemi; vrací nový stav (stejný jako `aiDay`). */
+export function* aiDaySteps(state) {
   const w = getWorld();
   const player = playerOf(state);
   const weekly = state.tick % (24 * AI.PLAN_DAYS) === 0, soon = state.tick % (24 * AI.PLAN_DAYS_WAR) === 0;
@@ -51,6 +52,7 @@ export function aiDay(state) {
     state = aiForts(state, o);
     state = aiTrade(state, o);     // M88: dovoz surovin, které brzdí zbrojovky
     state = aiIndustry(state, o);
+    yield;   // F2: přestávky i uvnitř jedné země (velmoci počítají desítky ms)
     state = aiArmy(state, o, scan);
     state = aiNavy(state, o);
     state = aiAir(state, o);
@@ -61,8 +63,17 @@ export function aiDay(state) {
     state = aiPara(state, o);    // M87: výsadkové divize a výsadky
     state = aiCommand(state, o);
     state = advanceInvasions(state, o);   // M71: shromáždění, nalodění a pauzy námořních invazí
+    yield;
     if (weekly || newWar(state, o) || (soon && spentOffensive(state, o))) state = aiStrategy(state, o);   // M66: divadla války, přidělení armád, útok a obrana; v míru domácí rozmístění
     if (!state.dip.sub[o]) state = aiPacts(aiDiplomacy(state, o), o);   // M87: AI si pakty o neútočení nabízí i sama   // loutky nevedou vlastní diplomacii (M33)
+    yield;
   }
   return state;
+}
+
+export function aiDay(state) {
+  const g = aiDaySteps(state);
+  let r = g.next();
+  while (!r.done) r = g.next();
+  return r.value;
 }

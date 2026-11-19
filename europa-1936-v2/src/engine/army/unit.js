@@ -28,9 +28,21 @@ export const statsOf = (mil, d) => tplStats(mil, d.tpl);
 /** Postih zásobování 0–1 (po vyčerpání zásoby v batohu). */
 export const lackOf = (d) => (d.sg > 0 ? 0 : 1 - d.sup);
 
-/** Bonusy velitele armády divize (v kontextu hodiny podle upravených polí). */
-const mergeCache = new WeakMap();   // bonusy velitele → Map(doktrinální bonusy → součet)
+/**
+ * Bonusy velitele armády divize (v kontextu hodiny podle upravených polí). F2 (výkon): výsledek se v kontextu pamatuje podle armády a země
+ * (`ctx.modsMemo`); paměť maže `editArmy` a `editGen`, protože bonusy závisí jen na armádě, velitelích a stavu mimo armádu (doktríny, duchové, technologie).
+ */
 export function modsOf(ctx, d) {
+  const army = d.army || 0;
+  const o = d.o ?? (army && ctx.armies[army] ? ctx.armies[army].o : 0);
+  const key = army * 4096 + o;
+  const memo = ctx.modsMemo || (ctx.modsMemo = new Map());
+  let r = memo.get(key);
+  if (r === undefined) { r = computeMods(ctx, d); memo.set(key, r); }
+  return r;
+}
+const mergeCache = new WeakMap();   // bonusy velitele → Map(doktrinální bonusy → součet)
+function computeMods(ctx, d) {
   const base = baseMods(ctx, d);
   const ab = ctx.state.cmd && d.army ? abilityMods(ctx.state, d.army) : null;   // M53: schopnost armády
   if (!ab) return base;

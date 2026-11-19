@@ -1,7 +1,7 @@
 // Denní krok armády (po půlnoci): zásobování, doplňování ze skladu, zakopání, plánování, zkušenosti velitelů, měsíční lidská síla.
 import { C } from './constants.js';
 import { dailySupply } from './supply.js';
-import { plansStep } from './plans.js';
+import { plansSteps } from './plans.js';
 import { editDiv, editStock, addMan, editGen, editArmy, rnd } from './ctx.js';
 import { statsOf, modsOf } from './unit.js';
 import { genLevel, xpForLevel, genMods } from './leaders.js';
@@ -81,13 +81,16 @@ function monthlyManpower(ctx) {
   }
 }
 
-export function dailyStep(ctx) {
+/** Denní krok armády jako generátor (F2): přestávky po zásobování a po každé plánované armádě (`plansSteps`). */
+export function* dailySteps(ctx) {
   dailySupply(ctx);
+  yield;
   dailyReinforce(ctx);
   dailyDigIn(ctx);
   dailyPlanning(ctx);
   dailyLeaders(ctx);
-  plansStep(ctx);
+  yield* plansSteps(ctx);
   const d = dateOfHour(ctx.tick);
   if (d.day === 1) monthlyManpower(ctx);
 }
+export function dailyStep(ctx) { for (const _ of dailySteps(ctx)) void _; }

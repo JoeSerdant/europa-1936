@@ -18,13 +18,13 @@ export function upkeepStep(ctx) {
     const moving = d.path.length > 0 && d.prog > 0 && !fighting;
     const cap = st.org * (1 - (1 - C.SUP_ORG_CAP) * lack);
     let org = d.org;
-    if (!fighting && !moving) {
+    if (!fighting && !moving && org < cap) {   // F2: obnova se počítá jen pod stropem (dřív se činitel počítal zbytečně i u plné organizace)
       const share = st.org ? org / st.org : 1;
       let f = share >= C.ORG_REGEN_SLOW_AT ? C.ORG_REGEN_SLOW : share <= C.ORG_REGEN_FAST_AT ? C.ORG_REGEN_FAST : 1;
       f *= 1 + modsOf(ctx, d).orgRegen;
       f *= 1 - C.ORG_INFRA * (1 - ctx.infra[d.p] / 5);
       f *= 1 - weatherAt(ctx.tick, d.p).org;   // M43
-      if (org < cap) org = Math.min(cap, org + st.org * C.ORG_REGEN * f);
+      org = Math.min(cap, org + st.org * C.ORG_REGEN * f);
     }
     if (org > cap) org = Math.max(cap, org - st.org * 0.02);
     let attr = lack > 0 ? C.SUP_ATTRITION * st.hp * lack * (1 + C.SUP_ATTR_TERRAIN * TERRAIN_RULES[w.terrain[d.p]].attr) * (1 + weatherAt(ctx.tick, d.p).cold) : 0;

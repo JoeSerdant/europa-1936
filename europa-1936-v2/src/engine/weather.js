@@ -13,12 +13,12 @@ const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
 export const WEATHER = { ATK: 0.12, SPD: 0.35, ORG: 0.4, ATTR: 1 };   // největší účinky mrazu (násobí se silou 0–1)
 
-const cache = new Map();   // `${měsíc}:${podnebí}` → počasí
+const cache = [];   // [měsíc][podnebí] → počasí (F2: bez skládání textového klíče při každém dotazu)
 
 /** Počasí podnebí `climate` v měsíci `month` (1–12): { t, cold, mud, heat, atk (postih útoku), spd (postih rychlosti), org (postih obnovy organizace), label }. */
 export function weatherIn(month, climate) {
-  const key = `${month}:${climate}`;
-  let r = cache.get(key);
+  const byClim = cache[month] || (cache[month] = Object.create(null));
+  let r = byClim[climate];
   if (r) return r;
   const [mean, amp] = CLIMATE_T[climate] || CLIMATE_T.temperate;
   const t = mean - amp * Math.cos((2 * Math.PI * (month - 1)) / 12);
@@ -32,7 +32,7 @@ export function weatherIn(month, climate) {
     org: WEATHER.ORG * cold + 0.15 * mud + 0.1 * heat,
     label: cold > 0.5 ? 'mráz' : cold > 0.1 ? 'chladno' : mud ? 'bláto' : heat > 0.2 ? 'vedro' : 'mírné',
   };
-  cache.set(key, r);
+  byClim[climate] = r;
   return r;
 }
 
@@ -46,5 +46,9 @@ export function climateOfProv(p) {
   return c;
 }
 
+let lastTick = NaN, lastMonth = 1;   // F2: měsíc poslední dotazované hodiny (systémy se ptají tisíckrát za hodinu)
 /** Počasí v provincii `p` v hodině `tick`. */
-export const weatherAt = (tick, p) => weatherIn(dateOfHour(tick).month, climateOfProv(p));
+export function weatherAt(tick, p) {
+  if (tick !== lastTick) { lastTick = tick; lastMonth = dateOfHour(tick).month; }
+  return weatherIn(lastMonth, climateOfProv(p));
+}

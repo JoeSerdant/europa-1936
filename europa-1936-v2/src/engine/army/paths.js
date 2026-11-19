@@ -33,6 +33,29 @@ export function stepHoursFor(w, ctrl, o, a, b, kind) {
 export const canEnter = (mil, o, c, dip) => c === o || atWar(mil, o, c) || (!!dip && hasAccess(dip, o, c));
 
 /**
+ * Statická data hran pro hledání cest a pohyb (F2, výkon): ke každé hraně sousednosti (`adjacency`) doplní `h` = hodiny kroku pěšáka
+ * (`stepHours`, závisí jen na světě) a `rl` = úroveň železnice mezi provinciemi. Počítá se jednou na svět; výsledky jsou stejné jako přímý výpočet.
+ */
+const edgeDone = new WeakSet();
+export function edgeData(w = getWorld()) {
+  const adj = adjacency(w);
+  if (edgeDone.has(adj)) return adj;
+  for (let p = 1; p <= w.L; p++) for (const e of adj[p]) { e.h = stepHours(w, p, e.to, e.kind); e.rl = railLevel(w, p, e.to); }
+  edgeDone.add(adj);
+  return adj;
+}
+
+/** `canEnter` pro jednu zemi a jeden stav válek (F2): výsledek podle majitele provincie se pamatuje (pole podle indexu země). */
+function enterTest(mil, o, dip) {
+  const memo = new Int8Array(getWorld().owners.length + 1).fill(-1);
+  return (c) => {
+    let v = memo[c];
+    if (v < 0) { v = canEnter(mil, o, c, dip) ? 1 : 0; memo[c] = v; }
+    return v === 1;
+  };
+}
+
+/**
  * Nejkratší cesta z `from` do `to` jako pole provincií (bez výchozí). Vrací null, když neexistuje.
  * @param {object} mil stav armády (kvůli válkám)
  * @param {number[]} ctrl kdo která provincie ovládá
@@ -40,10 +63,11 @@ export const canEnter = (mil, o, c, dip) => c === o || atWar(mil, o, c) || (!!di
  * @param {object} [opts] { maxHours, dip } (`dip` = diplomacie: přes území spojenců a loutek se smí procházet)
  */
 export function findPath(mil, ctrl, o, from, to, opts = {}) {
-  const w = getWorld(), adj = adjacency(w);
+  const w = getWorld(), adj = edgeData(w);
   if (from === to || !w.isLand(from) || !w.isLand(to)) return null;
   const dip = opts.dip;
-  if (!canEnter(mil, o, ctrl[to], dip)) return null;
+  const enter = enterTest(mil, o, dip);
+  if (!enter(ctrl[to])) return null;
   const maxH = opts.maxHours ?? Infinity;
   const dist = new Float64Array(w.L + 1).fill(Infinity);   // Float32 by zaokrouhlením uložených vzdáleností pod klíč haldy přeskočil uzly (dlouhé cesty se nenašly)
   const prev = new Int32Array(w.L + 1);
@@ -54,11 +78,12 @@ export function findPath(mil, ctrl, o, from, to, opts = {}) {
     const [d, p] = heap.pop();
     if (d > dist[p]) continue;
     if (p === to) break;
+    const own = ctrl[p] === o;
     for (const e of adj[p]) {
       const q = e.to;
       if (e.kind === 2) continue;
-      if (!canEnter(mil, o, ctrl[q], dip)) continue;
-      const nd = d + stepHoursFor(w, ctrl, o, p, q, e.kind);
+      if (!enter(ctrl[q])) continue;
+      const nd = d + (own && e.rl && ctrl[q] === o ? e.h / (1 + C.RAIL_SPEED * e.rl) : e.h);   // = stepHoursFor (M46)
       if (nd < dist[q] && nd <= maxH) { dist[q] = nd; prev[q] = p; heap.push(nd, q); }
     }
   }
@@ -66,6 +91,55 @@ export function findPath(mil, ctrl, o, from, to, opts = {}) {
   const path = [];
   for (let p = to; p !== from; p = prev[p]) path.push(p);
   return path.reverse();
+}
+
+/**
+ * Hledání cest z jednoho místa do více cílů (F2, výkon): vrací funkci `to → cesta | null` se stejným výsledkem jako `findPath(mil, ctrl, o, from, to, { dip })`.
+ * Dijkstra se nepouští znovu od začátku – pokračuje tam, kde skončil předchozí dotaz (provincie už vybrané z haldy mají konečnou vzdálenost i předchůdce).
+ * `mil`, `ctrl` a `dip` se během používání nesmějí změnit.
+ */
+export function pathSearch(mil, ctrl, o, from, dip) {
+  const w = getWorld(), adj = edgeData(w);
+  const enter = enterTest(mil, o, dip);
+  const land = w.isLand(from);
+  let dist = null, prev = null, done = null, heap = null, pending = 0;
+  const init = () => {
+    dist = new Float64Array(w.L + 1).fill(Infinity);
+    prev = new Int32Array(w.L + 1);
+    done = new Uint8Array(w.L + 1);
+    heap = new Heap();
+    dist[from] = 0;
+    heap.push(0, from);
+  };
+  const expand = (p, d) => {
+    const own = ctrl[p] === o;
+    for (const e of adj[p]) {
+      const q = e.to;
+      if (e.kind === 2) continue;
+      if (!enter(ctrl[q])) continue;
+      const nd = d + (own && e.rl && ctrl[q] === o ? e.h / (1 + C.RAIL_SPEED * e.rl) : e.h);
+      if (nd < dist[q]) { dist[q] = nd; prev[q] = p; heap.push(nd, q); }
+    }
+  };
+  const build = (to) => {
+    const path = [];
+    for (let p = to; p !== from; p = prev[p]) path.push(p);
+    return path.reverse();
+  };
+  return (to) => {
+    if (from === to || !land || !w.isLand(to) || !enter(ctrl[to])) return null;
+    if (!dist) init();
+    if (done[to]) return build(to);
+    if (pending) { expand(pending, dist[pending]); pending = 0; }   // cíl minulého dotazu: jeho sousedé se teprve rozšíří (jako by hledání pokračovalo)
+    while (heap.size) {
+      const [d, p] = heap.pop();
+      if (d > dist[p]) continue;
+      done[p] = 1;
+      if (p === to) { pending = p; return build(to); }
+      expand(p, d);
+    }
+    return dist[to] === Infinity ? null : build(to);
+  };
 }
 
 /** Délka cesty v hodinách pro pěšáka (součet kroků). */

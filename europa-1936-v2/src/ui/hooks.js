@@ -1,6 +1,7 @@
 // Háčky pro hlavní smyčku hry a klávesové zkratky.
 import { useEffect } from 'react';
-import { advance, hoursForElapsed, togglePause, changeSpeed, getWorld, confFor } from '../engine/index.js';
+import { hoursForElapsed, togglePause, changeSpeed, getWorld, confFor, SPEEDS } from '../engine/index.js';
+import { createClock, backlogMax } from './clock.js';
 import { gameStore, uiStore } from './store.js';
 import {
   toast, pushPopup, pushBanner, pushNews, pickBuild, checkAchievements, setAchOpen, saveUnitGroup, recallUnitGroup, playerIdx, selectFleet, closeSide, closeSaveDialog, autoSave, openOverview, closeOverview, closeBattle, quickSave, quickLoad, setHelp, setMenuOpen, setMode, togglePanel, toggleIndustry, toggleConsole, closeConsole, stopSelected, focusSelection, clearSelection, cancelPlanEdit, closeDesigner,
@@ -13,6 +14,7 @@ import { formatDate } from '../engine/time.js';
 const BANNER_ONLY = new Set(['focus', 'tech', 'doctrine']);   // M101: tyhle ohlásí jen velký pruh
 
 const AUTOSAVE_HOURS = 24 * 30;   // automatické uložení jednou za herní měsíc
+const FRAME_BUDGET_MS = [0, 10, 10, 12, 14, 16];   // F2: kolik ms ze snímku smí počítat engine podle rychlosti (zbytek patří mapě a rozhraní)
 /** Spustí práci, až bude prohlížeč volný (F2: zabalení automatického uložení nezdrží snímek). */
 const whenIdle = (fn) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(() => fn(), { timeout: 2000 }) : setTimeout(fn, 0));
 
@@ -21,22 +23,25 @@ export function useGameLoop(active) {
   useEffect(() => {
     if (!active) return undefined;
     let raf = 0, last = performance.now(), carry = 0;
+    const clock = createClock();   // F2: hodiny se počítají s rozpočtem času na snímek (půlnoc se rozloží do více snímků)
     const frame = (t) => {
       raf = requestAnimationFrame(frame);
       const dt = Math.min(250, Math.max(0, t - last));      // po uspání karty se čas nepřeskakuje
       last = t;
-      const { hours, carry: c } = hoursForElapsed(gameStore.getState(), dt, carry);
+      const prev = gameStore.getState();
+      if (prev.paused) { clock.reset(); carry = 0; return; }   // pauza zastaví i rozpracovanou hodinu
+      const { hours, carry: c } = hoursForElapsed(prev, dt, carry);
       carry = c;
-      if (hours > 0) {
-        const prev = gameStore.getState();
-        const before = prev.dip.cap;
-        gameStore.update(advance, hours);
-        const cur = gameStore.getState();
-        const after = cur.dip.cap;
-        if (cur.player && Math.floor(cur.tick / 24) !== Math.floor(prev.tick / 24)) checkAchievements(cur);   // M86: úspěchy jednou za herní den
-        if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) whenIdle(() => autoSave(cur));   // F2: na pozadí, chyba se ohlásí
-        void before; void after;
-      }
+      if (hours > 0) clock.add(hours, backlogMax(SPEEDS[prev.speed] || 0));
+      if (!clock.pending) return;
+      const t0 = performance.now();
+      const cur = clock.run(prev, () => performance.now(), t + (FRAME_BUDGET_MS[prev.speed] || 12));
+      const dbg = globalThis.__e1936;   // ladicí režim (?debug): čas enginu ve snímcích pro měření plynulosti
+      if (dbg) { const a = dbg.loopMs || (dbg.loopMs = []); a.push(performance.now() - t0); if (a.length > 5000) a.splice(0, 1000); }
+      if (cur === prev) return;
+      gameStore.setState(cur);
+      if (cur.player && Math.floor(cur.tick / 24) !== Math.floor(prev.tick / 24)) checkAchievements(cur);   // M86: úspěchy jednou za herní den
+      if (cur.player && Math.floor(cur.tick / AUTOSAVE_HOURS) !== Math.floor(prev.tick / AUTOSAVE_HOURS)) whenIdle(() => autoSave(cur));   // F2: na pozadí, chyba se ohlásí
     };
     raf = requestAnimationFrame(frame);
     // M101: oznámení z deníku – po každé změně stavu (běh času i akce hráče, např. vyhlášení války) se ohlásí nové záznamy;

@@ -20,6 +20,8 @@ Cíl: mechaniky věrné vzoru zhruba z 90 %, deset procent je záměrné zjednod
 | `npm run world:preview -- owner\|terrain x,y,w,h scale` | PNG náhled **exportovaného** světa do `tools/preview/` |
 | `node tools/smoke.mjs [šířka výška]` | automatická kontrola v prohlížeči (Playwright; viz § 7) |
 | `npm run sim -- <název>` | dlouhá simulace celé hry ze složky `sim/` (není součástí `npm test`); proměnné `SEED`, `PLAYER` (pasivní hráč), `HIST=0` (§ 4zzy) |
+| `npm run sim -- hash` / `perf` | otisky stavu po úsecích hry (optimalizace je nesmí změnit) / výkon enginu po systémech, nejdelší kousek práce (§ 4zzy) |
+| `node tools/perf-browser.mjs [s]` | plynulost v prohlížeči na válečném stavu (`SNAP`, `URL`; `PROF=` uloží profil CPU) |
 
 Proměnné generátoru: `STOP=1..5` (zastaví po kroku a vykreslí náhled), `NO_EXPORT=1`, `SVGMODE=owner\|state\|prov\|sea\|terrain`, `CROP`, `SCALE`, `SHOW_STRAITS=1`.
 
@@ -1006,6 +1008,14 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
 - **Exilová vláda žije dál**: po kapitulaci a loutkovém zbytku země zůstává `dip.exile[o] = hostitel`. Když kapituluje hostitel, jeho exily se přestěhují k jeho vlastnímu hostiteli (`dropExiles(state, host, to)`), a když ten žádný nemá, k nejsilnějšímu bývalému spojenci exilové země z `dip.ally0`, který ještě válčí (polská vláda po pádu Francie odejde do Británie); jinak zanikají. **Obnova** (`restoreCountry`) zruší i loutkový vztah (`sub`, `au`, `ally0` = 0) a války obnovené země s blokem hostitele.
 - Simulace `npm run sim -- poland` (`sim/poland.sim.js`): pozorovatelská hra (nebo pasivní hráč `PLAYER=POL`) do 5 let po kapitulaci Polska; každých 30 dní kontroluje všechny loutky a vypíše stav Polska při kapitulaci, po roce a po 5 letech.
 - **Uložené hry** (§ 4h): IndexedDB + gzip, záložně `localStorage`; viditelné upozornění při selhání automatického uložení.
+- **Výkon (A2)**: herní hodina je generátor `hourSteps` (`tick.js`) s přestávkami (`yield`) o půlnoci – v denním kroku armády po zásobování a po každé
+  plánované armádě (`dailySteps`, `plansSteps`), mezi skupinami systémů a v AI po částech každé země (`aiDaySteps`). `advanceHour`/`advance` ho doběhnou
+  najednou (stejný výsledek), rozhraní ho počítá po snímcích přes `ui/clock.js` (`createClock`: rozpočet ms na snímek podle rychlosti, strop nevyřízených
+  hodin `backlogMax`, při změně stavu uprostřed hodiny se hodina spočítá znovu). Přesné zrychlení bez změny výsledků: předpočítané hrany cest (`edgeData`:
+  hodiny kroku a železnice), paměť `canEnter` podle země, navazující Dijkstra z jednoho místa pro více cílů (`pathSearch`), měsíc počasí jednou za hodinu,
+  bonusy armád v kontextu hodiny (`ctx.modsMemo`, maže `editArmy`/`editGen`), souhrn průmyslu podle objektu stavu (`industryOf`). Mapa: dobytí provincie
+  nepřekresluje dlaždice „naléhavě“ a změny ve hře ji překreslí nejvýš 10× za sekundu (`GAME_REDRAW_MS`). Výsledek (listopad 1941, 1052 divizí):
+  118 → 59 ms na herní den, nejdelší nepřerušitelný kousek 42 → 11 ms; otisky stavu (`npm run sim -- hash`) zůstaly shodné.
 
 ## 5. Rozhraní
 
