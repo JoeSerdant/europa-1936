@@ -26,7 +26,8 @@ it('otisky stavu', () => {
   const out = [];
   for (const [nm, make, days] of cases) {
     const t0 = performance.now();
-    const s = advance(make(), 24 * days);
+    const { v, ...s } = advance(make(), 24 * days);   // bez čísla verze hry (zvedá se se změnou tvaru stavu, průběh nemění)
+    void v;
     out.push(`${nm}: ${fnv(JSON.stringify(s))} (${((performance.now() - t0) / days).toFixed(1)} ms/den)`);
   }
   fs.mkdirSync(dir, { recursive: true });

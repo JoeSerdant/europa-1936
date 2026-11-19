@@ -21,13 +21,15 @@ it('milníky války', () => {
     ['kapitulace Itálie', (l) => l.k === 'cap' && l.o === I('ITA')],
     ['kapitulace Německa', (l) => l.k === 'cap' && l.o === I('GER')],
   ];
-  const got = new Map(), govs = [];
+  const got = new Map(), govs = [], wars = [], caps = [];
   let seen = 0;
   const last = simulate(cfg, END, (s) => {
     for (const l of s.log.items) {
       if (l.id <= seen) continue;
       for (const [nm, f] of marks) if (!got.has(nm) && f(l)) got.set(nm, dateOf(s));
       if (l.k === 'gov') govs.push(`${dateOf(s)} ${tagOf(l.o)} → ${l.x}`);
+      if (l.k === 'war') wars.push(`${dateOf(s)} ${tagOf(l.a)}–${tagOf(l.b)}`);
+      if (l.k === 'cap') caps.push(`${dateOf(s)} ${tagOf(l.o)}`);
     }
     seen = s.log.n;
     return false;
@@ -35,6 +37,8 @@ it('milníky války', () => {
   const out = [`Milníky: semínko ${cfg.seed}, hráč ${cfg.player || 'pozorovatel'}, historická AI ${cfg.hist ? 'ano' : 'ne'}, do ${dateOf(last)}`];
   for (const [nm] of marks) out.push(`  ${nm}: ${got.get(nm) || '–'}`);
   out.push(`změny vlád (${govs.length}): ${govs.join('; ') || 'žádné'}`);
+  out.push(`vyhlášené války (${wars.length}): ${wars.join('; ') || 'žádné'}`);
+  out.push(`kapitulace (${caps.length}): ${caps.join('; ') || 'žádné'}`);
   writeReport('milestones', cfg, out);
   expect(got.size).toBeGreaterThanOrEqual(0);
 });

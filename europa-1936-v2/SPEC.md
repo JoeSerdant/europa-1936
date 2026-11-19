@@ -1017,6 +1017,15 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   nepřekresluje dlaždice „naléhavě“ a změny ve hře ji překreslí nejvýš 10× za sekundu (`GAME_REDRAW_MS`). Výsledek (listopad 1941, 1052 divizí):
   118 → 59 ms na herní den, nejdelší nepřerušitelný kousek 42 → 11 ms; otisky stavu (`npm run sim -- hash`) zůstaly shodné.
 
+- **Volná historie (A3)**: bez historické AI (`ai.hist = 0`) proběhnou historické události z dat také (`HIST_DEMANDS`, `HIST_WARS`, `HIST_JACKALS`,
+  `HIST_PACTS`, `HIST_FACTIONS`, `HIST_GUARANTEES`, `HIST_CIVIL`), ale s posunem země 0–`AI.FREE_SHIFT` dní podle semínka (`shiftOf`, `engine/ai/free.js`,
+  stejný pro všechny události země) a jen s vládou historické ideologie (`keepsCourse`). Koleje boje (`HIST_STRATEGIES`, výdrž, příměří) a zámořská pomoc
+  zůstávají jen historické AI. Stav `ai.salt` (jen ve volné historii) = semínko hry: přidává se do náhody voleb AI (`aiMayFocus`). Řádky `HIST_WARS`
+  s `quiet` platí v obou režimech jen, když spolu žádné velmoci neválčí (`quietWorld`) – záložní výboje SSSR (Polsko 1940, Rumunsko, od jara 1941
+  Německo), když hráč za Německo válku nezačne. **Vlády**: AI zvolí alternativní politickou cestu jen s podporou strany aspoň `NAT.ALT_MIN_SUPPORT`
+  (velmoc `ALT_MIN_SUPPORT_MAJOR`) a s vahou historické cesty `ALT_HIST_W = 8`; převrat jen pod stabilitou `POL.COUP_STAB = 0,30`
+  a nejvýš jednou za `COUP_COOL = 1095` dní. `GAME_VERSION = 47`.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.

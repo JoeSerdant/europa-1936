@@ -37,6 +37,7 @@ export const AI = {
   AIR_SHARE: 0.1,                   // podíl vojenských továren na letecké linky v míru
   AIR_SHARE_WAR: 0.16,              // ve válce
   RUSH_RATIO: 1.3,                  // při takové převaze sil útočí AI v režimu „Spěchat“
+  FREE_SHIFT: 120,                  // F2: volná historie – nejdelší posun historických událostí země (dní, podle semínka hry)
   PLAN_DAYS: 7,                     // jak často AI přepočítává útočné plány
   PLAN_DAYS_WAR: 2,                 // země, která útočí (má armádu s vyčerpanými cíli plánu), přepočítá plány už po tolika dnech (M88)
   LOCAL_RATIO: 2.5,                 // místní útok (M88): armáda udeří na cíl, když má tolikrát víc divizí, než je síla jeho obrany

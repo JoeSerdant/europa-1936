@@ -19,7 +19,7 @@ import { createCmd } from './cmd/index.js';
 import { createStat, recordStat } from './stat/index.js';
 import { createRules } from './rules.js';
 
-export const GAME_VERSION = 46;
+export const GAME_VERSION = 47;
 export const SPEEDS = [0, 12, 24, 48, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza)
 export const MAX_SPEED = 5;
 
@@ -60,7 +60,7 @@ export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = tru
     end: null,             // M36: konec hry (viz SPEC § 4p)
     doc: createDoc(w),     // M34: doktríny (viz SPEC § 4n)
     air,                   // M30: letectvo (viz SPEC § 4k)
-    ai: { level: [1, 2, 3].includes(aiLevel) ? aiLevel : 0, hist: hist ? 1 : 0, inv: [] },   // M24: nastavení AI (viz SPEC § 4g)
+    ai: { level: [1, 2, 3].includes(aiLevel) ? aiLevel : 0, hist: hist ? 1 : 0, inv: [], ...(hist ? {} : { salt: (Number(seed) >>> 0) || 1 }) },   // M24: nastavení AI (viz SPEC § 4g); F2: `salt` = semínko pro volby AI ve volné historii
     rules: createRules(rules),   // M76: pravidla hry (mlha války …)
   };
   return recordStat(applyScenario({ ...base, nav: createNav(w, base) }, scenario));   // M27: námořnictvo (viz SPEC § 4j); potřebuje přístavy podle vlastnictví

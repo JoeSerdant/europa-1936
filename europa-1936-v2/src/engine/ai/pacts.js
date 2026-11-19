@@ -16,7 +16,7 @@ import { playerOf } from './core.js';
 
 /** Má země `tag` historický plán proti `target`, který ještě může nastat? */
 function planned(tag, target, day) {
-  const hit = (x) => x.tag === tag && x.target === target && x.until >= day;
+  const hit = (x) => x.tag === tag && x.target === target && x.until >= day && !x.quiet;   // F2: záložní války (`quiet`) nejsou historický úmysl
   return HIST_WARS.some(hit) || HIST_JACKALS.some(hit) || HIST_DEMANDS.some(hit);
 }
 

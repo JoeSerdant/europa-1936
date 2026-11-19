@@ -7,6 +7,7 @@ import { logAdd } from '../log.js';
 import { declareWar } from '../army/commands.js';
 import { nearestControlled } from '../army/war.js';
 import { hasCapitulated, isDormant, setRel, pairKey } from '../dip/core.js';
+import { shiftOf } from '../ai/free.js';
 import { HIST_CIVIL } from '../../data/dip/civil.js';
 import { RELEASES } from '../../data/dip/releases.js';
 import { DIP } from '../dip/constants.js';
@@ -160,14 +161,15 @@ export function releaseNation(state, victor, loser) {
 /** Je mezi `a` a `b` občanská válka? (zapsaná v cíli války při rozdělení) */
 export const isCivilWar = (state, a, b) => state.dip.goal[`${a}>${b}`] === 'civil' || state.dip.goal[`${b}>${a}`] === 'civil';
 
-/** Denní krok: historické občanské války (jednorázově v okně po stanoveném dni; jen se zapnutým příznakem `ai.hist`). */
+/** Denní krok: historické občanské války (jednorázově v okně po stanoveném dni; s historickou AI přesně, F2: ve volné historii s posunem podle semínka). */
 export function civilDay(state) {
-  if (!state.ai || !state.ai.hist) return state;
+  if (!state.ai || (!state.ai.hist && !state.ai.level)) return state;   // historická AI: jako dřív (i bez AI zemí); volná historie jen se zapnutou AI
   const w = getWorld(), day = state.tick / 24;
   for (const c of HIST_CIVIL) {
-    if (day < c.day || day > c.day + c.window) continue;
     const parent = w.ownerIdx[c.tag], rebel = w.ownerIdx[c.rebel];
     if (!parent || !rebel) continue;
+    const k = shiftOf(state, parent);
+    if (day < c.day + k || day > c.day + k + c.window) continue;
     const flag = `civil_${c.id}`;
     if (state.nat.own[parent].flags[flag]) continue;
     const ids = c.states.map(stateIdOf).filter(Boolean);
