@@ -13,7 +13,7 @@ import { campOf } from '../dip/core.js';
 import { aggrOf } from '../../data/ai/personality.js';
 import { landZones } from '../army/zones.js';
 import { stagingArmies, startInvasion } from './invasion.js';
-import { holdBackOf, defendOnlyOf, pushOf, noEnterOf, invadeOpOf, gatherOf } from './hist.js';
+import { holdBackOf, defendOnlyOf, pushOf, noEnterOf, invadeOpOf, gatherOf, spareCapOf } from './hist.js';
 import { personaOf } from './persona.js';
 import { ruleMult } from '../rules.js';
 import { fortOf } from '../industry/selectors.js';
@@ -452,6 +452,7 @@ export function aiStrategy(state, o) {
   const home = new Set([o, ...friendsOf(state.dip, o)]);   // území vlastního tábora (podle vlastnictví států)
   const echelon = [];   // armády druhého sledu (na frontu se nevešly) – lze z nich sestavit invazní sbor
   const passive = defendOnlyOf(state, o);   // M92: záměrná chyba – proti těmto nepřátelům země jen brání
+  const spare = spareCapOf(state, o);   // F3: hlavní město, které se zatím nedobývá (Berlín do konce dubna 1945)
   const shut = noEnterOf(state, o);   // M93: na předválečné území těchto zemí se zatím neútočí (tempo postupu podle historie)
   const rearUsed = new Set();   // týlové provincie už rozdané (každá armáda druhého sledu dostane vlastní, aby se nehromadily)
   if (invadeOpOf(state, o)) {   // M93: historická operace vylodění si sbor vezme i z armád na frontě, když v záloze není dost divizí (Normandie, Provence)
@@ -510,7 +511,7 @@ export function aiStrategy(state, o) {
       const slice = sorted.slice(0, Math.max(AI.SLICE_MIN, a.n * AI.SLICE_PER_DIV)).sort((p, q) => p - q);
       const cand = [];
       for (const p of slice) for (const e of adj[p]) {
-        if (e.kind === 2 || !viable.has(e.to) || !foes.has(state.ctrl[e.to]) || cand.includes(e.to) || shut.has(w.provOwner0[e.to])) continue;
+        if (e.kind === 2 || !viable.has(e.to) || !foes.has(state.ctrl[e.to]) || cand.includes(e.to) || shut.has(w.provOwner0[e.to]) || spare.has(e.to)) continue;
         if (fortFree && fortOf(state, e.to) >= AI.FORT_AVOID) continue;   // M88: silné pevnosti se neztékají, dokud je kudy je obejít
         cand.push(e.to);
       }

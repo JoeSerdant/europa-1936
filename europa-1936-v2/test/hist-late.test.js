@@ -32,7 +32,7 @@ const noHist = (s) => ({ ...s, ai: { ...s.ai, hist: 0 } });
 describe('data', () => {
   it('nové řádky strategií odkazují na existující země; duchové mají klíče z MOD_KEYS a NO_POL', () => {
     for (const s of HIST_STRATEGIES) {
-      for (const k of ['war', 'needWar', 'invade', 'at', 'armistice', 'noEnter']) if (s[k]) expect(idx(s[k]), `${s.id}.${k}`).toBeGreaterThan(0);
+      for (const k of ['war', 'needWar', 'invade', 'at', 'armistice', 'noEnter', 'spareCap']) if (s[k]) expect(idx(s[k]), `${s.id}.${k}`).toBeGreaterThan(0);
       if (s.push) { expect(s.push).toBeGreaterThan(0); expect(s.push).toBeLessThanOrEqual(1); expect(s.war).toBeTruthy(); }
       if (s.from !== undefined) expect(s.until).toBeGreaterThan(s.from);
       if (s.armistice) { expect(s.held).toBeGreaterThan(0); if (s.force) expect(s.force).toBeLessThan(s.until); }
@@ -163,6 +163,17 @@ describe('zimní válka a moskevský mír (F3)', () => {
     expect(s.dip.cap[FIN]).toBe(0);
     expect(s.stateOwner[capS]).toBe(FIN);
     for (let p = 1; p <= W.L; p++) if (s.stateOwner[W.provState[p]] === FIN) expect(s.ctrl[p]).toBe(FIN);
+  });
+});
+
+describe('pád Berlína (F3)', () => {
+  it('Sověti a Spojenci útočí na Berlín až od konce dubna 1945; bez historické AI kdykoli', async () => {
+    const { spareCapOf } = await import('../src/engine/ai/hist.js');
+    const berlin = W.owners[GER].cap;
+    expect(spareCapOf(at(base(), 3300), SOV).has(berlin)).toBe(true);
+    expect(spareCapOf(at(base(), 3300), ENG).has(berlin)).toBe(true);
+    expect(spareCapOf(at(base(), 3406), SOV).size).toBe(0);
+    expect(spareCapOf(noHist(at(base(), 3300)), SOV).size).toBe(0);
   });
 });
 

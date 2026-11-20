@@ -93,6 +93,15 @@ export function noEnterOf(state, o) {
   return out;
 }
 
+/** F3: hlavní města, na která AI země `o` v okně `spareCap` zatím neútočí (pád Berlína podle historie): Set provincií. */
+export function spareCapOf(state, o) {
+  const out = new Set();
+  if (!histOn(state)) return out;
+  const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
+  for (const s of HIST_STRATEGIES) if (s.tag === tag && s.spareCap && day >= s.from && day < s.until) out.add(w.owners[w.ownerIdx[s.spareCap]].cap);
+  return out;
+}
+
 /** Podíl divizí, který země nechává v záloze v týlu (záměrná chyba podle `holdBack`), v daný den hry. */
 export function holdBackOf(state, o) {
   if (!histOn(state)) return 0;

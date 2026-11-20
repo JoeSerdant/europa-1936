@@ -1085,7 +1085,7 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
 - **Konec války 1944–1945** (koleje `HIST_STRATEGIES`, jen s historickou AI): Západní spojenci (`eng_border`, `fra_border`) vstoupí na předválečné
   území Německa až od 20. 10. 1944 (Cáchy) a od 4. 11. 1944 do přechodu Rýna 7. 3. 1945 jen brání (`eng_rhine`); Rudá armáda útočí na Visle
   od 12. 1. 1945 (`sov_push45`) a na Odře stojí od 2. 2. do 16. 4. 1945 (`sov_oder`). Německo vytrvá (`ger_holdout`) do 8. 5. 1945 a pak
-  bezpodmínečně kapituluje (`ger_surrender`); vytrvání končí kapitulací až při `DIP.HOLDOUT_SHARE = 0,98` území v rukou nepřítele.
+  bezpodmínečně kapituluje (`ger_surrender`); na Berlín Sověti ani Spojenci neútočí do 28. 4. 1945 (`spareCap`, čte `spareCapOf` v `aiStrategy`); vytrvání končí kapitulací až při `DIP.HOLDOUT_SHARE = 0,98` území v rukou nepřítele.
   Simulace `npm run sim -- endwar` (snímek stavu z jara 1944 v `sim/out/`, každých 15 dní podíl území, kdo drží předválečné Německo, divize).
 - **Zimní válka a moskevský mír** (jen s historickou AI): duchové `zimni_valka` (Finsko, 110 dní od začátku války: obrana +35 %) a
   `armada_po_cistkach` (SSSR, 70 dní: útok −30 %); řádek `fin_peace` s `peace: true` – jakmile SSSR drží 12 finských provincií (nejpozději
