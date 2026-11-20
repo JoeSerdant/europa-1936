@@ -65,9 +65,14 @@ export const HIST_STRATEGIES = [
   { id: 'sov_push43b', tag: 'SOV', war: 'GER', from: 2745, until: 2900, push: 0.9 },
   { id: 'sov_push44', tag: 'SOV', war: 'GER', from: 3090, until: 3190, push: 0.6 },
   { id: 'sov_vistula', tag: 'SOV', war: 'GER', from: 3190, until: 3290, defend: true },
-  { id: 'sov_push45', tag: 'SOV', war: 'GER', from: 3290, until: 3450, push: 0.6 },
+  { id: 'sov_push45', tag: 'SOV', war: 'GER', from: 3298, until: 3450, push: 0.6 },   // F3: Visla–Odra od 12. 1. 1945
   { id: 'sov_border', tag: 'SOV', from: 2000, until: 3200, noEnter: 'GER' },
   { id: 'eng_push44', tag: 'ENG', war: 'GER', from: 3090, until: 3450, push: 0.6 },
+  // F3: Západní spojenci vstoupí na předválečné území Německa až na podzim 1944 (Cáchy) a přes zimu stojí u Rýna (Ardeny, vyčerpané zásobování)
+  { id: 'eng_border', tag: 'ENG', from: 2600, until: 3215, noEnter: 'GER' },
+  { id: 'fra_border', tag: 'FRA', from: 2600, until: 3215, noEnter: 'GER' },
+  { id: 'eng_rhine', tag: 'ENG', war: 'GER', from: 3230, until: 3353, defend: true },   // do přechodu Rýna 7. 3. 1945
+  { id: 'sov_oder', tag: 'SOV', war: 'GER', from: 3320, until: 3392, defend: true },   // F3: Rudá armáda na Odře do Berlínské operace (16. 4. 1945)
   // po Kursku přechází Německo na východě do strategické obrany; Bagration v létě 1944 rozbije střed fronty
   { id: 'ger_east_def', tag: 'GER', war: 'SOV', from: 2760, until: 3800, defend: true },
   { id: 'bagration', tag: 'SOV', from: 3094, until: 3200, needWar: 'GER', spirit: 'bagration' },
@@ -75,8 +80,8 @@ export const HIST_STRATEGIES = [
   { id: 'ger_ruin', tag: 'GER', from: 3260, until: 3800, needWar: 'SOV', spirit: 'zhroucene_hospodarstvi' },   // M96: bombardované továrny, ztracená ropa
   // vylodění Spojenců: Sicílie a Itálie 1943, Normandie 1944
   // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
-  { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3400, holdout: true },
-  { id: 'ger_surrender', tag: 'GER', from: 3400, until: 3800, armistice: 'SOV', held: 20, force: 3470, conf: true },
+  { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true },   // F3: do 8. 5. 1945
+  { id: 'ger_surrender', tag: 'GER', from: 3415, until: 3800, armistice: 'SOV', held: 20, force: 3470, conf: true },
   { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },
   { id: 'husky', tag: 'ENG', from: 2650, until: 2950, invade: 'ITA', at: 'ITA' },
   { id: 'overlord', tag: 'ENG', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },

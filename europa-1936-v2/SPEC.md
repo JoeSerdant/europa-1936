@@ -1082,6 +1082,11 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   mimo historické ofenzivy, `weak` = cíle podle slabé obrany (`AI.OP_WEAK_KM` za bránící divizi). Karta provincie ukazuje „Velení AI“.
 - **Volná historie pestřeji**: pořadí národních cílů AI se posune náhodně o 0–`NAT.FREE_FOCUS_JITTER` váhy podle semínka hry;
   váha historické politické cesty `NAT.ALT_HIST_W` 8 → 5.
+- **Konec války 1944–1945** (koleje `HIST_STRATEGIES`, jen s historickou AI): Západní spojenci (`eng_border`, `fra_border`) vstoupí na předválečné
+  území Německa až od 20. 10. 1944 (Cáchy) a od 4. 11. 1944 do přechodu Rýna 7. 3. 1945 jen brání (`eng_rhine`); Rudá armáda útočí na Visle
+  od 12. 1. 1945 (`sov_push45`) a na Odře stojí od 2. 2. do 16. 4. 1945 (`sov_oder`). Německo vytrvá (`ger_holdout`) do 8. 5. 1945 a pak
+  bezpodmínečně kapituluje (`ger_surrender`); vytrvání končí kapitulací až při `DIP.HOLDOUT_SHARE = 0,98` území v rukou nepřítele.
+  Simulace `npm run sim -- endwar` (snímek stavu z jara 1944 v `sim/out/`, každých 15 dní podíl území, kdo drží předválečné Německo, divize).
 - **Zimní válka a moskevský mír** (jen s historickou AI): duchové `zimni_valka` (Finsko, 110 dní od začátku války: obrana +35 %) a
   `armada_po_cistkach` (SSSR, 70 dní: útok −30 %); řádek `fin_peace` s `peace: true` – jakmile SSSR drží 12 finských provincií (nejpozději
   13. 3. 1940), Finsko uzavře **územní mír**: `capitulate(…, { armistice, peace })` předá okupantovi obsazené státy (hlavní provincie státu),
