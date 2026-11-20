@@ -16,6 +16,7 @@ it('konec války', () => {
   for (let d = FROM; d <= END; d++) {
     if (d > FROM) s = advance(s, 24);
     if (s.log.items.some((e) => e.k === 'cap' && e.o === G) || s.dip.cap[G]) { out.push(`${dateOf(s)}: Německo kapitulovalo (den ${d})`); break; }
+    if (!globalThis.__berlin && s.ctrl[w.owners[G].cap] !== G) { globalThis.__berlin = 1; out.push(`${dateOf(s)}: padl Berlín (${tagOf(s.ctrl[w.owners[G].cap])})`); }
     if (d % 15 !== 0) continue;
     const h = vpHeld(s, G);
     const by = new Map();

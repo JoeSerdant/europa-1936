@@ -9,6 +9,7 @@
 //               nebo v okně `from`–`until` dní hry (operační pauza: doplnění sil před další ofenzivou)
 //  needWar      okenní duch platí jen tehdy, když země válčí se zemí `needWar` (a ta ještě nekapitulovala)
 //  push         (s `war`, `from`/`until`) historická ofenziva: práh poměru sil pro útok proti zemi `war` se násobí tímto číslem
+//  spareCap     (s `from`/`until`) AI zatím neútočí na hlavní město země `spareCap` (F3: pád Berlína podle historie)
 //  noEnter      (s `from`/`until`) AI zatím neútočí na původní (předválečné) území země `noEnter` – tempo postupu podle historie
 //  armistice    (s `from`/`until`) země v okně kapituluje, jakmile země `armistice` nebo její spojenec drží aspoň `held` provincií jejího původního území
 //               (Itálie 1943: pád režimu po vylodění Spojenců); od dne `force` kapituluje i bez toho
@@ -72,6 +73,9 @@ export const HIST_STRATEGIES = [
   { id: 'eng_border', tag: 'ENG', from: 2600, until: 3215, noEnter: 'GER' },
   { id: 'fra_border', tag: 'FRA', from: 2600, until: 3215, noEnter: 'GER' },
   { id: 'eng_rhine', tag: 'ENG', war: 'GER', from: 3230, until: 3353, defend: true },   // do přechodu Rýna 7. 3. 1945
+  { id: 'sov_berlin', tag: 'SOV', from: 3000, until: 3405, spareCap: 'GER' },   // F3: Berlín padne až na konci dubna 1945
+  { id: 'eng_berlin', tag: 'ENG', from: 3000, until: 3405, spareCap: 'GER' },
+  { id: 'fra_berlin', tag: 'FRA', from: 3000, until: 3405, spareCap: 'GER' },
   { id: 'sov_oder', tag: 'SOV', war: 'GER', from: 3320, until: 3392, defend: true },   // F3: Rudá armáda na Odře do Berlínské operace (16. 4. 1945)
   // po Kursku přechází Německo na východě do strategické obrany; Bagration v létě 1944 rozbije střed fronty
   { id: 'ger_east_def', tag: 'GER', war: 'SOV', from: 2760, until: 3800, defend: true },
