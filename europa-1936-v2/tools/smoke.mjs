@@ -605,6 +605,8 @@ try {
   await page.keyboard.press('l');
   await page.waitForSelector('.log-panel', { timeout: 3000 });
   check('klávesa L otevře panel Zprávy se záznamy', (await ui()).panel === 'log' && (await page.locator('.log-row').count()) >= 3);
+  await page.mouse.move(400, 400);   // nápověda upozornění (myš nad ikonou) by v malém okně zakryla záložky
+  await page.waitForTimeout(150);
   await page.getByRole('tab', { name: 'Moje' }).click();
   await page.waitForTimeout(150);
   const mineRows = await page.locator('.log-row').count();

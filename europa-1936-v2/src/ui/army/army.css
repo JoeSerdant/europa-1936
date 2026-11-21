@@ -85,7 +85,7 @@
 .army-sum .warn b { color: var(--amber); }
 .army-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; flex: none; border-bottom: 1px solid var(--rule); }
 .hint-r { flex-basis: 100%; font-size: 12.5px; }
-.side-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 8px 14px; scrollbar-width: thin; scrollbar-color: var(--rule-hi) transparent; }
+.side-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; padding: 6px 8px 14px; scrollbar-width: thin; scrollbar-color: var(--rule-hi) transparent; }
 
 .army-panel .row {
   display: grid; align-items: center; column-gap: 8px; min-height: 30px; padding: 3px 8px;
@@ -172,8 +172,8 @@
 .tut-dock { position: absolute; top: calc(var(--top-h) + 58px); z-index: 9; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .tut-dock > * { pointer-events: auto; }
 .tut-dock.by-build { left: 344px; }
-.tut-dock.by-dock { left: calc(min(640px, 48vw) + 14px); }
-.tut-dock.by-dock.wide { left: calc(min(700px, 52vw) + 14px); }   /* F2 C3: panel Politika je širší */
+.tut-dock.by-dock { left: calc(min(640px, calc(48 * var(--uvw))) + 14px); }
+.tut-dock.by-dock.wide { left: calc(min(700px, calc(52 * var(--uvw))) + 14px); }   /* F2 C3: panel Politika je širší */
 .toast { padding: 10px 18px; color: var(--paper); max-width: 560px; text-align: center; animation: rise 0.16s ease-out; }
 .toast.err { border-color: var(--red); box-shadow: 0 0 0 1px var(--red), 0 6px 20px rgba(0, 0, 0, 0.45); }   /* F2: chyba (např. selhalo automatické uložení) */
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
@@ -258,7 +258,7 @@
 .q-top .muted { flex: 1; text-align: right; font-size: 12.5px; }
 
 /* ------------------------------------------------------------------ návrhář šablon */
-.dialog.designer { width: min(800px, calc(100vw - 48px)); max-height: calc(100vh - 48px); padding: 0; gap: 0; }
+.dialog.designer { width: min(800px, calc(calc(100 * var(--uvw)) - 48px)); max-height: calc(calc(100 * var(--uvh)) - 48px); padding: 0; gap: 0; }
 .dz-head { display: flex; align-items: center; gap: 14px; padding: 14px 18px 12px; border-bottom: 1px solid var(--rule); flex: none; }
 .dz-head h2 { font-size: 22px; white-space: nowrap; }
 .dz-name { flex: 1; min-width: 0; padding: 8px 10px; font: 500 17px/1.2 var(--body); color: var(--paper); background: var(--ink-0); border: 0; box-shadow: inset 0 0 0 1px var(--rule-hi); }
@@ -315,20 +315,20 @@
 .legend-note { margin-top: 8px; font-size: 13px; color: var(--text-2); }
 
 /* nízké obrazovky (1366×768): návrhář je hustší, aby se celý vešel bez rolování (změřeno: tělo 595 px z 608 px; bez úprav přetékalo o 89 px) */
-@media (max-height: 820px) {
-  .dz-head { padding: 10px 16px 8px; }
-  .dz-cell { height: 38px; }
-  .dz-cell.sup { height: 30px; }
-  .dz-pick { padding: 2px 10px; }
-  .dz-pick span { font-size: 13.5px; }
-  .dz-palette { gap: 2px; }
-  .dz-left h3, .dz-right h3 { margin: 6px 0 6px; }
-  .dz-right h3 { margin: 4px 0 5px; }
-  .dz-stats, .dz-info { padding: 8px 10px; }
-  .dz-info { margin-top: 6px; gap: 4px; }
-  .dz-info p { font-size: 13px; line-height: 1.3; }
-  .dz-foot { padding: 8px 16px 10px; }
-}
+/* dřív @media (max-height: 820px) – UI: podle šířky rozhraní po zvětšení */
+:root.uh-820 .dz-head { padding: 10px 16px 8px; }
+:root.uh-820 .dz-cell { height: 38px; }
+:root.uh-820 .dz-cell.sup { height: 30px; }
+:root.uh-820 .dz-pick { padding: 2px 10px; }
+:root.uh-820 .dz-pick span { font-size: 13.5px; }
+:root.uh-820 .dz-palette { gap: 2px; }
+:root.uh-820 .dz-left h3, :root.uh-820 .dz-right h3 { margin: 6px 0 6px; }
+:root.uh-820 .dz-right h3 { margin: 4px 0 5px; }
+:root.uh-820 .dz-stats, :root.uh-820 .dz-info { padding: 8px 10px; }
+:root.uh-820 .dz-info { margin-top: 6px; gap: 4px; }
+:root.uh-820 .dz-info p { font-size: 13px; line-height: 1.3; }
+:root.uh-820 .dz-foot { padding: 8px 16px 10px; }
+
 
 /* ------------------------------------------------------------------ nábor a návrhář ve stylu celé obrazovky (M28) */
 .recruit-panel.prod-screen { display: flex; }
@@ -341,7 +341,7 @@
 .tpl-grid .tpl-card { margin: 0; }
 .recruit-panel .prod-right .stock { padding: 0; border: 0; }
 .recruit-panel .prod-right .eq { margin-top: 8px; }
-.dialog.designer { width: min(1280px, calc(100vw - 64px)); height: min(820px, calc(100vh - 80px)); max-height: none; border-top: 2px solid var(--brass-lo); }
+.dialog.designer { width: min(1280px, calc(calc(100 * var(--uvw)) - 64px)); height: min(820px, calc(calc(100 * var(--uvh)) - 80px)); max-height: none; border-top: 2px solid var(--brass-lo); }
 .dialog.designer .dz-body { grid-template-columns: minmax(0, 1.5fr) minmax(340px, 1fr); flex: 1; }
 .dialog.designer .dz-cell { height: 54px; font-size: 13px; }
 .dialog.designer .dz-cell.on b { font-size: 14px; }
@@ -349,7 +349,10 @@
 .dialog.designer .dz-grid { gap: 10px; }
 .dialog.designer .dz-head h2 { font-size: 24px; text-transform: uppercase; letter-spacing: 0.04em; }
 .dialog.designer .dz-palette { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-@media (max-height: 800px) { .dialog.designer { height: calc(100vh - 24px); } .dialog.designer .dz-cell { height: 52px; } }
+/* dřív @media (max-height: 800px) – UI: podle šířky rozhraní po zvětšení */
+:root.uh-800 .dialog.designer { height: calc(calc(100 * var(--uvh)) - 24px); }
+:root.uh-800 .dialog.designer .dz-cell { height: 52px; }
+
 
 /* ---- M102: armády jako v HOI4 – lišta armád, rozkazy, výběr s ikonami ---- */
 .sel-meters > div { grid-template-columns: 18px 1fr 44px; }
@@ -419,15 +422,15 @@
 .ao-act { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--brass-hi); }
 .ao-cp { margin-left: 4px; padding: 3px 6px; font: 600 12px/1 var(--display); color: var(--brass-hi); background: var(--ink-2); }
 @media (prefers-reduced-motion: reduce) { .acard.fight, .aorders { animation: none; } .acard:hover { transform: none; } }
-@media (max-height: 820px) {
-  .selbar { padding: 7px 10px 8px; gap: 6px; }
-  .selbar header .cls-icon { width: 28px; }
-  .mdivs { max-height: 44px; }
-  .chip { height: 22px; padding: 0 6px; }
-  .ib { width: 30px; height: 30px; }
-  .acard { height: 44px; width: 98px; }
-  .acard .portrait { width: 30px; height: 36px; }
-}
+/* dřív @media (max-height: 820px) – UI: podle šířky rozhraní po zvětšení */
+:root.uh-820 .selbar { padding: 7px 10px 8px; gap: 6px; }
+:root.uh-820 .selbar header .cls-icon { width: 28px; }
+:root.uh-820 .mdivs { max-height: 44px; }
+:root.uh-820 .chip { height: 22px; padding: 0 6px; }
+:root.uh-820 .ib { width: 30px; height: 30px; }
+:root.uh-820 .acard { height: 44px; width: 98px; }
+:root.uh-820 .acard .portrait { width: 30px; height: 36px; }
+
 
 /* ---- F3: pohyb jako v HOI4 – cíl a odhad příjezdu vybraných divizí ---- */
 .sel-march { display: flex; align-items: center; gap: 7px; padding: 5px 8px; font-size: 13px; color: var(--text-3); background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }

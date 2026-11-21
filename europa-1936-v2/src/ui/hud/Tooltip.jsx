@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
+import { uiScale } from '../scale.js';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { getWorld, TERRAIN_CS, divisionView, marchEta } from '../../engine/index.js';
@@ -47,8 +48,9 @@ export function Tooltip() {
     const el = ref.current;
     if (!el) return undefined;
     const place = () => {
-      const x = Math.min(pointer.x + 18, window.innerWidth - el.offsetWidth - 8);
-      const y = Math.min(pointer.y + 20, window.innerHeight - el.offsetHeight - 8);
+      const k = uiScale();   // UI: bublina je uvnitř zvětšeného rozhraní – souřadnice myši se převedou na jeho px
+      const x = Math.min(pointer.x / k + 18, window.innerWidth / k - el.offsetWidth - 8);
+      const y = Math.min(pointer.y / k + 20, window.innerHeight / k - el.offsetHeight - 8);
       el.style.transform = `translate(${Math.max(4, x)}px, ${Math.max(4, y)}px)`;
     };
     place();

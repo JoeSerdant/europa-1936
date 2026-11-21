@@ -1,6 +1,7 @@
 // Řadič mapy: vlastní kameru a vykreslovač, běží ve smyčce requestAnimationFrame a vykresluje jen když se něco změnilo.
 // React komponenty ho jen ovládají (kamera, výběr, režim) – kreslení samo je mimo React.
 import { mapEffectsOn } from './prefs.js';
+import { uiScale, onUiScale } from '../scale.js';
 import { getWorld } from '../../engine/world.js';
 import { buildGeometry } from './geometry.js';
 import { MapRenderer, FONT_DISPLAY, FONT_TEXT } from './renderer.js';
@@ -180,7 +181,10 @@ export class MapController {
     if (!this.renderer) { this.pending = { ...(this.pending || {}), effects: on }; return; }
     this.renderer.setEffects(on); this.dirty = true;
   }
-  setInsets(i) { this.insets = { l: 0, r: 0, t: 0, b: 0, ...i }; }
+  /** Volná plocha pro pohledy kamery (okraje zakryté panely, v px rozhraní – násobí se měřítkem rozhraní `uiScale`). */
+  setInsets(i) { this.rawInsets = { l: 0, r: 0, t: 0, b: 0, ...i }; const k = uiScale(); this.insets = { l: this.rawInsets.l * k, r: this.rawInsets.r * k, t: this.rawInsets.t * k, b: this.rawInsets.b * k }; }
+  /** Po změně měřítka rozhraní přepočítá okraje. */
+  rescaleInsets() { if (this.rawInsets) this.setInsets(this.rawInsets); }
 
   // ---------------------------------------------------------------- ovládání kamery
   cancelAnim() { this.anim = null; }
@@ -273,3 +277,4 @@ export class MapController {
 }
 
 export const mapController = new MapController();
+onUiScale(() => { mapController.rescaleInsets(); mapController.dirty = true; });   // UI: jiné měřítko rozhraní = jiné okraje pro kameru

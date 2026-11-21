@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { watchUiScale } from './ui/scale.js';
 import '@fontsource/jost/500.css';
 import '@fontsource/jost/600.css';
 import '@fontsource/jost/700.css';
@@ -39,6 +40,7 @@ function makeGrain() {
   } catch { /* bez zrnění se hra obejde */ }
 }
 makeGrain();
+watchUiScale();   // UI: responzivní měřítko rozhraní podle okna
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
