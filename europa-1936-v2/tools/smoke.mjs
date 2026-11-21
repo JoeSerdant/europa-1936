@@ -371,8 +371,16 @@ try {
   check('továrna ze zásobníku přetažená na linku se přidá', (await facSum()) === fac0, `${await facSum()}`);
   await shot('industry-prod');
   await page.getByRole('tab', { name: 'Obchod' }).click();
-  await page.waitForSelector('.ind-res', { timeout: 3000 });
-  check('obchod: tabulka šesti surovin a smlouvy', (await page.locator('.ind-res tbody tr').count()) === 6 && (await page.locator('.ind-trades li').count()) >= 1);
+  await page.waitForSelector('.res-grid', { timeout: 3000 });
+  check('obchod: šest karet surovin, trh a smlouvy', (await page.locator('.res-card').count()) === 6 && (await page.locator('.ind-trades li').count()) >= 1);
+  {
+    const before = await page.locator('.ind-trades li').count();
+    await page.locator('.res-card').nth(2).click();
+    await page.waitForTimeout(200);
+    const buy = page.locator('.mk-buy:not([disabled])').first();
+    if (await buy.count()) { await buy.click(); await page.waitForTimeout(300); }
+    check('obchod: klik na trhu uzavře smlouvu', (await page.locator('.mk-card').count()) === 0 || (await page.locator('.ind-trades li').count()) > before);
+  }
   await shot('industry-trade');
   await page.keyboard.press('Escape');   // M103: panel Stavby by překryl mapové režimy vlevo dole
   await page.keyboard.press('8');

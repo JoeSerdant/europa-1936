@@ -742,3 +742,48 @@ button.st-row:hover { background: var(--ink-3); }
 .dip-bloc { padding: 8px 10px; background: rgba(20, 30, 40, 0.6); box-shadow: inset 0 0 0 1px var(--rule); }
 .dip-detail { border-bottom: 0; padding-bottom: 0; }
 @media (prefers-reduced-motion: reduce) { .prod-screen.dip-panel .dip-side.open { animation: none; } }
+
+/* ---- UI: obchod – karty surovin, trh a smlouvy ---- */
+.trade-cols { grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr); }
+.res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(170px, 14vw, 230px), 1fr)); gap: 8px; }
+.res-card { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; border: 0; color: var(--text); text-align: left; cursor: pointer;
+  background: linear-gradient(180deg, rgba(30, 44, 58, 0.85), rgba(14, 22, 30, 0.9)); box-shadow: inset 0 0 0 1px var(--rule); }
+.res-card:hover { box-shadow: inset 0 0 0 1px var(--rule-hi); }
+.res-card:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--brass); }
+.res-card.on { box-shadow: inset 0 0 0 2px var(--brass); }
+.res-card.lack { background: linear-gradient(180deg, rgba(80, 32, 26, 0.7), rgba(26, 14, 14, 0.92)); }
+.rc-top { display: flex; align-items: center; gap: 8px; }
+.rc-top b { flex: 1; font: 600 15px/1 var(--display); }
+.rc-top em { font: 700 16px/1 var(--display); font-style: normal; font-variant-numeric: tabular-nums; }
+.rc-top em.good, .rc-foot .good { color: #8fd18f; } .rc-top em.bad, .rc-foot .bad { color: #ff9b86; }
+.rc-bar { position: relative; display: flex; height: 10px; background: var(--ink-0); box-shadow: inset 0 0 0 1px var(--rule); }
+.rc-bar i.ext { background: #6aa84f; } .rc-bar i.imp { background: #4c9ae0; }
+.rc-bar s { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--paper); text-decoration: none; }
+.rc-foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-3); }
+.rc-foot i { display: inline-flex; align-items: center; gap: 3px; font-style: normal; }
+.sec-head h3 .res-icon { vertical-align: -4px; }
+.market { display: flex; flex-direction: column; gap: 4px; }
+.mk-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(20, 30, 40, 0.75); box-shadow: inset 0 0 0 1px var(--rule); }
+.mk-card.war { opacity: 0.5; }
+.mk-nm { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mk-nm b { font: 600 13.5px/1 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mk-bar { height: 6px; background: var(--ink-0); } .mk-bar i { display: block; height: 100%; background: linear-gradient(90deg, #4c9ae0, #8fc4f0); }
+.mk-v { font: 600 14px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--paper); }
+.mk-route { color: var(--text-3); }
+.mk-buy { min-width: 38px; height: 28px; border: 0; font: 700 13px/1 var(--display); color: #17120a; background: var(--brass); cursor: pointer; }
+.mk-buy:hover:not(:disabled) { background: var(--brass-hi); }
+.mk-buy:disabled { opacity: 0.35; cursor: default; }
+.convoy-meter { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(20, 30, 40, 0.7); box-shadow: inset 0 0 0 1px var(--rule); }
+.convoy-meter > .icon { color: var(--brass-hi); }
+.convoy-meter > span { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.cv-bar { height: 8px; background: var(--ink-0); } .cv-bar i { display: block; height: 100%; background: #4c9ae0; } .cv-bar i.bad { background: #c8472f; }
+.convoy-meter > b { font: 700 15px/1 var(--display); } .convoy-meter b.bad { color: #ff9b86; }
+.deal-list { display: flex; flex-direction: column; gap: 5px; list-style: none; padding: 0; margin: 0; }
+.deal { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 9px; padding: 8px 10px; background: rgba(20, 30, 40, 0.75); box-shadow: inset 3px 0 0 #6aa84f, inset 0 0 0 1px var(--rule); }
+.deal.cut { box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule); }
+.deal.war { box-shadow: inset 3px 0 0 #b2402f, inset 0 0 0 1px var(--rule); opacity: 0.7; }
+.deal-mid { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.deal-mid b { font: 600 14px/1 var(--display); }
+.deal-mid .muted { display: flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deal-bar { height: 5px; background: var(--ink-0); } .deal-bar i { display: block; height: 100%; background: #6aa84f; }
+.deal-amt { display: inline-flex; align-items: center; gap: 2px; }
