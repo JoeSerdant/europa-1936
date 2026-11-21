@@ -22,6 +22,7 @@ import { aiPacts } from './pacts.js';
 import { advanceInvasions } from './invasion.js';
 import { aiCommand } from '../cmd/index.js';
 import { aiLend } from '../dip/lend.js';
+import { aiVolunteers } from './volunteers.js';
 
 /** Válčí země a některá její armáda má jen automatický plán (nebo žádný)? Pak se strategie spustí hned, ne až za týden. */
 function newWar(state, o) {
@@ -59,6 +60,7 @@ export function* aiDaySteps(state) {
     state = aiDoctrine(state, o);
     state = aiDesign(state, o);   // M97: návrhy variant tanků, lodí a letadel
     state = aiLend(state, o);
+    state = aiVolunteers(state, o);   // F4: dobrovolníci, licence a atašé
     state = aiFuel(state, o);    // M87: dovoz ropy při nedostatku paliva
     state = aiPara(state, o);    // M87: výsadkové divize a výsadky
     state = aiCommand(state, o);

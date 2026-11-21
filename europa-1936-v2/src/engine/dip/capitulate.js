@@ -10,6 +10,7 @@ import { conference, stateValue } from './subjects.js';
 import { addSpirit } from '../nat/spirits.js';
 import { exileCandidate, goIntoExile, dropExiles, markExile, exileHost } from './exile.js';
 import { divisionCount } from '../army/selectors.js';
+import { returnFrom } from './volunteers.js';
 
 /**
  * Konec války bloku (M88): padne-li vedoucí bloku, jeho malí členové, kteří válčili jen kvůli bloku (nikdo proti nim nemá válečný cíl ani oni proti nikomu),
@@ -41,6 +42,7 @@ export function capitulate(state, loser, opts = {}) {
   const all = [...new Set([...prev, ...now])].filter((c) => c !== loser).sort((a, b) => a - b);
   const friends = all.length ? all : 0;
   state = endBlocWar(state, loser);
+  state = returnFrom(state, loser);   // F4: cizí dobrovolníci a expediční sbory se vracejí domů
   const stateOwner = state.stateOwner.slice();
   const ctrl = state.ctrl.slice();
   const foes = enemiesOf(state.mil, loser).filter((c) => !state.dip.cap[c]);   // M95: účastníci mírové konference

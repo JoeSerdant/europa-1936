@@ -32,7 +32,7 @@ describe('začátek', () => {
       expect(e.ws).toBeGreaterThanOrEqual(0); expect(e.ws).toBeLessThanOrEqual(1);
       expect(e.pp).toBe(0);
       for (const cat in LAW_CATS) expect(LAWS[cat][e.laws[cat]]).toBeTruthy();
-      expect(Object.values(e.adv)).toEqual([0, 0, 0, 0]);
+      expect(Object.values(e.adv)).toEqual([0, 0, 0, 0, 0, 0, 0]);
     }
   });
   it('národní hodnoty: Německo odvádí rozšířeně, Británie dobrovolně a s volným obchodem', () => {
@@ -162,7 +162,7 @@ describe('země bez hráče', () => {
     const peace = day(set(createGame({ player: 'GER' }), SOV, { pp: 300 }), 3);
     expect(peace.pol.own[SOV].laws.eco).toBe('civ');
     expect(Object.values(peace.pol.own[SOV].adv).some(Boolean)).toBe(true);
-    expect(Object.values(a.pol.own[GER].adv)).toEqual([0, 0, 0, 0]);   // hráč si řídí sám
+    expect(Object.values(a.pol.own[GER].adv)).toEqual([0, 0, 0, 0, 0, 0, 0]);   // hráč si řídí sám (F4: i vrchní velení)
     void POL_;
   });
 });

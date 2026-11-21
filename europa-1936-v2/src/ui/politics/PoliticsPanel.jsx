@@ -1,6 +1,6 @@
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { politicsOf, focusTree, spiritsOf } from '../../engine/index.js';
+import { politicsOf, focusTree, spiritsOf, ADV_SLOTS, nextElection, formatDate } from '../../engine/index.js';
 import { COUNTRIES, IDEOLOGIES } from '../../data/countries.js';
 import { Flag } from '../common/Flag.jsx';
 import { playerIdx, changeLaw, hireAdv, dismissAdv, backParty } from '../actions.js';
@@ -10,7 +10,8 @@ import { Screen } from '../common/Screen.jsx';
 const pct = (v) => `${Math.round(v * 100)} %`;
 const MODS = { stab: 'stabilita', ws: 'podpora války', cons: 'spotřební zboží', build: 'stavby', prod: 'výroba', extract: 'těžba', imp: 'cena dovozu', man: 'lidská síla', research: 'výzkum' };
 const MODS_ARMY = { atk: 'útok divizí', def: 'obrana divizí', planCap: 'strop plánování', planGain: 'rychlost plánování', supUse: 'spotřeba zásob', speed: 'rychlost divizí', orgRegen: 'obnova organizace', atkArm: 'útok obrněných', atkInf: 'útok pěchoty', defInf: 'obrana pěchoty', hillAtk: 'útok v kopcích', hillDef: 'obrana v kopcích' };
-const modText = (mod, army) => [...Object.entries(mod).map(([k, v]) => [MODS[k], v]), ...Object.entries(army || {}).map(([k, v]) => [MODS_ARMY[k], v])].map(([n, v]) => `${n} ${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)} %`).join(', ');
+const MODS_DOC = { ...MODS_ARMY, fire: 'palba flotil', raid: 'nájezdy na konvoje', escort: 'krytí konvojů', patrol: 'síla hlídek', cas: 'podpora bojů ze vzduchu', bomb: 'bombardování' };   // F4: náčelníci štábů
+const modText = (mod, army, doc) => [...Object.entries(mod || {}).map(([k, v]) => [MODS[k], v]), ...Object.entries(army || {}).map(([k, v]) => [MODS_ARMY[k], v]), ...Object.entries(doc || {}).map(([k, v]) => [MODS_DOC[k] || k, v])].map(([n, v]) => `${n} ${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)} %`).join(', ');
 
 function Meter({ label, value, target, hint, cls }) {
   return (
@@ -53,7 +54,7 @@ function Advisor({ a }) {
           <li key={o.id} className={o.active ? 'on' : ''}>
             <button className="pol-opt" disabled={o.active || !!o.block} onClick={() => hireAdv(a.slot, o.id)} title={o.block || o.info} aria-pressed={o.active}>
               <b>{o.n}</b>
-              <span className="muted">{modText(o.mod)}</span>
+              <span className="muted">{modText(o.mod, null, o.doc)}</span>
               <i>{o.active ? 've službě' : `${o.pp} PM`}</i>
             </button>
           </li>
@@ -63,9 +64,46 @@ function Advisor({ a }) {
   );
 }
 
+/** F4: vrchní velení – tři karty náčelníků štábů (armáda, námořnictvo, letectvo) s volbami jako dlaždicemi. */
+function HighCommand({ list }) {
+  return (
+    <div className="hc-grid">
+      {list.map((a) => (
+        <section key={a.slot} className={`hc-card ${a.current ? 'on' : ''}`} aria-label={a.n}>
+          <header>
+            <span className="hc-ic" aria-hidden="true"><Icon name={ADV_SLOTS[a.slot].icon} size={22} /></span>
+            <span className="hc-nm"><b>{a.n}</b><i className="muted">{a.current ? `${a.current.n}: ${modText(null, null, a.current.doc)}` : 'Neobsazeno'}</i></span>
+            {a.current ? <button className="icon-btn sm" onClick={() => dismissAdv(a.slot)} aria-label={`Propustit: ${a.current.n}`} title="Propustit (cena se nevrací)"><Icon name="close" size={14} /></button> : null}
+          </header>
+          <div className="hc-opts">
+            {a.options.map((o) => (
+              <button key={o.id} className={`hc-opt ${o.active ? 'on' : ''}`} disabled={o.active || !!o.block} onClick={() => hireAdv(a.slot, o.id)} aria-pressed={o.active} title={o.block || o.info}>
+                <b>{o.n}</b>
+                <span>{modText(null, null, o.doc)}</span>
+                <i>{o.active ? 've službě' : `${o.pp} PM`}</i>
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/** F4: příští volby (jen demokracie): datum a odpočet, za války odklad. */
+function Elections({ state, me }) {
+  const day = nextElection(state, me);
+  if (day == null) return null;
+  const left = day - Math.floor(state.tick / 24);
+  return (
+    <p className="lc-elect" title="Ve volbách převezme vládu strana s víc než polovinou podpory; jinak demokraté vládnou dál se silným nebo slabým mandátem (stabilita).">
+      <Icon name="politics" size={14} /> Volby: {formatDate(day * 24)}{left > 0 ? ` (za ${left} d)` : ' (dnes)'}{state.mil.wars.some(([a, b]) => a === me || b === me) ? ' · za války se odkládají' : ''}
+    </p>
+  );
+}
 
 /** Karta státu vlevo: portrét vůdce (vlastní silueta), vláda, podpora ideologií a „národní duchové“ (platné zákony, poradci, splněné cíle). */
-function LeaderCard({ tag, p, spirits }) {
+function LeaderCard({ tag, p, spirits, state, me }) {
   const info = COUNTRIES[tag];
   const pa = p.parties, gov = IDEOLOGIES[pa.gov];
   return (
@@ -90,6 +128,7 @@ function LeaderCard({ tag, p, spirits }) {
           </li>
         ))}
       </ul>
+      <Elections state={state} me={me} />
       {pa.risk && <p className="lc-warn" role="alert">Hrozí převrat: strana „{IDEOLOGIES[pa.rival].name}“ se blíží vládnoucí straně.</p>}
       <h4>Národní duch</h4>
       <ul className="lc-spirits">
@@ -123,14 +162,16 @@ export function PoliticsPanel() {
     )}>
       <div className="prod-body">
         <div className="prod-cols pol-cols">
-          <LeaderCard tag={state.player} p={p} spirits={spirits} />
+          <LeaderCard tag={state.player} p={p} spirits={spirits} state={state} me={me} />
           <div className="prod-left">
             <div className="sec-head"><h3>Zákony</h3></div>
             <div className="law-grid">{p.laws.map((c) => <Law key={c.cat} cat={c} />)}</div>
+            <div className="sec-head"><h3>Vrchní velení</h3><span className="muted">náčelníci štábů: bonusy armády, námořnictva a letectva</span></div>
+            <HighCommand list={p.advisors.filter((a) => ADV_SLOTS[a.slot].hc)} />
           </div>
           <aside className="prod-right">
             <div className="sec-head"><h3>Poradci</h3></div>
-            {p.advisors.map((a) => <Advisor key={a.slot} a={a} />)}
+            {p.advisors.filter((a) => !ADV_SLOTS[a.slot].hc).map((a) => <Advisor key={a.slot} a={a} />)}
           </aside>
         </div>
       </div>

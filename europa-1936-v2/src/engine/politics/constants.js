@@ -23,4 +23,9 @@ export const POL = {
   COUP_CHAOS_DAYS: 365, // dnů trvání ducha „Porevoluční chaos“ po převratu (M74)
   COUP_HIT: 0.15,      // ztráta stability po převratu
   SPY_SUBVERT: 6,      // body, o které zpravodajská operace posílí stranu v cíli
+  ELECT_EVERY: 1461,   // F4 volby: odstup voleb ve dnech u zemí mimo `ELECTIONS`
+  ELECT_WIN: 50,       // jiná strana převezme vládu, má-li ve volbách víc než tolik bodů podpory (a nejvíc ze všech)
+  ELECT_STRONG: 55,    // demokraté s aspoň tolika body získají silný mandát (+ELECT_STAB stability), pod 50 slabou vládu (−ELECT_STAB)
+  ELECT_STAB: 0.03,
+  ELECT_GOV_HIT: 0.05, // ztráta stability při změně vlády ve volbách (převrat COUP_HIT)
 };

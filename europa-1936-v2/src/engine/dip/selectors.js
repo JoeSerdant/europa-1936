@@ -3,7 +3,7 @@ import { getWorld } from '../world.js';
 import { DIP } from './constants.js';
 import { WARGOALS, WARGOAL_IDS } from '../../data/dip/wargoals.js';
 import { relOf, factionOf, sameFaction, warScore, vpHeld, hasCapitulated, isDormant } from './core.js';
-import { atWar } from '../army/war.js';
+import { atWar, hasWar } from '../army/war.js';
 import { overlordOf, autonomyOf, autonomyLevel, autonomyBlock } from './subjects.js';
 import { lendFriend } from './lend.js';
 import { guarantees, guaranteeBlock } from './guarantee.js';
@@ -16,6 +16,9 @@ import { pactOf, pactBlock, pactAccepts, breakBlock, improveBlock, pactOffers } 
 /** Pakt o neútočení se zemí `t` pro rozhraní: { days (jak dlouho platí), breakBlock } nebo null. */
 const pactView = (state, o, t) => { const p = pactOf(state, o, t); return p ? { days: Math.floor((state.tick - p.t) / 24), breakBlock: breakBlock(state, o, t) } : null; };
 import { warBlock, justReady, peaceBlock, inviteBlock } from './commands.js';
+import { volKind, volCap } from './volunteers.js';
+import { attBlock } from './attache.js';
+import { licOffers } from './licence.js';
 
 const idxOf = (o) => (typeof o === 'string' ? getWorld().ownerIdx[o] : o);
 
@@ -26,6 +29,10 @@ export function diplomacyOf(state, o) {
   const fac = factionOf(state, o);
   const myTag = w.owners[o].tag, day = state.tick / 24;
   const list = [];
+  const away = new Map();   // F4: vlastní divize sloužící u jiných zemí (příjemce → počet)
+  let awayAll = 0;
+  for (const d of state.mil.divs) if (d && d.vo === o) { away.set(d.o, (away.get(d.o) || 0) + 1); awayAll++; }
+  const cap = volCap(state, o), att = state.dip.att || [];
   for (let t = 1; t < w.owners.length; t++) {
     if (t === o || isDormant(state, t)) continue;
     const war = atWar(state.mil, o, t);
@@ -53,6 +60,10 @@ export function diplomacyOf(state, o) {
       score: war ? warScore(state, o, t) : 0,
       overlord: overlordOf(state, t), mine: overlordOf(state, t) === o,
       au: autonomyOf(state, t), auLevel: autonomyLevel(autonomyOf(state, t)), tightBlock: autonomyBlock(state, o, t, true), looseBlock: autonomyBlock(state, o, t, false),
+      fighting: hasWar(state.mil, t),
+      volKind: volKind(state, o, t), volAway: away.get(t) || 0, volLeft: Math.max(0, cap - awayAll), volCap: cap,   // F4: dobrovolníci / expediční sbor
+      attMine: att.some((x) => x.a === o && x.b === t), attHere: att.filter((x) => x.b === t).length, attBlock: attBlock(state, o, t),   // F4: atašé
+      lic: licOffers(state, o, t),   // F4: licence, které by od této země šly koupit
       annexBlock: overlordOf(state, t) !== o ? 'Není to vaše loutka.' : state.pol.own[o].pp < DIP.ANNEX_PP ? `Chybí politická moc (${Math.ceil(DIP.ANNEX_PP - state.pol.own[o].pp)}).` : null,
     });
   }

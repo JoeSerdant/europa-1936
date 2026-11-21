@@ -13,6 +13,7 @@ import {
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   orderDrop, dropBlock, AIR, dropNuke, nukeBlock, confClaim, confClaimsDone,
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf,
+  volKind, volBlock, sendVolunteers, recallVolunteers, attBlock, sendAttache, recallAttache, licBlock, buyLicence, PLANES,
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, setDesign, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS, buildRoom, fortRoom,
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
@@ -1092,6 +1093,66 @@ export function lendTo(tag, eq) {
   if (!run(lendLease, me, t, eq, n)) return false;
   toast(`Odesláno: ${EQUIP[eq].n} × ${n} (${countryName(tag)}).`);
   return true;
+}
+
+// ============================================================ dobrovolníci, atašé a licence (F4)
+const divWord = (n) => (n === 1 ? 'divize' : n < 5 ? 'divize' : 'divizí');
+/**
+ * Divize hráče, které by šly zemi `to`: vybrané vlastní divize mimo boj, jinak jedna volná divize (nečinná, nejdřív mimo armády).
+ * Pro expediční sbor se z výběru berou jen divize na území, kam má příjemce přístup (pravidla hlídá `volBlock`).
+ */
+export function volunteerIds(s, me, to) {
+  const sel = uiStore.getState().selDivs.filter((id) => { const d = s.mil.divs[id]; return d && d.o === me && !d.vo && !d.b; });
+  if (sel.length) return sel;
+  if (volKind(s, me, to) !== 'vol') return [];
+  let best = 0;
+  for (let id = s.mil.divs.length - 1; id >= 1; id--) {
+    const d = s.mil.divs[id];
+    if (!d || d.o !== me || d.vo || d.b || d.path.length) continue;
+    if (!best || (s.mil.divs[best].army && !d.army)) best = id;
+  }
+  return best ? [best] : [];
+}
+/** Pošle zemi `tag` dobrovolníky nebo expediční sbor (vybrané divize, jinak jednu volnou); při neúspěchu napíše důvod. */
+export function volunteersTo(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const ids = volunteerIds(s, me, t), kind = volKind(s, me, t);
+  const why = volBlock(s, me, t, ids);
+  if (why) { toast(why); return false; }
+  if (!run(sendVolunteers, me, t, ids)) return false;
+  setUi({ selDivs: NONE });
+  toast(`${kind === 'exp' ? 'Expediční sbor' : 'Dobrovolníci'}: ${ids.length} ${divWord(ids.length)} nyní slouží zemi ${countryName(tag)}.`);
+  return true;
+}
+/** Povolá zpět vlastní divize sloužící u země `tag`. */
+export function recallVolunteersFrom(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  if (!run(recallVolunteers, me, t)) { toast('Nic k povolání (divize v boji se vrátí až po bitvě).'); return false; }
+  toast('Divize se vracejí domů.');
+  return true;
+}
+/** Vyšle nebo povolá vojenského atašé u země `tag`. */
+export function attacheTo(tag, recall = false) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  if (recall) return run(recallAttache, me, t);
+  const why = attBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  const ok = run(sendAttache, me, t);
+  if (ok) toast(`Vojenský atašé odjel do země ${countryName(tag)}.`);
+  return ok;
+}
+/** Koupí od země `tag` licenci na typ `k`. */
+export function licenceFrom(tag, k) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = licBlock(s, me, t, k);
+  if (why) { toast(why); return false; }
+  const ok = run(buyLicence, me, t, k);
+  if (ok) toast(`Licence koupena: ${(EQUIP[k] || PLANES[k] || SHIPS[k]).n}.`);
+  return ok;
 }
 
 // ============================================================ doktríny (M34)

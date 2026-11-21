@@ -82,11 +82,12 @@ export function pushParty(state, o, ideo, v) {
  * Změní vládnoucí ideologii země: ztráta stability a politické moci, členové bloku s nepřátelskou ideologií bloky opouštějí
  * (vedoucí bloku, jehož vláda se změnila, ztrácí ty, kdo teď mají s ním záporný ideologický vztah).
  */
-export function changeGov(state, o, ideo) {
+export function changeGov(state, o, ideo, opts = {}) {
   const own = state.pol && state.pol.own[o];
   if (!own || !own.par || !IDEO_ORDER.includes(ideo) || ideo === own.gov) return state;
-  let s = setOwn(state, o, { gov: ideo, gt: state.tick, stab: Math.max(0.1, own.stab - POL.COUP_HIT), pp: 0 });
-  s = addSpirit(s, o, 'porevolucni_chaos', POL.COUP_CHAOS_DAYS);   // M74: dočasný národní duch
+  const vote = !!opts.vote;   // F4: vláda vzešlá z voleb – menší otřes, bez porevolučního chaosu, politická moc zůstane
+  let s = setOwn(state, o, { gov: ideo, gt: state.tick, stab: Math.max(0.1, own.stab - (vote ? POL.ELECT_GOV_HIT : POL.COUP_HIT)), pp: vote ? own.pp : 0 });
+  if (!vote) s = addSpirit(s, o, 'porevolucni_chaos', POL.COUP_CHAOS_DAYS);   // M74: dočasný národní duch
   const id = s.dip.fac[o];
   if (id) {   // členové, jejichž vláda se s novou vládou o (nebo s vedoucím) neslučuje, blok opouštějí
     const f = s.dip.facs[id];
@@ -100,7 +101,7 @@ export function changeGov(state, o, ideo) {
       s = { ...s, dip: { ...s.dip, fac, facs, ver: s.dip.ver + 1 } };
     }
   }
-  return logAdd(s, { k: 'gov', o, x: ideo });
+  return logAdd(s, vote ? { k: 'gov', o, x: ideo, y: 1 } : { k: 'gov', o, x: ideo });
 }
 
 /** Denní krok stran jedné země: posun podpory, případný převrat. Vrací nový stav `own` (nebo tentýž objekt). */

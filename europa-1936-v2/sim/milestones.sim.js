@@ -9,6 +9,8 @@ it('milníky války', () => {
   const I = (t) => w.ownerIdx[t];
   const pair = (l, a, b) => (l.a === I(a) && l.b === I(b)) || (l.a === I(b) && l.b === I(a));
   const marks = [
+    ['dobrovolníci ve Španělsku', (l) => l.k === 'vol' && (l.b === I('NSP') || l.b === I('SPR'))],   // F4
+    ['konec občanské války ve Španělsku', (l) => l.k === 'cap' && (l.o === I('SPR') || l.o === I('NSP'))],
     ['anšlus', (l) => l.k === 'ult' && l.a === I('GER') && l.b === I('AUS') && l.y],
     ['Sudety', (l) => l.k === 'ult' && l.a === I('GER') && l.b === I('CZE') && l.y],
     ['válka Německo–Polsko', (l) => l.k === 'war' && pair(l, 'GER', 'POL')],
@@ -23,7 +25,7 @@ it('milníky války', () => {
     ['kapitulace Itálie', (l) => l.k === 'cap' && l.o === I('ITA')],
     ['kapitulace Německa', (l) => l.k === 'cap' && l.o === I('GER')],
   ];
-  const got = new Map(), govs = [], wars = [], caps = [];
+  const got = new Map(), govs = [], wars = [], caps = [], vols = [];
   let seen = 0, capLost = '';
   const me = cfg.player ? w.ownerIdx[cfg.player] : 0;
   const last = simulate(cfg, END, (s) => {
@@ -34,6 +36,7 @@ it('milníky války', () => {
       if (l.k === 'gov') govs.push(`${dateOf(s)} ${tagOf(l.o)} → ${l.x}`);
       if (l.k === 'war') wars.push(`${dateOf(s)} ${tagOf(l.a)}–${tagOf(l.b)}`);
       if (l.k === 'cap') caps.push(`${dateOf(s)} ${tagOf(l.o)}`);
+      if (l.k === 'vol') vols.push(`${dateOf(s)} ${tagOf(l.a)}→${tagOf(l.b)} ${l.y}${l.x === 'exp' ? ' (sbor)' : ''}`);   // F4
     }
     seen = s.log.n;
     return false;
@@ -44,6 +47,7 @@ it('milníky války', () => {
   out.push(`změny vlád (${govs.length}): ${govs.join('; ') || 'žádné'}`);
   out.push(`vyhlášené války (${wars.length}): ${wars.join('; ') || 'žádné'}`);
   out.push(`kapitulace (${caps.length}): ${caps.join('; ') || 'žádné'}`);
+  out.push(`dobrovolníci (${vols.length}): ${vols.join('; ') || 'žádní'}`);
   writeReport('milestones', cfg, out);
   expect(got.size).toBeGreaterThanOrEqual(0);
 });

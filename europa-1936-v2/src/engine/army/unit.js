@@ -6,19 +6,25 @@ import { docMods } from '../doc/core.js';
 import { spiritArmyMods, NO_SPIRIT_MODS } from '../nat/spirits.js';
 import { techArmyMods, NO_TECH_ARMY } from '../research/core.js';
 import { isAi, diffRow } from '../ai/core.js';
+import { attMods } from '../dip/attCore.js';
 
 const extraCache = new WeakMap();   // bonusy duchů → Map(bonusy technologií → součet)
-const diffCache = new WeakMap();    // F3: bonusy duchů a technologií → Map(bonusy obtížnosti → součet)
-/** Vojenské bonusy duchů, technologií a obtížnosti (F3: jen AI země, řádek `DIFFICULTY.army`) dohromady. */
-function extraMods(state, o) {
-  const r = spiritTechMods(state, o);
-  const dm = state.ai && state.ai.level && isAi(state, o) ? diffRow(state).army : null;
-  if (!dm) return r;
-  let m = diffCache.get(r);
-  if (!m) { m = new Map(); diffCache.set(r, m); }
-  let q = m.get(dm);
-  if (!q) { q = { ...r }; for (const k in dm) q[k] = (q[k] || 0) + dm[k]; m.set(dm, q); }
+const addCache = new WeakMap();     // F3/F4: součet bonusů → Map(další bonusy → součet)
+/** Součet dvou sad bonusů se stabilní identitou (mezipaměť podle objektů). */
+function addMods(r, x) {
+  let m = addCache.get(r);
+  if (!m) { m = new Map(); addCache.set(r, m); }
+  let q = m.get(x);
+  if (!q) { q = { ...r }; for (const k in x) q[k] = (q[k] || 0) + x[k]; m.set(x, q); }
   return q;
+}
+/** Vojenské bonusy duchů, technologií, obtížnosti (F3: jen AI země, řádek `DIFFICULTY.army`) a cizích atašé (F4) dohromady. */
+function extraMods(state, o) {
+  let r = spiritTechMods(state, o);
+  const dm = state.ai && state.ai.level && isAi(state, o) ? diffRow(state).army : null;
+  if (dm) r = addMods(r, dm);
+  const am = state.dip ? attMods(state.dip, o) : null;
+  return am ? addMods(r, am) : r;
 }
 /** Vojenské bonusy duchů a technologií země dohromady (M96). */
 function spiritTechMods(state, o) {

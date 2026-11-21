@@ -23,3 +23,7 @@ export { aidBlock, deliverAid, overseasDay } from './overseas.js';
 export { stateValue, confClaims, confClaim, confClaimsDone, confFor, bidCost, confRun } from './subjects.js';
 export { exileHost, exileCandidate, goIntoExile, restorable, restoreCountry, exileDay, dropExiles } from './exile.js';
 export { OVERSEAS, OVERSEAS_AID } from '../../data/dip/overseas.js';
+export { coBelligerent, volKind, volAway, volCap, volDest, volBlock, sendVolunteers, recallVolunteers, volDay } from './volunteers.js';
+export { attachesOf, attachesAt, attBlock, sendAttache, recallAttache, attDay } from './attache.js';
+export { attCount, attMods } from './attCore.js';
+export { LIC_KEYS, licCost, licBlock, licOffers, buyLicence } from './licence.js';

@@ -12,6 +12,10 @@ import { PLANES } from '../data/air/planes.js';
 import { ACE_NAMES } from '../engine/air/constants.js';
 import { EQUIP } from '../data/army/index.js';
 import { BUILDINGS } from '../data/industry/buildings.js';
+import { SHIPS } from '../data/navy/ships.js';
+
+const eqName = (k) => (EQUIP[k] || PLANES[k] || SHIPS[k])?.n || k;
+const divs = (n) => `${n} ${n === 1 ? 'divizi' : n < 5 ? 'divize' : 'divizí'}`;
 
 const nm = (o) => getWorld().owners[o]?.name || '?';
 
@@ -46,7 +50,7 @@ export function logLine(e, me = 0) {
     case 'ult': return { icon: 'dip', tone: e.y ? 'info' : 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} předložila ultimátum zemi ${nm(e.b)} (${DEMAND_BY_ID[e.x]?.n || e.x}): ${e.y ? 'požadavek byl přijat.' : 'požadavek byl odmítnut.'}` };
     case 'ultq': return { icon: 'dip', tone: 'bad', world: true, mine: e.a === me || e.b === me, text: `${nm(e.a)} předložila ultimátum zemi ${nm(e.b)} (${DEMAND_BY_ID[e.x]?.n || e.x}).` };
     case 'civil': return { icon: 'swords', tone: 'bad', world: true, mine: e.o === me || e.x === me, text: e.y ? `V zemi ${nm(e.o)} vypukla občanská válka: povstalci vyhlásili stát ${nm(e.x)}.` : `Od země ${nm(e.o)} se oddělil stát ${nm(e.x)}.` };
-    case 'gov': return { icon: 'flag', tone: e.o === me ? 'bad' : 'info', world: true, mine: e.o === me, text: `V zemi ${nm(e.o)} proběhl převrat: vládu převzala strana „${IDEOLOGIES[e.x]?.name || e.x}“.` };
+    case 'gov': return { icon: 'flag', tone: e.o === me ? 'bad' : 'info', world: true, mine: e.o === me, text: e.y ? `V zemi ${nm(e.o)} vyhrála volby strana „${IDEOLOGIES[e.x]?.name || e.x}“ a sestavila vládu.` : `V zemi ${nm(e.o)} proběhl převrat: vládu převzala strana „${IDEOLOGIES[e.x]?.name || e.x}“.` };
     case 'inv': return { icon: 'army', tone: e.b === me ? 'bad' : 'info', world: true, mine: e.o === me || e.b === me, text: e.a ? `${nm(e.o)} vysílá ${e.y} divizí k vylodění u ${w.provName(e.x)} (${nm(e.b)}).` : `${nm(e.o)} posílá ${e.y} divizí jako posily do předmostí u ${w.provName(e.x)}.` };
     case 'lands': return { icon: 'army', tone: 'bad', world: false, mine: true, text: e.y ? `Nepřátelský výsadek (${nm(e.o)}): ${w.provName(e.x)}.` : `Nepřítel (${nm(e.o)}) se vylodil: ${w.provName(e.x)}.` };
     case 'release': return { icon: 'flag', tone: 'info', world: true, mine: e.o === me || e.y === me, text: `${nm(e.o)} z území poražené země ${nm(e.y)} vytvořila loutkový stát ${nm(e.x)}.` };
@@ -66,6 +70,11 @@ export function logLine(e, me = 0) {
     case 'free': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.x].name} se osamostatnila a přestala být loutkou země ${w.owners[e.o].name}.` };
     case 'take': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${nm(e.o)} převzala ${e.y} ${e.y === 1 ? 'stát' : e.y < 5 ? 'státy' : 'států'} země ${nm(e.x)}.` };
     case 'tribute': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${nm(e.x)} musela zaplatit zemi ${nm(e.o)} válečné odškodné.` };
+    case 'vol': return { icon: 'army', tone: 'info', world: true, mine: e.a === me || e.b === me, text: e.x === 'exp' ? `${nm(e.a)} předává zemi ${nm(e.b)} expediční sbor: ${divs(e.y)}.` : `${nm(e.a)} posílá zemi ${nm(e.b)} dobrovolníky: ${divs(e.y)}.` };   // F4
+    case 'volback': return { icon: 'army', tone: 'info', world: false, mine: e.a === me || e.b === me, text: `${divs(e.y)} země ${nm(e.a)} se ${e.x === 'recall' ? 'na povolání' : e.x === 'cap' ? 'po kapitulaci příjemce' : 'po konci války'} vrací ze služby u země ${nm(e.b)}.` };
+    case 'att': return { icon: 'dip', tone: 'info', world: false, mine: e.a === me || e.b === me, text: `${nm(e.a)} vysílá vojenského atašé k zemi ${nm(e.b)}.` };
+    case 'lic': return { icon: 'industry', tone: 'good', world: false, mine: e.a === me || e.b === me, text: `${nm(e.a)} kupuje od země ${nm(e.b)} licenci: ${eqName(e.x)} (úroveň ${e.y}).` };
+    case 'elect': return { icon: 'politics', tone: e.x === 'gov' ? 'bad' : 'info', world: e.x === 'gov', mine: e.o === me, text: e.x === 'war' ? `${nm(e.o)}: volby se kvůli válce odkládají.` : e.x === 'gov' ? `${nm(e.o)}: volby vyhrála strana „${IDEOLOGIES[e.y]?.name || e.y}“ a mění vládu.` : `${nm(e.o)}: volby potvrdily vládu${e.y ? ' se silným mandátem' : ' jen těsně'}.` };
     default: return { icon: 'help', tone: 'info', world: false, mine: false, text: `Neznámý záznam: ${e.k}.` };
   }
 }
@@ -80,5 +89,7 @@ export function logImportant(e, me) {
   if (e.k === 'napq' || e.k === 'napend') return e.b === me;
   if (e.k === 'nap') return !!e.y && (e.a === me || e.b === me);
   if (e.k === 'inv') return e.b === me && !!e.a;
+  if (e.k === 'vol') return e.b === me;   // F4: hráč dostal dobrovolníky
+  if (e.k === 'elect') return e.o === me;
   return e.k === 'cap' || e.k === 'cede' || e.k === 'tech' || e.k === 'focus' || e.k === 'sunk' || e.k === 'landing' || e.k === 'lands' || e.k === 'drop' || e.k === 'built' || e.k === 'doctrine' || e.k === 'free';
 }
