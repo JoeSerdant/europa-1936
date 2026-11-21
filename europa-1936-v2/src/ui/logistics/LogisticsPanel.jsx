@@ -7,20 +7,21 @@ import { playerIdx } from '../actions.js';
 import { fmtInt, fmtNum } from '../format.js';
 import { EQUIP_GROUPS } from '../../data/industry/groups.js';
 import { EquipIcon } from '../industry/EquipIcon.jsx';
+import { ResIcon } from '../common/ResIcon.jsx';
 
 const pct = (v) => `${Math.round(Math.max(0, v) * 100)} %`;
 const groupColor = (e) => (EQUIP_GROUPS.find((g) => g.items.includes(e)) || EQUIP_GROUPS[0]).color;
 
 function Tile({ eq, color }) {   // M104: kreslená ikona výzbroje
-  return <span className="eq-tile" style={{ '--g': color, width: 38, height: 38 }} aria-hidden="true"><EquipIcon eq={eq} size={30} color="var(--paper)" /></span>;
+  return <span className="eq-tile" style={{ '--g': color, width: 48, height: 48 }} aria-hidden="true"><EquipIcon eq={eq} size={38} color="var(--paper)" /></span>;
 }
 
 /** Zásoba paliva (M73): výroba z přebytku ropy, spotřeba motorizovaných divizí, letectva a flotil. */
 function FuelCard({ f }) {
   return (
     <div className={`lg-fuel${f.low ? ' bad' : ''}`} title="Palivo vzniká z přebytku ropy a z továren; spotřebují ho motorizované divize, letectvo na misích a flotily v pohybu. Bez něj zpomalují a slábnou.">
-      <div className="sec-head"><h3>Palivo</h3><span className="muted">zásoba {fmtInt(f.stock)} / {fmtInt(f.cap)}</span></div>
-      <span className="bar"><i style={{ width: `${Math.min(100, (f.stock / Math.max(1, f.cap)) * 100)}%` }} /></span>
+      <div className="sec-head"><h3><ResIcon r="ropa" size={20} /> Palivo</h3><b className="fuel-num">{fmtInt(f.stock)} / {fmtInt(f.cap)}</b></div>
+      <span className="fuel-tank"><i style={{ width: `${Math.min(100, (f.stock / Math.max(1, f.cap)) * 100)}%` }} /><em className={f.gain >= f.use ? 'up' : 'down'}>{f.gain >= f.use ? '▲' : '▼'} {fmtNum(f.gain - f.use, 1)} / den</em></span>
       <p className="muted">Výroba {fmtNum(f.gain, 1)} − spotřeba {fmtNum(f.use, 1)} za den{f.days !== Infinity ? ` · vystačí na ${Math.max(0, Math.floor(f.days))} dní` : ''}{f.ratio < 1 ? ` · pokrytí ${pct(f.ratio)}` : ''}</p>
     </div>
   );
@@ -68,36 +69,45 @@ export function LogisticsPanel() {
       <div className="prod-body">
         <div className="prod-cols">
           <div className="prod-left">
-            <div className="sec-head"><h3>Výzbroj a lodě</h3><span className="muted">výroba za den, efektivita, sklad</span></div>
-            <table className="lg-table" aria-label="Výzbroj">
-              <thead><tr><th></th><th>Druh</th><th title="Linek / továren">Linky</th><th title="Průměrná efektivita linek">Efekt.</th><th title="Kusů za den">Za den</th><th>Sklad</th></tr></thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.e} className={r.lack ? 'bad' : ''}>
-                    <td><Tile eq={r.e} color={r.color} /></td>
-                    <th scope="row">{r.n}</th>
-                    <td>{r.lines ? `${r.lines} / ${r.fac}` : '–'}</td>
-                    <td>{r.lines ? <span className="bar prog"><i style={{ width: `${Math.min(100, r.eff * 100)}%` }} /></span> : '–'}</td>
-                    <td>{r.lines ? fmtNum(r.day, 1) : '–'}</td>
-                    <td className="have">{fmtInt(r.have)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="sec-head"><h3>Výzbroj a lodě</h3><span className="muted">sklad · výroba za den · efektivita linek</span></div>
+            {EQUIP_GROUPS.map((g) => {
+              const items = rows.filter((r) => g.items.includes(r.e));
+              if (!items.length) return null;
+              const top = Math.max(1, ...items.map((r) => r.have));
+              return (
+                <section key={g.id} className="lg-group" style={{ '--g': g.color }} aria-label={g.n}>
+                  <h4>{g.n}</h4>
+                  <div className="lg-tiles">
+                    {items.map((r) => (
+                      <div key={r.e} className={`lg-tile ${r.lack ? 'bad' : ''} ${r.lines ? '' : 'idle'}`} role="group" aria-label={r.n}
+                        title={`${r.n}: sklad ${fmtInt(r.have)}${r.lines ? `, ${fmtNum(r.day, 1)} za den na ${r.lines} ${r.lines === 1 ? 'lince' : 'linkách'} (${r.fac} továren), efektivita ${pct(r.eff)}` : ', nevyrábí se'}${r.lack ? ' – chybí suroviny' : ''}`}>
+                        <Tile eq={r.e} color={r.color} />
+                        <span className="lt-nm">{r.n}</span>
+                        <b className="lt-have">{fmtInt(r.have)}</b>
+                        <span className="lt-bar"><i style={{ width: `${(100 * r.have) / top}%` }} /></span>
+                        <span className="lt-foot">
+                          {r.lines ? <><i className="up">▲ {fmtNum(r.day, 1)}</i><i className="fac" title="Továrny na linkách"><Icon name="industry" size={12} />{r.fac}</i><span className="lt-eff" title={`Efektivita ${pct(r.eff)}`}><i style={{ width: `${Math.min(100, r.eff * 100)}%` }} /></span></> : <i className="muted">nevyrábí se</i>}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
           <aside className="prod-right">
             <div className="sec-head"><h3>Suroviny</h3><span className="muted">bilance za den</span></div>
-            <ul className="lg-res">
+            <div className="lg-res">
               {RES_IDS.map((r) => {
                 const x = sum.res[r] || { ext: 0, imp: 0, exp: 0, dem: 0 };
                 const bal = x.ext + x.imp - x.exp - x.dem;
                 return (
-                  <li key={r} className={bal < -0.05 ? 'bad' : ''} title={`Těžba ${fmtNum(x.ext, 1)} + dovoz ${fmtNum(x.imp, 1)} − vývoz ${fmtNum(x.exp, 1)} − potřeba ${fmtNum(x.dem, 1)}`}>
-                    <span className="ab">{RESOURCES[r].ab}</span><span className="nm">{RESOURCES[r].n}</span><b>{bal > 0 ? '+' : ''}{fmtNum(bal, 1)}</b>
-                  </li>
+                  <span key={r} className={`lg-res-tile ${bal < -0.05 ? 'bad' : ''}`} title={`${RESOURCES[r].n}: těžba ${fmtNum(x.ext, 1)} + dovoz ${fmtNum(x.imp, 1)} − vývoz ${fmtNum(x.exp, 1)} − potřeba ${fmtNum(x.dem, 1)}`}>
+                    <ResIcon r={r} size={26} /><span className="nm">{RESOURCES[r].n}</span><b>{bal > 0 ? '+' : ''}{fmtNum(bal, 1)}</b>
+                  </span>
                 );
               })}
-            </ul>
+            </div>
             <FuelCard f={fuelOf(state, me)} />
             <p className="muted">Zelená bilance znamená přebytek, červená nedostatek: linky pak vyrábějí pomaleji. Chybějící suroviny doplníte v okně Obchod (R).</p>
           </aside>

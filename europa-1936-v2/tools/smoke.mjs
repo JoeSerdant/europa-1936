@@ -406,7 +406,7 @@ try {
   check('lišta nabídek má 17 tlačítek', (await page.locator('.menubar button').count()) === 17);
   await page.keyboard.press('i');
   await page.waitForSelector('.logistics-panel', { timeout: 3000 });
-  check('klávesa I otevře Logistiku s tabulkou výzbroje a surovin', (await ui()).panel === 'logistics' && (await page.locator('.lg-table tbody tr').count()) >= 4 && (await page.locator('.lg-res li').count()) === 6);
+  check('klávesa I otevře Logistiku s dlaždicemi výzbroje po skupinách a surovinami', (await ui()).panel === 'logistics' && (await page.locator('.lg-tile').count()) >= 4 && (await page.locator('.lg-group').count()) >= 2 && (await page.locator('.lg-res-tile').count()) === 6);
   await shot('logistics');
   await page.keyboard.press('g');
   await page.waitForSelector('.spy-panel .ind-new', { timeout: 3000 });
