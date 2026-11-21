@@ -4,8 +4,20 @@ import { Icon } from '../common/Icon.jsx';
 import { navyOf, SHIPS, SHIP_IDS, getWorld, industryOf, NAV_MISSIONS, NAV_MISSION_IDS } from '../../engine/index.js';
 import { playerIdx, newFleet, selectFleet, fleetMission, stopSelectedFleet, disbandSelectedFleet, renameSelectedFleet, selectLabel } from '../actions.js';
 import { fmtInt, fmtDays } from '../format.js';
+import { EquipIcon } from '../industry/EquipIcon.jsx';
 
-const shipsText = (ships) => SHIP_IDS.filter((k) => ships[k]).map((k) => `${ships[k]}× ${SHIPS[k].ab}`).join(' ');
+// UI (jako v HOI4): lodě jako siluety s počty, mise flotily jako ikony, sestavení flotily klikáním nebo přetažením lodí z rezervy.
+const MISSION_ICON = { '': 'stop', patrol: 'eye', raid: 'target', escort: 'shield' };
+
+/** Silueta lodi s počtem (dlaždice). */
+function ShipTile({ k, n, size = 40, dim = false }) {
+  return (
+    <span className={`ship-tile ${dim ? 'dim' : ''}`} title={`${SHIPS[k].n}: ${n}`}>
+      <span className="eq-tile" style={{ '--g': '#7fb5c9', width: size, height: size }} aria-hidden="true"><EquipIcon eq={k} size={Math.round(size * 0.82)} color="var(--paper)" /></span>
+      <b>{fmtInt(n)}</b>
+    </span>
+  );
+}
 
 function Fleet({ f, sel, home }) {
   const [name, setName] = useState(null);
@@ -13,44 +25,62 @@ function Fleet({ f, sel, home }) {
   return (
     <article className={`fleet-card ${sel ? 'on' : ''} ${f.blocked ? 'bad' : ''}`} aria-label={f.nm}>
       <header>
-        {name === null ? <button className="fl-name" onClick={() => selectFleet(sel ? 0 : f.id)} onDoubleClick={() => setName(f.nm)} title="Klik vybere, dvojklik přejmenuje"><b>{f.nm}</b></button>
+        {name === null ? <button className="fl-name" onClick={() => selectFleet(sel ? 0 : f.id)} onDoubleClick={() => setName(f.nm)} title="Klik vybere, dvojklik přejmenuje"><Icon name="ship" size={16} /><b>{f.nm}</b></button>
           : <input className="fl-input" autoFocus value={name} maxLength={40} aria-label="Název flotily" onChange={(e) => setName(e.target.value)}
               onBlur={() => { if (name.trim()) { selectFleet(f.id); renameSelectedFleet(name); } setName(null); }}
               onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'Escape') setName(null); }} />}
-        <span className="muted">{f.count} lodí</span>
+        <span className="fl-state" title={f.moving ? `Plují do: ${f.dest}` : `Stojí: ${f.at}`}><Icon name={f.moving ? 'speed' : 'flag'} size={13} />{f.moving ? f.dest : f.at}{f.speed ? ` · ${f.speed} km/h` : ''}</span>
       </header>
-      <p className="fl-ships">{shipsText(f.ships)}</p>
-      {f.deck ? <p className={`fl-deck ${f.planes < f.deck ? 'low' : ''}`} title="Palubní letouny: první úder v bitvě a podpora bojů na pobřeží. Doplňují se z rezervy letectva v domovském přístavu.">Palubní letouny <b>{f.planes}/{f.deck}</b>{f.planes < f.deck && !atHome ? ' · doplní se v přístavu' : ''}</p> : null}
-      <p className="muted">{f.moving ? `Plují do: ${f.dest}` : `Stojí: ${f.at}`}{f.speed ? ` · ${f.speed} km/h` : ''}{f.blocked ? ' · protivník ovládá oblast' : ''}</p>
-      <div className="fl-missions" role="group" aria-label="Mise flotily">
-        <span className="muted">Mise</span>
-        <button className={`sbtn ${!f.m ? 'primary' : ''}`} aria-pressed={!f.m} onClick={() => fleetMission(f.id, '')} title="Flotila jen drží oblast.">Žádná</button>
-        {NAV_MISSION_IDS.map((m) => <button key={m} className={`sbtn ${f.m === m ? 'primary' : ''}`} aria-pressed={f.m === m} onClick={() => fleetMission(f.id, m)} title={NAV_MISSIONS[m].info}>{NAV_MISSIONS[m].n}</button>)}
+      <div className="fl-ships" aria-label="Lodě">{SHIP_IDS.filter((k) => f.ships[k]).map((k) => <ShipTile key={k} k={k} n={f.ships[k]} size={34} />)}</div>
+      {f.deck ? (
+        <div className={`fl-deck ${f.planes < f.deck ? 'low' : ''}`} title="Palubní letouny: první úder v bitvě a podpora bojů na pobřeží. Doplňují se z rezervy letectva v domovském přístavu.">
+          <Icon name="plane" size={14} /><span className="deck-bar"><i style={{ width: `${(100 * f.planes) / f.deck}%` }} /></span><b>{f.planes}/{f.deck}</b>
+        </div>
+      ) : null}
+      {f.blocked ? <p className="pol-block">Protivník ovládá oblast.</p> : null}
+      <div className="fl-foot">
+        <div className="fl-missions" role="group" aria-label="Mise flotily">
+          {['', ...NAV_MISSION_IDS].map((m) => (
+            <button key={m || 'none'} className={`mis-btn ${(f.m || '') === m ? 'on' : ''}`} aria-pressed={(f.m || '') === m} aria-label={m ? NAV_MISSIONS[m].n : 'Žádná'}
+              onClick={() => fleetMission(f.id, m)} title={m ? `${NAV_MISSIONS[m].n}: ${NAV_MISSIONS[m].info}` : 'Žádná mise: flotila jen drží oblast.'}><Icon name={MISSION_ICON[m]} size={16} /></button>
+          ))}
+        </div>
+        <span className="fl-acts">
+          <button className="icon-btn sm" onClick={() => { selectFleet(f.id); selectLabel(f.p, true); }} title="Ukázat na mapě" aria-label="Ukázat"><Icon name="target" size={15} /></button>
+          {sel ? <button className="icon-btn sm" disabled={!f.moving} onClick={stopSelectedFleet} title="Zastavit" aria-label="Zastavit"><Icon name="stop" size={15} /></button> : null}
+          {sel ? <button className="icon-btn sm" disabled={!atHome} onClick={disbandSelectedFleet} title={atHome ? 'Rozpustit – lodě se vrátí do rezervy' : 'Rozpustit jde jen v domovské oblasti'} aria-label="Rozpustit"><Icon name="trash" size={15} /></button> : null}
+        </span>
       </div>
-      <div className="ind-btns">
-        <button className="sbtn" onClick={() => { selectFleet(f.id); selectLabel(f.p, true); }} title="Ukázat na mapě"><Icon name="target" size={14} />Ukázat</button>
-        {sel ? <button className="sbtn" disabled={!f.moving} onClick={stopSelectedFleet}>Zastavit</button> : null}
-        {sel ? <button className="sbtn" disabled={!atHome} onClick={disbandSelectedFleet} title={atHome ? 'Lodě se vrátí do rezervy' : 'Rozpustit jde jen v domovské oblasti'}>Rozpustit</button> : null}
-      </div>
-      {sel ? <p className="muted">Pravým tlačítkem na mořskou oblast pošlete flotilu na cestu.</p> : null}
+      {sel ? <p className="muted fl-hint">Pravým tlačítkem na mořskou oblast pošlete flotilu na cestu.</p> : null}
     </article>
   );
 }
 
+/** Sestavení flotily: lodě z rezervy se klikem (Shift = všechny) nebo přetažením přesouvají do nové flotily; klik v nové flotile loď vrátí. */
 function FormFleet({ pool }) {
   const [pick, setPick] = useState({});
   const total = SHIP_IDS.reduce((a, k) => a + (pick[k] || 0), 0);
+  const add = (k, all) => setPick((p) => ({ ...p, [k]: Math.min(pool[k] || 0, all ? pool[k] || 0 : (p[k] || 0) + 1) }));
+  const sub = (k) => setPick((p) => ({ ...p, [k]: Math.max(0, (p[k] || 0) - 1) }));
+  const kinds = SHIP_IDS.filter((k) => k !== 'tr' && pool[k]);
   return (
-    <section className="ind-new" aria-label="Nová flotila">
-      <div className="fl-form">
-        {SHIP_IDS.filter((k) => k !== 'tr').map((k) => (
-          <label key={k} className="fl-pick" title={SHIPS[k].info}>
-            <span>{SHIPS[k].n}</span>
-            <input type="number" min="0" max={pool[k] || 0} value={pick[k] || 0} disabled={!pool[k]} aria-label={`Počet: ${SHIPS[k].n}`}
-              onChange={(e) => setPick({ ...pick, [k]: Math.max(0, Math.min(pool[k] || 0, Number(e.target.value) || 0)) })} onKeyDown={(e) => e.stopPropagation()} />
-            <i>z {pool[k] || 0}</i>
-          </label>
-        ))}
+    <section className="fl-form" aria-label="Nová flotila">
+      <div className="fl-pool" aria-label="Rezerva lodí">
+        {kinds.map((k) => {
+          const left = (pool[k] || 0) - (pick[k] || 0);
+          return (
+            <button key={k} className="fl-pick" disabled={left < 1} draggable={left > 0} onDragStart={(e) => { e.dataTransfer.setData('text/plain', k); e.dataTransfer.effectAllowed = 'move'; }}
+              onClick={(e) => add(k, e.shiftKey)} aria-label={`Přidat: ${SHIPS[k].n}`} title={`${SHIPS[k].n} – klik přidá jednu, Shift všechny, nebo přetáhněte do nové flotily. ${SHIPS[k].info || ''}`}>
+              <ShipTile k={k} n={left} dim={left < 1} />
+              <i>{SHIPS[k].n}</i>
+            </button>
+          );
+        })}
+      </div>
+      <div className={`fl-tray ${total ? '' : 'empty'}`} aria-label="Nová flotila" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const k = e.dataTransfer.getData('text/plain'); if (SHIPS[k]) add(k, e.shiftKey); }}>
+        {total ? SHIP_IDS.filter((k) => pick[k]).map((k) => (
+          <button key={k} className="fl-picked" onClick={() => sub(k)} aria-label={`Ubrat: ${SHIPS[k].n}`} title="Klik vrátí loď do rezervy"><ShipTile k={k} n={pick[k]} size={34} /></button>
+        )) : <span className="muted">Sem přetáhněte lodě z rezervy (nebo na ně klikněte).</span>}
       </div>
       <button className="sbtn primary" disabled={total < 1} onClick={() => { if (newFleet(pick)) setPick({}); }}>Sestavit flotilu ({total})</button>
     </section>
@@ -75,9 +105,9 @@ export function NavyPanel() {
           <span className="stat-cell" title="Volné loděnice bez lodní linky"><i>Volné</i><b>{ind.dockFree}</b></span>
           {nv.carrier.deck ? <span className="stat-cell" title={`Palubní letouny: ${nv.carrier.aboard} na palubách z ${nv.carrier.deck} míst, ${nv.carrier.spare} v rezervě (vyrábějte je v okně Výroba; doplňují se v domovském přístavu)`}><i>Paluby</i><b>{nv.carrier.aboard}/{nv.carrier.deck} +{fmtInt(nv.carrier.spare)}</b></span> : null}
         </div>
-        <ul className="eq">
-          {SHIP_IDS.map((k) => <li key={k} title={`${SHIPS[k].n}: celkem ${nv.total[k]}, v rezervě ${nv.pool[k] || 0}`}><i>{SHIPS[k].ab}</i><b>{fmtInt(nv.total[k])}</b></li>)}
-        </ul>
+        <div className="fl-total" aria-label="Lodě celkem">
+          {SHIP_IDS.filter((k) => nv.total[k]).map((k) => <span key={k} title={`${SHIPS[k].n}: celkem ${nv.total[k]}, v rezervě ${nv.pool[k] || 0}`}><ShipTile k={k} n={nv.total[k]} size={30} /></span>)}
+        </div>
         <p className="muted pol-sum">{nv.home ? `Domovský přístav: ${getWorld().provName(nv.home.prov)} (${nv.home.name}).` : 'Žádný přístav – nelze sestavit flotilu.'}{mineBattle ? ' Pozor: některá flotila stojí v oblasti ovládané nepřítelem.' : ''}</p>
       </section>
       <div className="side-scroll">

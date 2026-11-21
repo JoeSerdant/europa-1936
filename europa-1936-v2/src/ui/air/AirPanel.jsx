@@ -9,6 +9,7 @@ import { playerIdx, formAirWing, disbandAirWing, reinforceAirWing, setAirMission
 import { fmtInt } from '../format.js';
 
 const MISSIONS = { air: 'Hlídky', cas: 'Podpora boje', bomb: 'Bombardování' };
+const MISSION_ICON = { '': 'stop', air: 'shield', cas: 'swords', bomb: 'target' };   // UI: mise jako ikony
 const stateName = (s) => getWorld().states[s].n;
 const COLOR = { sti: '#7fb5c9', bit: '#d6b55c', tac: '#d9533a', str: '#b86dd1', pal: '#5fa38a' };
 
@@ -37,15 +38,21 @@ function Wing({ wg, state }) {
       </div>
       <div className="aw-n" title="Počet letadel"><b>{fmtInt(wg.n)}</b><i>letadel</i></div>
       <div className="aw-mission">
-        <select value={m} onChange={(e) => choose(e.target.value)} aria-label="Mise">
-          <option value="">Klid na základně</option>
-          {roles.map((r) => <option key={r} value={r}>{MISSIONS[r]}</option>)}
-        </select>
+        <div className="aw-mis" role="group" aria-label="Mise">
+          {['', ...roles].map((r) => (
+            <button key={r || 'none'} className={`mis-btn ${m === r ? 'on' : ''}`} aria-pressed={m === r} aria-label={r ? MISSIONS[r] : 'Klid na základně'} title={r ? MISSIONS[r] : 'Klid na základně'} onClick={() => choose(r)}>
+              <Icon name={MISSION_ICON[r]} size={16} />
+            </button>
+          ))}
+        </div>
         {m ? (
-          <select value={wg.to} onChange={(e) => setAirMission(wg.id, m, Number(e.target.value))} aria-label="Cílový stát">
-            {targets.map((x) => <option key={x.s} value={x.s}>{stateName(x.s)} · {x.km} km</option>)}
-            {!targets.some((x) => x.s === wg.to) && <option value={wg.to}>{stateName(wg.to)}</option>}
-          </select>
+          <div className="aw-targets" role="group" aria-label="Cílový stát">
+            {(targets.some((x) => x.s === wg.to) ? targets : [{ s: wg.to, km: 0 }, ...targets]).slice(0, 4).map((x) => (
+              <button key={x.s} className={`tg-chip ${wg.to === x.s ? 'on' : ''}`} aria-pressed={wg.to === x.s} onClick={() => setAirMission(wg.id, m, x.s)} title={`${stateName(x.s)}${x.km ? ` · ${x.km} km` : ''}`}>
+                <b>{stateName(x.s)}</b>{x.km ? <i>{x.km} km</i> : null}
+              </button>
+            ))}
+          </div>
         ) : <span className="muted">Vyberte misi.</span>}
       </div>
       <div className="aw-btns">
@@ -73,9 +80,24 @@ function NewWing({ a }) {
       <div className="sec-head"><h3>Nové křídlo</h3><span className="muted">z rezervy</span></div>
       {!types.length ? <p className="muted">V rezervě nejsou letadla. Vyrobíte je na linkách v okně Výroba (Y).</p> : !bases.length ? <p className="muted">Žádné letiště s volným místem. Postavte letiště v okně Stavby (T).</p> : (
         <div className="an-form">
-          <label><span>Typ</span><select value={type} onChange={(e) => setT(e.target.value)} aria-label="Typ letadel">{types.map((x) => <option key={x} value={x}>{PLANES[x].n} ({fmtInt(a.pool[x])})</option>)}</select></label>
-          <label><span>Základna</span><select value={b.s} onChange={(e) => setBase(Number(e.target.value))} aria-label="Letiště">{bases.map((x) => <option key={x.s} value={x.s}>{stateName(x.s)} · volno {x.free}</option>)}</select></label>
-          <label><span>Počet</span><input type="number" min="1" max={max} value={cnt} onChange={(e) => setN(Number(e.target.value))} aria-label="Počet letadel" /></label>
+          <div className="an-types" role="group" aria-label="Typ letadel">
+            {types.map((x) => (
+              <button key={x} className={`af-tile ${type === x ? 'on' : ''}`} aria-pressed={type === x} onClick={() => setT(x)} title={`${PLANES[x].n} – v rezervě ${fmtInt(a.pool[x])}`}>
+                <Tile t={x} size={34} /><b>{fmtInt(a.pool[x])}</b><i>{PLANES[x].ab}</i>
+              </button>
+            ))}
+          </div>
+          <div className="an-bases" role="group" aria-label="Letiště">
+            {bases.slice(0, 8).map((x) => (
+              <button key={x.s} className={`an-base ${b.s === x.s ? 'on' : ''}`} aria-pressed={b.s === x.s} onClick={() => setBase(x.s)} title={`${stateName(x.s)}: volno ${x.free} míst`}>
+                <Icon name="plane" size={14} /><b>{stateName(x.s)}</b><i>+{x.free}</i>
+              </button>
+            ))}
+          </div>
+          <label className="an-count"><span>Počet</span>
+            <input type="range" min="1" max={Math.max(1, max)} value={cnt} onChange={(e) => setN(Number(e.target.value))} aria-label="Počet letadel" />
+            <b>{cnt}</b>
+          </label>
           <button className="sbtn primary" disabled={!max} onClick={() => formAirWing(type, cnt, b.s)}>Sestavit křídlo ({cnt})</button>
         </div>
       )}
@@ -146,7 +168,7 @@ export function AirPanel() {
             <NewWing a={a} />
             <Nukes state={state} me={me} />
             <div className="sec-head"><h3>Rezerva</h3></div>
-            <ul className="eq">{PLANE_IDS.filter((t) => a.types.includes(t) || a.pool[t]).map((t) => <li key={t} title={PLANES[t].n}><i>{PLANES[t].ab}</i><b>{fmtInt(a.pool[t] || 0)}</b></li>)}</ul>
+            <div className="air-reserve">{PLANE_IDS.filter((t) => a.types.includes(t) || a.pool[t]).map((t) => <span key={t} className="ar-tile" title={`${PLANES[t].n}: ${fmtInt(a.pool[t] || 0)} v rezervě`}><Tile t={t} size={34} /><b>{fmtInt(a.pool[t] || 0)}</b></span>)}</div>
             <div className="sec-head"><h3>Letiště ({a.bases.length})</h3><span className="muted">{AIR.PER_LEVEL} letadel na úroveň</span></div>
             <ul className="air-bases">
               {a.bases.map((x) => (

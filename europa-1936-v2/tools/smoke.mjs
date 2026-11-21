@@ -457,9 +457,9 @@ try {
   const wingsOne = await page.locator('.air-wing').count();
   check('filtr typů letadel zúží seznam křídel a druhý klik ho vrátí', wingsOne >= 1 && wingsOne < wingsAll && (await page.locator('.af-tile').first().click(), (await page.locator('.air-wing').count()) === wingsAll), `${wingsOne}/${wingsAll}`);
   const wingBit = page.locator('.air-wing', { hasText: 'Bitevní letoun' }).first();
-  await wingBit.getByLabel('Mise').selectOption('cas');
+  await wingBit.getByRole('button', { name: 'Podpora boje' }).click();
   await page.waitForTimeout(1000);
-  check('mise „Podpora boje“ se zadá křídlu (cíl se nabídne)', (await E(() => window.__e1936.gameStore.getState().air.wings.some((w) => w && w.m === 'cas' && w.o === window.__e1936.engine.getWorld().ownerIdx.GER))) && (await wingBit.getByLabel('Cílový stát').count()) === 1);
+  check('mise „Podpora boje“ se zadá ikonou (cíle se nabídnou jako dlaždice)', (await E(() => window.__e1936.gameStore.getState().air.wings.some((w) => w && w.m === 'cas' && w.o === window.__e1936.engine.getWorld().ownerIdx.GER))) && (await wingBit.locator('.tg-chip').count()) >= 1);
   await shot('air');
   await page.locator('.air-panel .icon-btn.close').click();
   await page.waitForTimeout(300);
@@ -647,7 +647,8 @@ try {
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const pool = s.nav.pool.slice(); pool[o] = { ...pool[o], dd: 4 }; gameStore.setState({ ...s, nav: { ...s.nav, pool } }); });
   await page.waitForSelector('.fl-form', { timeout: 3000 });
   const nFleets0 = await page.locator('.fleet-card').count();
-  await page.getByLabel('Počet: Torpédoborec').fill('3');
+  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Přidat: Torpédoborec' }).click();
+  check('sestavení flotily: klik přesune lodě z rezervy do nové flotily', (await page.locator('.fl-tray .fl-picked').count()) === 1 && /\(3\)/.test(await page.getByRole('button', { name: /Sestavit flotilu/ }).innerText()));
   await page.getByRole('button', { name: /Sestavit flotilu/ }).click();
   await page.waitForFunction(() => window.__e1936.uiStore.getState().fleetSel > 0, null, { timeout: 3000 });
   await page.waitForTimeout(700);
