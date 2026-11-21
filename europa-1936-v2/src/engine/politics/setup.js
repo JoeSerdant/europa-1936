@@ -34,7 +34,7 @@ export function createPol(w) {
   for (let o = 1; o < w.owners.length; o++) {
     const tag = w.owners[o].tag;
     const b = polBase(tag);
-    own.push({ stab: b.stab, ws: b.ws, pp: 0, laws: { ...POL_DEFAULT_LAWS, ...(POL_NATIONAL[tag]?.laws || {}) }, adv: { pol: 0, arm: 0, ind: 0, sci: 0 }, ...startGov(tag) });
+    own.push({ stab: b.stab, ws: b.ws, pp: 0, laws: { ...POL_DEFAULT_LAWS, ...(POL_NATIONAL[tag]?.laws || {}) }, adv: { pol: 0, arm: 0, ind: 0, sci: 0, army: 0, navy: 0, air: 0 }, ...startGov(tag) });
   }
   return { ver: 0, own };
 }

@@ -91,7 +91,7 @@ export function SelectionBar() {
         {view ? <ClsIcon cls={view.cls} size={34} /> : <span className="sel-count">{ids.length}</span>}
         <div className="sel-title">
           <b>{view ? view.name : `${ids.length} ${plural(ids.length, 'divize', 'divize', 'divizí')}`}</b>
-          <span>{mixedOwners ? 'Různé země' : <Flag tag={owner.tag} width={18} />}{view ? ` ${view.tplName}` : ''}</span>
+          <span>{mixedOwners ? 'Různé země' : <Flag tag={owner.tag} width={18} />}{view ? ` ${view.tplName}` : ''}{view && first.vo ? <em className="sel-vol" title={`Dobrovolníci země ${w.owners[first.vo].name}: bojují pod velením země ${owner.name}, doplňuje je jejich původní země`}><Flag tag={w.owners[first.vo].tag} width={16} /> dobrovolníci</em> : null}</span>
         </div>
         {view && <Status status={view.status} supply={view.supply} grace={view.graceHours} />}
         {mine && army && (

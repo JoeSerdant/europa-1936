@@ -524,6 +524,12 @@ try {
   await page.waitForTimeout(250);
   const pol1 = await E(() => { const { gameStore, engine } = window.__e1936; const e = gameStore.getState().pol.own[engine.getWorld().ownerIdx.GER]; return { eco: e.laws.eco, sci: e.adv.sci, pp: e.pp }; });
   check('zákon a poradce se zadají a zaplatí politickou mocí', pol1.eco === 'early' && pol1.sci === 'akademik' && pol1.pp < 400, `${pol1.eco}, ${pol1.sci}, zbývá ${pol1.pp}`);
+  // F4: vrchní velení – tři karty náčelníků štábů, najmutí klikem na dlaždici
+  check('politika má tři karty vrchního velení', (await page.locator('.hc-card').count()) === 3 && (await page.locator('.hc-opt').count()) >= 9);
+  await page.locator('.hc-card').first().getByRole('button', { name: /Teoretik obrněných sil/ }).click();
+  await page.waitForTimeout(250);
+  const hc1 = await E(() => { const { gameStore, engine } = window.__e1936; return gameStore.getState().pol.own[engine.getWorld().ownerIdx.GER].adv.army; });
+  check('náčelník generálního štábu se najme klikem na dlaždici', hc1 === 'nac_tanky', String(hc1));
   await shot('politics');
   await page.keyboard.press('p');
   await page.waitForTimeout(150);
@@ -593,6 +599,31 @@ try {
   await page.getByRole('button', { name: 'Vše', exact: true }).click();
   await shot('diplomacy');
   await E(() => { const { gameStore, engine } = window.__e1936; const w = engine.getWorld(); gameStore.setState(engine.proposePeace(gameStore.getState(), w.ownerIdx.GER, w.ownerIdx.SWE)); });
+  // F4: vojenská pomoc a licence – válka SSSR–Finsko, Německo posílá dobrovolníky a kupuje licenci na pušky
+  await E(() => {
+    const { gameStore, engine } = window.__e1936; const w = engine.getWorld(), G = w.ownerIdx.GER, F = w.ownerIdx.FIN;
+    let s = engine.makePeace(gameStore.getState(), 'GER', 'SWE');
+    s = engine.declareWar(s, 'SOV', 'FIN');
+    const own = s.pol.own.slice(); own[G] = { ...own[G], ws: 0.9, pp: 300 };
+    const lv = s.mil.lv.slice(); lv[F] = { ...(lv[F] || {}), pusky: 4 };
+    const k = G < F ? `${G}-${F}` : `${F}-${G}`;
+    gameStore.setState({ ...s, pol: { ...s.pol, own }, mil: { ...s.mil, lv }, dip: { ...s.dip, rel: { ...s.dip.rel, [k]: 80 } } });
+  });
+  await page.waitForTimeout(900);
+  await page.locator('.dip-search').fill('Finsko');
+  await page.waitForTimeout(200);
+  await page.locator('.dip-card').first().click();
+  await page.waitForTimeout(300);
+  check('detail válčící země nabízí dobrovolníky, atašé a licence', (await page.locator('.dip-detail .dip-act', { hasText: 'Dobrovolníci' }).count()) === 1 && (await page.locator('.dip-detail .dip-act', { hasText: 'Vojenský atašé' }).count()) === 1 && (await page.locator('.dip-lic-tile').count()) >= 1);
+  await page.locator('.dip-detail .dip-act', { hasText: 'Dobrovolníci' }).click();
+  await page.locator('.dip-lic-tile').first().click();
+  await page.waitForTimeout(300);
+  const vol1 = await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(), w = engine.getWorld(); return { n: s.mil.divs.filter((d) => d && d.vo === w.ownerIdx.GER && d.o === w.ownerIdx.FIN).length, lv: s.mil.lv[w.ownerIdx.GER].pusky }; });
+  check('klik pošle divizi jako dobrovolníky a koupí licenci', vol1.n === 1 && vol1.lv === 4, JSON.stringify(vol1));
+  await shot('diplomacy-aid');
+  await E(() => { const { gameStore, engine } = window.__e1936; gameStore.setState(engine.volDay(engine.makePeace(gameStore.getState(), 'SOV', 'FIN'))); });
+  await page.locator('.dip-search').fill('');
+  await page.locator('.dip-search').evaluate((e) => e.blur());   // klávesa D jinak skončí ve vyhledávání
   await page.keyboard.press('d');
   await page.waitForTimeout(150);
 

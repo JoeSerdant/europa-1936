@@ -20,15 +20,16 @@ function dailyReinforce(ctx) {
     const want = Math.min(st.hp - d.hp, st.hp * C.REINF_PER_DAY * (1 + st.healing));
     const frac = want / st.hp;
     const costMen = frac * st.men;
-    const stock = ctx.stock[d.o];
+    const src = d.vo || d.o;   // F4: dobrovolníky a expediční sbor doplňuje jejich původní země
+    const stock = ctx.stock[src];
     let f = 1;
-    if (costMen > 0) f = Math.min(f, ctx.man[d.o] / costMen);
+    if (costMen > 0) f = Math.min(f, ctx.man[src] / costMen);
     for (const e in st.need) { const c = frac * st.need[e]; if (c > 0) f = Math.min(f, (stock[e] || 0) / c); }
     if (f <= 0.001) continue;
     f = Math.min(1, f);
-    const s = editStock(ctx, d.o);
+    const s = editStock(ctx, src);
     for (const e in st.need) s[e] = Math.max(0, s[e] - frac * st.need[e] * f);
-    addMan(ctx, d.o, -costMen * f);
+    addMan(ctx, src, -costMen * f);
     editDiv(ctx, id).hp = Math.min(st.hp, d.hp + want * f);
   }
 }

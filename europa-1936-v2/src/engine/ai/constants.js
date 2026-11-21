@@ -140,4 +140,12 @@ export const AI = {
   PEACE_POSTS_MIN: 12,
   PEACE_SPREAD: 40,                 // příplatek (pixely) za každý už přidělený post – rozloží posty mezi armády
   STAB_MIN: 0.4,                    // nejmenší stabilita pro vyhlášení války
+  VOL_REL: 50,                      // F4: volná historie – AI pošle dobrovolníky jen zemi se shodnou ideologií a vztahem aspoň tolik
+  VOL_N: 2,                         // a nejvýš tolik divizí najednou
+  VOL_WAVE: 365,                    // historičtí dobrovolníci: odstup vln doplnění ve dnech (od začátku okna)
+  ATT_KEEP: 150,                    // atašé vyšle AI jen s aspoň tolika body politické moci
+  LIC_KEEP: 100,                    // licenci zvažuje menší země od tolika bodů politické moci
+  LIC_LEFT: 40,                     // a po nákupu jí musí zbýt aspoň tolik
+  LIC_REL: 50,                      // ve volné historii kupuje i mimo blok od země se vztahem aspoň tolik
+  LIC_KEYS: ['pusky', 'dela', 'pdela', 'podpora', 'ltanky', 'mtanky', 'sti', 'bit', 'tac'],   // co AI licencuje (pořadí = přednost)
 };

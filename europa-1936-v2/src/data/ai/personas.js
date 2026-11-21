@@ -7,13 +7,14 @@
 //  reserve  podíl divizí v záloze v týlu za války
 //  op       způsob útoku: broad (běžný), focus (soustředěný úder na málo cílů), wide (útok po celé šíři), methodical (bez hrr útoků),
 //           weak (útok na slabě hájená místa, obchází silné body)
+//  hc       F4: náčelník generálního štábu, kterého AI najme (id z `ADVISORS`, slot `army`)
 export const PERSONAS = {
-  vyvazena: { n: 'Vyvážené velení', info: 'Běžné složení armády; útočí, když má převahu.', mix: {}, prod: {}, atk: 1, reserve: 0, op: 'broad' },
-  mobilni: { n: 'Pohyblivá válka', info: 'Víc tanků a motorizovaných divizí; úder soustředí na málo míst a prolamuje frontu.', mix: { tank: 0.5, motor: 0.4 }, prod: { ltanky: 1.25, mtanky: 1.25, htanky: 1.1, auta: 1.2, vozy: 1.2 }, atk: 1, reserve: 0, op: 'focus' },
-  masova: { n: 'Masová armáda', info: 'Hodně pěchoty; útočí po celé šíři fronty i s menší převahou.', mix: { pesi: 0.2, tank: -0.3, motor: -0.3 }, prod: { pusky: 1.2, podpora: 0.85 }, atk: 0.9, reserve: 0, op: 'wide' },
-  palebna: { n: 'Palebná převaha', info: 'Silné dělostřelectvo; postupuje metodicky, útočí až s větší převahou a bez hrr útoků.', mix: {}, prod: { dela: 1.3, pdela: 1.2 }, atk: 1.1, reserve: 0, op: 'methodical' },
-  obranna: { n: 'Obrana do hloubky', info: 'Část armád drží v záloze v týlu; útočí jen s velkou převahou a tam, kde je nepřítel slabý.', mix: {}, prod: { pdela: 1.3 }, atk: 1.2, reserve: 0.15, op: 'weak' },
-  slabiny: { n: 'Hledání slabin', info: 'Útočí na slabě hájená místa, obchází silné body a víc se spoléhá na motorizaci.', mix: { motor: 0.25 }, prod: { auta: 1.15 }, atk: 1, reserve: 0, op: 'weak' },
+  vyvazena: { n: 'Vyvážené velení', info: 'Běžné složení armády; útočí, když má převahu.', mix: {}, prod: {}, atk: 1, reserve: 0, op: 'broad', hc: 'nac_zasoby' },
+  mobilni: { n: 'Pohyblivá válka', info: 'Víc tanků a motorizovaných divizí; úder soustředí na málo míst a prolamuje frontu.', mix: { tank: 0.5, motor: 0.4 }, prod: { ltanky: 1.25, mtanky: 1.25, htanky: 1.1, auta: 1.2, vozy: 1.2 }, atk: 1, reserve: 0, op: 'focus', hc: 'nac_tanky' },
+  masova: { n: 'Masová armáda', info: 'Hodně pěchoty; útočí po celé šíři fronty i s menší převahou.', mix: { pesi: 0.2, tank: -0.3, motor: -0.3 }, prod: { pusky: 1.2, podpora: 0.85 }, atk: 0.9, reserve: 0, op: 'wide', hc: 'nac_utok' },
+  palebna: { n: 'Palebná převaha', info: 'Silné dělostřelectvo; postupuje metodicky, útočí až s větší převahou a bez hrr útoků.', mix: {}, prod: { dela: 1.3, pdela: 1.2 }, atk: 1.1, reserve: 0, op: 'methodical', hc: 'nac_plan' },
+  obranna: { n: 'Obrana do hloubky', info: 'Část armád drží v záloze v týlu; útočí jen s velkou převahou a tam, kde je nepřítel slabý.', mix: {}, prod: { pdela: 1.3 }, atk: 1.2, reserve: 0.15, op: 'weak', hc: 'nac_obrana' },
+  slabiny: { n: 'Hledání slabin', info: 'Útočí na slabě hájená místa, obchází silné body a víc se spoléhá na motorizaci.', mix: { motor: 0.25 }, prod: { auta: 1.15 }, atk: 1, reserve: 0, op: 'weak', hc: 'nac_zasoby' },
 };
 export const PERSONA_IDS = Object.keys(PERSONAS);
 

@@ -69,4 +69,21 @@ export const DIP = {
   RESTORE_MAN: 50000,     // nejmenší lidská síla obnovené země
   VICTORY_DAYS: 180,      // dnů trvání ducha „Vítězná nálada“ po kapitulaci protivníka (M74)
   ANNEX_PP: 150,          // cena anexe vlastní loutky        // bonus za shodnou ideologii
+  // F4 – dobrovolníci a expediční sbory (země předá divize jiné zemi ve válce)
+  VOL_WS: 0.4,            // dobrovolníky posílá jen země s podporou války aspoň tolik
+  VOL_REL: 10,            // a se vztahem k příjemci aspoň tolik (blok stačí)
+  VOL_MIN_ARMY: 10,       // dobrovolníky posílá jen země s aspoň tolika divizemi
+  VOL_SHARE: 0.1,         // nejvýš tento podíl vlastních divizí jako dobrovolníci
+  VOL_MAX: 8,             // a nejvýš tolik divizí
+  VOL_REL_GAIN: 10,       // zlepšení vztahu příjemce k odesílateli
+  // F4 – licenční výroba (odkup úrovně výzbroje od jiné země)
+  LIC_PP: 15,             // cena za každou úroveň rozdílu v politické moci (spojenci v bloku polovinu)
+  LIC_REL: 25,            // licenci prodá jen země se vztahem aspoň tolik (blok, pán a loutka vždy)
+  LIC_REL_GAIN: 5,        // zlepšení vztahu po prodeji licence
+  // F4 – vojenský atašé
+  ATT_PP: 25,             // cena vyslání v politické moci
+  ATT_MAX: 2,             // nejvíc atašé, které jedna země vyšle
+  ATT_XP: 0.3,            // denní zkušenosti armády odesílatele za každého atašé
+  ATT_ATK: 0.03,          // bonus útoku a obrany divizí příjemce za každého atašé (počítají se nejvýš tři)
+  ATT_REL: 10,            // zlepšení vztahu příjemce k odesílateli
 };

@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import { useGameSlow } from '../store.js';
+import { useGameSlow, useUi } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS, capLimitOf, ideologyOf, divisionCount, WARGOALS } from '../../engine/index.js';
+import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS, capLimitOf, ideologyOf, divisionCount, WARGOALS, volBlock } from '../../engine/index.js';
+import { EquipIcon } from '../industry/EquipIcon.jsx';
+import { EQUIP_GROUPS } from '../../data/industry/groups.js';
 import { IDEOLOGIES, COUNTRIES } from '../../data/countries.js';
-import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, offerPactTo, breakPactWith, answerPactFrom, improveWith, demandFrom, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
+import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, offerPactTo, breakPactWith, answerPactFrom, improveWith, demandFrom, foundBloc, inviteBloc, leaveBloc, selectLabel, volunteerIds, volunteersTo, recallVolunteersFrom, attacheTo, licenceFrom } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -25,6 +27,8 @@ function badgesOf(c) {
   if (c.mine) b.push(['ally', 'chain', 'Vaše loutka']);
   else if (c.overlord) b.push(['cap', 'chain', 'Loutka jiné země']);
   if (c.capitulated) b.push(['cap', 'flag', c.exile ? 'Vláda v exilu' : 'Kapitulovala']);
+  if (c.volAway) b.push(['ally', 'army', `Slouží tam ${c.volAway} vašich divizí`]);   // F4
+  if (c.attMine) b.push(['ally', 'eye', 'Máte tam vojenského atašé']);
   if (c.just) b.push(['just', 'scroll', c.just.done ? 'Válka ospravedlněna' : `Ospravedlnění: ještě ${c.just.left} d`]);
   return b;
 }
@@ -58,9 +62,9 @@ function Card({ c, on, onPick }) {
 }
 
 /** Dlaždice akce: ikona, název, cena; zakázaná ukáže důvod v nápovědě. */
-function Act({ icon, n, cost, onClick, block, tone = '' }) {
+function Act({ icon, n, cost, onClick, block, tone = '', hint = '' }) {
   return (
-    <button className={`dip-act ${tone}`} disabled={!!block} onClick={onClick} title={block || n} aria-label={n}>
+    <button className={`dip-act ${tone}`} disabled={!!block} onClick={onClick} title={block || hint || n} aria-label={n}>
       <Icon name={icon} size={20} />
       <b>{n}</b>
       {cost ? <i>{cost}</i> : null}
@@ -80,6 +84,41 @@ function Lend({ c, stock }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+const groupColor = (k) => (EQUIP_GROUPS.find((g) => g.items.includes(k)) || EQUIP_GROUPS[0]).color;
+
+/** F4: dobrovolníci nebo expediční sbor (vybrané divize, jinak jedna volná), povolání zpět a vojenský atašé. */
+function Help({ c, state, me }) {
+  useUi((s) => s.selDivs);   // výběr divizí mění, co se pošle
+  const ids = c.volKind ? volunteerIds(state, me, c.o) : [];
+  const block = c.volKind ? volBlock(state, me, c.o, ids) : null;
+  const exp = c.volKind === 'exp';
+  return (
+    <div className="dip-acts">
+      {c.volKind ? <Act icon="army" n={exp ? 'Expediční sbor' : 'Dobrovolníci'} cost={exp ? `${ids.length} vybraných divizí` : `${ids.length || 1} div. · volno ${c.volLeft}/${c.volCap}`} onClick={() => volunteersTo(c.tag)}
+        block={block} hint={exp ? 'Předá vybrané divize (zůstanou na místě); bojují pod velením spojence, doplňujete je vy.' : 'Pošle vybrané divize (nebo jednu volnou) do hlavního města země; bojují pod jejím velením, doplňujete je vy a zkušenosti z bojů máte vy.'} /> : null}
+      {c.volAway > 0 ? <Act icon="flag" n={`Povolat zpět (${c.volAway})`} onClick={() => recallVolunteersFrom(c.tag)} hint="Divize se vrátí domů (ty v boji až po bitvě)." /> : null}
+      {c.attMine ? <Act icon="eye" n="Povolat atašé" onClick={() => attacheTo(c.tag, true)} />
+        : <Act icon="eye" n="Vojenský atašé" cost={`${DIP.ATT_PP} PM`} onClick={() => attacheTo(c.tag)} block={c.attBlock} hint={`Pozorovatel v cizí válce: vaše armáda získává zkušenosti, divize země mají útok a obranu +${Math.round(DIP.ATT_ATK * 100)} %.`} />}
+    </div>
+  );
+}
+
+/** F4: licence na lepší výzbroj – dlaždice se siluetou, úrovní (vaše → jejich) a cenou. */
+function Licences({ c }) {
+  return (
+    <div className="dip-lic-grid" role="group" aria-label="Licence">
+      {c.lic.map((l) => (
+        <button key={l.k} className="dip-lic-tile" disabled={!!l.block} onClick={() => licenceFrom(c.tag, l.k)} aria-label={`Licence: ${l.n}`}
+          title={l.block ? `${l.n}: ${l.block}` : `${l.n}: úroveň ${l.mine} → ${l.theirs} za ${l.cost} PM`}>
+          <span className="eq-tile" style={{ '--g': groupColor(l.k), width: 40, height: 40 }} aria-hidden="true"><EquipIcon eq={l.k} size={32} color="var(--paper)" /></span>
+          <span className="lic-lv"><i>{l.mine}</i><em>›</em><b>{l.theirs}</b></span>
+          <i className="lic-cost">{l.cost} PM</i>
+        </button>
+      ))}
     </div>
   );
 }
@@ -152,6 +191,8 @@ function Detail({ c, state, me, onClose }) {
         </>
       )}
 
+      {!c.war && (c.fighting || c.volAway > 0 || c.attMine) && (<><h4>Vojenská pomoc</h4><Help c={c} state={state} me={me} /></>)}
+      {!c.war && c.lic.length > 0 && (<><h4>Licence na výzbroj</h4><Licences c={c} /></>)}
       {c.friend && (<><h4>Půjčka a pronájem</h4><Lend c={c} stock={state.mil.stock[me]} /></>)}
     </section>
   );

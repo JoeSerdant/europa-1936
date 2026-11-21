@@ -1101,6 +1101,42 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   ale země nekapituluje (`cap` = 0), nestane se loutkou a žije dál jako AI země (záznam deníku `cede`). Pokračovací válka: řádek `HIST_WARS`
   Finsko → SSSR s `with: 'GER'` – Finsko ospravedlňuje od 1. 5. 1941 a válku začne, až když SSSR válčí s Německem.
 
+## 4zzzz. Funkce HOI4 – vlna 1 (F4, `GAME_VERSION = 50`)
+
+Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a dat). Tvar stavu: divize může mít pole `vo`, `dip.att = [{ a, b }]`,
+`pol.own[o].adv` má navíc sloty `army`, `navy`, `air` (vše součástí `validateState` a čisté JSON).
+
+- **Dobrovolníci a expediční sbor** (`dip/volunteers.js`): předaná divize má vlastníka `o` = příjemce (bojuje, pohybuje se, zásobuje a velí jí
+  příjemce, AI ji zařadí do svých armád) a `vo` = původní země. Doplňuje ji výzbrojí a lidskou silou původní země (`dailyReinforce`), statistiky
+  má ze své šablony (úrovně výzbroje původní země), zkušenosti z jejích bojů dostává původní země (`docDay`). `volKind(state, from, to)`:
+  `'exp'` = spolubojovník (společný nepřítel) předá libovolné divize, zůstanou na místě (příjemce tam musí mít přístup); `'vol'` = země mimo válku
+  pošle nejvýš `volCap` divizí (`DIP.VOL_SHARE` armády, nejvýš `DIP.VOL_MAX`, armáda aspoň `DIP.VOL_MIN_ARMY`) při podpoře války
+  `DIP.VOL_WS` a vztahu `DIP.VOL_REL` (blok stačí); objeví se v hlavním městě příjemce (`volDest`). Návrat: `recallVolunteers` (divize v boji až po
+  bitvě), `volDay` (příjemce už neválčí, je s původní zemí ve válce), `returnFrom` v `capitulate`; padne-li původní země, zůstanou příjemci.
+  AI: historické řádky `HIST_VOL` (Itálie a Německo ve Španělsku; vlny doplnění po `AI.VOL_WAVE` dnech), ve volné historii obecná pomoc
+  zemi se shodnou ideologií (`AI.VOL_REL`, `AI.VOL_N`). Sovětská pomoc republice zůstává jen výzbrojí – se sovětskými divizemi
+  občanská válka neskončila.
+- **Vojenský atašé** (`dip/attache.js`, jádro `attCore.js`): země, která neválčí s příjemcem ani s jeho nepřáteli, vyšle k válčící zemi atašé
+  (`DIP.ATT_PP`, nejvýš `DIP.ATT_MAX`): odesílatel denně `DIP.ATT_XP` zkušeností armády za atašé, divize příjemce útok a obranu +`DIP.ATT_ATK`
+  za atašé (nejvýš tři; `attMods` v `extraMods`). Zaniká povoláním nebo v `attDay`. AI je vysílá jen ve volné historii.
+- **Licenční výroba** (`dip/licence.js`): `buyLicence(state, a, b, typ)` zapíše `mil.lv[a][typ]` = úroveň prodávajícího (jako po výzkumu)
+  za `DIP.LIC_PP` politické moci za úroveň rozdílu (spojenci v bloku, pán a loutka polovinu); prodá jen země, se kterou kupující neválčí a která
+  mu věří (blok, pán a loutka, nebo vztah `DIP.LIC_REL`), jen na odemčený typ (`LIC_KEYS` = typy, jejichž úroveň zvyšuje některá technologie).
+  AI: menší země měsíčně od spojence (s historickou AI jen blok, pán a loutka; `AI.LIC_*`).
+- **Volby** (`politics/elections.js`, data `ELECTIONS`): demokracie volí v termínech podle skutečných volebních období (jinak každé
+  `POL.ELECT_EVERY` dní od dne podle indexu země); za války se volby odkládají. Strana s víc než `POL.ELECT_WIN` body a nejvíc ze všech převezme
+  vládu (`changeGov(…, { vote: true })`: menší ztráta stability `POL.ELECT_GOV_HIT`, bez porevolučního chaosu); jinak demokraté se silným
+  (≥ `POL.ELECT_STRONG`, stabilita +`POL.ELECT_STAB`) nebo slabým mandátem (< 50, −). S historickou AI volby vládu AI země nemění. Termín je
+  čistá funkce dne (`nextElection`), žádný stav; karta vůdce v okně Politika ukazuje příští volby.
+- **Vrchní velení** (náčelníci štábů): sloty `army`, `navy`, `air` v `ADV_SLOTS` (`hc: true`), volby v `ADVISORS` s polem `doc` (klíče doktrín:
+  útok, obrana, útok obrněných, rychlost plánování, spotřeba zásob, palba flotil, nájezdy, krytí konvojů, hlídky, podpora bojů, bombardování).
+  Bonus čte jen `docMods` (mezipaměť podle hotových doktrín a obsazení vrchního velení). AI najímá náčelníky po ostatních poradcích:
+  náčelníka generálního štábu podle stylu velení (`PERSONAS[].hc`), ostatní podle země (`rand01`).
+- **Rozhraní**: detail země v Diplomacii má skupinu „Vojenská pomoc“ (dobrovolníci / expediční sbor: vybrané divize, jinak jedna volná;
+  povolání zpět; atašé) a „Licence na výzbroj“ (dlaždice se siluetou, úrovní a cenou); okno Politika kartu „Vrchní velení“ se třemi náčelníky
+  jako dlaždicemi a termín voleb u vůdce; bublina a lišta výběru označí dobrovolníky vlajkou původní země. Deník: `vol` (svět), `volback`,
+  `att`, `lic`, `elect` (jen s hráčem), `gov` s `y = 1` = vláda z voleb.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1307,6 +1343,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M103** | **Stavby jako v HOI4, plány na mapě, přiblížení cílů**: volba budovy a klikání na státy (režim mapy Stavby), barevné linie front a velké šípy útoku, přiblížení stromu cílů | **hotovo** |
 | **M104** | **Výroba jako v HOI4**: kreslené ikony výzbroje, řada továren u linky (klik a tažení), zásobník volných továren s přetahováním | **hotovo** |
 | **M105** | **Výzkum s ikonami a okna u kraje**: kreslené ikony technologií, klik na kartu zahájí výzkum, sedm oken jako panel vlevo nad mapou | **hotovo** |
+| **F4a** | **Funkce HOI4 – vlna 1**: dobrovolníci a expediční sbory, vojenský atašé, licenční výroba, volby v demokraciích, vrchní velení (náčelníci štábů) | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

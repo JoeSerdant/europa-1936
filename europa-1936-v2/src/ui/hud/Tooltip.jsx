@@ -27,6 +27,7 @@ function UnitLines({ ids, state }) {
     <>
       <b>{view ? view.name : `${ids.length} ${ids.length < 5 ? 'divize' : 'divizí'}`}</b>
       <span>{mixed ? 'Různé země' : <><Flag tag={owner.tag} width={20} /> {owner.name}</>}{view ? ` · ${view.tplName}` : ''}</span>
+      {view && first.vo ? <span><Flag tag={w.owners[first.vo].tag} width={18} /> Dobrovolníci země {w.owners[first.vo].name}</span> : null}
       <span>Síla {pct(sum.hp)} · Organizace {pct(sum.org)}</span>
       <span>{view ? STATUS_NAMES[view.status] : Object.entries(sum.classes).map(([k, n]) => `${CLS_NAMES[k]} ${n}`).join(', ')}</span>
       {march && march.hours >= 0 ? <span className="tip-march">Pochod do {w.provName(march.dest)} · příjezd asi za {fmtEta(march.hours)}</span> : null}

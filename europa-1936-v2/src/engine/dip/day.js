@@ -12,6 +12,8 @@ import { overseasDay } from './overseas.js';
 import { exileDay } from './exile.js';
 import { civilDay, isCivilWar } from '../civil/index.js';
 import { CAP_LIMITS, HIST_STRATEGIES } from '../../data/ai/strategies.js';
+import { volDay } from './volunteers.js';
+import { attDay } from './attache.js';
 
 /** Hranice kapitulace země (M92): `CAP_LIMITS` podle tagu, jinak výchozí `DIP.CAP_SHARE` a `DIP.CAP_CAPITAL_SHARE`. */
 export function capLimitOf(o) {
@@ -89,5 +91,6 @@ export function dipDay(state) {
     if (nv !== v) { if (!relCopy) { rel = { ...rel }; relCopy = true; } if (nv === 0) delete rel[k]; else rel[k] = nv; }
   }
   if (just !== state.dip.just || rel !== state.dip.rel) state = { ...state, dip: { ...state.dip, just, rel } };
+  state = attDay(volDay(state));   // F4: dobrovolníci po konci války domů, atašé u zemí, které už neválčí
   return accessDay(state);   // M67: dohody s kapitulovanými a válečnými protivníky zaniknou, cizinci bez práva na cizím území odejdou domů
 }
