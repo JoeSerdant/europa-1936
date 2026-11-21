@@ -371,8 +371,16 @@ try {
   check('továrna ze zásobníku přetažená na linku se přidá', (await facSum()) === fac0, `${await facSum()}`);
   await shot('industry-prod');
   await page.getByRole('tab', { name: 'Obchod' }).click();
-  await page.waitForSelector('.ind-res', { timeout: 3000 });
-  check('obchod: tabulka šesti surovin a smlouvy', (await page.locator('.ind-res tbody tr').count()) === 6 && (await page.locator('.ind-trades li').count()) >= 1);
+  await page.waitForSelector('.res-grid', { timeout: 3000 });
+  check('obchod: šest karet surovin, trh a smlouvy', (await page.locator('.res-card').count()) === 6 && (await page.locator('.ind-trades li').count()) >= 1);
+  {
+    const before = await page.locator('.ind-trades li').count();
+    await page.locator('.res-card').nth(2).click();
+    await page.waitForTimeout(200);
+    const buy = page.locator('.mk-buy:not([disabled])').first();
+    if (await buy.count()) { await buy.click(); await page.waitForTimeout(300); }
+    check('obchod: klik na trhu uzavře smlouvu', (await page.locator('.mk-card').count()) === 0 || (await page.locator('.ind-trades li').count()) > before);
+  }
   await shot('industry-trade');
   await page.keyboard.press('Escape');   // M103: panel Stavby by překryl mapové režimy vlevo dole
   await page.keyboard.press('8');
@@ -398,7 +406,7 @@ try {
   check('lišta nabídek má 17 tlačítek', (await page.locator('.menubar button').count()) === 17);
   await page.keyboard.press('i');
   await page.waitForSelector('.logistics-panel', { timeout: 3000 });
-  check('klávesa I otevře Logistiku s tabulkou výzbroje a surovin', (await ui()).panel === 'logistics' && (await page.locator('.lg-table tbody tr').count()) >= 4 && (await page.locator('.lg-res li').count()) === 6);
+  check('klávesa I otevře Logistiku s dlaždicemi výzbroje po skupinách a surovinami', (await ui()).panel === 'logistics' && (await page.locator('.lg-tile').count()) >= 4 && (await page.locator('.lg-group').count()) >= 2 && (await page.locator('.lg-res-tile').count()) === 6);
   await shot('logistics');
   await page.keyboard.press('g');
   await page.waitForSelector('.spy-panel .ind-new', { timeout: 3000 });
@@ -449,9 +457,9 @@ try {
   const wingsOne = await page.locator('.air-wing').count();
   check('filtr typů letadel zúží seznam křídel a druhý klik ho vrátí', wingsOne >= 1 && wingsOne < wingsAll && (await page.locator('.af-tile').first().click(), (await page.locator('.air-wing').count()) === wingsAll), `${wingsOne}/${wingsAll}`);
   const wingBit = page.locator('.air-wing', { hasText: 'Bitevní letoun' }).first();
-  await wingBit.getByLabel('Mise').selectOption('cas');
+  await wingBit.getByRole('button', { name: 'Podpora boje' }).click();
   await page.waitForTimeout(1000);
-  check('mise „Podpora boje“ se zadá křídlu (cíl se nabídne)', (await E(() => window.__e1936.gameStore.getState().air.wings.some((w) => w && w.m === 'cas' && w.o === window.__e1936.engine.getWorld().ownerIdx.GER))) && (await wingBit.getByLabel('Cílový stát').count()) === 1);
+  check('mise „Podpora boje“ se zadá ikonou (cíle se nabídnou jako dlaždice)', (await E(() => window.__e1936.gameStore.getState().air.wings.some((w) => w && w.m === 'cas' && w.o === window.__e1936.engine.getWorld().ownerIdx.GER))) && (await wingBit.locator('.tg-chip').count()) >= 1);
   await shot('air');
   await page.locator('.air-panel .icon-btn.close').click();
   await page.waitForTimeout(300);
@@ -572,13 +580,17 @@ try {
   // diplomacie (M23): panel Diplomacie (D), seznam zemí, rozbalení řádku, blok
   await page.keyboard.press('d');
   await page.waitForSelector('.dip-panel', { timeout: 3000 });
-  check('klávesa D otevře panel Diplomacie se seznamem zemí', (await ui()).panel === 'dip' && (await page.locator('.dip-row').count()) >= 30);
+  check('klávesa D otevře panel Diplomacie s kartami zemí', (await ui()).panel === 'dip' && (await page.locator('.dip-card').count()) >= 30);
   await E(() => { const { gameStore, engine } = window.__e1936; gameStore.setState(engine.declareWar(gameStore.getState(), 'GER', 'SWE')); });
   await page.waitForTimeout(900);
-  check('země ve válce jsou v seznamu první a označené', (await page.locator('.dip-row.war').count()) >= 1 && (await page.locator('.dip-list li').first().getAttribute('class')).includes('war'));
-  await page.locator('.dip-head').nth(3).click();
-  await page.waitForSelector('.dip-body', { timeout: 3000 });
-  check('řádek země se rozbalí s akcemi', (await page.locator('.dip-body .sbtn').count()) >= 2);
+  check('země ve válce jsou v mřížce první a označené', (await page.locator('.dip-card.war').count()) >= 1 && (await page.locator('.dip-grid .dip-card').first().getAttribute('class')).includes('war'));
+  await page.locator('.dip-card').nth(3).click();
+  await page.waitForTimeout(250);
+  check('klik na kartu vysune detail země s ukazatelem vztahu a dlaždicemi akcí', (await page.locator('.dip-side.open .dip-detail .rel-gauge').count()) >= 1 && (await page.locator('.dip-detail .dip-act').count()) >= 3 && (await page.locator('.dip-side.open').isVisible()));
+  await page.getByRole('button', { name: 'Válka', exact: true }).click();
+  await page.waitForTimeout(200);
+  check('filtr Válka ukáže jen země ve válce', (await page.locator('.dip-card').count()) >= 1 && (await page.locator('.dip-card:not(.war)').count()) === 0);
+  await page.getByRole('button', { name: 'Vše', exact: true }).click();
   await shot('diplomacy');
   await E(() => { const { gameStore, engine } = window.__e1936; const w = engine.getWorld(); gameStore.setState(engine.proposePeace(gameStore.getState(), w.ownerIdx.GER, w.ownerIdx.SWE)); });
   await page.keyboard.press('d');
@@ -593,6 +605,8 @@ try {
   await page.keyboard.press('l');
   await page.waitForSelector('.log-panel', { timeout: 3000 });
   check('klávesa L otevře panel Zprávy se záznamy', (await ui()).panel === 'log' && (await page.locator('.log-row').count()) >= 3);
+  await page.mouse.move(400, 400);   // nápověda upozornění (myš nad ikonou) by v malém okně zakryla záložky
+  await page.waitForTimeout(150);
   await page.getByRole('tab', { name: 'Moje' }).click();
   await page.waitForTimeout(150);
   const mineRows = await page.locator('.log-row').count();
@@ -635,7 +649,8 @@ try {
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const pool = s.nav.pool.slice(); pool[o] = { ...pool[o], dd: 4 }; gameStore.setState({ ...s, nav: { ...s.nav, pool } }); });
   await page.waitForSelector('.fl-form', { timeout: 3000 });
   const nFleets0 = await page.locator('.fleet-card').count();
-  await page.getByLabel('Počet: Torpédoborec').fill('3');
+  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Přidat: Torpédoborec' }).click();
+  check('sestavení flotily: klik přesune lodě z rezervy do nové flotily', (await page.locator('.fl-tray .fl-picked').count()) === 1 && /\(3\)/.test(await page.getByRole('button', { name: /Sestavit flotilu/ }).innerText()));
   await page.getByRole('button', { name: /Sestavit flotilu/ }).click();
   await page.waitForFunction(() => window.__e1936.uiStore.getState().fleetSel > 0, null, { timeout: 3000 });
   await page.waitForTimeout(700);

@@ -2,6 +2,7 @@
    Panely mají seříznuté rohy (clip-path) a jemnou rastrovou síť jako na kartografickém listu. */
 
 :root {
+  --uvw: 1vw; --uvh: 1vh;   /* UI: jednotky okna v px rozhraní (nastavuje ui/scale.js) */
   color-scheme: dark;
   --ink-0: #0a1118;
   --ink-1: #0f1821;
@@ -43,6 +44,8 @@ b { font-weight: 600; }
 i { font-style: normal; }
 
 .app { position: fixed; inset: 0; overflow: hidden; }
+/* UI: responzivní měřítko – vše kromě mapy se zvětší podle okna (ui/scale.js) */
+.app > :not(.map-host) { zoom: var(--ui-scale, 1); }
 .map-host { position: absolute; inset: 0; touch-action: none; background: #0c1a27; }
 .map-host.dragging { cursor: grabbing !important; }
 .map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -191,24 +194,24 @@ kbd {
 .stat i { font-size: 12px; color: var(--text-3); }
 .stat b { font: 600 17px/1.15 var(--display); color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* F2 B4: pod 2200 px jsou vidět všechny ukazatele – ve dvou řádcích jako ikona + hodnota, popis je v nápovědě (title) */
-@media (max-width: 2199px) {
-  .stats { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 21px); column-gap: 16px; row-gap: 3px; align-items: center; margin-right: 8px; }
-  .stat { gap: 6px; }
-  .stat i { display: none; }
-  .stat b { font: 600 14.5px/1 var(--display); }
-  .stat > svg { width: 15px; height: 15px; flex: none; }
-  .stat-fly { top: 20px; left: 18px; }
-}
-@media (max-width: 1599px) {
-  .stats { column-gap: 11px; }
-  .stat b { font-size: 13.5px; }
-  .tb-name span { display: none; }
-  .tb-name b { font-size: 17px; }
-  .tb-time { margin-left: 14px; gap: 10px; }
-  .tb-date { min-width: 0; }
-  .tb-date b { font-size: 17px; }
-  .tb-date span { font-size: 13px; }
-}
+/* dřív @media (max-width: 2199px) – UI: podle šířky rozhraní po zvětšení */
+:root.uw-2199 .stats { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 21px); column-gap: 16px; row-gap: 3px; align-items: center; margin-right: 8px; }
+:root.uw-2199 .stat { gap: 6px; }
+:root.uw-2199 .stat i { display: none; }
+:root.uw-2199 .stat b { font: 600 14.5px/1 var(--display); }
+:root.uw-2199 .stat > svg { width: 15px; height: 15px; flex: none; }
+:root.uw-2199 .stat-fly { top: 20px; left: 18px; }
+
+/* dřív @media (max-width: 1599px) – UI: podle šířky rozhraní po zvětšení */
+:root.uw-1599 .stats { column-gap: 11px; }
+:root.uw-1599 .stat b { font-size: 13.5px; }
+:root.uw-1599 .tb-name span { display: none; }
+:root.uw-1599 .tb-name b { font-size: 17px; }
+:root.uw-1599 .tb-time { margin-left: 14px; gap: 10px; }
+:root.uw-1599 .tb-date { min-width: 0; }
+:root.uw-1599 .tb-date b { font-size: 17px; }
+:root.uw-1599 .tb-date span { font-size: 13px; }
+
 
 /* ------------------------------------------------------------------ mapové režimy */
 .rail { position: absolute; left: 14px; top: calc(var(--top-h) + 18px); display: flex; flex-direction: column; gap: 6px; z-index: 4; }
@@ -305,12 +308,12 @@ kbd {
 /* ------------------------------------------------------------------ hlavní menu */
 .menu {
   position: absolute; inset: 0; display: flex; align-items: center;
-  padding-left: max(5.5vw, 56px); pointer-events: none;
+  padding-left: max(calc(5.5 * var(--uvw)), 56px); pointer-events: none;
   background: linear-gradient(90deg, rgba(7, 12, 18, 0.95) 0%, rgba(7, 12, 18, 0.86) 24%, rgba(7, 12, 18, 0.45) 40%, rgba(7, 12, 18, 0) 56%);
 }
-.menu-col { pointer-events: auto; width: min(560px, 38vw); min-width: 400px; }
+.menu-col { pointer-events: auto; width: min(560px, calc(38 * var(--uvw))); min-width: 400px; }
 .cartouche { border-top: 5px double var(--brass-lo); border-bottom: 5px double var(--brass-lo); padding: 26px 0 24px; margin-bottom: 36px; }
-.menu h1 { font: 500 clamp(52px, 6.2vw, 96px)/0.95 var(--display); letter-spacing: 0.07em; text-transform: uppercase; color: var(--paper); }
+.menu h1 { font: 500 clamp(52px, calc(6.2 * var(--uvw)), 96px)/0.95 var(--display); letter-spacing: 0.07em; text-transform: uppercase; color: var(--paper); }
 .cartouche p { margin-top: 16px; font-size: 19px; letter-spacing: 0.02em; color: var(--text-2); }
 .menu-buttons { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 .menu-buttons .btn { width: 300px; justify-content: flex-start; }
@@ -365,7 +368,7 @@ kbd {
 
 
 /* ------------------------------------------------------------------ konzole (M29) */
-.console { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; height: min(300px, 40vh); display: flex; flex-direction: column; background: rgba(6, 10, 15, 0.94); border-top: 2px solid var(--brass-lo); }
+.console { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; height: min(300px, calc(40 * var(--uvh))); display: flex; flex-direction: column; background: rgba(6, 10, 15, 0.94); border-top: 2px solid var(--brass-lo); }
 .con-out { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px; font: 500 14px/1.45 ui-monospace, Menlo, Consolas, monospace; user-select: text; scrollbar-width: thin; scrollbar-color: var(--rule-hi) transparent; }
 .con-out p { margin: 0; white-space: pre-wrap; color: var(--text-2); }
 .con-out p.cmd { color: var(--brass-hi); }
@@ -389,7 +392,9 @@ kbd {
 .mm-list kbd { justify-self: start; min-width: 22px; padding: 2px 5px; text-align: center; font: 600 11px/1.2 var(--display); color: var(--text-2); background: var(--ink-0); box-shadow: inset 0 0 0 1px var(--rule-hi); }
 .mm-list .icon { color: var(--text-3); }
 .mm-list button.on .icon { color: var(--brass-hi); }
-@media (max-width: 1499px) { .mm { left: 14px; bottom: auto; top: calc(var(--top-h) + 56px); flex-direction: column-reverse; } }
+/* dřív @media (max-width: 1499px) – UI: podle šířky rozhraní po zvětšení */
+:root.uw-1499 .mm { left: 14px; bottom: auto; top: calc(var(--top-h) + 56px); flex-direction: column-reverse; }
+
 
 /* Upozornění vedle lišty nabídek (M49, M58) */
 .alerts { position: absolute; left: 760px; top: var(--top-h); z-index: 8; display: flex; flex-direction: row; gap: 4px; list-style: none; margin: 0; padding: 5px 0 0; height: 46px; }
@@ -417,7 +422,7 @@ kbd {
 @media (prefers-reduced-motion: reduce) { .popup { animation: none; } }
 
 /* Okno bitvy (M61) */
-.battle-dialog { width: min(1100px, 94vw); max-height: 88vh; display: flex; flex-direction: column; }
+.battle-dialog { width: min(1100px, calc(94 * var(--uvw))); max-height: calc(88 * var(--uvh)); display: flex; flex-direction: column; }
 .bt-mid { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 16px 12px; }
 .bt-adv { position: relative; width: min(560px, 90%); height: 22px; background: rgba(200, 71, 47, 0.45); border: 1px solid var(--rule-hi); }
 .bt-adv i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(79, 140, 200, 0.75); }
@@ -433,7 +438,7 @@ kbd {
 .bt-tot { display: flex; gap: 14px; flex-wrap: wrap; }
 .bt-tot span { display: flex; flex-direction: column; font-size: 12px; color: var(--text-3); }
 .bt-tot b { font: 600 15px/1.2 var(--display); color: var(--text-1, #eef); }
-.bt-units { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; max-height: 38vh; overflow: auto; }
+.bt-units { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; max-height: calc(38 * var(--uvh)); overflow: auto; }
 .bt-units li { display: grid; grid-template-columns: 30px 1fr 90px 52px; align-items: center; gap: 8px; padding: 3px 6px; background: rgba(8, 12, 17, 0.5); font-size: 13px; }
 .bt-units li.front { box-shadow: inset 3px 0 0 var(--brass); }
 .bt-units .meters { display: flex; flex-direction: column; gap: 2px; }
@@ -454,7 +459,7 @@ kbd {
 .bt-tac.beaten b { text-decoration: line-through; opacity: 0.7; }
 
 /* ---- F3: okno Nastavení upozornění ---- */
-.notify-dialog { width: min(640px, 94vw); }
+.notify-dialog { width: min(640px, calc(94 * var(--uvw))); }
 .notify-rows { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 14px; }
 .notify-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 8px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
 .notify-row > span { font-weight: 600; }

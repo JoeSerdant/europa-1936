@@ -4,13 +4,15 @@ import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import {
   getWorld, industryOf, stateIndustry, projectEta, allCountries, countryName, slotsUsed, slotsOf, atWar,
-  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, isUnlocked, tradeStatus, convoysOf,
+  BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, isUnlocked, tradeStatus, convoysOf, tradeRoute,
 } from '../../engine/index.js';
 import {
   playerIdx, closeSide, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel,
 } from '../actions.js';
 import { fmtInt, fmtNum, fmtDays } from '../format.js';
 import { EQUIP_GROUPS } from '../../data/industry/groups.js';
+import { ResIcon } from '../common/ResIcon.jsx';
+import { Flag } from '../common/Flag.jsx';
 
 const TABS = [
   { id: 'build', name: 'Stavby' },
@@ -202,86 +204,116 @@ function ProdTab({ state, me, sum }) {
 }
 
 // ------------------------------------------------------------------ obchod
-function ResTable({ sum }) {
-  const rows = RES_IDS.map((r) => ({ r, ...(sum.res[r] || { ext: 0, imp: 0, exp: 0, dem: 0, f: 1 }) }));
+// UI (jako v HOI4): suroviny jako karty s ikonou a ukazatelem pokrytí, trh vybrané suroviny jako karty dodavatelů (smlouva jedním kliknutím),
+// smlouvy jako karty s průběhem dodávek – místo tabulky a formuláře s rozbalovacími seznamy.
+
+/** Karta suroviny: ikona, bilance za den, pruh zdrojů (těžba, dovoz) proti potřebě a krytí. */
+function ResCard({ r, x, on, onPick }) {
+  const have = x.ext + x.imp, need = x.dem + x.exp, max = Math.max(have, need, 0.1);
+  const bal = have - need, lack = x.dem > 0 && x.f < 0.999;
   return (
-    <table className="ind-res" aria-label="Suroviny">
-      <thead><tr><th>Surovina</th><th title="Těžba za den">Těžba</th><th title="Dovoz za den">Dovoz</th><th title="Vývoz za den">Vývoz</th><th title="Poptávka linek za den">Potřeba</th><th title="Jak velká část potřeby je kryta">Krytí</th></tr></thead>
-      <tbody>
-        {rows.map((x) => (
-          <tr key={x.r} className={x.f < 0.999 ? 'bad' : ''}>
-            <th scope="row">{RESOURCES[x.r].n}</th>
-            <td>{fmtNum(x.ext, 1)}</td><td>{x.imp ? fmtNum(x.imp, 1) : '–'}</td><td>{x.exp ? fmtNum(x.exp, 1) : '–'}</td><td>{x.dem ? fmtNum(x.dem, 1) : '–'}</td>
-            <td>{x.dem ? pct(x.f) : '–'}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <button className={`res-card ${on ? 'on' : ''} ${lack ? 'lack' : ''}`} onClick={onPick} aria-pressed={on} aria-label={`${RESOURCES[r].n}: bilance ${fmtNum(bal, 1)}`}
+      title={`${RESOURCES[r].n} za den – těžba ${fmtNum(x.ext, 1)}, dovoz ${fmtNum(x.imp, 1)}, vývoz ${fmtNum(x.exp, 1)}, potřeba linek ${fmtNum(x.dem, 1)}`}>
+      <span className="rc-top"><ResIcon r={r} size={30} /><b>{RESOURCES[r].n}</b><em className={bal < -1e-9 ? 'bad' : 'good'}>{bal > 0 ? '+' : ''}{fmtNum(bal, 1)}</em></span>
+      <span className="rc-bar" aria-hidden="true">
+        <i className="ext" style={{ width: `${(100 * x.ext) / max}%` }} />
+        <i className="imp" style={{ width: `${(100 * x.imp) / max}%` }} />
+        {need > 0 && <s style={{ left: `${Math.min(100, (100 * need) / max)}%` }} />}
+      </span>
+      <span className="rc-foot"><i><Icon name="build" size={12} />{fmtNum(x.ext, 1)}</i><i><Icon name="trade" size={12} />{x.imp ? fmtNum(x.imp, 1) : '–'}</i><i className={lack ? 'bad' : ''}>{x.dem ? pct(x.f) : '–'}</i></span>
+    </button>
   );
 }
 
-function TradeForm({ state, me }) {
-  const partners = useMemo(() => allCountries().filter((c) => c.idx !== me).sort((a, b) => a.name.localeCompare(b.name, 'cs')), [me]);
-  const [f, setF] = useState({ partner: 0, res: 'ropa', amt: 3, out: false });
-  const partner = f.partner || partners[0].idx;
-  const sur = industryOf(state, partner).res[f.res];
-  const surplus = sur ? Math.max(0, sur.ext - sur.dem - sur.exp) : 0;
+/** Trh se surovinou `res`: země s přebytkem (dovoz) nebo s nedostatkem (vývoz) jako karty; klik na +1 / +3 uzavře smlouvu. */
+function Market({ state, me, res, out }) {
+  const day = Math.floor(state.tick / 24);
+  const rows = useMemo(() => {
+    const w = getWorld(), list = [];
+    for (const c of allCountries()) {
+      if (c.idx === me) continue;
+      const x = industryOf(state, c.idx).res[res];
+      if (!x) continue;
+      const v = out ? x.dem - x.ext - x.imp : x.ext - x.dem - x.exp;
+      if (v < 0.25) continue;
+      const route = tradeRoute(state, out ? me : c.idx, out ? c.idx : me);
+      list.push({ o: c.idx, tag: w.owners[c.idx].tag, name: c.name, v, sea: !!(route && route.sea), war: atWar(state, me, c.idx) });
+    }
+    return list.sort((a, b) => b.v - a.v).slice(0, 18);
+  }, [day, res, out, me]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const top = Math.max(1, ...rows.map((x) => x.v));
+  if (!rows.length) return <p className="empty">{out ? 'Nikdo tuto surovinu nepotřebuje.' : 'Žádná země nemá přebytek této suroviny.'}</p>;
   return (
-    <section className="ind-new" aria-label="Nová smlouva">
-      <div className="ind-trade-form">
-        <select value={f.out ? 'out' : 'in'} onChange={(e) => setF({ ...f, out: e.target.value === 'out' })} aria-label="Směr obchodu">
-          <option value="in">Dovážet od</option><option value="out">Vyvážet do</option>
-        </select>
-        <select value={partner} onChange={(e) => setF({ ...f, partner: Number(e.target.value) })} aria-label="Partner">
-          {partners.map((c) => <option key={c.idx} value={c.idx}>{c.name}</option>)}
-        </select>
-        <select value={f.res} onChange={(e) => setF({ ...f, res: e.target.value })} aria-label="Surovina">
-          {RES_IDS.map((r) => <option key={r} value={r}>{RESOURCES[r].n}</option>)}
-        </select>
-        <input type="number" min="0.5" max={IND.TRADE_AMT_MAX} step="0.5" value={f.amt} onChange={(e) => setF({ ...f, amt: Number(e.target.value) })} aria-label="Množství za den" />
-        <button className="sbtn primary" onClick={() => newTrade(partner, f.res, f.amt, f.out)}>Uzavřít</button>
-      </div>
-      <p className="muted">{f.out ? 'Vývoz je omezen vaším přebytkem.' : `Přebytek partnera: ${fmtNum(surplus, 1)} za den.`} Dovoz stojí {fmtNum(IND.TRADE_CIV * 100, 0)} % civilní továrny na jednotku.</p>
-    </section>
+    <div className="market" role="list" aria-label="Trh">
+      {rows.map((x) => (
+        <div key={x.o} className={`mk-card ${x.war ? 'war' : ''}`} role="listitem">
+          <Flag tag={x.tag} width={30} />
+          <span className="mk-nm"><b>{x.name}</b><span className="mk-bar"><i style={{ width: `${(100 * x.v) / top}%` }} /></span></span>
+          <span className="mk-v" title={out ? 'Nedostatek země za den' : 'Přebytek země za den'}>{fmtNum(x.v, 1)}</span>
+          <span className="mk-route" title={x.sea ? 'Po moři – potřebuje konvoje' : 'Po souši'}><Icon name={x.sea ? 'ship' : 'road'} size={15} /></span>
+          {[1, 3].map((n) => <button key={n} className="mk-buy" disabled={x.war || n > x.v + 0.5} onClick={() => newTrade(x.o, res, n, out)} title={`${out ? 'Vyvážet' : 'Dovážet'} ${n} za den`}>+{n}</button>)}
+        </div>
+      ))}
+    </div>
   );
 }
 
 function TradeTab({ state, me, sum }) {
   const ts = useMemo(() => new Map(tradeStatus(state, me).map((x) => [x.d.id, x])), [state.ind.trade, state.nav, state.ctrl, state.mil.wars, me]);
   const cv = convoysOf(state, me);
+  const [res, setRes] = useState(() => RES_IDS.find((r) => sum.res[r] && sum.res[r].f < 0.999) || 'ropa');
+  const [out, setOut] = useState(false);
   return (
-    <div className="prod-cols">
+    <div className="prod-cols trade-cols">
       <div className="prod-left">
-        <div className="sec-head"><h3>Suroviny</h3><span className="muted">za den</span></div>
-        <ResTable sum={sum} />
+        <div className="sec-head"><h3>Suroviny</h3><span className="muted">za den · klikněte na surovinu pro trh</span></div>
+        <div className="res-grid" aria-label="Suroviny">
+          {RES_IDS.map((r) => <ResCard key={r} r={r} x={sum.res[r] || { ext: 0, imp: 0, exp: 0, dem: 0, f: 1 }} on={res === r} onPick={() => setRes(r)} />)}
+        </div>
+        <div className="sec-head"><h3><ResIcon r={res} size={20} /> Trh: {RESOURCES[res].n}</h3>
+          <div className="seg" role="group" aria-label="Směr obchodu">
+            <button className={`sbtn ${!out ? 'primary' : ''}`} aria-pressed={!out} onClick={() => setOut(false)}>Dovoz</button>
+            <button className={`sbtn ${out ? 'primary' : ''}`} aria-pressed={out} onClick={() => setOut(true)}>Vývoz</button>
+          </div>
+        </div>
+        <Market state={state} me={me} res={res} out={out} />
+        <p className="muted">Dovoz stojí {fmtNum(IND.TRADE_CIV * 100, 0)} % civilní továrny na jednotku za den.</p>
       </div>
       <aside className="prod-right">
-      <section className="ind-new" aria-label="Konvoje"><div className="sec-head"><h3>Konvoje</h3><span className="muted">transportní lodě dovozce</span></div><p className="muted">Smlouvy přes moře potřebují konvoje: {cv.need} potřeba · {cv.avail} lodí k dispozici{cv.need > cv.avail ? ' – nedostatek zmenšuje dodávky' : ''}. Nepřátelské lodě na trase konvoje ničí, vlastní válečné lodě je kryjí.</p></section>
-      <TradeForm state={state} me={me} />
-      <div className="sec-head"><h3>Smlouvy{sum.trade.length ? ` (${sum.trade.length})` : ''}</h3></div>
-      {!sum.trade.length ? <p className="empty">Žádné smlouvy. Chybějící suroviny koupíte od zemí s přebytkem.</p> : (
-        <ul className="queue ind-trades">
-          {sum.trade.map((d) => {
-            const out = d.from === me;
-            const partner = out ? d.to : d.from;
-            const cut = d.got < d.amt - 1e-9;
-            const war = atWar(state, d.from, d.to);
-            return (
-              <li key={d.id}>
-                <div className="q-top">
-                  <b>{RESOURCES[d.res].n}</b>
-                  <span className="muted">{out ? 'vývoz do' : 'dovoz od'} {countryName(getWorld().owners[partner].tag)}</span>
-                  <button className="icon-btn sm" onClick={() => changeTrade(d.id, d.amt - 1)} disabled={d.amt <= 1} aria-label="Ubrat množství" title="−1"><Icon name="minus" size={14} /></button>
-                  <b className="ind-amt" title="Sjednané množství za den">{fmtNum(d.amt, 1)}</b>
-                  <button className="icon-btn sm" onClick={() => changeTrade(d.id, d.amt + 1)} disabled={d.amt + 1 > IND.TRADE_AMT_MAX} aria-label="Přidat množství" title="+1"><Icon name="plus" size={14} /></button>
-                  <button className="icon-btn sm" onClick={() => dropTrade(d.id)} aria-label="Zrušit smlouvu" title="Zrušit smlouvu"><Icon name="close" size={14} /></button>
-                </div>
-                <span className={`muted ind-got ${cut ? 'lack' : ''}`}>{war ? 'přerušeno válkou' : `dodáno ${fmtNum(d.got, 1)} z ${fmtNum(d.amt, 1)}`}{ts.get(d.id) && ts.get(d.id).route.sea ? ` · po moři, ${ts.get(d.id).need} ${ts.get(d.id).need === 1 ? 'konvoj' : 'konvojů'}${ts.get(d.id).risk > 0.005 ? `, riziko ${Math.round(ts.get(d.id).risk * 100)} %` : ''}` : ' · po souši'}</span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        <section className="convoy-meter" aria-label="Konvoje" title="Smlouvy přes moře potřebují konvoje (transportní lodě dovozce). Nepřátelské lodě na trase konvoje ničí, vlastní válečné lodě je kryjí.">
+          <Icon name="ship" size={22} />
+          <span><b>Konvoje</b><span className="cv-bar"><i className={cv.need > cv.avail ? 'bad' : ''} style={{ width: `${Math.min(100, (100 * cv.need) / Math.max(1, cv.avail))}%` }} /></span></span>
+          <b className={cv.need > cv.avail ? 'bad' : ''}>{cv.need} / {cv.avail}</b>
+        </section>
+        <div className="sec-head"><h3>Smlouvy{sum.trade.length ? ` (${sum.trade.length})` : ''}</h3></div>
+        {!sum.trade.length ? <p className="empty">Žádné smlouvy. Vyberte surovinu a na trhu klikněte na +1 u země s přebytkem.</p> : (
+          <ul className="ind-trades deal-list">
+            {sum.trade.map((d) => {
+              const o2 = d.from === me;
+              const partner = o2 ? d.to : d.from;
+              const war = atWar(state, d.from, d.to);
+              const st = ts.get(d.id);
+              const share = d.amt ? Math.min(1, d.got / d.amt) : 0;
+              return (
+                <li key={d.id} className={`deal ${war ? 'war' : share < 0.999 ? 'cut' : ''}`}>
+                  <ResIcon r={d.res} size={28} />
+                  <Flag tag={getWorld().owners[partner].tag} width={30} />
+                  <span className="deal-mid">
+                    <b>{RESOURCES[d.res].n}</b>
+                    <span className="muted">{o2 ? 'vývoz do' : 'dovoz od'} {countryName(getWorld().owners[partner].tag)} <Icon name={st && st.route.sea ? 'ship' : 'road'} size={12} />{st && st.risk > 0.005 ? ` riziko ${Math.round(st.risk * 100)} %` : ''}</span>
+                    <span className="deal-bar" title={war ? 'Přerušeno válkou' : `Dodáno ${fmtNum(d.got, 1)} z ${fmtNum(d.amt, 1)}`}><i style={{ width: `${war ? 0 : share * 100}%` }} /></span>
+                  </span>
+                  <span className="deal-amt">
+                    <button className="icon-btn sm" onClick={() => changeTrade(d.id, d.amt - 1)} disabled={d.amt <= 1} aria-label="Ubrat množství" title="−1"><Icon name="minus" size={14} /></button>
+                    <b className="ind-amt" title="Sjednané množství za den">{fmtNum(d.amt, 1)}</b>
+                    <button className="icon-btn sm" onClick={() => changeTrade(d.id, d.amt + 1)} disabled={d.amt + 1 > IND.TRADE_AMT_MAX} aria-label="Přidat množství" title="+1"><Icon name="plus" size={14} /></button>
+                  </span>
+                  <button className="icon-btn sm" onClick={() => dropTrade(d.id)} aria-label="Zrušit smlouvu" title="Zrušit smlouvu"><Icon name="trash" size={15} /></button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </aside>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { uiScale } from '../scale.js';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { focusTree, natOf, fxLinesOf, modLines, FOCUS_BY_ID, CONT_FOCUSES, CONT_IDS, contBlock, NAT } from '../../engine/index.js';
@@ -86,7 +87,8 @@ function useTreeZoom(tree) {
     if (e.shiftKey) return;
     e.preventDefault();
     const r = ref.current.getBoundingClientRect();
-    zoomAt(z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX - r.left, e.clientY - r.top);
+    const k = uiScale();   // UI: souřadnice myši v px okna → px zvětšeného rozhraní
+    zoomAt(z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), (e.clientX - r.left) / k, (e.clientY - r.top) / k);
   };
   useLayoutEffect(() => {
     const el = ref.current;
@@ -109,7 +111,7 @@ function useTreeZoom(tree) {
       drag.current = { x: e.clientX, y: e.clientY, l: ref.current.scrollLeft, t: ref.current.scrollTop };
       ref.current.classList.add('dragging');
     },
-    onPointerMove: (e) => { const d = drag.current; if (!d) return; ref.current.scrollLeft = d.l - (e.clientX - d.x); ref.current.scrollTop = d.t - (e.clientY - d.y); },
+    onPointerMove: (e) => { const d = drag.current; if (!d) return; const k = uiScale(); ref.current.scrollLeft = d.l - (e.clientX - d.x) / k; ref.current.scrollTop = d.t - (e.clientY - d.y) / k; },
     onPointerUp: () => { drag.current = null; if (ref.current) ref.current.classList.remove('dragging'); },
     onPointerLeave: () => { drag.current = null; if (ref.current) ref.current.classList.remove('dragging'); },
   };

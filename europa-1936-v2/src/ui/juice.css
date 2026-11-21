@@ -57,7 +57,7 @@
 /* ---- noviny ze světa ---- */
 .news-scrim { z-index: 40; }
 .news-paper {
-  width: 640px; max-width: calc(100vw - 48px); max-height: calc(100vh - 80px); overflow: auto; padding: 18px 26px 18px; color: #2a2118;
+  width: 640px; max-width: calc(calc(100 * var(--uvw)) - 48px); max-height: calc(calc(100 * var(--uvh)) - 80px); overflow: auto; padding: 18px 26px 18px; color: #2a2118;
   background: radial-gradient(ellipse at 30% 20%, #f3ead2, #e3d6b2 70%, #cdbd92); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), inset 0 0 60px rgba(120, 90, 40, 0.35);
   transform-origin: 50% 40%; animation: news-in 0.7s cubic-bezier(0.2, 1.1, 0.35, 1) both;
 }

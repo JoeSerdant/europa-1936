@@ -1082,6 +1082,14 @@ Fáze 2 kvality (opravy chyb nalezených při hraní a simulacích), bez nových
   mimo historické ofenzivy, `weak` = cíle podle slabé obrany (`AI.OP_WEAK_KM` za bránící divizi). Karta provincie ukazuje „Velení AI“.
 - **Volná historie pestřeji**: pořadí národních cílů AI se posune náhodně o 0–`NAT.FREE_FOCUS_JITTER` váhy podle semínka hry;
   váha historické politické cesty `NAT.ALT_HIST_W` 8 → 5.
+- **Grafické rozhraní (UI)**: Diplomacie = mřížka karet zemí (vlajka, ukazatel vztahů −100…+100, odznaky stavu, filtr a hledání) a detail
+  vysunutý vedle panelu (akce jako dlaždice s ikonou a cenou, poměr sil, válečné skóre); Obchod = karty surovin (bilance, pruh zdrojů proti
+  potřebě), trh vybrané suroviny jako karty zemí s tlačítky +1/+3 a smlouvy jako karty s průběhem; Logistika = dlaždice výzbroje po skupinách
+  (sklad, výroba, efektivita), palivo jako nádrž; Námořnictvo = siluety lodí, mise ikonami, sestavení flotily klikem nebo přetažením;
+  Letectvo = mise ikonami, cíle a letiště jako dlaždice, počet posuvníkem.
+- **Responzivní rozhraní** (`ui/scale.js`): měřítko `--ui-scale` = 1 do 1920×1080, na větších oknech roste (2560×1440 → 1,33, 4K → 2),
+  pod 1280×720 klesá (min. 0,75); hráč ho upraví v nabídce („Velikost rozhraní“, localStorage `e1936.uiscale`). Zvětšuje se CSS `zoom` vše
+  kromě mapy; jednotky okna pro styly `--uvw`/`--uvh`, breakpointy jako třídy `uw-N`/`uh-N` podle šířky a výšky rozhraní po zvětšení.
 - **Konec války 1944–1945** (koleje `HIST_STRATEGIES`, jen s historickou AI): Západní spojenci (`eng_border`, `fra_border`) vstoupí na předválečné
   území Německa až od 20. 10. 1944 (Cáchy) a od 4. 11. 1944 do přechodu Rýna 7. 3. 1945 jen brání (`eng_rhine`); Rudá armáda útočí na Visle
   od 12. 1. 1945 (`sov_push45`) a na Odře stojí od 2. 2. do 16. 4. 1945 (`sov_oder`). Německo vytrvá (`ger_holdout`) do 8. 5. 1945 a pak

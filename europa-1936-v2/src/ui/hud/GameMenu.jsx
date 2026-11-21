@@ -9,6 +9,7 @@ import { mapEffectsOn, setMapEffects } from '../map/prefs.js';
 import { mapController } from '../map/controller.js';
 import { goMenu, setHelp, setMenuOpen, openSaveDialog, setAchOpen, newsEnabled, setNewsEnabled, setNotifyOpen } from '../actions.js';
 import { AUTOSAVE_OPTS, autoSaveEvery, setAutoSaveEvery } from '../saves.js';
+import { UI_SCALE_OPTS, uiScalePref, setUiScalePref } from '../scale.js';
 
 /** Nabídka ve hře (Esc): pokračovat, ovládání, zpět do hlavního menu. */
 export function GameMenu() {
@@ -21,7 +22,8 @@ export function GameMenu() {
   const [fx, setFx] = useState(mapEffectsOn());
   const [news, setNews] = useState(newsEnabled());
   const [vol, setVol] = useState(Math.round(soundVolume() * 100));
-  const [auto, setAuto] = useState(autoSaveEvery());   // F3: interval automatického ukládání
+  const [auto, setAuto] = useState(autoSaveEvery());
+  const [ui, setUiPref] = useState(uiScalePref());   // UI: velikost rozhraní   // F3: interval automatického ukládání
   useEffect(() => { if (open) setNews(newsEnabled()); }, [open]);
   useEffect(() => { if (!open) setConfirm(false); }, [open]);
   if (!open) return null;
@@ -36,6 +38,9 @@ export function GameMenu() {
           <button className="btn" title="Tři automatická uložení na střídačku – přepisuje se nejstarší. Kliknutím změníte interval."
             onClick={() => { const i = AUTOSAVE_OPTS.findIndex(([id]) => id === auto); const next = AUTOSAVE_OPTS[(i + 1) % AUTOSAVE_OPTS.length][0]; setAutoSaveEvery(next); setAuto(next); }}>
             Automatické ukládání: {AUTOSAVE_OPTS.find(([id]) => id === auto)[1]}</button>
+          <button className="btn" title="Velikost lišt, panelů a oken; automaticky podle velikosti okna (na velkých monitorech větší)"
+            onClick={() => { const i = UI_SCALE_OPTS.findIndex(([id]) => id === ui); const next = UI_SCALE_OPTS[(i + 1) % UI_SCALE_OPTS.length][0]; setUiScalePref(next); setUiPref(next); }}>
+            Velikost rozhraní: {UI_SCALE_OPTS.find(([id]) => id === ui)[1]}</button>
           <button className="btn" onClick={() => { setMenuOpen(false); setHelp(true); }}>Ovládání</button>
           <button className="btn" onClick={() => setAchOpen(true)}>Úspěchy</button>
           <button className="btn" aria-pressed={tut} onClick={() => { setTutorial(!tut); setTut(!tut); }}>Průvodce: {tut ? 'zapnutý' : 'vypnutý'}</button>
