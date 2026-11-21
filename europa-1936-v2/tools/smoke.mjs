@@ -572,13 +572,17 @@ try {
   // diplomacie (M23): panel Diplomacie (D), seznam zemí, rozbalení řádku, blok
   await page.keyboard.press('d');
   await page.waitForSelector('.dip-panel', { timeout: 3000 });
-  check('klávesa D otevře panel Diplomacie se seznamem zemí', (await ui()).panel === 'dip' && (await page.locator('.dip-row').count()) >= 30);
+  check('klávesa D otevře panel Diplomacie s kartami zemí', (await ui()).panel === 'dip' && (await page.locator('.dip-card').count()) >= 30);
   await E(() => { const { gameStore, engine } = window.__e1936; gameStore.setState(engine.declareWar(gameStore.getState(), 'GER', 'SWE')); });
   await page.waitForTimeout(900);
-  check('země ve válce jsou v seznamu první a označené', (await page.locator('.dip-row.war').count()) >= 1 && (await page.locator('.dip-list li').first().getAttribute('class')).includes('war'));
-  await page.locator('.dip-head').nth(3).click();
-  await page.waitForSelector('.dip-body', { timeout: 3000 });
-  check('řádek země se rozbalí s akcemi', (await page.locator('.dip-body .sbtn').count()) >= 2);
+  check('země ve válce jsou v mřížce první a označené', (await page.locator('.dip-card.war').count()) >= 1 && (await page.locator('.dip-grid .dip-card').first().getAttribute('class')).includes('war'));
+  await page.locator('.dip-card').nth(3).click();
+  await page.waitForTimeout(250);
+  check('klik na kartu vysune detail země s ukazatelem vztahu a dlaždicemi akcí', (await page.locator('.dip-side.open .dip-detail .rel-gauge').count()) >= 1 && (await page.locator('.dip-detail .dip-act').count()) >= 3 && (await page.locator('.dip-side.open').isVisible()));
+  await page.getByRole('button', { name: 'Válka', exact: true }).click();
+  await page.waitForTimeout(200);
+  check('filtr Válka ukáže jen země ve válce', (await page.locator('.dip-card').count()) >= 1 && (await page.locator('.dip-card:not(.war)').count()) === 0);
+  await page.getByRole('button', { name: 'Vše', exact: true }).click();
   await shot('diplomacy');
   await E(() => { const { gameStore, engine } = window.__e1936; const w = engine.getWorld(); gameStore.setState(engine.proposePeace(gameStore.getState(), w.ownerIdx.GER, w.ownerIdx.SWE)); });
   await page.keyboard.press('d');

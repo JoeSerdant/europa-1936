@@ -2,130 +2,219 @@ import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS, capLimitOf } from '../../engine/index.js';
+import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS, capLimitOf, ideologyOf, divisionCount, WARGOALS } from '../../engine/index.js';
+import { IDEOLOGIES, COUNTRIES } from '../../data/countries.js';
 import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, offerPactTo, breakPactWith, answerPactFrom, improveWith, demandFrom, foundBloc, inviteBloc, leaveBloc, selectLabel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
-/** Půjčka a pronájem: výběr druhu výzbroje a odeslání čtvrtiny skladu příteli. */
-function Lend({ c, me }) {
-  const stock = useGameSlow((s) => s.mil.stock[me], 900);
-  const [eq, setEq] = useState('pusky');
-  const n = Math.floor((stock?.[eq] || 0) * DIP.LEND_MAX);
+// UI (jako v HOI4): diplomacie jako mřížka karet zemí (vlajka, ukazatel vztahů, odznaky stavu) a detail vybrané země s akcemi
+// jako dlaždicemi s ikonou a cenou – místo seznamu s řadami textových tlačítek. Data dává `diplomacyOf`, akce jsou v `ui/actions.js`.
+
+const relCls = (r) => (r >= 25 ? 'good' : r <= -25 ? 'bad' : 'mid');
+
+/** Odznaky stavu země: [klíč, ikona, nápověda]. */
+function badgesOf(c) {
+  const b = [];
+  if (c.war) b.push(['war', 'swords', 'Ve válce s vámi']);
+  if (c.ally) b.push(['ally', 'flag', 'Člen vašeho bloku']);
+  if (c.garMine) b.push(['ally', 'shield', 'Zaručujete její nezávislost']);
+  if (c.garTheirs) b.push(['ally', 'shield', 'Zaručuje vaši nezávislost']);
+  if (c.pact) b.push(['ally', 'handshake', `Pakt o neútočení (${c.pact.days} dní)`]);
+  if (c.access || c.accGiven) b.push(['ally', 'road', c.access ? 'Smíte projít jejím územím' : 'Smí projít vaším územím']);
+  if (c.mine) b.push(['ally', 'chain', 'Vaše loutka']);
+  else if (c.overlord) b.push(['cap', 'chain', 'Loutka jiné země']);
+  if (c.capitulated) b.push(['cap', 'flag', c.exile ? 'Vláda v exilu' : 'Kapitulovala']);
+  if (c.just) b.push(['just', 'scroll', c.just.done ? 'Válka ospravedlněna' : `Ospravedlnění: ještě ${c.just.left} d`]);
+  return b;
+}
+
+/** Ukazatel vztahů −100…+100: výplň od středu doleva (červeně) nebo doprava (zeleně). */
+function RelGauge({ rel, big = false }) {
+  const v = Math.max(-100, Math.min(100, rel));
   return (
-    <div className="ind-btns dip-lend">
-      <select value={eq} onChange={(e) => setEq(e.target.value)} aria-label="Druh výzbroje">
-        {EQUIP_IDS.map((id) => <option key={id} value={id}>{EQUIP[id].n} ({stock?.[id] || 0})</option>)}
-      </select>
-      <button className="sbtn" disabled={n < 1} onClick={() => lendTo(c.tag, eq)} title={`Poslat ${Math.round(DIP.LEND_MAX * 100)} % skladu spojenci`}>Poslat {n}</button>
+    <span className={`rel-gauge ${big ? 'big' : ''}`} title={`Vztah ${v > 0 ? '+' : ''}${v}`} aria-label={`Vztah ${v}`}>
+      <i className={v >= 0 ? 'pos' : 'neg'} style={v >= 0 ? { left: '50%', width: `${v / 2}%` } : { left: `${50 + v / 2}%`, width: `${-v / 2}%` }} />
+      <b className={relCls(v)}>{v > 0 ? '+' : ''}{v}</b>
+    </span>
+  );
+}
+
+/** Karta země v mřížce. */
+function Card({ c, on, onPick }) {
+  const badges = badgesOf(c);
+  const ring = c.just && !c.just.done ? c.just : null;
+  return (
+    <button className={`dip-card ${on ? 'on' : ''} ${c.war ? 'war' : ''} ${c.ally ? 'ally' : ''}`} onClick={onPick} aria-pressed={on} aria-label={`${c.name}: vztah ${c.rel}`}>
+      <span className="dc-flag"><Flag tag={c.tag} width={46} /></span>
+      <span className="dc-nm">{c.name}</span>
+      <RelGauge rel={c.rel} />
+      <span className="dc-badges">
+        {badges.slice(0, 4).map(([k, ic, t], i) => <i key={i} className={`dc-b ${k}`} title={t}><Icon name={ic} size={13} /></i>)}
+        {ring ? <i className="dc-b just" title={`Ospravedlnění: ještě ${ring.left} d`}>{ring.left} d</i> : null}
+      </span>
+    </button>
+  );
+}
+
+/** Dlaždice akce: ikona, název, cena; zakázaná ukáže důvod v nápovědě. */
+function Act({ icon, n, cost, onClick, block, tone = '' }) {
+  return (
+    <button className={`dip-act ${tone}`} disabled={!!block} onClick={onClick} title={block || n} aria-label={n}>
+      <Icon name={icon} size={20} />
+      <b>{n}</b>
+      {cost ? <i>{cost}</i> : null}
+    </button>
+  );
+}
+
+/** Půjčka a pronájem: dlaždice výzbroje se siluetou a počtem; klik pošle podíl skladu spojenci. */
+function Lend({ c, stock }) {
+  return (
+    <div className="dip-lend-grid" role="group" aria-label="Půjčka a pronájem">
+      {EQUIP_IDS.filter((id) => (stock?.[id] || 0) > 0).map((id) => {
+        const n = Math.floor((stock[id] || 0) * DIP.LEND_MAX);
+        return (
+          <button key={id} className="dip-lend-tile" disabled={n < 1} onClick={() => lendTo(c.tag, id)} title={`Poslat ${n} ks (${Math.round(DIP.LEND_MAX * 100)} % skladu): ${EQUIP[id].n}`}>
+            <span className="ab">{EQUIP[id].ab}</span><b>+{n}</b>
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-const relCls = (r) => (r >= 25 ? 'good' : r <= -25 ? 'bad' : 'mid');
-
-function Row({ c, me }) {
-  const [open, setOpen] = useState(false);
-  const flags = [];
-  if (c.war) flags.push(['war', 'válka']);
-  if (c.garMine) flags.push(['ally', 'vaše záruka']);
-  else if (c.garTheirs) flags.push(['ally', 'zaručuje vás']);
-  if (c.ally) flags.push(['ally', 'spojenec']);
-  if (c.pact) flags.push(['ally', 'pakt']);
-  if (c.accDeal) flags.push(['ally', 'přístup']);
-  if (c.mine) flags.push(['ally', 'vaše loutka']);
-  else if (c.overlord) flags.push(['cap', 'loutka']);
-  if (c.capitulated) flags.push(['cap', c.exile ? 'v exilu' : 'kapitulovala']);
-  if (c.just && !c.just.done) flags.push(['just', `ospravedlnění ${c.just.left} d`]);
-  if (c.just && c.just.done) flags.push(['just', 'ospravedlněno']);
+/** Detail vybrané země: záhlaví s vlajkou a ukazateli, odznaky a akce po skupinách. */
+function Detail({ c, state, me, onClose }) {
+  const w = getWorld();
+  const ideo = IDEOLOGIES[ideologyOf(state, c.o)];
+  const divs = divisionCount(state, c.tag), mine = divisionCount(state, w.owners[me].tag);
+  const badges = badgesOf(c);
   return (
-    <li className={`dip-row ${c.war ? 'war' : ''}`}>
-      <button className="dip-head" onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${c.name}: vztah ${c.rel}`}>
-        <Flag tag={c.tag} width={22} />
-        <span className="nm">{c.name}</span>
-        <span className={`rel ${relCls(c.rel)}`}>{c.rel > 0 ? '+' : ''}{c.rel}</span>
-        {flags.slice(0, 2).map(([k, t]) => <i key={k} className={`dip-flag ${k}`}>{t}</i>)}
-      </button>
-      {open && (
-        <div className="dip-body">
-          {c.faction ? <p className="muted">Blok: {c.faction.nm} ({c.faction.mem.length})</p> : <p className="muted">Bez bloku.</p>}
-          <div className="ind-btns">
-            {c.war ? (
-              <button className="sbtn" disabled={!!c.peaceBlock} onClick={() => makePeaceWith(c.tag)} title={c.peaceBlock || 'Navrhnout bílý mír'}>Navrhnout mír</button>
-            ) : c.canDeclare ? (
-              <button className="sbtn danger" onClick={() => declareWarOn(c.tag)} title="Vyhlásit válku (zapojí se bloky)">Vyhlásit válku</button>
-            ) : (
-              c.goals.map((g) => <button key={g.id} className="sbtn" disabled={!!g.block} onClick={() => justifyOn(c.tag, g.id)} title={g.block || `${g.info} ${g.pp} PM, ${g.days} dní.`}>Ospravedlnit: {g.n}</button>)
-            )}
-            {c.mine && <span className="muted" title="Autonomie loutky">{AUTONOMY_NAMES[c.auLevel]} · autonomie {Math.round(c.au)} %</span>}
-            {c.mine && <button className="sbtn" disabled={!!c.tightBlock} onClick={() => tightenPuppet(c.tag)} title={c.tightBlock || `Utáhnout kontrolu (${DIP.AU_TIGHT_PP} PM): autonomie −${DIP.AU_TIGHT}`}>Utáhnout kontrolu</button>}
-            {c.mine && <button className="sbtn" disabled={!!c.looseBlock} onClick={() => loosenPuppet(c.tag)} title={c.looseBlock || `Uvolnit kontrolu: autonomie +${DIP.AU_LOOSE}, lepší vztah`}>Uvolnit kontrolu</button>}
-            {c.mine && <button className="sbtn danger" disabled={!!c.annexBlock} onClick={() => annexOwnPuppet(c.tag)} title={c.annexBlock || 'Anektovat loutku (stojí politickou moc)'}>Anektovat loutku</button>}
-            {c.garMine
-              ? <button className="sbtn" onClick={() => revokeGuaranteeFor(c.tag)} title="Zrušit záruku nezávislosti">Zrušit záruku</button>
-              : <button className="sbtn" disabled={!!c.garBlock} onClick={() => guaranteeFor(c.tag)} title={c.garBlock || `Zaručit nezávislost (${DIP.GAR_PP} PM): napadne-li ji někdo, přidáte se do války`}>Zaručit nezávislost</button>}
-            <button className="sbtn" disabled={!!c.inviteBlock} onClick={() => inviteBloc(c.tag)} title={c.inviteBlock || 'Pozvat do bloku'}>Pozvat do bloku</button>
-            {!c.war && c.demands.map((dm) => <button key={dm.id} className="sbtn danger" disabled={!!dm.block} onClick={() => demandFrom(c.tag, dm.id)} title={dm.block || `Ultimátum (${DIP.ULT_PP} PM): ${dm.kind === 'annex' ? 'připojení země' : 'odstoupení území'}. Cíl ustoupí při přesile ${dm.need}× (máte ${fmtNum(dm.have, 1)}×); jinak získáte záminku k válce.`}>Ultimátum: {dm.n}</button>)}
-            {!c.war && !c.ally && (c.pact
-              ? <button className="sbtn danger" disabled={!!c.pact.breakBlock} onClick={() => breakPactWith(c.tag)} title={c.pact.breakBlock || `Vypovědět pakt o neútočení: stabilita −${Math.round(DIP.NAP_BREAK_STAB * 100)} %, vztah ${DIP.NAP_BREAK_REL}`}>Vypovědět pakt</button>
-              : <button className="sbtn" disabled={!!c.pactBlock} onClick={() => offerPactTo(c.tag)} title={c.pactBlock || `Nabídnout pakt o neútočení (${DIP.NAP_PP} PM): ${c.pactOdds ? 'nejspíš přijme' : 'nejspíš odmítne'}`}>Pakt o neútočení</button>)}
-            {!c.war && <button className="sbtn" disabled={!!c.improveBlock} onClick={() => improveWith(c.tag)} title={c.improveBlock || `Zlepšit vztahy o ${DIP.IMPROVE_GAIN} (${DIP.IMPROVE_PP} PM)`}>Zlepšit vztahy</button>}
-            {!c.war && !c.access && <button className="sbtn" disabled={!!c.accBlock} onClick={() => requestAccessFrom(c.tag)} title={c.accBlock || `Požádat o průchod vašich armád jejím územím (${DIP.ACC_PP} PM)`}>Požádat o přístup</button>}
-            {!c.war && (c.accMine
-              ? <button className="sbtn" onClick={() => revokeAccessFrom(c.tag)} title="Odvolat jejím armádám průchod vaším územím">Odvolat přístup</button>
-              : !c.accGiven && <button className="sbtn" disabled={!!c.giveBlock} onClick={() => grantAccessTo(c.tag)} title={c.giveBlock || 'Dovolit jejím armádám průchod vaším územím (zdarma)'}>Dát přístup</button>)}
-            <button className="sbtn" onClick={() => selectLabel(getWorld().owners[c.o].cap, true)} title="Ukázat hlavní město"><Icon name="target" size={14} />Ukázat</button>
-          </div>
-          {c.pact ? <p className="muted dip-access">Pakt o neútočení platí {c.pact.days} dní.</p> : null}
-          {!c.war && (c.access || c.accGiven) ? <p className="muted dip-access">Vojenský přístup: {c.access ? 'smíte projít jejich územím' : 'jejich armády nesmí na vaše území'}{c.access && c.accGiven ? ' · ' : ''}{c.accGiven ? (c.access ? 'smějí projít vaším' : 'smějí projít vaším územím') : ''}</p> : null}
-          {c.friend ? <Lend c={c} me={me} /> : null}
-          {c.war ? <p className="muted">Válečné skóre: {c.score > 0 ? '+' : ''}{fmtNum(c.score * 100, 0)} %</p> : null}
-          {!c.war && !c.canDeclare && c.justifyBlock ? <p className="pol-block">{c.justifyBlock}</p> : null}
+    <section className="dip-detail" aria-label={`Detail: ${c.name}`}>
+      <header className="dd-head">
+        <Flag tag={c.tag} width={84} />
+        <div className="dd-title">
+          <h3>{c.name}</h3>
+          <span className="muted">{COUNTRIES[c.tag]?.government || ''}{ideo ? <> · <i className="ideo-dot" style={{ background: ideo.color }} />{ideo.name}</> : null}</span>
+          <span className="muted">{c.faction ? <><Icon name="flag" size={13} /> {c.faction.nm} ({c.faction.mem.length})</> : 'Bez bloku'}</span>
         </div>
+        <button className="icon-btn sm" onClick={() => selectLabel(w.owners[c.o].cap, true)} title="Ukázat hlavní město na mapě" aria-label="Ukázat"><Icon name="target" size={16} /></button>
+        <button className="icon-btn sm" onClick={onClose} title="Zavřít detail" aria-label="Zavřít detail"><Icon name="close" size={16} /></button>
+      </header>
+      <div className="dd-meters">
+        <div><span className="muted">Vztah</span><RelGauge rel={c.rel} big /></div>
+        <div title={`Divize: ${c.name} ${divs}, vy ${mine}`}><span className="muted">Síla armády</span>
+          <span className="force-bar"><i className="me" style={{ width: `${(100 * mine) / Math.max(1, mine + divs)}%` }} /><i className="them" /></span>
+          <b className="force-nums">{mine} : {divs}</b>
+        </div>
+        {c.war ? <div><span className="muted">Válečné skóre</span><b className={c.score >= 0 ? 'good' : 'bad'}>{c.score > 0 ? '+' : ''}{fmtNum(c.score * 100, 0)} %</b></div> : null}
+      </div>
+      {badges.length > 0 && <div className="dd-badges">{badges.map(([k, ic, t], i) => <span key={i} className={`dd-badge ${k}`}><Icon name={ic} size={14} />{t}</span>)}</div>}
+
+      <h4>Válka</h4>
+      <div className="dip-acts">
+        {c.war ? <Act icon="handshake" n="Navrhnout mír" onClick={() => makePeaceWith(c.tag)} block={c.peaceBlock} />
+          : c.canDeclare ? <Act icon="swords" n="Vyhlásit válku" tone="danger" onClick={() => declareWarOn(c.tag)} />
+            : c.goals.map((g) => <Act key={g.id} icon="scroll" n={`Ospravedlnit: ${g.n}`} cost={`${g.pp} PM · ${g.days} d`} onClick={() => justifyOn(c.tag, g.id)} block={g.block} />)}
+        {!c.war && c.demands.map((dm) => <Act key={dm.id} icon="gavel" n={`Ultimátum: ${dm.n}`} cost={`přesila ${fmtNum(dm.have, 1)}× / ${dm.need}×`} tone="danger" onClick={() => demandFrom(c.tag, dm.id)} block={dm.block} />)}
+      </div>
+      {c.just && !c.just.done ? <div className="just-bar" title="Ospravedlňování války"><i style={{ width: `${Math.round(100 * (1 - c.just.left / Math.max(1, ...c.goals.map((g) => WARGOALS[g.id]?.days || 30))))}%` }} /><span>Ospravedlnění – ještě {c.just.left} dní</span></div> : null}
+      {!c.war && !c.canDeclare && c.justifyBlock && !c.just ? <p className="pol-block">{c.justifyBlock}</p> : null}
+
+      {!c.war && (
+        <>
+          <h4>Diplomacie</h4>
+          <div className="dip-acts">
+            <Act icon="heart" n="Zlepšit vztahy" cost={`+${DIP.IMPROVE_GAIN} · ${DIP.IMPROVE_PP} PM`} onClick={() => improveWith(c.tag)} block={c.improveBlock} />
+            {!c.ally && (c.pact
+              ? <Act icon="handshake" n="Vypovědět pakt" tone="danger" onClick={() => breakPactWith(c.tag)} block={c.pact.breakBlock} />
+              : <Act icon="handshake" n="Pakt o neútočení" cost={`${DIP.NAP_PP} PM · ${c.pactOdds ? 'přijme' : 'odmítne'}`} onClick={() => offerPactTo(c.tag)} block={c.pactBlock} />)}
+            {c.garMine ? <Act icon="shield" n="Zrušit záruku" onClick={() => revokeGuaranteeFor(c.tag)} />
+              : <Act icon="shield" n="Zaručit nezávislost" cost={`${DIP.GAR_PP} PM`} onClick={() => guaranteeFor(c.tag)} block={c.garBlock} />}
+            <Act icon="flag" n="Pozvat do bloku" onClick={() => inviteBloc(c.tag)} block={c.inviteBlock} />
+            {!c.access && <Act icon="road" n="Požádat o přístup" cost={`${DIP.ACC_PP} PM`} onClick={() => requestAccessFrom(c.tag)} block={c.accBlock} />}
+            {c.accMine ? <Act icon="road" n="Odvolat přístup" onClick={() => revokeAccessFrom(c.tag)} />
+              : !c.accGiven && <Act icon="road" n="Dát přístup" cost="zdarma" onClick={() => grantAccessTo(c.tag)} block={c.giveBlock} />}
+          </div>
+        </>
       )}
-    </li>
+
+      {c.mine && (
+        <>
+          <h4>Loutka · {AUTONOMY_NAMES[c.auLevel]}</h4>
+          <div className="au-bar" title={`Autonomie ${Math.round(c.au)} %`}><i style={{ width: `${Math.round(c.au)}%` }} /><span>autonomie {Math.round(c.au)} %</span></div>
+          <div className="dip-acts">
+            <Act icon="chain" n="Utáhnout kontrolu" cost={`${DIP.AU_TIGHT_PP} PM · −${DIP.AU_TIGHT}`} onClick={() => tightenPuppet(c.tag)} block={c.tightBlock} />
+            <Act icon="heart" n="Uvolnit kontrolu" cost={`+${DIP.AU_LOOSE}`} onClick={() => loosenPuppet(c.tag)} block={c.looseBlock} />
+            <Act icon="crown" n="Anektovat loutku" tone="danger" onClick={() => annexOwnPuppet(c.tag)} block={c.annexBlock} />
+          </div>
+        </>
+      )}
+
+      {c.friend && (<><h4>Půjčka a pronájem</h4><Lend c={c} stock={state.mil.stock[me]} /></>)}
+    </section>
   );
 }
 
-/** Záložka Diplomacie: blok hráče a seznam zemí se vztahem, ospravedlněním, vyhlášením války, mírem a pozváním do bloku. */
+const FILTERS = [['all', 'Vše'], ['war', 'Válka'], ['ally', 'Spojenci'], ['near', 'Sousedé']];
+
+/** Záložka Diplomacie: mřížka karet zemí (filtr, hledání), detail vybrané země a váš blok. */
 export function DiplomacyPanel() {
   const state = useGameSlow((s) => s, 700);
   const me = playerIdx(state);
   const [name, setName] = useState('');
+  const [pick, setPick] = useState(-1);
+  const [filter, setFilter] = useState('all');
+  const [q, setQ] = useState('');
   const d = useMemo(() => (me ? diplomacyOf(state, me) : null), [state.dip, state.mil.wars, state.pol, state.ctrl, state.stateOwner, state.tick, me]);
+  const near = useMemo(() => {   // sousedé po souši (podle kontroly provincií)
+    const w = getWorld(), out = new Set();
+    if (!me) return out;
+    for (let p = 1; p <= w.L; p++) if (state.ctrl[p] === me) w.forLandNeighbors(p, (q2) => { const c = state.ctrl[q2]; if (c && c !== me) out.add(c); });
+    return out;
+  }, [state.ctrl, me]);
   if (!me) return <div className="prod-screen dip-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádnou diplomacii.</p></div></div>;
-  const list = [...d.list].sort((a, b) => (b.war - a.war) || (b.ally - a.ally) || (b.rel - a.rel));
+  const all = [...d.list].sort((a, b) => (b.war - a.war) || (b.ally - a.ally) || (near.has(b.o) - near.has(a.o)) || (b.rel - a.rel));
+  const ql = q.trim().toLowerCase();
+  const list = all.filter((c) => (filter === 'war' ? c.war : filter === 'ally' ? c.ally || c.garMine || c.pact || c.mine : filter === 'near' ? near.has(c.o) : true) && (!ql || c.name.toLowerCase().includes(ql)));
+  const cur = pick > 0 ? all.find((c) => c.o === pick) || null : null;   // detail až po kliknutí na kartu (u kraje se vysune vedle panelu)
   const f = d.faction;
   return (
-    <Screen cls="dip-panel" title="Diplomacie" icon="dip" head={<p className="muted pol-sum dip-held">Území držené nepřáteli: {fmtNum(d.held.share * 100, 0)} % bodů (kapitulace od {Math.round(capLimitOf(me).share * 100)} %).</p>}>
+    <Screen cls="dip-panel" title="Diplomacie" icon="dip" head={(
+      <div className="dip-held" title={`Kapitulace při ${Math.round(capLimitOf(me).share * 100)} % území v rukou nepřítele`}>
+        <span className="muted">Území v rukou nepřátel</span>
+        <span className="held-bar"><i style={{ width: `${Math.min(100, d.held.share * 100)}%` }} /><em style={{ left: `${capLimitOf(me).share * 100}%` }} /></span>
+        <b>{fmtNum(d.held.share * 100, 0)} %</b>
+      </div>
+    )}>
       <div className="prod-body">
-        <div className="prod-cols">
+        <div className="prod-cols dip-cols">
           <div className="prod-left">
-            <div className="sec-head"><h3>Země ({list.length})</h3><span className="muted">klikněte na zemi pro akce</span></div>
-            <ul className="dip-list">{list.map((c) => <Row key={c.o} c={c} me={me} />)}</ul>
-          </div>
-          <aside className="prod-right">
+            <div className="dip-tools">
+              <div className="seg" role="group" aria-label="Filtr zemí">
+                {FILTERS.map(([id, t]) => <button key={id} className={`sbtn ${filter === id ? 'primary' : ''}`} aria-pressed={filter === id} onClick={() => setFilter(id)}>{t}</button>)}
+              </div>
+              <input className="dip-search" type="search" value={q} placeholder="Hledat zemi" aria-label="Hledat zemi" onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
+            </div>
             {d.offers.length > 0 && (
               <section className="dip-offers" aria-label="Diplomatické nabídky">
-                <div className="sec-head"><h3>Nabídky</h3></div>
-                <ul>
-                  {d.offers.map((x) => (
-                    <li key={x.tag}>
-                      <Flag tag={x.tag} width={22} /><span>{x.name}: pakt o neútočení <i className="muted">(ještě {x.left} dní)</i></span>
-                      <button className="sbtn" onClick={() => answerPactFrom(x.tag, true)}>Přijmout</button>
-                      <button className="sbtn danger" onClick={() => answerPactFrom(x.tag, false)}>Odmítnout</button>
-                    </li>
-                  ))}
-                </ul>
+                {d.offers.map((x) => (
+                  <div key={x.tag} className="offer-card">
+                    <Flag tag={x.tag} width={34} /><Icon name="handshake" size={20} />
+                    <span><b>{x.name}</b> nabízí pakt o neútočení<i className="muted"> · ještě {x.left} d</i></span>
+                    <button className="icon-btn sm ok" onClick={() => answerPactFrom(x.tag, true)} aria-label="Přijmout" title="Přijmout"><Icon name="check" size={16} /></button>
+                    <button className="icon-btn sm" onClick={() => answerPactFrom(x.tag, false)} aria-label="Odmítnout" title="Odmítnout"><Icon name="close" size={16} /></button>
+                  </div>
+                ))}
               </section>
             )}
-            <div className="sec-head"><h3>Váš blok</h3></div>
             <section aria-label="Blok" className="dip-bloc">
+              <h4>Váš blok</h4>
               {f ? (
                 <>
-                  <div className="q-top"><b>{f.nm}</b><span className="muted">{f.mem.length} {f.mem.length === 1 ? 'člen' : f.mem.length < 5 ? 'členové' : 'členů'}</span>
-                    <button className="sbtn" onClick={leaveBloc} title="Opustit blok">Opustit</button></div>
-                  <div className="chips">{f.mem.map((o) => <span key={o} className="chip chip-flag"><Flag tag={getWorld().owners[o].tag} width={16} />{getWorld().owners[o].name}{o === f.ldr ? <i>vedoucí</i> : null}</span>)}</div>
+                  <div className="q-top"><Icon name="flag" size={18} /><b>{f.nm}</b><button className="sbtn" onClick={leaveBloc} title="Opustit blok">Opustit</button></div>
+                  <div className="bloc-flags">{f.mem.map((o) => <span key={o} className={`bloc-mem ${o === f.ldr ? 'ldr' : ''}`} title={`${getWorld().owners[o].name}${o === f.ldr ? ' – vedoucí' : ''}`}><Flag tag={getWorld().owners[o].tag} width={34} />{o === f.ldr ? <Icon name="crown" size={12} /> : null}</span>)}</div>
                 </>
               ) : d.capitulated ? <p className="muted">Země kapitulovala.</p> : (
                 <div className="dip-found">
@@ -134,6 +223,13 @@ export function DiplomacyPanel() {
                 </div>
               )}
             </section>
+            <div className="dip-grid" role="list" aria-label={`Země (${list.length})`}>
+              {list.map((c) => <Card key={c.o} c={c} on={cur && cur.o === c.o} onPick={() => setPick(pick === c.o ? -1 : c.o)} />)}
+              {!list.length && <p className="empty">Žádná země neodpovídá filtru.</p>}
+            </div>
+          </div>
+          <aside className={`prod-right dip-side ${cur ? 'open' : ''}`}>
+            {cur ? <Detail c={cur} state={state} me={me} onClose={() => setPick(-1)} /> : <p className="empty">Vyberte zemi.</p>}
           </aside>
         </div>
       </div>
