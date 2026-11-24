@@ -486,6 +486,7 @@ export class UnitLayer {
     };
     if (plan.area && plan.area.length) paint(plan.area, 'rgba(70,150,255,0.30)', 'rgba(150,200,255,0.95)');
     if (plan.line && plan.line.length) paint(plan.line, 'rgba(70,150,255,0.30)', 'rgba(150,200,255,0.95)');
+    if (plan.fb && plan.fb.length) paint(plan.fb, 'rgba(230,190,60,0.25)', 'rgba(255,215,90,0.95)');   // F4c: ústupová linie
     if (plan.to && plan.to.length) {
       paint(plan.to, 'rgba(235,75,50,0.30)', 'rgba(255,150,120,0.95)');
       ctx.fillStyle = '#ff6a47';

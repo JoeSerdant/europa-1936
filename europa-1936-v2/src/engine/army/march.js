@@ -2,11 +2,10 @@
 // Počítá stejně jako `movementStep` (rychlost divize, terén, počasí, infrastruktura, železnice ve vlastním území), jen bez bitev
 // a bez úbytku organizace cestou – je to odhad. Čistá čtení stavu, nic nemění.
 import { getWorld } from '../world.js';
-import { C } from './constants.js';
 import { edgeData, findPath } from './paths.js';
 import { openCtx } from './ctx.js';
 import { statsOf } from './unit.js';
-import { moveSpeed } from './movement.js';
+import { moveSpeed, legHours } from './movement.js';
 
 const isId = (x) => Number.isInteger(x) && x > 0;
 
@@ -21,7 +20,7 @@ function hoursAlong(ctx, d, path, prog) {
     if (!e || e.kind === 2) return -1;
     const speed = moveSpeed(ctx, d, st, next, e.kind);
     const rail = ctx.ctrl[from] === d.o && ctx.ctrl[next] === d.o ? e.rl : 0;
-    const hours = Math.max(1, e.h * (C.SPEED_REF / speed) / (1 + C.RAIL_SPEED * rail));
+    const hours = Math.max(1, legHours(e, speed, rail, d.rd));
     total += i === 0 ? hours * (1 - Math.min(99, Math.max(0, prog)) / 100) : hours;
     from = next;
   }

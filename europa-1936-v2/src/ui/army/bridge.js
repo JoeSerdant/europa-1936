@@ -19,11 +19,11 @@ export function focusedArmy(u, g) {
 
 /** Pohled na plán pro mapu: { area, line, to } nebo null. Při úpravě plánu se ukazují rozpracované seznamy. */
 export function planViewOf(u, g) {
-  if (u.planEdit) return { army: u.planEdit.army, area: u.planEdit.area, line: u.planEdit.line, to: u.planEdit.to };
+  if (u.planEdit) return { army: u.planEdit.army, area: u.planEdit.area, line: u.planEdit.line, to: u.planEdit.to, fb: u.planEdit.fb || NONE };
   const army = focusedArmy(u, g);
   const a = army ? g.mil.armies[army] : null;
   if (!a || !a.plan) return null;
-  return a.plan.k === 'area' ? { army, area: a.plan.area, line: NONE, to: NONE } : { army, area: NONE, line: a.plan.line, to: a.plan.to };
+  return a.plan.k === 'area' ? { army, area: a.plan.area, line: NONE, to: NONE } : { army, area: NONE, line: a.plan.line, to: a.plan.to, fb: a.plan.fb || NONE };
 }
 
 export function connectArmyOverlay() {

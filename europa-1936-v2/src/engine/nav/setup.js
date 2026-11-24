@@ -17,5 +17,5 @@ export function createNav(w, state) {
     if (any && home) fleets.push({ o, nm: 'Hlavní flotila', p: home.sea, ships, c: {}, mx: powerOf(ships).hp, to: 0, path: [], prog: 0, m: '', pl: deckOf(ships) });   // M90: paluby plné
     else for (const s in ships) pool[o][s] += ships[s];
   }
-  return { ver: 0, fn: fleets.length - 1, fleets, pool, sail: [], cv: new Array(n).fill(0) };
+  return { ver: 0, fn: fleets.length - 1, fleets, pool, sail: [], cv: new Array(n).fill(0), mn: {} };   // F4c: miny { oblast: { země: počet } }
 }

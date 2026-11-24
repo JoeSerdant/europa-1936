@@ -4,7 +4,7 @@ import { getWorld } from '../world.js';
 import { AIR } from './constants.js';
 import { PLANES } from '../../data/air/planes.js';
 import { atWar } from '../army/war.js';
-import { afbOf, radarOf, levelMult } from './core.js';
+import { afbOf, radarOf, levelMult, seasOfState } from './core.js';
 import { docMods } from '../doc/core.js';
 import { logAdd } from '../log.js';
 import { rand01 } from '../nat/core.js';
@@ -14,7 +14,8 @@ import { modsOf as techModsOf } from '../research/core.js';
 import { designMultOf } from '../design/core.js';
 
 const DFIELD = { atk: 'atk', cas: 'cas', bomb: 'bomb' };   // M97: pole síly letounu → násobek návrhu
-import { planesOf, coastStatesOf } from '../nav/core.js';
+import { planesOf, coastStatesOf, powerOf } from '../nav/core.js';
+const fleetPowerHp = (f) => powerOf(f.ships).hp;
 import { NAV } from '../nav/constants.js';
 
 const key = (o, s) => `${o}:${s}`;
@@ -41,6 +42,16 @@ export function airDay(state) {
   const dmul = { atk: 'patrol', cas: 'cas', bomb: 'bomb' };
   const power = (wg, field) => wg.n * PLANES[wg.t][field] * levelMult(state, wg.o, wg.t) * (1 + AIR.ACE_BONUS * (wg.a || 0)) * fuelAirMult(state, wg.o) * (1 + (dmul[field] ? docMods(state, wg.o)[dmul[field]] : 0)) * (1 + techModsOf(state, wg.o).air) * (DFIELD[field] ? designMultOf(state, wg.o, wg.t)[DFIELD[field]] : 1);   // M96: letecké technologie; M97: návrh varianty
   for (const wg of wings) if (wg && wg.m === 'air') patrol.set(key(wg.o, wg.to), (patrol.get(key(wg.o, wg.to)) || 0) + power(wg, 'atk'));
+  // F4c: stíhání – stíhači nad státem napadají jen bombardéry, bitevní letouny a úderná letadla (ne hlídky)
+  const intc = new Map();
+  for (const wg of wings) if (wg && wg.m === 'int') intc.set(key(wg.o, wg.to), (intc.get(key(wg.o, wg.to)) || 0) + power(wg, 'atk') * AIR.INT_MULT);
+  const foesInt = (o, s) => { let e = 0; for (const [k, v] of intc) { const [p, z] = k.split(':').map(Number); if (z === s && p !== o && atWar(state.mil, o, p)) e += v; } return e; };
+  const strikers = new Set();   // `${o}:${s}` – země s údernými misemi nad státem (stíhání má co stíhat)
+  for (const wg of wings) if (wg && (wg.m === 'cas' || wg.m === 'bomb' || wg.m === 'nav')) strikers.add(key(wg.o, wg.to));
+  const enemyStrikes = (o, s) => { for (const k of strikers) { const [p, z] = k.split(':').map(Number); if (z === s && p !== o && atWar(state.mil, o, p)) return true; } return false; };
+  // F4c: úder na lodě – nepřátelské flotily v mořích u cílového státu
+  const fleetsNear = (o, s) => (state.nav ? state.nav.fleets.map((f, i) => (f && atWar(state.mil, o, f.o) && seasOfState(s).includes(f.p) ? i : 0)).filter(Boolean) : []);
+  const navStrikes = [];
   const foesPatrol = (o, s) => {
     let e = 0;
     for (const [k, v] of patrol) { const [p, z] = k.split(':').map(Number); if (z === s && p !== o && atWar(state.mil, o, p)) e += v; }
@@ -69,10 +80,16 @@ export function airDay(state) {
           aces.push({ k: 'ace', o: wg.o, x: wg.t, y: newA });
         }
       }
+    } else if (wg.m === 'int') {
+      if (enemyStrikes(wg.o, wg.to)) frac += AIR.LOSS_INT * 0.5;   // F4c: stíhači utrží ztráty jen v boji s údernými letadly
     } else {
       const rocket = !!PLANES[wg.t].rocket;   // M82: raketu nikdo nezastaví, ale letí jen jednou
-      const cov = rocket ? 1 : cover(wg.o, wg.to, e);
+      const cov = rocket ? 1 : cover(wg.o, wg.to, e + foesInt(wg.o, wg.to));   // F4c: nepřátelské stíhání oslabí krytí úderných misí
       frac = rocket ? AIR.ROCKET_USE : frac + AIR.LOSS_INT * (1 - cov);
+      if (wg.m === 'nav') {
+        const near = fleetsNear(wg.o, wg.to);
+        if (near.length) { frac += AIR.LOSS_NAV; navStrikes.push({ ids: near, p: power(wg, 'cas') * cov }); }
+      }
       if (wg.m === 'cas') {
         sup[key(wg.o, wg.to)] = (sup[key(wg.o, wg.to)] || 0) + power(wg, 'cas') * cov;
       } else if (wg.m === 'bomb') {
@@ -96,6 +113,19 @@ export function airDay(state) {
     if (!pl || state.nav.fleets.some((x) => x && x.p === f.p && atWar(state.mil, f.o, x.o))) continue;
     const v = pl * PLANES.pal.cas * NAV.PLANE_CAS * fuelAirMult(state, f.o);
     for (const s of coastStatesOf(f.p)) sup[key(f.o, s)] = (sup[key(f.o, s)] || 0) + v;   // bonus platí divizím vlastníka flotily v pobřežním státě
+  }
+  // F4c: poškození flotil z úderů na lodě (rozdělené podle odolnosti zasažených flotil)
+  let nav = state.nav;
+  if (navStrikes.length && nav) {
+    const fleets = nav.fleets.slice();
+    for (const st of navStrikes) {
+      let hp = 0;
+      for (const i of st.ids) if (fleets[i]) hp += fleetPowerHp(fleets[i]);
+      if (hp <= 0) continue;
+      const dmg = Math.min(AIR.NAV_DMG_MAX, AIR.NAV_K * st.p / hp);
+      for (const i of st.ids) if (fleets[i]) fleets[i] = { ...fleets[i], dm: Math.round(Math.min(NAV.DMG_MAX, (fleets[i].dm || 0) + dmg) * 1000) / 1000 };
+    }
+    nav = { ...nav, fleets, ver: nav.ver + 1 };
   }
   const supOut = {};
   for (const k in sup) supOut[k] = Math.min(AIR.CAS_MAX, sup[k] * AIR.CAS_COEF);
@@ -122,7 +152,7 @@ export function airDay(state) {
   const made = nukeProduction(state);   // M82: výroba atomových bomb
   if (made) out.nuke = made.nuke;
   const player = state.player ? w.ownerIdx[state.player] : 0;
-  let res = { ...next, pol, mil, air: out };
+  let res = { ...next, pol, mil, air: out, ...(nav !== state.nav ? { nav } : {}) };
   for (const a of aces) if (a.o === player) res = logAdd(res, a);
   if (made) for (const o of made.ready) if (o === player) res = logAdd(res, { k: 'nukeready', o });
   return res;

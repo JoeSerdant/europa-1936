@@ -6,10 +6,11 @@ import { hasAccess } from '../dip/accessCore.js';
 import { sameFaction } from '../dip/core.js';
 import { logAddMany } from '../log.js';
 import { NAV } from './constants.js';
+import { BUILDINGS } from '../../data/industry/buildings.js';
 import { tradeRoute, routeRisk, needOf } from './convoy.js';
 import { docMods } from '../doc/core.js';
 import { fuelNavMult } from '../fuel/index.js';
-import { seaGraph, seaKm, powerOf, fleetPower, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf, deckOf, planesOf } from './core.js';
+import { seaGraph, seaKm, powerOf, fleetPower, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf, deckOf, planesOf, damageOf, enemyMines, baseLevelAt } from './core.js';
 import { modsOf as techModsOf } from '../research/core.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
@@ -48,14 +49,16 @@ function arrivals(state) {
     let place = s.to, landed = true;
     if (state.ctrl[s.to] !== s.o) {
       const c = state.ctrl[s.to], foe = atWar(state.mil, s.o, c);
-      if (enemyThere || !(foe || hasAccess(state.dip, s.o, c))) { place = state.ctrl[s.from] === s.o ? s.from : s.to; landed = false; }
+      const cf = foe && state.ind.cf ? state.ind.cf[s.to] || 0 : 0;   // F4c: pobřežní pevnost na nejvyšší úrovni vylodění zastaví
+      if (enemyThere || !(foe || hasAccess(state.dip, s.o, c)) || cf >= BUILDINGS.cfort.max) { place = state.ctrl[s.from] === s.o ? s.from : s.to; landed = false; }
       else if (foe) {
         if (!ctrlCopy) { ctrl = ctrl.slice(); ctrlCopy = true; }
         ctrl[s.to] = s.o; ownerVer++;
       }   // u spojence se přistane bez záboru (M67)
     }
     const port = w.portLevel[place] > 0;
-    divs[s.id] = { ...d, p: place, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0, org: d.org * (landed && !port ? NAV.LAND_ORG : 1) };
+    const cfl = landed && state.ind.cf && place !== prev ? state.ind.cf[place] || 0 : 0;
+    divs[s.id] = { ...d, p: place, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0, org: d.org * (landed && !port ? NAV.LAND_ORG : 1) * (1 - NAV.CFORT_ORG * cfl) };
     if (o_isPlayer(s.o, player)) logs.push({ k: 'landing', o: s.o, x: landed ? place : s.from, a: landed ? 1 : 0 });
     else if (landed && prev !== s.o && prev === player) logs.push({ k: 'lands', o: s.o, x: place, b: prev });   // M71: nepřítel se vylodil na území hráče
   }
@@ -119,8 +122,8 @@ function combat(state) {
     const mis = (i) => (f0[i].m === 'patrol' ? 1 + NAV.MISSION_PATROL : f0[i].m === 'raid' ? NAV.MISSION_EVADE : 1);
     const fire = (i) => (1 + docMods(state, f0[i].o).fire) * (1 + techModsOf(state, f0[i].o).nav) * mis(i);   // M96: námořní technologie
     const sum = (list) => list.reduce((a, i) => {
-      const sh = f0[i].ships, p = fleetPower(state, f0[i].o, sh);
-      return { hp: a.hp + p.hp, atk: a.atk + p.atk * fire(i), air: a.air + airPower(sh, f0[i].pl || 0) * fire(i), asw: a.asw + aswOf(sh), ss: a.ss + (sh.ss || 0), pl: a.pl + planesOf(f0[i]) };
+      const sh = f0[i].ships, p = fleetPower(state, f0[i].o, sh), ok = 1 - damageOf(f0[i]);   // F4c: poškozená flotila je slabší
+      return { hp: a.hp + p.hp * ok, atk: a.atk + p.atk * fire(i) * ok, air: a.air + airPower(sh, f0[i].pl || 0) * fire(i), asw: a.asw + aswOf(sh) * ok, ss: a.ss + (sh.ss || 0), pl: a.pl + planesOf(f0[i]) };
     }, { hp: 0, atk: 0, air: 0, asw: 0, ss: 0, pl: 0 });
     const pa = sum(idsA), pb = sum(idsB);
     if (pa.atk + pa.air <= 0 && pb.atk + pb.air <= 0) continue;
@@ -132,7 +135,8 @@ function combat(state) {
     const planeLoss = (own, foe) => Math.min(0.9, NAV.PLANE_LOSS + (foe.pl > 0 ? NAV.PLANE_DUEL * foe.pl / (foe.pl + own.pl) : 0));
     for (const [list, frac, sub, pl] of [[idsA, fa, subA, planeLoss(pa, pb)], [idsB, fb, subB, planeLoss(pb, pa)]]) for (const i of list) {
       const ev = f0[i].m === 'raid' ? NAV.MISSION_EVADE : 1;
-      let nf = fleets[i] && applyLoss(fleets[i], frac * ev, sub * ev);
+      let nf = fleets[i] && applyLoss(fleets[i], frac * ev * NAV.SINK_SHARE, sub * ev * NAV.SINK_SHARE);   // F4c: část ztrát potopí lodě, zbytek je poškození
+      if (nf) nf = { ...nf, dm: Math.min(NAV.DMG_MAX, damageOf(nf) + frac * ev * (1 - NAV.SINK_SHARE)) };
       if (nf && (nf.pl || 0) > 0) nf = { ...nf, pl: Math.min(deckOf(nf.ships), (nf.pl || 0) - Math.ceil((nf.pl || 0) * pl * ev)) };
       fleets[i] = nf; touched.push(i);
     }
@@ -142,7 +146,7 @@ function combat(state) {
   for (const i of touched) {
     const f = fleets[i];
     if (!f) continue;
-    if (powerOf(f.ships).hp < f.mx * NAV.RETREAT) {
+    if (powerOf(f.ships).hp * (1 - damageOf(f)) < f.mx * NAV.RETREAT) {
       const tmp = { ...f, p: retreatTo({ ...state, nav: { ...state.nav, fleets } }, f), path: [], to: 0, prog: 0, mx: powerOf(f.ships).hp };
       fleets[i] = tmp;
     }
@@ -247,7 +251,67 @@ export function refillDecks(state) {
   return { ...state, nav: { ...state.nav, fleets, ver: state.nav.ver + 1 }, air: { ...state.air, pool, ver: state.air.ver + 1 } };
 }
 
+/**
+ * F4c, denně: miny (kladení torpédoborci a ponorkami na misi `mine`, odminování torpédoborci na misi `sweep`, úbytek, poškození nepřátelských
+ * flotil) a opravy stojících flotil v oblasti s vlastním přístavem (rychlost podle úrovně přístavu a námořní základny `nb`).
+ */
+export function minesAndRepairs(state) {
+  const f0 = state.nav.fleets;
+  let mn = state.nav.mn || {}, mc = false;
+  const editMn = () => { if (!mc) { mn = { ...mn }; mc = true; } };
+  for (let i = 1; i < f0.length; i++) {
+    const f = f0[i];
+    if (!f || f.path.length) continue;
+    if (f.m === 'mine') {
+      const add = NAV.MINE_LAY * ((f.ships.dd || 0) + (f.ships.ss || 0));
+      if (!add) continue;
+      editMn();
+      const cur = mn[f.p] || {};
+      mn[f.p] = { ...cur, [f.o]: Math.min(NAV.MINES_MAX, (cur[f.o] || 0) + add) };
+    } else if (f.m === 'sweep' && mn[f.p]) {
+      let left = NAV.MINE_SWEEP * (f.ships.dd || 0);
+      if (!left) continue;
+      editMn();
+      const cur = { ...mn[f.p] };
+      for (const k of Object.keys(cur).sort()) { if (!atWar(state.mil, f.o, +k) || left <= 0) continue; const take = Math.min(cur[k], left); cur[k] -= take; left -= take; if (cur[k] <= 0.01) delete cur[k]; }
+      mn[f.p] = cur;
+    }
+  }
+  // úbytek min
+  for (const l of Object.keys(mn)) {
+    const cur = mn[l], next = {};
+    let any = false;
+    for (const k in cur) { const v = cur[k] * (1 - NAV.MINE_DECAY); if (v >= 0.5) { next[k] = Math.round(v * 100) / 100; any = true; } }
+    editMn();
+    if (any) mn[l] = next; else delete mn[l];
+  }
+  // poškození minami a opravy
+  let fleets = f0, fc = false;
+  const s1 = mc ? { ...state, nav: { ...state.nav, mn } } : state;
+  const homes = new Map();
+  for (let i = 1; i < f0.length; i++) {
+    const f = f0[i];
+    if (!f) continue;
+    let dm = damageOf(f);
+    const mines = enemyMines(s1, f.o, f.p);
+    if (mines > 0) dm = Math.min(NAV.DMG_MAX, dm + mines * NAV.MINE_DMG * (f.m === 'sweep' ? 0.5 : 1));
+    else if (dm > 0 && !f.path.length) {
+      let h = homes.get(f.o);
+      if (!h) { h = homeSeas(state, f.o); homes.set(f.o, h); }
+      if (h.has(f.p)) dm = Math.max(0, dm - NAV.REPAIR - NAV.REPAIR_LV * baseLevelAt(state, f.o, f.p));
+    }
+    dm = Math.round(dm * 1000) / 1000;
+    if (dm === damageOf(f)) continue;
+    if (!fc) { fleets = fleets.slice(); fc = true; }
+    const nf = { ...f, dm };
+    if (!dm) delete nf.dm;
+    fleets[i] = nf;
+  }
+  if (!mc && !fc) return state;
+  return { ...state, nav: { ...state.nav, mn, fleets, ver: state.nav.ver + 1 } };
+}
+
 export function navDay(state) {
-  return refillDecks(raids(sinkings(combat(state))));
+  return minesAndRepairs(refillDecks(raids(sinkings(combat(state)))));
 }
 void SHIPS; void seaGraph;

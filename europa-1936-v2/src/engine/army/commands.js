@@ -230,7 +230,9 @@ export function orderMove(state, divIds, prov, append = false) {
     if (!seg) continue;
     const path = queued ? d.path.concat(seg) : seg;
     if (!divs) divs = mil.divs.slice();
-    divs[id] = { ...d, path, prog: queued || d.path[0] === path[0] ? d.prog : 0, mo: prov };   // F3: `mo` = cíl přímého rozkazu – plán armády ho nechá doběhnout
+    const { rd, ...rest } = d;   // F4c: běžný rozkaz ruší strategický přesun
+    void rd;
+    divs[id] = { ...rest, path, prog: queued || d.path[0] === path[0] ? d.prog : 0, mo: prov };   // F3: `mo` = cíl přímého rozkazu – plán armády ho nechá doběhnout
   }
   return divs ? { ...state, mil: { ...mil, divs } } : state;
 }
@@ -243,7 +245,42 @@ export function cancelOrder(state, divIds) {
     const d = divOf(mil, id);
     if (!d || (d.path.length === 0 && d.prog === 0) || isDefending(mil, d, id)) continue;
     if (!divs) divs = mil.divs.slice();
-    divs[id] = { ...d, path: [], prog: 0 };
+    const { rd, ...rest } = d;
+    void rd;
+    divs[id] = { ...rest, path: [], prog: 0 };
+  }
+  return divs ? { ...state, mil: { ...mil, divs } } : state;
+}
+
+/**
+ * F4c: proč nejde divizi `id` poslat strategickým přesunem do `prov` (český text), nebo null. Přesun vede jen vlastním a spřáteleným územím
+ * (žádná provincie cesty nesmí patřit nepříteli), divize nesmí bojovat a cíl musí ovládat vlastník divize.
+ */
+export function railBlock(state, id, prov) {
+  const mil = state.mil, w = getWorld(), d = divOf(mil, id);
+  if (!d) return 'Divize neexistuje.';
+  if (!Number.isInteger(prov) || !w.isLand(prov)) return 'Neplatný cíl.';
+  if (d.b) return 'Divize bojuje.';
+  if (state.ctrl[prov] !== d.o) return 'Přesun po železnici vede jen do vlastní provincie.';
+  if (d.p === prov) return 'Divize už tam stojí.';
+  const path = findPath(mil, state.ctrl, d.o, d.p, prov, { dip: state.dip });
+  if (!path) return 'Cesta neexistuje.';
+  if (path.some((p) => atWar(mil, d.o, state.ctrl[p]))) return 'Cesta vede přes nepřátelské území.';
+  return null;
+}
+
+/** F4c: strategický přesun (vlakem jako v HOI4): divize jedou `C.REDEPLOY_MULT`× rychleji, bez organizace a bez boje (`rd: 1`); divize, které nejdou, se přeskočí. */
+export function orderRail(state, divIds, prov) {
+  const mil = state.mil;
+  let divs = null;
+  const paths = new Map();
+  for (const id of uniq(divIds)) {
+    if (railBlock(state, id, prov)) continue;
+    const d = mil.divs[id];
+    const key = `${d.o}:${d.p}`;
+    if (!paths.has(key)) paths.set(key, findPath(mil, state.ctrl, d.o, d.p, prov, { dip: state.dip }));
+    if (!divs) divs = mil.divs.slice();
+    divs[id] = { ...d, path: paths.get(key), prog: 0, mo: prov, rd: 1 };
   }
   return divs ? { ...state, mil: { ...mil, divs } } : state;
 }
@@ -393,7 +430,9 @@ export function normalizePlan(plan) {
     const mode = PLAN_MODES.includes(plan.mode) ? plan.mode : 'balanced';
     if (!line || !to || line.length < 1 || line.length > AREA_MAX || to.length > AREA_MAX) return null;
     const out = { k: 'front', line, to: to.filter((p) => !line.includes(p)), mode };
-    if (plan.loc) out.loc = 1;   // M88: místní útok AI na slabá místa (ne celková ofenziva divadla)
+    if (plan.loc) out.loc = 1;
+    const fb = landList(plan.fb ?? []);   // F4c: ústupová linie (armáda na ni přejde, když se fronta hroutí)
+    if (fb && fb.length && fb.length <= AREA_MAX) { const f = fb.filter((p) => !line.includes(p) && !out.to.includes(p)); if (f.length) out.fb = f; }   // M88: místní útok AI na slabá místa (ne celková ofenziva divadla)
     return out;
   }
   return null;

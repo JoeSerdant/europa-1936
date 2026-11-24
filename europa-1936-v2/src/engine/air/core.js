@@ -51,3 +51,14 @@ export function basesOf(state, o) {
 
 /** Smí křídlo typu `t` plnit misi `m`? */
 export const roleOk = (t, m) => !!PLANES[t] && PLANES[t].roles.includes(m);
+
+const seaCache = new WeakMap();
+/** F4c: mořské oblasti u pobřeží státu `s` (cíl mise Úder na lodě). */
+export function seasOfState(s) {
+  const w = getWorld();
+  let m = seaCache.get(w);
+  if (!m) { m = new Map(); seaCache.set(w, m); }
+  let out = m.get(s);
+  if (!out) { const set = new Set(); for (const p of w.states[s].v) w.forCoast(p, (sea) => set.add(sea)); out = [...set].sort((a, b) => a - b); m.set(s, out); }
+  return out;
+}

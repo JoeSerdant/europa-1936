@@ -66,7 +66,7 @@ export function routeRisk(state, route, from, to) {
   const seas = new Set(route.seas);
   for (const f of state.nav.fleets) {
     if (!f || !seas.has(f.p)) continue;
-    const atk = fleetPower(state, f.o, f.ships).atk;   // M96: úrovně lodí
+    const atk = fleetPower(state, f.o, f.ships).atk * (1 - (f.dm || 0));   // M96: úrovně lodí; F4c: poškození
     if (!atk) continue;
     const dm = docMods(state, f.o);
     if (atWar(state.mil, to, f.o) || atWar(state.mil, from, f.o)) {
@@ -76,6 +76,13 @@ export function routeRisk(state, route, from, to) {
   }
   let safe = 1;
   for (const [sea, r] of raid) safe *= 1 - Math.min(NAV.RAID_MAX, NAV.RAID_COEF * Math.max(0, r - NAV.ESCORT_K * (escort.get(sea) || 0)));
+  if (state.nav.mn) for (const sea of seas) {   // F4c: nepřátelské miny na trase (nepřítel dovozce nebo vývozce)
+    const m = state.nav.mn[sea];
+    if (!m) continue;
+    let n = 0;
+    for (const k in m) if (atWar(state.mil, to, +k) || atWar(state.mil, from, +k)) n += m[k];
+    if (n > 0) safe *= 1 - Math.min(NAV.RAID_MAX, n * NAV.MINE_RISK);
+  }
   return Math.min(NAV.RAID_MAX, 1 - safe);
 }
 

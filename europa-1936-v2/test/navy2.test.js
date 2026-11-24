@@ -72,7 +72,7 @@ describe('mise a konvoje', () => {
     const s = createGame({ player: null });
     const id = s.nav.fleets.findIndex((f) => f && f.o === ENG);
     expect(s.nav.fleets[id].m).toBe('');
-    expect(NAV_MISSION_IDS).toEqual(['patrol', 'raid', 'escort']);
+    expect(NAV_MISSION_IDS).toEqual(['patrol', 'raid', 'escort', 'mine', 'sweep']);
     for (const m of NAV_MISSION_IDS) expect(NAV_MISSIONS[m].n && NAV_MISSIONS[m].info).toBeTruthy();
     const a = setFleetMission(s, id, 'raid');
     expect(a.nav.fleets[id].m).toBe('raid');

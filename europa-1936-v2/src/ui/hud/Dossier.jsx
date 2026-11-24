@@ -102,6 +102,8 @@ function StateIndustry({ s }) {
         <span title={`${BUILDINGS.inf.n}: úroveň ${info.inf} z ${BUILDINGS.inf.max}`}><Icon name="road" size={15} /><Pips n={info.inf} max={BUILDINGS.inf.max} q={q('inf').length} /></span>
         <span title={`${BUILDINGS.afb.n}: úroveň ${info.afb} z ${BUILDINGS.afb.max}`}><Icon name="plane" size={15} /><Pips n={info.afb} max={BUILDINGS.afb.max} q={q('afb').length} /></span>
         <span title={`${BUILDINGS.radar.n}: úroveň ${info.radar} z ${BUILDINGS.radar.max}`}><Icon name="eye" size={15} /><Pips n={info.radar} max={BUILDINGS.radar.max} q={q('radar').length} /></span>
+        {info.port ? <span title={`${BUILDINGS.nb.n}: úroveň ${info.nb} z ${BUILDINGS.nb.max} – opravy lodí`}><Icon name="ship" size={15} /><Pips n={info.nb} max={BUILDINGS.nb.max} q={q('nb').length} /></span> : null}
+        <span title={info.hub ? `${BUILDINGS.hub.n}: postaven` : `${BUILDINGS.hub.n}: není`}><Icon name="box" size={15} /><Pips n={info.hub} max={1} q={q('hub').length} /></span>
       </div>
       {res.length > 0 && (
         <div className="st-res">{res.map(([r, n]) => <span key={r} title={`${RESOURCES[r].n}: těžba ${fmtNum(n, 1)} za den`}><ResIcon r={r} size={20} /><b>{fmtNum(n, 1)}</b></span>)}</div>
@@ -117,8 +119,8 @@ function StateIndustry({ s }) {
 function ProvinceFort({ p }) {
   const state = useGameSlow((g) => g, 700);
   const me = playerIdx(state);
-  const lv = fortOf(state, p);
-  const queued = state.ind.build.filter((b) => b.p === p).length;
+  const lv = fortOf(state, p), cf = (state.ind.cf && state.ind.cf[p]) || 0;   // F4c: pobřežní pevnost
+  const queued = state.ind.build.filter((b) => b.p === p && b.k === 'fort').length;
   const mine = me && state.ctrl[p] === me && state.stateOwner[getWorld().provState[p]] === me;
   if (!lv && !queued && !mine) return null;
   return (
@@ -126,6 +128,7 @@ function ProvinceFort({ p }) {
       <h3>Pevnost</h3>
       <dl className="kv">
         <Row label="Úroveň">{lv} z {BUILDINGS.fort.max}{queued ? ` · rozestavěno ${queued}` : ''}</Row>
+        {cf ? <Row label="Pobřežní">{cf} z {BUILDINGS.cfort.max}{cf >= BUILDINGS.cfort.max ? ' · vylodění nemožné' : ''}</Row> : null}
       </dl>
       {mine && lv + queued < BUILDINGS.fort.max && (   /* F2 B6: pevnost se staví v panelu Stavby – odkaz otevře panel s vybranou pevností */
         <div className="ind-btns"><button className="sbtn" onClick={() => { openBuild(); pickBuild('fort'); }} title={`${BUILDINGS.fort.info} Otevře panel Stavby s vybranou pevností – klikněte na provincii.`}><Icon name="shield" size={14} />Pevnost v panelu Stavby</button></div>
@@ -303,6 +306,19 @@ function SeaFleets({ l }) {
   );
 }
 
+/** F4c: miny v mořské oblasti podle zemí. */
+function SeaMines({ l }) {
+  const mn = useGameSlow((g) => (g.nav.mn && g.nav.mn[l]) || null, 800);
+  if (!mn || !Object.keys(mn).length) return null;
+  const w = getWorld();
+  return (
+    <section>
+      <h3>Miny v oblasti</h3>
+      <div className="chips">{Object.entries(mn).map(([o, n]) => <span key={o} className="chip chip-flag" title="Miny poškozují nepřátelské flotily a ohrožují konvoje; odstraní je torpédoborce na misi Odminování"><Flag tag={w.owners[+o].tag} width={18} />{w.owners[+o].name}<i>{Math.round(n)}</i></span>)}</div>
+    </section>
+  );
+}
+
 function SeaDossier({ l }) {
   const w = getWorld();
   const s = w.sea[l - w.L];
@@ -325,6 +341,7 @@ function SeaDossier({ l }) {
           <Row label="Pobřežních provincií">{fmtInt(near.length)}</Row>
         </dl>
         <SeaFleets l={l} />
+        <SeaMines l={l} />
         {seas.length > 0 && <section><h3>Sousední moře</h3><Chips items={seas.slice(0, 14)} /></section>}
         {near.length > 0 && <section><h3>Pobřeží</h3><Chips items={near.slice(0, 18)} /></section>}
       </div>

@@ -222,6 +222,7 @@
 .sw { display: inline-block; width: 12px; height: 12px; }
 .sw.line { background: var(--plan-line); }
 .sw.to { background: var(--plan-to); }
+.sw.fb { background: rgba(230, 190, 60, 0.85); }   /* F4c: ústupová linie */
 .plan-help { font-size: 13px; color: var(--text-3); }
 .planbar footer { display: flex; justify-content: flex-end; gap: 8px; }
 .planbar footer .btn { min-height: 34px; padding: 0 18px; font-size: 14px; }

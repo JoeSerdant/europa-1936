@@ -16,6 +16,10 @@ export const AIR = {
   BOMB_STOCK: 0.00001,    // podíl zničeného skladu výzbroje za jednotku síly
   BOMB_STOCK_MAX: 0.02,
   LOST_BASE_LOSS: 0.3,    // podíl letadel ztracený, když křídlo přijde o letiště
+  INT_MULT: 1.5,          // F4c: stíhání – síla stíhačů proti nepřátelským bombardérům a bitevním letounům (s hlídkami se nebijí)
+  NAV_K: 0.25,            // F4c: úder na lodě – poškození flotil za jednotku síly (podpora × krytí) na jednotku jejich odolnosti
+  NAV_DMG_MAX: 0.15,      // nejvyšší denní poškození jedné flotily z úderů letectva
+  LOSS_NAV: 0.03,         // denní ztráty letadel útočících na lodě (protiletadlová palba flotil)
   ACE_CHANCE: 0.06,       // denní šance na eso při plném vzdušném boji (násobí se podílem nepřátelských hlídek)
   ACE_BONUS: 0.05,        // bonus síly hlídek křídla za každý stupeň es
   ACE_MAX: 3,             // nejvyšší stupeň es

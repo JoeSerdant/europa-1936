@@ -183,7 +183,8 @@ describe('konec války v Evropě (M98)', () => {
     expect(holdoutOf(s, GER)).toBe(true);
     expect(holdoutOf(at(s, 3450), GER)).toBe(false);
     expect(holdoutOf(noHist(s), GER)).toBe(false);
-    expect(armisticeRow(at(s, 3420), GER)).toBeNull();   // Sověti zatím nedrží 20 německých provincií
+    expect(armisticeRow(at(s, 3414), GER)).toBeNull();   // F4c: do 8. 5. 1945 nic (pak natvrdo)
+    expect(armisticeRow(at(s, 3415), GER)).toBeTruthy();
     const r = armisticeRow(at(s, 3480), GER);
     expect(r && r.conf).toBeTruthy();
     const t = dipDay(at(s, 3480));

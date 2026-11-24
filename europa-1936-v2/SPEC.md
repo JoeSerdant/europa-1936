@@ -1158,6 +1158,32 @@ Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a da
   počasí, obyvatelé, plocha, železnice a přístav jako tečky úrovně), stavební sloty jako dlaždice (civilní a vojenské továrny, loděnice,
   rozestavěné s postupem, volné), sdílené budovy s úrovní (infrastruktura, letiště, radar) a těžba jako ikony surovin.
 
+## 4zzzzzz. Mechaniky HOI4 – přesuny, námořní válka, stavby (F4c, `GAME_VERSION = 51`)
+
+Tvar stavu: divize může mít `rd: 1` (strategický přesun), plán fronty `fb: [prov…]` (ústupová linie), flotila `dm` (poškození 0–`NAV.DMG_MAX`),
+`nav.mn = { oblast: { země: počet min } }`, `ind.cf = { provincie: úroveň }` (pobřežní pevnosti), stavby státu `nb` a `hub` v `ind.st[s]`.
+
+- **Strategický přesun po železnici** (`orderRail`, kontroly `railBlock`): jen do vlastní provincie a cestou bez nepřátelského území; divize s `rd`
+  jede `C.REDEPLOY_MULT`× rychleji (`legHours` sdílí pohyb i odhad příjezdu), má nejvýš `C.REDEPLOY_ORG` organizace a nebojuje – narazí-li na
+  nepřítele, přesun končí; po příjezdu `rd` zmizí. Běžný rozkaz i zastavení přesun ruší. Ovládání: Alt + pravé tlačítko nebo tlačítko v liště výběru.
+- **Ústupová linie** (`plan.fb` u plánu fronty, `dailyFallback`): když nepřítel drží aspoň `C.FALLBACK_LOST` provincií linie fronty, armáda dostane
+  obranný plán po ústupové linii (bez cílů) a plánovač ji tam přesune. V liště plánu nástroj „Ústupová linie“ (žlutě na mapě).
+- **Poškození a opravy lodí**: v námořním boji jen `NAV.SINK_SHARE` ztrát potápí lodě, zbytek je poškození flotily `dm` (slabší palba, odolnost
+  a krytí konvojů, dřívější ústup). Stojící flotila v oblasti s vlastním přístavem se denně opravuje o `NAV.REPAIR` + `NAV.REPAIR_LV` × (úroveň
+  přístavu + **námořní základny** `nb`, stavba státu s přístavem, max. 5) – `baseLevelAt`, `minesAndRepairs`.
+- **Miny**: mise flotil `mine` (torpédoborce a ponorky kladou `NAV.MINE_LAY` min za loď a den, nejvýš `NAV.MINES_MAX` na zemi v oblasti) a `sweep`
+  (torpédoborce odstraní `NAV.MINE_SWEEP` nepřátelských min); miny ubývají o `NAV.MINE_DECAY` denně, poškozují nepřátelské flotily v oblasti
+  (`NAV.MINE_DMG` za minu) a zvyšují riziko konvojů na trase (`NAV.MINE_RISK`, v `routeRisk`).
+- **Letecké mise**: `int` Stíhání (stíhači; silou × `AIR.INT_MULT` oslabují krytí nepřátelských úderných misí nad státem, s hlídkami se nebijí) a
+  `nav` Úder na lodě (bitevní letouny a taktické bombardéry; cíl je pobřežní stát, `seasOfState`): nepřátelské flotily v přilehlých mořích dostanou
+  poškození `AIR.NAV_K` × síla podpory × krytí / jejich odolnost (nejvýš `AIR.NAV_DMG_MAX` denně), letadla ztrácejí `AIR.LOSS_NAV`.
+- **Pobřežní pevnost** (`cfort`, provinční stavba u moře, max. 3, `buildFort(state, p, 'cfort')`, `fortRoom(…, 'cfort')`): vyloďující se divize ztratí
+  `NAV.CFORT_ORG` organizace za úroveň; na nejvyšší úrovni se nepřítel vylodit nedokáže.
+- **Zásobovací uzel** (`hub`, stavba státu, max. 1, jen s železnicí v hlavní provincii státu): hlavní provincie státu se stane uzlem zásobování
+  (jako železniční uzel ze světa). Postavené uzly nese neviditelná vlastnost `hubs` pole z `seaPorts` (`builtHubs`), takže je dostane každé volání `supplyFlow`.
+- **Rozhraní**: stavby Námořní základna, Zásobovací uzel a Pobřežní pevnost v panelu Stavby; karta státu ukazuje základnu a uzel tečkami, pevnost
+  provincie i pobřežní pevnost; moře ukazuje miny podle zemí; flotila ukazuje poškození; mise flotil a letectva jako ikony.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1366,6 +1392,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M105** | **Výzkum s ikonami a okna u kraje**: kreslené ikony technologií, klik na kartu zahájí výzkum, sedm oken jako panel vlevo nad mapou | **hotovo** |
 | **F4a** | **Funkce HOI4 – vlna 1**: dobrovolníci a expediční sbory, vojenský atašé, licenční výroba, volby v demokraciích, vrchní velení (náčelníci štábů) | **hotovo** |
 | **F4b** | **Historie natvrdo a rozhraní jako v HOI4**: vynucené konce válek (Španělsko „fronty ztuhly“, pády zemí 1939–1941), horní lišta s cílem a výzkumem, přehled vpravo, ikony režimů mapy, karta státu se sloty | **hotovo** |
+| **F4c** | **Mechaniky HOI4**: přesun po železnici, ústupová linie, poškození a opravy lodí s námořními základnami, miny, stíhání a úder na lodě, pobřežní pevnosti, zásobovací uzly | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

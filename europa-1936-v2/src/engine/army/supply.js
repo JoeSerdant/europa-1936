@@ -15,7 +15,8 @@ const cache = new Map();   // země → { sig, reach }
 
 /** Podpis množiny provincií, které země (a její přátelé) ovládá (počet, součet, součet čtverců, xor), seznamu přátel a námořně zásobovaných přístavů – kvůli mezipaměti. */
 function signature(ctrl, o, L, friends, ports) {
-  const tail = ports && ports.length ? `|${ports.join(',')}` : '';
+  const hubs = ports && ports.hubs && ports.hubs.length ? `h${ports.hubs.join(',')}` : '';   // F4c: postavené uzly
+  const tail = (ports && ports.length ? `|${ports.join(',')}` : '') + hubs;
   let n = 0, s = 0, q = 0, x = 0;
   if (friends && friends.length) {
     const mine = new Uint8Array(ctrl.length ? Math.max(o, ...friends) + 1 : 0);
@@ -36,10 +37,11 @@ export function supplyFlow(ctrl, o, infra = geo().infra, friends = null, ports =
   const w = getWorld();
   const fr = friends && friends.length ? friends : null;
   const pt = ports && ports.length ? ports : null;
-  const sig = signature(ctrl, o, w.L, fr, pt);
+  const hubs = ports && ports.hubs && ports.hubs.length ? ports.hubs : null;
+  const sig = signature(ctrl, o, w.L, fr, ports);
   const hit = cache.get(o);
   if (hit && hit.sig === sig && hit.L === w.L && hit.infra === infra) return hit.reach;
-  const reach = computeReach(ctrl, o, w, infra, fr, pt);
+  const reach = computeReach(ctrl, o, w, infra, fr, pt, hubs);
   cache.set(o, { sig, reach, L: w.L, infra });
   return reach;
 }
@@ -51,7 +53,8 @@ export function flowDrop(w, g, infra, p, q, kind) {
   return (t.flow * (1 - C.SUP_INFRA_RELIEF * infra[q] / 5) + (kind === 1 ? RIVER.flow : 0)) * dist;
 }
 
-function computeReach(ctrl, o, w, infra, friends, ports) {
+function computeReach(ctrl, o, w, infra, friends, ports, hubs = null) {
+  const built = hubs ? new Set(hubs) : null;   // F4c: postavené zásobovací uzly se chovají jako uzly železnice
   const fset = friends ? new Set(friends) : null;
   const mine = (c) => c === o || (fset !== null && fset.has(c));   // vlastní nebo přátelské území
   const g = geo(w), adj = adjacency(w);
@@ -85,7 +88,7 @@ function computeReach(ctrl, o, w, infra, friends, ports) {
   const push = (p, v) => { v = Math.fround(v); if (v > reach[p] && v >= C.SUP_MIN_FLOW) { reach[p] = v; heap.push(-v, p); } };
   if (capitalHeld) push(cap, C.SUP_CAPITAL);
   for (let p = 1; p <= L; p++) {
-    if (ctrl[p] !== o || p === cap || !g.hub[p]) continue;
+    if (ctrl[p] !== o || p === cap || !(g.hub[p] || (built && built.has(p)))) continue;
     // uzel spojený železnicí s hlavním městem dostává podíl jeho toku; každý uzel má aspoň slabé místní zásoby (kolonie, obklíčení)
     push(p, Math.max(C.SUP_HUB * rail[p], C.SUP_LOCAL));
   }

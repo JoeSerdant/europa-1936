@@ -31,6 +31,7 @@ export function createInd(w, rng) {
     st: Array.from({ length: w.states.length }, (_, s) => (s ? { civ: 0, mil: 0, dok: 0, res: {} } : null)),
     inf: new Array(w.states.length).fill(0),
     fort: {},
+    cf: {},   // F4c: pobřežní pevnosti podle provincie
     cons: new Array(w.owners.length).fill(0),
     build: [], lines: [], trade: [],
     fuel: createFuel(w),   // M73: zásoby paliva
