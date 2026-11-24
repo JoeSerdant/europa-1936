@@ -12,7 +12,7 @@ import {
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   orderDrop, dropBlock, AIR, dropNuke, nukeBlock, confClaim, confClaimsDone,
-  proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf,
+  proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf, orderRail, railBlock,
   volKind, volBlock, sendVolunteers, recallVolunteers, attBlock, sendAttache, recallAttache, licBlock, buyLicence, PLANES,
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, setDesign, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS, buildRoom, fortRoom,
 } from '../engine/index.js';
@@ -449,12 +449,28 @@ export function dropSelected(prov) {
 }
 
 /** Pravé tlačítko na mapě: rozkaz vybraným vlastním divizím (pohyb, v nepřátelské provincii útok). */
-export function contextClick(l, { shift = false, ctrl = false } = {}) {
+/** F4c: strategický přesun vybraných vlastních divizí do provincie `prov` (vlakem vlastním územím; divize, které nemohou, zůstanou). */
+export function railSelected(prov) {
+  const s = gameStore.getState();
+  const ids = ownSelected(s);
+  setUi({ railMode: false });
+  if (!ids.length || !getWorld().isLand(prov)) return false;
+  const ok = ids.filter((id) => !railBlock(s, id, prov));
+  if (!ok.length) { toast(`Přesun po železnici: ${railBlock(s, ids[0], prov)}`); play('error'); return false; }
+  if (!run(orderRail, ok, prov)) return false;
+  afterManualOrder(s, ok);
+  toast(`Přesun po železnici: ${ok.length} ${ok.length === 1 ? 'divize' : ok.length < 5 ? 'divize' : 'divizí'} do ${getWorld().provName(prov)}${ok.length < ids.length ? ` (${ids.length - ok.length} nemůže)` : ''}.`);
+  return true;
+}
+export const toggleRailMode = () => setUi({ railMode: !uiStore.getState().railMode });
+
+export function contextClick(l, { shift = false, ctrl = false, alt = false } = {}) {
   const u = uiStore.getState();
   if (u.planEdit || !l) return false;
   if (u.fleetSel && getWorld().isSea(l)) return orderFleetTo(l);
   if (!u.selDivs.length) return false;
   if (ctrl) return dropSelected(l);   // M80: Ctrl + pravé tlačítko = letecký výsadek
+  if (alt || u.railMode) return railSelected(l);   // F4c: Alt + pravé tlačítko (nebo tlačítko v liště výběru) = přesun po železnici
   return orderSelected(l, { queue: shift });
 }
 
@@ -577,7 +593,8 @@ export function startPlanEdit(armyId, kind) {
   const line = cur && cur.k === 'front' && kind === 'front' ? cur.line.slice() : [];
   const to = cur && cur.k === 'front' && kind === 'front' ? cur.to.slice() : [];
   const mode = cur && cur.k === 'front' ? cur.mode : 'balanced';
-  setUi({ planEdit: { army: armyId, kind, area, line, to, mode, tool: kind === 'front' ? 'line' : 'area' }, armyFocus: armyId });
+  const fb = cur && cur.k === 'front' && kind === 'front' && cur.fb ? cur.fb.slice() : [];   // F4c: ústupová linie
+  setUi({ planEdit: { army: armyId, kind, area, line, to, fb, mode, tool: kind === 'front' ? 'line' : 'area' }, armyFocus: armyId });
 }
 
 export function cancelPlanEdit() { setUi({ planEdit: null }); }
@@ -599,13 +616,12 @@ export function planPaint(l, { shift = false } = {}) {
   if (!pe || !l || !w.isLand(l)) return;
   const tool = pe.tool;
   const group = shift ? w.states[w.land[l].s].v : [l];
-  const list = pe[tool];
+  const list = pe[tool] || [];
   const allIn = group.every((p) => list.includes(p));
   let next = allIn ? list.filter((p) => !group.includes(p)) : list.concat(group.filter((p) => !list.includes(p)));
   const patch = { [tool]: next };
-  if (!allIn) {                                  // linie a cíle se nepřekrývají
-    if (tool === 'line') patch.to = pe.to.filter((p) => !group.includes(p));
-    if (tool === 'to') patch.line = pe.line.filter((p) => !group.includes(p));
+  if (!allIn) {                                  // linie, cíle a ústupová linie se nepřekrývají
+    for (const k of ['line', 'to', 'fb']) if (k !== tool && pe[k]) patch[k] = pe[k].filter((p) => !group.includes(p));
   }
   setUi({ planEdit: { ...pe, ...patch } });
 }
@@ -622,13 +638,13 @@ export function planSuggest() {
 
 export function planClearLists() {
   const pe = uiStore.getState().planEdit;
-  if (pe) setUi({ planEdit: { ...pe, area: [], line: [], to: [] } });
+  if (pe) setUi({ planEdit: { ...pe, area: [], line: [], to: [], fb: [] } });
 }
 
 export function confirmPlan() {
   const pe = uiStore.getState().planEdit;
   if (!pe) return false;
-  const plan = pe.kind === 'area' ? { k: 'area', area: pe.area } : { k: 'front', line: pe.line, to: pe.to, mode: pe.mode };
+  const plan = pe.kind === 'area' ? { k: 'area', area: pe.area } : { k: 'front', line: pe.line, to: pe.to, mode: pe.mode, fb: pe.fb || [] };
   if (!run(setPlan, pe.army, plan)) { toast(pe.kind === 'area' ? 'Vyberte aspoň jednu provincii k hájení.' : 'Vyberte aspoň jednu provincii linie fronty.'); return false; }
   setUi({ planEdit: null });
   return true;
@@ -725,12 +741,12 @@ export function buildAt(l, { shift = false } = {}) {
   const u = uiStore.getState(), s = gameStore.getState(), me = playerIdx(s), w = getWorld(), kind = u.buildKind;
   if (!me || !kind || !w.isLand(l)) return 0;
   const fort = BUILDINGS[kind].province;
-  const room = fort ? fortRoom(s, l, me) : buildRoom(s, w.provState[l], kind, me);
+  const room = fort ? fortRoom(s, l, me, kind) : buildRoom(s, w.provState[l], kind, me);
   if (!room.n) { toast(room.why); play('error'); return 0; }
   let n = 0;
   const want = shift ? room.n : 1;
   for (let i = 0; i < want; i++) {
-    const ok = fort ? run(buildFort, l) : run(build, w.provState[l], kind);
+    const ok = fort ? run(buildFort, l, kind) : run(build, w.provState[l], kind);
     if (!ok) break;
     n++;
   }

@@ -50,6 +50,21 @@ describe('fronta rozkazů (M59)', () => {
     expect(p[p.length - 1]).toBe(c);
     expect(p).toContain(b);
   });
+  it('F4c: Alt + pravé tlačítko (nebo režim z lišty výběru) pošle divize po železnici', () => {
+    const { s, a, c } = chain();
+    A.goMenu(); A.startGame('GER');
+    const [t, id] = addDivision(s, 'GER', 'pesi', a);
+    gameStore.setState(t);
+    uiStore.setState({ ...uiStore.getState(), selDivs: [id], planEdit: null, fleetSel: 0 });
+    expect(A.contextClick(c, { alt: true })).toBe(true);
+    expect(gameStore.getState().mil.divs[id].rd).toBe(1);
+    gameStore.setState(t);
+    A.toggleRailMode();
+    expect(uiStore.getState().railMode).toBe(true);
+    expect(A.contextClick(c)).toBe(true);
+    expect(gameStore.getState().mil.divs[id].rd).toBe(1);
+    expect(uiStore.getState().railMode).toBe(false);   // režim platí na jeden rozkaz
+  });
 });
 
 describe('skupiny jednotek (M59)', () => {

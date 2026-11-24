@@ -7,7 +7,7 @@ import { fmtInt, fmtDays } from '../format.js';
 import { EquipIcon } from '../industry/EquipIcon.jsx';
 
 // UI (jako v HOI4): lodě jako siluety s počty, mise flotily jako ikony, sestavení flotily klikáním nebo přetažením lodí z rezervy.
-const MISSION_ICON = { '': 'stop', patrol: 'eye', raid: 'target', escort: 'shield' };
+const MISSION_ICON = { '': 'stop', patrol: 'eye', raid: 'target', escort: 'shield', mine: 'dig', sweep: 'check' };   // F4c: miny
 
 /** Silueta lodi s počtem (dlaždice). */
 function ShipTile({ k, n, size = 40, dim = false }) {
@@ -35,6 +35,11 @@ function Fleet({ f, sel, home }) {
       {f.deck ? (
         <div className={`fl-deck ${f.planes < f.deck ? 'low' : ''}`} title="Palubní letouny: první úder v bitvě a podpora bojů na pobřeží. Doplňují se z rezervy letectva v domovském přístavu.">
           <Icon name="plane" size={14} /><span className="deck-bar"><i style={{ width: `${(100 * f.planes) / f.deck}%` }} /></span><b>{f.planes}/{f.deck}</b>
+        </div>
+      ) : null}
+      {f.dm ? (
+        <div className="fl-deck low" title="Poškození flotily: oslabuje palbu i odolnost. Opravuje se v oblasti s vlastním přístavem – rychleji s námořní základnou.">
+          <Icon name="build" size={14} /><span className="deck-bar"><i style={{ width: `${Math.round(f.dm * 100)}%`, background: '#d4573a' }} /></span><b>{Math.round(f.dm * 100)} %</b>
         </div>
       ) : null}
       {f.blocked ? <p className="pol-block">Protivník ovládá oblast.</p> : null}

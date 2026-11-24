@@ -33,6 +33,9 @@ export function PlanBar() {
             <button className={pe.tool === 'to' ? 'on' : ''} onClick={() => setPlanTool('to')} aria-pressed={pe.tool === 'to'}>
               <i className="sw to" />Cíle útoku <em>{count(pe.to.length)}</em>
             </button>
+            <button className={pe.tool === 'fb' ? 'on' : ''} onClick={() => setPlanTool('fb')} aria-pressed={pe.tool === 'fb'} title="Ústupová linie: když nepřítel obsadí třetinu linie fronty, armáda se sama stáhne sem">
+              <i className="sw fb" />Ústupová linie <em>{count((pe.fb || []).length)}</em>
+            </button>
           </>
         ) : (
           <button className="on" aria-pressed="true"><i className="sw line" />Hájená oblast <em>{count(pe.area.length)}</em></button>
@@ -45,7 +48,7 @@ export function PlanBar() {
           {PLAN_MODES.map((m) => <button key={m} className={pe.mode === m ? 'on' : ''} onClick={() => setEditMode(m)} title={MODE_HINTS[m]} aria-pressed={pe.mode === m}>{MODE_NAMES[m]}</button>)}
         </div>
       )}
-      <p className="plan-help">Klikejte na provincie na mapě: přidávají se a odebírají. <kbd>Shift</kbd> + klik vybere celý stát.{front ? ' Linie je to, co armáda drží; cíle jsou nepřátelské provincie k dobytí.' : ''}</p>
+      <p className="plan-help">Klikejte na provincie na mapě: přidávají se a odebírají. <kbd>Shift</kbd> + klik vybere celý stát.{front ? ' Linie je to, co armáda drží; cíle jsou nepřátelské provincie k dobytí; ústupová linie je záložní obrana v týlu.' : ''}</p>
       <footer>
         <button className="btn" onClick={cancelPlanEdit}>Zrušit</button>
         <button className="btn primary" onClick={confirmPlan} disabled={!ready}>Potvrdit plán</button>

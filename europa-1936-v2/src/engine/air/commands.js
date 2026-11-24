@@ -5,7 +5,7 @@ import { AIR } from './constants.js';
 import { PLANES } from '../../data/air/planes.js';
 import { isUnlocked } from '../research/core.js';
 import { atWar } from '../army/war.js';
-import { afbOf, capacityOf, planesAt, stateKm, roleOk } from './core.js';
+import { afbOf, capacityOf, planesAt, stateKm, roleOk, seasOfState } from './core.js';
 
 const isInt = (n) => Number.isInteger(n);
 const patch = (state, p) => ({ ...state, air: { ...state.air, ...p, ver: state.air.ver + 1 } });
@@ -79,6 +79,7 @@ export function missionBlock(state, id, m, to) {
     const e = state.stateOwner[to];
     if (!e || !atWar(state.mil, wg.o, e)) return 'Bombardovat lze jen stát země, se kterou jste ve válce.';
   }
+  if (m === 'nav' && !seasOfState(to).length) return 'Úder na lodě míří na moře u pobřeží – zvolte pobřežní stát.';   // F4c
   return null;
 }
 

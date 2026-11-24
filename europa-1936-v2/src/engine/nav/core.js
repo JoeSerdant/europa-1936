@@ -138,11 +138,21 @@ const portList = new WeakMap();   // svět → všechny provincie s přístavem
 
 /** Přístavy, které země ovládá a ze kterých jde zásobovat po moři (M71): mají aspoň dvě transportní lodě a jejich mořská oblast není zablokovaná nepřítelem. */
 export function seaPorts(state, o) {
-  if (!state.nav || transportsBare(state, o).total < 2) return [];
   const w = getWorld(), out = [];
-  let all = portList.get(w);
-  if (!all) { all = []; for (let p = 1; p <= w.L; p++) if (w.portLevel[p]) all.push(p); portList.set(w, all); }
-  for (const p of all) if (state.ctrl[p] === o && !seaBlocked(state, o, w.portSea[p])) out.push(p);
+  if (state.nav && transportsBare(state, o).total >= 2) {
+    let all = portList.get(w);
+    if (!all) { all = []; for (let p = 1; p <= w.L; p++) if (w.portLevel[p]) all.push(p); portList.set(w, all); }
+    for (const p of all) if (state.ctrl[p] === o && !seaBlocked(state, o, w.portSea[p])) out.push(p);
+  }
+  Object.defineProperty(out, 'hubs', { value: builtHubs(state, o), enumerable: false });   // F4c: postavené zásobovací uzly jedou s přístavy do každého volání `supplyFlow` (mimo výčet pole)
+  return out;
+}
+
+/** F4c: hlavní provincie států se zásobovacím uzlem (`ind.st[s].hub`), které země `o` vlastní a ovládá. */
+export function builtHubs(state, o) {
+  const out = [], st = state.ind && state.ind.st, w = getWorld();
+  if (!st) return out;
+  for (let s = 1; s < st.length; s++) if (st[s] && st[s].hub && state.stateOwner[s] === o && state.ctrl[w.states[s].cap] === o) out.push(w.states[s].cap);
   return out;
 }
 
@@ -198,4 +208,29 @@ export function coastSeasOf(p) {
   const w = getWorld(), out = [];
   w.forCoast(p, (s) => { out.push(s); });
   return out;
+}
+
+// ---------------------------------------------------------------- F4c: poškození, námořní základny, miny
+/** Poškození flotily 0–`NAV.DMG_MAX` (chybí = 0): oslabuje palbu i odolnost v boji a krytí konvojů. */
+export const damageOf = (f) => f.dm || 0;
+
+/** Nepřátelské miny (součet zemí ve válce s `o`) v mořské oblasti `label`. */
+export function enemyMines(state, o, label) {
+  const m = state.nav.mn && state.nav.mn[label];
+  if (!m) return 0;
+  let n = 0;
+  for (const k in m) if (atWar(state.mil, o, +k)) n += m[k];
+  return n;
+}
+
+/** Nejlepší námořní základna země `o` u oblasti `label`: úroveň přístavu + úroveň stavby `nb` ve státě (0 = žádný vlastní přístav). */
+export function baseLevelAt(state, o, label) {
+  const w = getWorld();
+  let best = 0;
+  for (let p = 1; p <= w.L; p++) {
+    if (!w.portLevel[p] || w.portSea[p] !== label || state.ctrl[p] !== o) continue;
+    const st = state.ind && state.ind.st[w.provState[p]];
+    best = Math.max(best, w.portLevel[p] + ((st && st.nb) || 0));
+  }
+  return best;
 }

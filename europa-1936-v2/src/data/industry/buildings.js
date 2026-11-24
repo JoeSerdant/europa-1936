@@ -11,6 +11,9 @@ export const BUILDINGS = {
   afb: { n: 'Letiště', ab: 'LET', cost: 450, days: 30, slot: false, max: 5, info: 'Zvyšuje kapacitu letecké základny státu (60 letadel na úroveň). Letadla potřebují letiště.' },
   radar: { n: 'Radar', ab: 'RAD', cost: 300, days: 35, slot: false, max: 3, info: 'Radarová stanice státu: nepřátelská letadla nad ním potkají silnější obranu (jako 5 stíhaček na úroveň).' },
   fort: { n: 'Pevnost', ab: 'PEV', cost: 350, days: 40, slot: false, max: 5, province: true, info: 'Opevnění provincie: obránce v ní dostává bonus k obraně (12 % za úroveň).' },
+  nb: { n: 'Námořní základna', ab: 'NZ', cost: 400, days: 30, slot: false, max: 5, port: true, info: 'Opravuje poškozené lodě flotil v přilehlé mořské oblasti (rychleji s každou úrovní). Jen ve státě s přístavem.' },   // F4c
+  hub: { n: 'Zásobovací uzel', ab: 'ZU', cost: 600, days: 45, slot: false, max: 1, rail: true, info: 'Nový zdroj zásob v hlavní provincii státu (jako železniční uzel): napojený železnicí na hlavní město zásobuje frontu daleko od domova.' },   // F4c
+  cfort: { n: 'Pobřežní pevnost', ab: 'PPE', cost: 300, days: 35, slot: false, max: 3, province: true, coast: true, info: 'Opevnění pobřeží: vyloďující se nepřítel ztratí organizaci, na nejvyšší úrovni se vylodit nedokáže.' },   // F4c
   inf: { n: 'Infrastruktura', ab: 'INF', cost: 500, days: 30, slot: false, max: 3, info: 'Zlepšuje silnice a železnici státu: rychlejší pochod, lepší zásobování, další stavební slot.' },
 };
 export const BUILDING_IDS = Object.keys(BUILDINGS);

@@ -22,6 +22,7 @@ export function build(state, s, kind) {
   const o = state.stateOwner[s];
   if (!o || state.ctrl[w.states[s].cap] !== o) return state;
   if (BUILDINGS[kind].port && !w.states[s].v.some((p) => w.portLevel[p] > 0)) return state;
+  if (BUILDINGS[kind].rail && !hasRail(w, w.states[s].cap)) return state;
   if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return state;
   if (BUILDINGS[kind].slot) { if (slotsUsed(ind, s) >= slotsOf(ind, s)) return state; }
   else if ((kind === 'inf' ? ind.inf[s] || 0 : ind.st[s][kind] || 0) + ind.build.filter((b) => b.s === s && b.k === kind).length >= (BUILDINGS[kind].max ?? I.INF_MAX)) return state;
@@ -29,16 +30,24 @@ export function build(state, s, kind) {
   return patch(state, { jn: id, build: [...ind.build, { id, o, s, k: kind, prog: 0 }] });
 }
 
-/** Zadá pevnost v provincii `p` (stát i kontrola patří stejné zemi); úroveň do `max`, stavby se řadí do fronty země. */
-export function buildFort(state, p) {
-  const w = getWorld(), ind = state.ind, B = BUILDINGS.fort;
-  if (!isInt(p) || p < 1 || p > w.L) return state;
+/** Má provincie železnici? */
+export const hasRail = (w, p) => w.rails.start[p + 1] > w.rails.start[p];
+/** Leží provincie u moře? */
+export const isCoastal = (w, p) => { let c = false; w.forCoast(p, () => { c = true; }); return c; };
+/** Úroveň provinční stavby `kind` v provincii (pevnost `ind.fort`, F4c: pobřežní pevnost `ind.cf`). */
+export const provLevel = (ind, p, kind) => ((kind === 'cfort' ? ind.cf : ind.fort) || {})[p] || 0;
+
+/** Zadá pevnost (nebo F4c pobřežní pevnost `cfort`) v provincii `p` (stát i kontrola patří stejné zemi); úroveň do `max`, stavby se řadí do fronty země. */
+export function buildFort(state, p, kind = 'fort') {
+  const w = getWorld(), ind = state.ind, B = BUILDINGS[kind];
+  if (!B || !B.province || !isInt(p) || p < 1 || p > w.L) return state;
   const s = w.provState[p], o = state.stateOwner[s];
   if (!o || state.ctrl[p] !== o) return state;
-  if ((ind.fort[p] || 0) + ind.build.filter((b) => b.p === p).length >= B.max) return state;
+  if (B.coast && !isCoastal(w, p)) return state;
+  if (provLevel(ind, p, kind) + ind.build.filter((b) => b.p === p && b.k === kind).length >= B.max) return state;
   if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return state;
   const id = ind.jn + 1;
-  return patch(state, { jn: id, build: [...ind.build, { id, o, s, p, k: 'fort', prog: 0 }] });
+  return patch(state, { jn: id, build: [...ind.build, { id, o, s, p, k: kind, prog: 0 }] });
 }
 
 export function cancelBuild(state, id) {

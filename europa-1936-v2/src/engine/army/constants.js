@@ -10,6 +10,9 @@ export const C = {
   INFRA_SPEED: 0.05,        // zpomalení za každý stupeň infrastruktury pod 5 v cílové provincii
   RAIL_SPEED: 0.8,          // přesun po železnici ve vlastním území: čas kroku se dělí 1 + RAIL_SPEED × úroveň spoje (1–5)
   RAIL_ORG: 0.25,           // podíl běžné ztráty organizace za hodinu při jízdě po železnici
+  REDEPLOY_MULT: 4,         // F4c: strategický přesun (`rd`) – čas kroku se dělí tímto číslem (vlakem vlastním územím)
+  REDEPLOY_ORG: 0.1,        // F4c: divize při strategickém přesunu nemá víc než tento podíl organizace (je zranitelná, nebojuje)
+  FALLBACK_LOST: 0.34,      // F4c: ústupová linie – armáda přejde na ni, když nepřítel drží aspoň tento podíl provincií její linie fronty
   ORG_MOVE_COST: 0.2,       // ztráta organizace za hodinu pohybu (body)
   ORG_SPEED_LOW: 0.3,       // pod tímto podílem organizace se pohyb zpomaluje
   ORG_SPEED_ZERO: -0.8,     // změna rychlosti při nulové organizaci

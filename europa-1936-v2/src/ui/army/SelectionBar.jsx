@@ -5,7 +5,7 @@ import { Icon } from '../common/Icon.jsx';
 import { armyTree, divisionView, ARMY, getWorld, marchEta } from '../../engine/index.js';
 import { Portrait } from './Portrait.jsx';
 import {
-  playerIdx, ownSelected, newArmy, addSelectionToArmy, removeSelectionFromArmy, stopSelected, disbandSelected, focusSelection, clearSelection, toggleDivision,
+  playerIdx, ownSelected, newArmy, addSelectionToArmy, removeSelectionFromArmy, stopSelected, disbandSelected, focusSelection, clearSelection, toggleDivision, toggleRailMode,
 } from '../actions.js';
 import { fmtNum, plural, fmtEta } from '../format.js';
 import { ClsIcon, Bar, Status } from './parts.jsx';
@@ -59,6 +59,7 @@ const MINI_MAX = 36;
 /** Dolní lišta vybraných jednotek (M102): u jedné divize ikony s čísly, u více mřížka mini karet; povely jen ikonami s nápovědou. */
 export function SelectionBar() {
   const sel = useUi((s) => s.selDivs);
+  const railMode = useUi((s) => s.railMode);
   const state = useGameSlow((s) => s, 300);
   const [menu, setMenu] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -134,7 +135,7 @@ export function SelectionBar() {
       {march && (march.hours >= 0 || march.fighting > 0) && (
         <div className="sel-march" title="Odhad podle rychlosti, terénu, počasí a železnice; bitvy cestou pochod prodlouží">
           <Icon name="speed" size={15} />
-          {march.hours >= 0 ? <span>Pochod do <b>{w.provName(march.dest)}</b> · příjezd asi za <b>{fmtEta(march.hours)}</b></span> : <span>Útok probíhá</span>}
+          {march.hours >= 0 ? <span>{ids.some((id) => state.mil.divs[id].rd) ? 'Vlakem do ' : 'Pochod do '}<b>{w.provName(march.dest)}</b> · příjezd asi za <b>{fmtEta(march.hours)}</b></span> : <span>Útok probíhá</span>}
           {march.fighting > 0 && march.hours >= 0 ? <em>{march.fighting} v boji</em> : null}
         </div>
       )}
@@ -143,6 +144,7 @@ export function SelectionBar() {
           <button className="ib" data-tip="Nová armáda z výběru" aria-label="Nová armáda" onClick={() => newArmy(true)}><Icon name="plus" size={18} /></button>
           <button className={`ib ${menu ? 'on' : ''}`} data-tip="Přesunout do armády" aria-label="Do armády" onClick={() => setMenu(!menu)} aria-expanded={menu} aria-haspopup="menu"><Icon name="merge" size={18} /></button>
           <button className="ib" data-tip="Zastavit pochod (X)" aria-label="Zastavit" disabled={!moving} onClick={() => stopSelected()}><Icon name="stop" size={18} /></button>
+          <button className={`ib ${railMode ? 'on' : ''}`} data-tip="Přesun po železnici: pak pravým tlačítkem na cíl (nebo Alt + pravé tlačítko)" aria-label="Přesun po železnici" aria-pressed={railMode} onClick={toggleRailMode}><Icon name="road" size={18} /></button>
           <button className="ib" data-tip="Zaměřit (F)" aria-label="Zaměřit" onClick={focusSelection}><Icon name="focus" size={18} /></button>
           {armed
             ? <button className="ib danger on" data-tip="Opravdu rozpustit – klikněte znovu" aria-label="Opravdu rozpustit" autoFocus onClick={() => { setArmed(false); disbandSelected(); }}><Icon name="check" size={18} /></button>

@@ -9,6 +9,7 @@ import { dateOfHour } from '../time.js';
 import { countryStats } from '../selectors.js';
 import { getWorld } from '../world.js';
 import { manMult } from '../politics/core.js';
+import { atWar } from './war.js';
 
 function dailyReinforce(ctx) {
   const mil = ctx.mil;
@@ -31,6 +32,21 @@ function dailyReinforce(ctx) {
     for (const e in st.need) s[e] = Math.max(0, s[e] - frac * st.need[e] * f);
     addMan(ctx, src, -costMen * f);
     editDiv(ctx, id).hp = Math.min(st.hp, d.hp + want * f);
+  }
+}
+
+/**
+ * F4c: ústupová linie – armáda s plánem fronty a záložní linií (`plan.fb`) na ni přejde, jakmile nepřítel drží aspoň `C.FALLBACK_LOST`
+ * provincií její linie: nový plán je obranná fronta po záložní linii (bez cílů a bez další ústupové linie). Plánovač pak divize přesune.
+ */
+function dailyFallback(ctx) {
+  for (let id = 1; id < ctx.armies.length; id++) {
+    const a = ctx.armies[id];
+    if (!a || !a.plan || a.plan.k !== 'front' || !a.plan.fb || !a.plan.fb.length) continue;
+    const line = a.plan.line;
+    let lost = 0;
+    for (const p of line) { const c = ctx.ctrl[p]; if (c && c !== a.o && atWar(ctx.mil, a.o, c)) lost++; }
+    if (line.length && lost / line.length >= C.FALLBACK_LOST) editArmy(ctx, id).plan = { k: 'front', line: a.plan.fb.slice(), to: [], mode: a.plan.mode };
   }
 }
 
@@ -89,6 +105,7 @@ export function* dailySteps(ctx) {
   dailyReinforce(ctx);
   dailyDigIn(ctx);
   dailyPlanning(ctx);
+  dailyFallback(ctx);   // F4c: ústupové linie
   dailyLeaders(ctx);
   yield* plansSteps(ctx);
   const d = dateOfHour(ctx.tick);

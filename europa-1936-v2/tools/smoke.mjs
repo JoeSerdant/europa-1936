@@ -192,6 +192,11 @@ try {
   // M102: lišta armád dole – karty s portrétem, proužky a rozkazy vybrané armády jen ikonami
   check('lišta armád ukazuje karty armád s portrétem a proužky', (await page.locator('.armybar .acard .portrait').count()) >= 1 && (await page.locator('.armybar .acard .bar').count()) >= 2);
   await shot('selected');
+  // F4c: tlačítko Přesun po železnici v liště výběru zapne režim jednoho rozkazu
+  await page.locator('.selbar .ib[aria-label="Přesun po železnici"]').click();
+  check('tlačítko přesunu po železnici zapne režim', (await page.evaluate(() => window.__e1936.uiStore.getState().railMode)) === true);
+  await page.locator('.selbar .ib[aria-label="Přesun po železnici"]').click();
+  check('druhý klik režim vypne', (await page.evaluate(() => window.__e1936.uiStore.getState().railMode)) === false);
 
   // pravé tlačítko: pochod do sousední vlastní provincie
   const order = await E(() => {
@@ -259,10 +264,17 @@ try {
   const pe = await E(() => { const p = window.__e1936.uiStore.getState().planEdit; return p ? { line: p.line.length, to: p.to.length } : null; });
   check('plán fronty: návrh podle skutečné fronty doplní linii i cíle', !!pe && pe.line > 0 && pe.to > 0, pe ? `${pe.line} provincií v linii, ${pe.to} cílů` : 'bez úpravy');
   await shot('plan');
+  // F4c: ústupová linie – nástroj v liště plánu, klik na vlastní provincii v týlu
+  await page.getByRole('button', { name: /Ústupová linie/ }).click();
+  await E(() => { const { uiStore, gameStore, engine } = window.__e1936; const u = uiStore.getState(); const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const w = engine.getWorld(); const p = w.owners[o].cap; uiStore.setState({ ...u, planEdit: { ...u.planEdit, fb: [p] } }); void s; });
+  await page.waitForTimeout(150);
+  check('lišta plánu má nástroj Ústupová linie', (await page.locator('.planbar button', { hasText: 'Ústupová linie' }).count()) === 1);
   await page.getByRole('button', { name: 'Potvrdit plán' }).click();
   await page.waitForTimeout(250);
   const planTxt = await page.locator('.army-panel .plan-line').first().innerText().catch(() => '');
   check('potvrzený plán je vidět v panelu armády', /Linie fronty/.test(planTxt), planTxt);
+  const fbOk = await E(() => { const s = window.__e1936.gameStore.getState(); return s.mil.armies.some((a) => a && a.plan && a.plan.fb && a.plan.fb.length); });
+  check('potvrzený plán si nese ústupovou linii', fbOk);
 
   // šest dnů hry s plánem: nic nespadne, divize armády se pohnou
   const sim = await E(() => {
@@ -325,7 +337,7 @@ try {
   await page.keyboard.press('t');
   await page.waitForSelector('.build-panel', { timeout: 3000 });
   // M103: stavby jako v HOI4 – úzký panel vlevo, mapa zůstává vidět; budova se zvolí a staví se klikem na stát na mapě
-  check('klávesa T otevře panel Stavby vlevo (mapa zůstane vidět) s volbou budov', (await ui()).panel === 'industry' && (await page.locator('.build-panel .bp-tile').count()) === 7 && (await page.locator('.industry-panel').count()) === 0);
+  check('klávesa T otevře panel Stavby vlevo (mapa zůstane vidět) s volbou budov', (await ui()).panel === 'industry' && (await page.locator('.build-panel .bp-tile').count()) === 10 && (await page.locator('.industry-panel').count()) === 0);
   const nb = () => E(() => { const g = window.__e1936.gameStore.getState(); return g.ind.build.filter((b) => b.o === window.__e1936.engine.getWorld().ownerIdx.GER).length; });
   const b0 = await nb();
   await page.locator('.build-panel').getByRole('radio', { name: 'Civilní továrna' }).click();
@@ -347,7 +359,7 @@ try {
   await page.waitForTimeout(250);
   const b1 = await nb();
   await page.locator('.bp-best button').first().click();
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(700);   // seznam fronty se obnovuje se zpožděním (useGameSlow)
   const b2 = await nb();
   check('klik na stát na mapě i na doporučené místo zadá stavbu do fronty', b1 === b0 + 1 && b2 === b1 + 1 && (await page.locator('.bp-queue li').count()) === b2, `fronta ${b0} → ${b1} → ${b2}`);
   await page.keyboard.press('Escape');

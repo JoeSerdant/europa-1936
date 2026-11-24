@@ -13,6 +13,9 @@ import { fuelRatio, FUEL } from '../fuel/index.js';
 
 export const MIN_ORG_TO_ATTACK = 0.1;   // podíl maxima organizace, pod který divize nezačíná útok
 
+/** Hodiny kroku po hraně `e` rychlostí `speed` se železnicí úrovně `rail`; F4c: strategický přesun (`rd`) je `C.REDEPLOY_MULT`× rychlejší. Sdílí `march.js`. */
+export const legHours = (e, speed, rail, rd) => e.h * (C.SPEED_REF / speed) / (1 + C.RAIL_SPEED * rail) / (rd ? C.REDEPLOY_MULT : 1);
+
 function clearOrder(ctx, id) {
   const d = editDiv(ctx, id);
   d.path = []; d.prog = 0;
@@ -61,16 +64,18 @@ export function movementStep(ctx) {
     const foes = at ? at.filter((x) => atWar(mil, d0.o, ctx.divs[x].o)) : [];
     const st = statsOf(mil, d0);
     if (foes.length) {
+      if (d0.rd) { clearOrder(ctx, id); delete editDiv(ctx, id).rd; continue; }   // F4c: vlak nejede do nepřítele – přesun končí
       if (d0.hold > 0 || d0.rt > 0 || d0.org < st.org * MIN_ORG_TO_ATTACK) continue;   // čeká, až bude moci útočit
       startBattleAgainst(ctx, id, next, foes);
       continue;
     }
     const speed = moveSpeed(ctx, d0, st, next, e.kind);
     const rail = ctx.ctrl[d0.p] === d0.o && ctx.ctrl[next] === d0.o ? e.rl : 0;   // M46: železnice ve vlastním území (e.rl = railLevel)
-    const hours = e.h * (C.SPEED_REF / speed) / (1 + C.RAIL_SPEED * rail);   // e.h = stepHours
+    const hours = legHours(e, speed, rail, d0.rd);   // e.h = stepHours
     const d = editDiv(ctx, id);
     d.prog += 100 / Math.max(1, hours);
     d.org = Math.max(Math.min(d.org, st.org * C.MIN_ORG_SHARE_MOVING), d.org - C.ORG_MOVE_COST * (rail ? C.RAIL_ORG : 1));
+    if (d.rd) d.org = Math.min(d.org, st.org * C.REDEPLOY_ORG);   // F4c: ve vlaku bez bojové pohotovosti
     d.dig = 0;
     if (d.prog >= 100) {
       d.prog = Math.min(99, d.prog - 100);
@@ -80,7 +85,7 @@ export function movementStep(ctx) {
         setCtrl(ctx, next, d.o);
         d.org = Math.max(st.org * C.MIN_ORG_SHARE_MOVING * 0.5, d.org - C.CONQUER_ORG_LOSS * st.org);
       }
-      if (d.path.length === 0) d.prog = 0;
+      if (d.path.length === 0) { d.prog = 0; delete d.rd; }   // F4c: přesun dokončen
     }
   }
 }

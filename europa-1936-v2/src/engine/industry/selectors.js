@@ -1,4 +1,5 @@
 // Dotazy na průmysl pro rozhraní a AI (čisté, bez změn stavu).
+import { hasRail, isCoastal, provLevel } from './commands.js';
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { EQUIP } from '../../data/army/equipment.js';
@@ -56,7 +57,7 @@ export function stateIndustry(state, s) {
   const w = getWorld();
   const cat = categoryOf(w.states[s].p);
   return {
-    s, cat, civ: e.civ, mil: e.mil, dok: e.dok || 0, port: w.states[s].v.some((p) => w.portLevel[p] > 0), inf: ind.inf[s] || 0, afb: e.afb || 0, radar: e.radar || 0, res: e.res,
+    s, cat, civ: e.civ, mil: e.mil, dok: e.dok || 0, port: w.states[s].v.some((p) => w.portLevel[p] > 0), inf: ind.inf[s] || 0, afb: e.afb || 0, radar: e.radar || 0, nb: e.nb || 0, hub: e.hub || 0, res: e.res,
     slots: slotsOf(ind, s), used: slotsUsed(ind, s),
     queued: ind.build.filter((b) => b.s === s),
   };
@@ -96,7 +97,8 @@ export function buildRoom(state, s, kind, o) {
   const w = getWorld(), ind = state.ind, B = BUILDINGS[kind];
   if (!B || B.province || !(s >= 1 && s < w.states.length)) return { n: 0, why: 'Neplatná stavba.' };
   if (state.stateOwner[s] !== o || state.ctrl[w.states[s].cap] !== o) return { n: 0, why: 'Stavět lze jen ve vlastním, neokupovaném státě.' };
-  if (B.port && !w.states[s].v.some((p) => w.portLevel[p] > 0)) return { n: 0, why: 'Loděnice potřebuje přístav.' };
+  if (B.port && !w.states[s].v.some((p) => w.portLevel[p] > 0)) return { n: 0, why: `${B.n}: stát nemá přístav.` };
+  if (B.rail && !hasRail(w, w.states[s].cap)) return { n: 0, why: `${B.n}: hlavní provincie státu nemá železnici.` };
   if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return { n: 0, why: 'Fronta staveb je plná.' };
   if (B.slot) {
     const n = slotsOf(ind, s) - slotsUsed(ind, s);
@@ -108,11 +110,12 @@ export function buildRoom(state, s, kind, o) {
 }
 
 /** Kolik úrovní pevnosti lze ještě zadat v provincii `p` zemí `o` (pravidla příkazu `buildFort`): { n, why }. */
-export function fortRoom(state, p, o) {
-  const w = getWorld(), ind = state.ind, B = BUILDINGS.fort;
-  if (!(p >= 1 && p <= w.L)) return { n: 0, why: 'Neplatná provincie.' };
-  if (state.stateOwner[w.provState[p]] !== o || state.ctrl[p] !== o) return { n: 0, why: 'Pevnost lze stavět jen ve vlastní, neokupované provincii.' };
+export function fortRoom(state, p, o, kind = 'fort') {
+  const w = getWorld(), ind = state.ind, B = BUILDINGS[kind];
+  if (!B || !B.province || !(p >= 1 && p <= w.L)) return { n: 0, why: 'Neplatná provincie.' };
+  if (state.stateOwner[w.provState[p]] !== o || state.ctrl[p] !== o) return { n: 0, why: `${B.n}: stavět lze jen ve vlastní, neokupované provincii.` };
+  if (B.coast && !isCoastal(w, p)) return { n: 0, why: `${B.n}: provincie neleží u moře.` };
   if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return { n: 0, why: 'Fronta staveb je plná.' };
-  const n = B.max - (ind.fort[p] || 0) - ind.build.filter((b) => b.p === p).length;
-  return n > 0 ? { n, why: '' } : { n: 0, why: 'Pevnost má nejvyšší úroveň.' };
+  const n = B.max - provLevel(ind, p, kind) - ind.build.filter((b) => b.p === p && b.k === kind).length;
+  return n > 0 ? { n, why: '' } : { n: 0, why: `${B.n}: nejvyšší úroveň.` };
 }

@@ -27,6 +27,18 @@ export const NAV = {
   MISSION_RAID: 1.5,    // mise Nájezdy: násobek síly flotily proti konvojům
   MISSION_EVADE: 0.6,   // mise Nájezdy: flotila v boji uhýbá – tolik ztrát utrpí i způsobí
   MISSION_ESCORT: 1.5,  // mise Doprovod: násobek krytí konvojů        // kolik z palebné síly vlastních lodí na trase ruší síly nájezdníků
+  // F4c: poškození a opravy, námořní základny, miny, pobřežní pevnosti
+  SINK_SHARE: 0.5,      // podíl ztrát v boji, který lodě potopí; zbytek je poškození flotily (`dm`, oslabí palbu i odolnost)
+  DMG_MAX: 0.7,         // nejvyšší poškození flotily
+  REPAIR: 0.03,         // denní oprava v oblasti s vlastním přístavem (stojící flotila)
+  REPAIR_LV: 0.02,      // navíc za každou úroveň přístavu a námořní základny (nejlepší u oblasti)
+  MINES_MAX: 100,       // nejvíc min jedné země v oblasti
+  MINE_LAY: 1.5,        // denně min za každý torpédoborec a ponorku flotily na misi Kladení min
+  MINE_SWEEP: 2,        // denně odstraněných nepřátelských min za každý torpédoborec na misi Odminování
+  MINE_DECAY: 0.01,     // denní úbytek min (moře je odnáší)
+  MINE_DMG: 0.0008,     // denní poškození flotily za každou nepřátelskou minu v její oblasti (odminovávající polovina)
+  MINE_RISK: 0.003,     // riziko konvoje za nepřátelskou minu v oblasti trasy (nejvýš RAID_MAX)
+  CFORT_ORG: 0.25,      // pobřežní pevnost: vyloďující se divize ztratí tento podíl organizace za úroveň
 };
 
 /** Mise flotil (M81): '' = bez mise (drží oblast). */
@@ -34,5 +46,7 @@ export const NAV_MISSIONS = {
   patrol: { n: 'Hlídka', info: 'Flotila vyhledává nepřítele v oblasti: lepší palba v boji.' },
   raid: { n: 'Nájezdy', info: 'Flotila loví konvoje na trasách oblastí a boji se silnějším se vyhýbá.' },
   escort: { n: 'Doprovod', info: 'Flotila kryje vlastní a spojenecké konvoje v oblasti.' },
+  mine: { n: 'Kladení min', info: 'Torpédoborce a ponorky kladou miny: nepřátelské flotily v oblasti se poškozují a konvoje ztrácejí lodě.' },   // F4c
+  sweep: { n: 'Odminování', info: 'Torpédoborce odstraňují nepřátelské miny v oblasti.' },
 };
 export const NAV_MISSION_IDS = Object.keys(NAV_MISSIONS);

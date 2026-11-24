@@ -37,6 +37,7 @@ export function validateState(s) {
   if (!isArr(s.air.drops)) return 'Uložená hra je poškozená (výsadky).';
   if (!isArr(s.air.wings) || !isArr(s.air.pool) || s.air.pool.length !== w.owners.length) return 'Uložená hra je poškozená (letectvo).';
   if (!isArr(s.nav.fleets) || !s.nav.fleets.every((f) => f === null || (Number.isInteger(f.pl) && f.pl >= 0))) return 'Uložená hra je poškozená (palubní letouny).';   // M90
+  if (!s.nav.mn || typeof s.nav.mn !== 'object' || !s.ind.cf || typeof s.ind.cf !== 'object') return 'Uložená hra je poškozená (miny a pobřežní pevnosti).';   // F4c
   if (!isArr(s.dip.fac) || s.dip.fac.length !== w.owners.length || !isArr(s.dip.sub) || !isArr(s.dip.conf) || !isArr(s.dip.gar) || !isArr(s.dip.au) || !isArr(s.dip.acc) || !isArr(s.dip.ult) || !isArr(s.dip.nap) || !isArr(s.dip.napq) || !isArr(s.dip.exile) || !isArr(s.dip.ally0) || !isArr(s.dip.att) || s.dip.ally0.length !== w.owners.length || !s.dip.goal || typeof s.dip.goal !== 'object') return 'Uložená hra je poškozená (diplomacie).';
   return null;
 }

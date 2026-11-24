@@ -104,7 +104,7 @@ export const HIST_STRATEGIES = [
   // vylodění Spojenců: Sicílie a Itálie 1943, Normandie 1944
   // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
   { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true },   // F3: do 8. 5. 1945
-  { id: 'ger_surrender', tag: 'GER', from: 3415, until: 3800, armistice: 'SOV', held: 20, force: 3470, conf: true },
+  { id: 'ger_surrender', tag: 'GER', from: 3415, until: 3800, armistice: 'SOV', held: 20, force: 3415, conf: true },   // F4c: natvrdo 8. 5. 1945
   { id: 'ita_holdout', tag: 'ITA', from: 2400, until: 2795, holdout: true },   // F4: režim vydrží do vylodění na Sicílii a pádu v září 1943
   { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },
   { id: 'husky', tag: 'ENG', from: 2650, until: 2950, invade: 'ITA', at: 'ITA' },

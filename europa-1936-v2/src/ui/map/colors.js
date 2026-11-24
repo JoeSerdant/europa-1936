@@ -89,7 +89,7 @@ export function fillColors(world, game, mode, focus = 0) {
   const bk = mode.startsWith('build:') ? mode.slice(6) : '';
   const room = new Map();
   const roomOf = (p) => {
-    if (BUILDINGS[bk] && BUILDINGS[bk].province) return fortRoom(game, p, me).n;
+    if (BUILDINGS[bk] && BUILDINGS[bk].province) return fortRoom(game, p, me, bk).n;
     const s = world.provState[p];
     if (!room.has(s)) room.set(s, buildRoom(game, s, bk, me).n);
     return room.get(s);
