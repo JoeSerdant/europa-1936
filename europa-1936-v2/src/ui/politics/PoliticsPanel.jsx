@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useGameSlow } from '../store.js';
+import { Portrait } from '../army/Portrait.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { politicsOf, focusTree, spiritsOf, ADV_SLOTS, nextElection, formatDate } from '../../engine/index.js';
 import { COUNTRIES, IDEOLOGIES } from '../../data/countries.js';
@@ -22,45 +24,74 @@ function Meter({ label, value, target, hint, cls }) {
   );
 }
 
-function Law({ cat }) {
+const LAW_ICON = { eco: 'industry', con: 'recruit', trd: 'trade' };
+const ADV_ICON = { pol: 'politics', arm: 'army', ind: 'industry', sci: 'research' };
+
+/** Volby slotu jako dlaždice (zákon nebo poradce): název, účinek, cena; aktivní zvýrazněná, zamčená s důvodem v nápovědě. */
+function Picker({ options, onPick, mods, cost, activeText }) {
   return (
-    <section className="pol-law" aria-label={cat.n}>
-      <h3>{cat.n}</h3>
-      <ul>
-        {cat.options.map((o) => (
-          <li key={o.id} className={o.active ? 'on' : ''}>
-            <button className="pol-opt" disabled={o.active || !!o.block} onClick={() => changeLaw(cat.cat, o.id)} title={o.block || o.info} aria-pressed={o.active}>
-              <b>{o.n}</b>
-              <span className="muted">{Object.keys(o.mod).length ? modText(o.mod) : 'bez příplatků'}</span>
-              <i>{o.active ? 'platí' : o.pp ? `${o.pp} PM` : 'zdarma'}</i>
-            </button>
-            {!o.active && o.block ? <span className="pol-block">{o.block}</span> : null}
-          </li>
-        ))}
-      </ul>
+    <div className="pol-pick" role="group">
+      {options.map((o) => (
+        <button key={o.id} className={`pol-opt-tile ${o.active ? 'on' : ''}`} disabled={o.active || !!o.block} onClick={() => onPick(o.id)} aria-pressed={o.active} title={o.block || o.info}>
+          <b>{o.n}</b>
+          <span>{mods(o) || 'bez příplatků'}</span>
+          <i>{o.active ? activeText : cost(o)}</i>
+          {!o.active && o.block ? <em className="pol-block">{o.block}</em> : null}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Zákon jako slot (UI jako v HOI4): ikona oboru, platný zákon, klik otevře volby. */
+function Law({ cat, open, onOpen }) {
+  const cur = cat.options.find((o) => o.active);
+  return (
+    <section className={`pol-law ${open ? 'open' : ''}`} aria-label={cat.n}>
+      <button className="pol-slot" onClick={onOpen} aria-expanded={open} title={`${cat.n}: ${cur.info}`}>
+        <span className="pol-slot-ic"><Icon name={LAW_ICON[cat.cat] || 'gavel'} size={26} /></span>
+        <span className="pol-slot-txt"><i>{cat.n}</i><b>{cur.n}</b><em>{Object.keys(cur.mod).length ? modText(cur.mod) : 'bez příplatků'}</em></span>
+      </button>
+      {open ? <Picker options={cat.options} onPick={(id) => changeLaw(cat.cat, id)} mods={(o) => (Object.keys(o.mod).length ? modText(o.mod) : '')} cost={(o) => (o.pp ? `${o.pp} PM` : 'zdarma')} activeText="platí" /> : null}
     </section>
   );
 }
 
-function Advisor({ a }) {
+/** Poradce jako slot s portrétem (vlastní silueta): klik otevře volby. */
+function Advisor({ a, open, onOpen }) {
   return (
-    <section className="pol-adv" aria-label={a.n}>
-      <div className="q-top">
-        <h3>{a.n}</h3>
+    <section className={`pol-adv ${open ? 'open' : ''}`} aria-label={a.n}>
+      <div className="pol-slot adv">
+        <button className="pol-slot-main" onClick={onOpen} aria-expanded={open} title={a.current ? `${a.n}: ${a.current.info}` : `${a.n}: neobsazeno – vyberte poradce`}>
+          <span className={`pol-portrait ${a.current ? '' : 'empty'}`}>{a.current ? <Portrait name={a.current.n} w={40} h={50} /> : <Icon name="plus" size={20} />}<i><Icon name={ADV_ICON[a.slot] || 'general'} size={12} /></i></span>
+          <span className="pol-slot-txt"><i>{a.n}</i><b>{a.current ? a.current.n : 'Neobsazeno'}</b><em>{a.current ? modText(a.current.mod, null, a.current.doc) : 'klikněte a vyberte'}</em></span>
+        </button>
         {a.current ? <button className="icon-btn sm" onClick={() => dismissAdv(a.slot)} aria-label={`Propustit: ${a.current.n}`} title="Propustit (cena se nevrací)"><Icon name="close" size={14} /></button> : null}
       </div>
-      <ul>
-        {a.options.map((o) => (
-          <li key={o.id} className={o.active ? 'on' : ''}>
-            <button className="pol-opt" disabled={o.active || !!o.block} onClick={() => hireAdv(a.slot, o.id)} title={o.block || o.info} aria-pressed={o.active}>
-              <b>{o.n}</b>
-              <span className="muted">{modText(o.mod, null, o.doc)}</span>
-              <i>{o.active ? 've službě' : `${o.pp} PM`}</i>
-            </button>
-          </li>
-        ))}
-      </ul>
+      {open ? <Picker options={a.options} onPick={(id) => hireAdv(a.slot, id)} mods={(o) => modText(o.mod, null, o.doc)} cost={(o) => `${o.pp} PM`} activeText="ve službě" /> : null}
     </section>
+  );
+}
+
+/** Koláčový graf podpory stran (SVG), vládnoucí strana vytažená. */
+function PartyPie({ rows }) {
+  let a = -Math.PI / 2;
+  const R = 54, C = 60;
+  return (
+    <svg className="pol-pie" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Podpora stran">
+      {rows.map((r) => {
+        const da = (r.pct / 100) * Math.PI * 2;
+        if (da <= 0.001) return null;
+        const mid = a + da / 2, off = r.gov ? 4 : 0;
+        const cx = C + Math.cos(mid) * off, cy = C + Math.sin(mid) * off;
+        const x1 = cx + Math.cos(a) * R, y1 = cy + Math.sin(a) * R;
+        a += da;
+        const x2 = cx + Math.cos(a) * R, y2 = cy + Math.sin(a) * R;
+        const d = da >= Math.PI * 2 - 0.001 ? `M ${C - R} ${C} a ${R} ${R} 0 1 0 ${2 * R} 0 a ${R} ${R} 0 1 0 ${-2 * R} 0` : `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 ${da > Math.PI ? 1 : 0} 1 ${x2} ${y2} Z`;
+        return <path key={r.id} d={d} fill={IDEOLOGIES[r.id].color} stroke="#0b121a" strokeWidth="1.2"><title>{`${IDEOLOGIES[r.id].name}: ${r.pct.toFixed(1)} %`}</title></path>;
+      })}
+      <circle cx={C} cy={C} r="24" fill="#0f1821" />
+    </svg>
   );
 }
 
@@ -119,25 +150,30 @@ function LeaderCard({ tag, p, spirits, state, me }) {
       </div>
       <h3>{info.leader}</h3>
       <p className="muted">{pa.gov === info.ideology ? info.government : `Vláda: ${gov.name}`}</p>
-      <ul className="lc-ideo" aria-label="Podpora stran">
-        {pa.rows.map((r) => (
-          <li key={r.id} className={r.gov ? 'main' : ''} title={`${IDEOLOGIES[r.id].name}: ${r.pct.toFixed(1)} %${r.gov ? ' (vládnoucí strana)' : ''}`}>
-            <i style={{ background: IDEOLOGIES[r.id].color }} /><span>{IDEOLOGIES[r.id].name}</span><b>{Math.round(r.pct)} %</b>
-            <button type="button" className="mini" aria-label={`Podpořit stranu ${IDEOLOGIES[r.id].name}`} title={r.block || `Podpořit: ${pa.cost} PM, +${pa.gain} bodů`} disabled={!!r.block} onClick={() => backParty(r.id)}>+</button>
-            <span className="bar"><i style={{ width: `${r.pct}%`, background: IDEOLOGIES[r.id].color }} /></span>
-          </li>
-        ))}
-      </ul>
+      <div className="lc-parties">
+        <PartyPie rows={pa.rows} />
+        <ul className="lc-ideo" aria-label="Podpora stran">
+          {pa.rows.map((r) => (
+            <li key={r.id} className={r.gov ? 'main' : ''} title={`${IDEOLOGIES[r.id].name}: ${r.pct.toFixed(1)} %${r.gov ? ' (vládnoucí strana)' : ''}`}>
+              <i style={{ background: IDEOLOGIES[r.id].color }} /><span>{IDEOLOGIES[r.id].name}</span><b>{Math.round(r.pct)} %</b>
+              <button type="button" className="mini" aria-label={`Podpořit stranu ${IDEOLOGIES[r.id].name}`} title={r.block || `Podpořit: ${pa.cost} PM, +${pa.gain} bodů`} disabled={!!r.block} onClick={() => backParty(r.id)}>+</button>
+            </li>
+          ))}
+        </ul>
+      </div>
       <Elections state={state} me={me} />
       {pa.risk && <p className="lc-warn" role="alert">Hrozí převrat: strana „{IDEOLOGIES[pa.rival].name}“ se blíží vládnoucí straně.</p>}
       <h4>Národní duch</h4>
       <ul className="lc-spirits">
-        {spirits.map((x) => <li key={x.k} className={x.kind} title={x.hint}>{x.n}</li>)}
+        {spirits.map((x) => <li key={x.k} className={x.kind} title={`${x.n}: ${x.hint}`}><Icon name={x.icon} size={18} /><span>{x.n}</span></li>)}
         {!spirits.length && <li className="muted">Zatím žádný</li>}
       </ul>
     </aside>
   );
 }
+
+/** Otevřený slot (zákon nebo poradce) – stav komponenty, ne hry. */
+const usePick = () => useState('');
 
 /** Záložka Politika: stabilita, podpora války, politická moc (PM), zákony a poradci. */
 export function PoliticsPanel() {
@@ -145,11 +181,12 @@ export function PoliticsPanel() {
   const me = playerIdx(state);
   if (!me) return <div className="prod-screen politics-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádnou politiku.</p></div></div>;
   const p = politicsOf(state, me);
+  const [open, setOpen] = usePick();
   const spirits = [
-    ...spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, hint: `${x.info} ${modText(x.mod, x.army)}${x.days ? ` · ještě ${x.days} dní` : ''}` })),
-    ...p.laws.map((c) => { const o = c.options.find((x) => x.active); return { k: `l${c.cat}`, n: o.n, kind: 'law', hint: `${c.n}: ${o.info}` }; }),
-    ...p.advisors.filter((a) => a.current).map((a) => ({ k: `a${a.slot}`, n: a.current.n, kind: 'adv', hint: `${a.n}: ${a.current.info}` })),
-    ...focusTree(state, me).filter((f) => f.status === 'done').map((f) => ({ k: `f${f.id}`, n: f.n, kind: 'focus', hint: f.info || 'Splněný národní cíl' })),
+    ...spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, icon: x.tone === 'bad' ? 'resistance' : 'flag', hint: `${x.info} ${modText(x.mod, x.army)}${x.days ? ` · ještě ${x.days} dní` : ''}` })),
+    ...p.laws.map((c) => { const o = c.options.find((x) => x.active); return { k: `l${c.cat}`, n: o.n, kind: 'law', icon: LAW_ICON[c.cat] || 'gavel', hint: `${c.n}: ${o.info}` }; }),
+    ...p.advisors.filter((a) => a.current).map((a) => ({ k: `a${a.slot}`, n: a.current.n, kind: 'adv', icon: ADV_ICON[a.slot] || 'general', hint: `${a.n}: ${a.current.info}` })),
+    ...focusTree(state, me).filter((f) => f.status === 'done').map((f) => ({ k: `f${f.id}`, n: f.n, kind: 'focus', icon: 'focus', hint: f.info || 'Splněný národní cíl' })),
   ];
   return (
     <Screen cls="politics-panel" title="Politika" icon="politics" head={(
@@ -165,13 +202,13 @@ export function PoliticsPanel() {
           <LeaderCard tag={state.player} p={p} spirits={spirits} state={state} me={me} />
           <div className="prod-left">
             <div className="sec-head"><h3>Zákony</h3></div>
-            <div className="law-grid">{p.laws.map((c) => <Law key={c.cat} cat={c} />)}</div>
+            <div className="law-grid">{p.laws.map((c) => <Law key={c.cat} cat={c} open={open === `l${c.cat}`} onOpen={() => setOpen(open === `l${c.cat}` ? '' : `l${c.cat}`)} />)}</div>
             <div className="sec-head"><h3>Vrchní velení</h3><span className="muted">náčelníci štábů: bonusy armády, námořnictva a letectva</span></div>
             <HighCommand list={p.advisors.filter((a) => ADV_SLOTS[a.slot].hc)} />
           </div>
           <aside className="prod-right">
             <div className="sec-head"><h3>Poradci</h3></div>
-            {p.advisors.filter((a) => !ADV_SLOTS[a.slot].hc).map((a) => <Advisor key={a.slot} a={a} />)}
+            {p.advisors.filter((a) => !ADV_SLOTS[a.slot].hc).map((a) => <Advisor key={a.slot} a={a} open={open === `a${a.slot}`} onOpen={() => setOpen(open === `a${a.slot}` ? '' : `a${a.slot}`)} />)}
           </aside>
         </div>
       </div>

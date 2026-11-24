@@ -18,16 +18,19 @@ function unlocks(id) {
   return out;
 }
 
+/** Výzkumný slot jako v HOI4: ikona technologie, název, postup a zbývající dny; volný slot bliká a vybízí k volbě. */
 function Slot({ s }) {
-  if (!s.id) return <div className="rs-slot empty"><span className="muted">Volný slot – vyberte technologii níže.</span></div>;
+  if (!s.id) return <div className="rs-slot empty" aria-label={`Slot ${s.slot + 1}: volný`}><span className="rs-ic free" aria-hidden="true"><Icon name="plus" size={22} /></span><span className="rs-txt"><b>Volný slot</b><i className="muted">Vyberte technologii ve stromu níže</i></span></div>;
+  const ic = techIconOf(s.id, s.tech);
   return (
     <div className="rs-slot" aria-label={`Slot ${s.slot + 1}: ${s.tech.n}`}>
-      <div className="q-top">
-        <b>{s.tech.n}</b>
-        <span className="muted">{s.eta < 0 ? '–' : `za ${fmtDays(s.eta)}`}{s.ahead > 0 ? ` · předstih ${fmtNum(s.ahead, 1)} r.` : ''}{s.share > 0 ? ` · sdílení bloku +${Math.round(s.share * 100)} %` : ''}</span>
-        <button className="icon-btn sm" onClick={() => stopResearch(s.slot)} aria-label={`Přerušit výzkum ${s.tech.n}`} title="Přerušit (postup se zachová)"><Icon name="close" size={14} /></button>
-      </div>
-      <span className="bar prog"><i style={{ width: `${(s.p * 100).toFixed(1)}%` }} /></span>
+      <span className="rs-ic" aria-hidden="true">{ic.eq ? <EquipIcon eq={ic.eq} size={38} /> : <Icon name={ic.icon} size={24} />}</span>
+      <span className="rs-txt">
+        <b title={s.tech.n}>{s.tech.n}</b>
+        <i className="muted">{s.eta < 0 ? '–' : `za ${fmtDays(s.eta)}`}{s.ahead > 0 ? ` · předstih ${fmtNum(s.ahead, 1)} r.` : ''}{s.share > 0 ? ` · blok +${Math.round(s.share * 100)} %` : ''}</i>
+        <span className="bar prog"><i style={{ width: `${(s.p * 100).toFixed(1)}%` }} /></span>
+      </span>
+      <button className="icon-btn sm" onClick={() => stopResearch(s.slot)} aria-label={`Přerušit výzkum ${s.tech.n}`} title="Přerušit (postup se zachová)"><Icon name="close" size={14} /></button>
     </div>
   );
 }

@@ -58,7 +58,7 @@ try {
   await page.waitForTimeout(1800);
   const top = await page.locator('.topbar').innerText();
   check('hra začíná s AI zemí na těžké obtížnosti', (await page.evaluate(() => window.__e1936.gameStore.getState().ai)).diff === 1);
-  check('horní lišta: země a datum', top.includes('Německo') && top.includes('1. ledna 1936'));
+  check('horní lišta: země (jméno nebo na úzké obrazovce jen vlajka) a datum', (top.includes('Německo') || (await page.locator('.topbar .tb-flag').count()) === 1) && top.includes('1. ledna 1936'));
   await shot('game');
   // UI jako v HOI4: národní cíl a výzkum u vlajky, přehled vpravo s armádami
   check('horní lišta má národní cíl a výzkumné sloty', (await page.locator('.tb-focus').count()) === 1 && (await page.locator('.tb-slots i').count()) >= 2);
@@ -533,12 +533,20 @@ try {
   check('klávesa P otevře panel Politika se zákony a poradci', (await ui()).panel === 'politics' && (await page.locator('.pol-law').count()) === 3 && (await page.locator('.pol-adv').count()) === 4);
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const own = s.pol.own.slice(); own[o] = { ...own[o], pp: 400, ws: 0.9 }; gameStore.setState({ ...s, pol: { ...s.pol, own } }); });
   await page.waitForTimeout(900);
+  // UI jako v HOI4: zákon a poradce jsou sloty – klik otevře volby jako dlaždice
+  await page.locator('.pol-law').first().locator('.pol-slot').click();
+  await page.waitForTimeout(150);
+  check('klik na slot zákona otevře volby jako dlaždice', (await page.locator('.pol-law.open .pol-opt-tile').count()) >= 3);
+  await shot('politics-top');
   await page.locator('.pol-law').first().getByRole('button', { name: /Raná mobilizace/ }).click();
+  await page.locator('.pol-adv').nth(3).locator('.pol-slot-main').click();
+  await page.waitForTimeout(150);
   await page.locator('.pol-adv').nth(3).getByRole('button', { name: /Akademik/ }).click();
   await page.waitForTimeout(250);
   const pol1 = await E(() => { const { gameStore, engine } = window.__e1936; const e = gameStore.getState().pol.own[engine.getWorld().ownerIdx.GER]; return { eco: e.laws.eco, sci: e.adv.sci, pp: e.pp }; });
   check('zákon a poradce se zadají a zaplatí politickou mocí', pol1.eco === 'early' && pol1.sci === 'akademik' && pol1.pp < 400, `${pol1.eco}, ${pol1.sci}, zbývá ${pol1.pp}`);
   // F4: vrchní velení – tři karty náčelníků štábů, najmutí klikem na dlaždici
+  check('vůdce má koláč stran a duchy jako ikony', (await page.locator('.pol-pie path').count()) >= 2 && (await page.locator('.lc-spirits li .icon').count()) >= 1);
   check('politika má tři karty vrchního velení', (await page.locator('.hc-card').count()) === 3 && (await page.locator('.hc-opt').count()) >= 9);
   await page.locator('.hc-card').first().getByRole('button', { name: /Teoretik obrněných sil/ }).click();
   await page.waitForTimeout(250);

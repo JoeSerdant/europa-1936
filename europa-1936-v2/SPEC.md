@@ -1153,6 +1153,11 @@ Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a da
   hráčovy strany), Armády (počet divizí, organizace, boj, zásoby), Výcvik, Flotily, Letectvo, Výroba (továrny, efektivita), Stavby (postup);
   klik vede na mapu (armáda = výběr divizí a let kamery), do okna bitvy nebo do okna. Sbalitelný celý (`ui.outliner`) i po oddílech; skrytý,
   když je otevřený pravý panel; střední lišty se pak středí mezi levým sloupcem a přehledem.
+- **Okna Výzkum a Politika jako v HOI4** (F4e): výzkumné sloty s ikonou technologie (`techIconOf`), názvem, postupem a dny, volný slot bliká;
+  v Politice karta vůdce s portrétem, koláčovým grafem podpory stran (`PartyPie`, vládnoucí strana vysunutá) a národními duchy jako ikonami
+  (název a účinek v nápovědě); zákony (ekonomika, odvod, obchod) a poradci jsou sloty – klik otevře volby jako dlaždice (`Picker`, cena,
+  účinek, důvod zákazu), poradci se siluetou portrétu a ikonou oboru; otevřený slot je stav komponenty. V ukotveném okně je karta vůdce
+  nad zákony v plné výšce. Na úzké obrazovce zůstane v horní liště jen vlajka.
 - **Mapové režimy** jako řada ikon vedle minimapy (název a klávesa v nápovědě), ne rozbalovací seznam.
 - **Karta státu** (záložka Oblast): záhlaví s vlajkou vlastníka, vítěznými body a korunou hlavního města, vlastnosti jako ikony (terén, podnebí,
   počasí, obyvatelé, plocha, železnice a přístav jako tečky úrovně), stavební sloty jako dlaždice (civilní a vojenské továrny, loděnice,
