@@ -60,10 +60,14 @@ try {
   check('hra začíná s AI zemí na těžké obtížnosti', (await page.evaluate(() => window.__e1936.gameStore.getState().ai)).diff === 1);
   check('horní lišta: země a datum', top.includes('Německo') && top.includes('1. ledna 1936'));
   await shot('game');
+  // UI jako v HOI4: národní cíl a výzkum u vlajky, přehled vpravo s armádami
+  check('horní lišta má národní cíl a výzkumné sloty', (await page.locator('.tb-focus').count()) === 1 && (await page.locator('.tb-slots i').count()) >= 2);
+  check('přehled vpravo má oddíly cíl, výzkum a armády', (await page.locator('.outliner .ol-sec').count()) >= 3 && (await page.locator('.outliner .ol-sec[aria-label="Armády"] .ol-item').count()) >= 1);
 
   await page.mouse.click(Math.round(W * 0.5), Math.round(H * 0.55));
   await page.waitForSelector('.dossier h2', { timeout: 3000 });
   check('klik na provincii otevře panel', (await page.locator('.dossier h2').innerText()).length > 0);
+  check('karta státu ukazuje sloty budov a vlastnosti jako ikony', (await page.locator('.dossier .st-slot').count()) >= 2 && (await page.locator('.dossier .st-chips > span').count()) >= 5);
   await shot('dossier');
   check('karta vlastní provincie nabízí stavbu pevnosti', (await page.locator('.prov-fort').count()) === 1);
 
@@ -96,19 +100,17 @@ try {
   for (const [key, mode] of [['2', 'Terén'], ['5', 'Obyvatelé'], ['6', 'Vítězné body'], ['1', 'Politická']]) {
     await page.keyboard.press(key);
     await page.waitForTimeout(300);
-    const on = await page.locator('.mm-trigger').getAttribute('data-mode');
+    const on = await page.locator('.mm').getAttribute('data-mode');
     check(`režim ${key} = ${mode}`, on === mode, on);
     if (key === '2') await shot('terrain');
   }
-  await page.locator('.mm-trigger').click();
-  check('seznam mapových režimů dole má 11 položek s klávesami', (await page.locator('.mm-list li').count()) === 11 && (await page.locator('.mm-list kbd').first().innerText()) === '1');
+  check('mapové režimy jsou řada 11 tlačítek s ikonami (HOI4)', (await page.locator('.mm .mm-btn').count()) === 11 && (await page.locator('.mm .mm-btn.on').count()) === 1);
   await shot('mapmodes');
-  await page.locator('.mm-list button', { hasText: 'Státy' }).click();
-  check('výběr ze seznamu přepne režim a seznam se zavře', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Státy' && (await page.locator('.mm-list').count()) === 0);
-  await page.locator('.mm-trigger').click();
-  await page.locator('.mm-list button', { hasText: 'Počasí' }).click();
+  await page.locator('.mm .mm-btn[aria-label="Státy"]').click();
+  check('klik na ikonu přepne režim', (await page.locator('.mm').getAttribute('data-mode')) === 'Státy');
+  await page.locator('.mm .mm-btn[aria-label="Počasí"]').click();
   await page.waitForTimeout(400);
-  check('mapový režim Počasí', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Počasí');
+  check('mapový režim Počasí', (await page.locator('.mm').getAttribute('data-mode')) === 'Počasí');
   await shot('weather');
   await page.keyboard.press('1');
 
@@ -283,7 +285,7 @@ try {
   // mapový režim Zásobování (klávesa 7)
   await page.keyboard.press('7');
   await page.waitForTimeout(500);
-  check('režim 7 = Zásobování', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Zásobování');
+  check('režim 7 = Zásobování', (await page.locator('.mm').getAttribute('data-mode')) === 'Zásobování');
   await shot('supply');
   await page.keyboard.press('1');
 
@@ -385,7 +387,7 @@ try {
   await page.keyboard.press('Escape');   // M103: panel Stavby by překryl mapové režimy vlevo dole
   await page.keyboard.press('8');
   await page.waitForTimeout(500);
-  check('režim 8 = Průmysl s vysvětlivkami', (await page.locator('.mm-trigger').getAttribute('data-mode')) === 'Průmysl' && (await page.locator('.legend').innerText()).includes('továren'));
+  check('režim 8 = Průmysl s vysvětlivkami', (await page.locator('.mm').getAttribute('data-mode')) === 'Průmysl' && (await page.locator('.legend').innerText()).includes('továren'));
   await shot('industry-map');
   await page.keyboard.press('1');
   const ind3 = await E(() => {
@@ -751,6 +753,16 @@ try {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
   check('Esc zavře dialog uložených her', (await page.locator('.save-dialog').count()) === 0);
+  // UI jako v HOI4: klik na armádu v přehledu vpravo vybere její divize (posune kameru – proto až na konci)
+  await page.evaluate(() => { const u = window.__e1936.uiStore; u.setState({ ...u.getState(), selected: 0, panel: null }); });
+  await page.waitForTimeout(400);
+  if ((await page.locator('.outliner .ol-sec[aria-label="Armády"] .ol-item').count()) > 0) {
+    await page.locator('.outliner .ol-sec[aria-label="Armády"] .ol-item').first().click();
+    await page.waitForTimeout(700);
+    check('klik na armádu v přehledu vybere její divize', (await page.evaluate(() => window.__e1936.uiStore.getState().selDivs.length)) >= 1);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(150);
+  } else check('přehled vpravo je vidět i na konci hry', false);
   await page.keyboard.press('Escape');
   await page.waitForSelector('.dialog');
   check('nabídka má přepínač zvuku a průvodce, stránka vlastní kurzory', (await page.getByRole('button', { name: /Zvuk:/ }).count()) === 1 && (await page.getByRole('button', { name: /Průvodce:/ }).count()) === 1 && /url\(/.test(await page.evaluate(() => getComputedStyle(document.body).cursor)));

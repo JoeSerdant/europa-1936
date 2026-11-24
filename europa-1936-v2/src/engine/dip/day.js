@@ -3,7 +3,7 @@ import { getWorld } from '../world.js';
 import { hasWar, enemiesOf, atWar } from '../army/war.js';
 import { friendsOf } from './accessCore.js';
 import { DIP } from './constants.js';
-import { vpHeld } from './core.js';
+import { vpHeld, pairKey } from './core.js';
 import { capitulate } from './capitulate.js';
 import { subjectsDay } from './subjects.js';
 import { accessDay } from './access.js';
@@ -39,6 +39,11 @@ export function armisticeRow(state, o) {
     const foe = w.ownerIdx[s.armistice];
     if (!foe || !atWar(state.mil, o, foe)) continue;
     if (s.force && day >= s.force) return s;   // pojistka: režim padne i bez úspěšného vylodění
+    if (s.days) {   // F4: vynucený konec N dní po začátku války (válka bez zapsaného začátku se počítá od začátku okna)
+      const since = state.dip.since && state.dip.since[pairKey(o, foe)];
+      if ((since != null ? state.tick - since : (day - s.from) * 24) >= s.days * 24) return s;
+    }
+    if (!s.held) continue;
     const camp = new Set([foe, ...friendsOf(state.dip, foe)]);
     let n = 0;
     for (let p = 1; p <= w.L; p++) if (w.provOwner0[p] === o && camp.has(state.ctrl[p]) && ++n >= s.held) return s;
@@ -54,6 +59,15 @@ export function holdoutOf(state, o) {
   return HIST_STRATEGIES.some((s) => s.tag === tag && s.holdout && day >= s.from && day < s.until);
 }
 
+/**
+ * Konec války z historické koleje (řádek `armistice`): `full` = běžná kapitulace (konference i exil, F4), `conf` = bezpodmínečná kapitulace
+ * s konferencí bez exilu (M98), `peace` = územní mír (F3), jinak příměří bez konference (M93).
+ */
+function forcedEnd(state, o, ar) {
+  if (ar.full) return capitulate(state, o);
+  return capitulate(state, o, ar.conf ? { noExile: true, victor: getWorld().ownerIdx[ar.armistice] } : { armistice: true, peace: !!ar.peace });
+}
+
 export function dipDay(state) {
   const w = getWorld();
   state = civilDay(state);   // M69: historické občanské války
@@ -67,7 +81,9 @@ export function dipDay(state) {
     if (state.dip.cap[o] || !hasWar(state.mil, o)) continue;
     const h = vpHeld(state, o);
     if (enemiesOf(state.mil, o).some((e) => isCivilWar(state, o, e))) {   // M69: občanskou válku neukončí pád hlavního města, až držení většiny země
-      if (h.total && h.share >= DIP.CIVIL_CAP_SHARE) state = capitulate(state, o);
+      const share = holdoutOf(state, o) ? DIP.HOLDOUT_SHARE : DIP.CIVIL_CAP_SHARE;   // F4: historické vytrvání platí i v občanské válce
+      if (h.total && h.share >= share) state = capitulate(state, o);
+      else { const ar = armisticeRow(state, o); if (ar) state = forcedEnd(state, o, ar); }   // F4: vynucený konec („fronty ztuhly“)
       continue;
     }
     const lim = holdoutOf(state, o) ? { share: DIP.HOLDOUT_SHARE, capital: DIP.HOLDOUT_SHARE } : capLimitOf(o);   // M92: hranice kapitulace podle země; M98: vytrvání do konce
@@ -75,7 +91,7 @@ export function dipDay(state) {
     if (h.total && (h.share >= lim.share || (capRule && h.capHeld && h.share >= lim.capital))) state = capitulate(state, o);
     else {
       const ar = armisticeRow(state, o);
-      if (ar) state = capitulate(state, o, ar.conf ? { noExile: true, victor: w.ownerIdx[ar.armistice] } : { armistice: true, peace: !!ar.peace });   // M93: příměří (bez exilu a konference); M98: bezpodmínečná kapitulace (konference bez exilu)
+      if (ar) state = forcedEnd(state, o, ar);
     }
   }
   // vypršelá ospravedlnění

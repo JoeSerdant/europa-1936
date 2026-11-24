@@ -15,10 +15,29 @@
 //               (Itálie 1943: pád režimu po vylodění Spojenců); od dne `force` kapituluje i bez toho
 //               s `conf` = bezpodmínečná kapitulace s mírovou konferencí (bez exilu); s `peace` = územní mír (F3): obsazené státy připadnou
 //               okupantovi, ale země nekapituluje – dál vede vlastní politiku a války (moskevský mír Finska 1940)
+//               F4 (historie natvrdo, jako skriptované události HOI4): s `full` = běžná kapitulace (konference, exil); `days` = vynucený konec
+//               N dní po začátku války se zemí `armistice`; bez `held` rozhoduje jen `force` / `days`. Platí i v občanské válce.
 //  holdout      (s `from`/`until`) země bojuje do posledního: kapituluje až při `DIP.HOLDOUT_SHARE` území v rukou nepřítele (M98)
 //  invade       operace vylodění (s `from`/`until`): země se v okně vylodí u země `invade` i bez převahy na moři, z větší dálky a v plné síle sboru (Sicílie, Normandie);
 //               `at` = vylodění jen na původním území této země (Normandie: Němci držená Francie)
 export const HIST_STRATEGIES = [
+  // F4: občanská válka ve Španělsku natvrdo – žádná strana se nezhroutí dřív, republika vydrží do zimy 1938/39 a nejpozději 1. 4. 1939
+  // „fronty ztuhnou“: republika bezpodmínečně kapituluje a vítěz sjednotí zemi (bez ohledu na to, kde fronta stojí)
+  { id: 'spr_holdout', tag: 'SPR', from: 198, until: 1150, holdout: true },
+  { id: 'nsp_front', tag: 'NSP', war: 'SPR', from: 300, until: 1050, defend: true },   // po tažení na Madrid fronty ztuhnou
+  { id: 'spr_front', tag: 'SPR', war: 'NSP', from: 198, until: 1050, defend: true },
+  { id: 'nsp_push', tag: 'NSP', war: 'SPR', from: 1050, until: 1186, push: 0.6 },   // Ebro a Katalánie (zima 1938/39)
+  { id: 'nsp_holdout', tag: 'NSP', from: 198, until: 1300, holdout: true },
+  { id: 'spr_end', tag: 'SPR', from: 1150, until: 1400, armistice: 'NSP', force: 1186, conf: true },
+  // F4: pády zemí v letech 1939–1941 natvrdo k historickému datu (dřív smí padnout bojem): Polsko 6. 10. 1939, Nizozemsko 15. 5. 1940,
+  // Belgie 28. 5. 1940, Norsko 10. 6. 1940, Francie 22. 6. 1940; Jugoslávie 12 a Řecko 25 dní po vstupu Německa do války
+  { id: 'pol_fall', tag: 'POL', from: 1340, until: 1460, armistice: 'GER', force: 1374, full: true },
+  { id: 'hol_fall', tag: 'HOL', from: 1580, until: 1700, armistice: 'GER', force: 1596, full: true },
+  { id: 'bel_fall', tag: 'BEL', from: 1580, until: 1700, armistice: 'GER', force: 1609, full: true },
+  { id: 'nor_fall', tag: 'NOR', from: 1580, until: 1750, armistice: 'GER', force: 1622, full: true },
+  { id: 'fra_fall', tag: 'FRA', from: 1580, until: 1750, armistice: 'GER', force: 1634, full: true },
+  { id: 'yug_fall', tag: 'YUG', from: 1880, until: 2100, armistice: 'GER', days: 12, full: true },
+  { id: 'gre_fall', tag: 'GRE', from: 1880, until: 2100, armistice: 'GER', days: 25, full: true },
   // západ 1940: blesková válka proti zaskočené a demoralizované Francii, která drží zálohy v týlu
   { id: 'blitz_ger', tag: 'GER', from: 1585, until: 1680, needWar: 'FRA', spirit: 'bleskova_valka' },
   { id: 'fra_morale', tag: 'FRA', from: 1585, until: 1720, needWar: 'GER', spirit: 'podivna_valka' },
@@ -86,6 +105,7 @@ export const HIST_STRATEGIES = [
   // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
   { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true },   // F3: do 8. 5. 1945
   { id: 'ger_surrender', tag: 'GER', from: 3415, until: 3800, armistice: 'SOV', held: 20, force: 3470, conf: true },
+  { id: 'ita_holdout', tag: 'ITA', from: 2400, until: 2795, holdout: true },   // F4: režim vydrží do vylodění na Sicílii a pádu v září 1943
   { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },
   { id: 'husky', tag: 'ENG', from: 2650, until: 2950, invade: 'ITA', at: 'ITA' },
   { id: 'overlord', tag: 'ENG', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },

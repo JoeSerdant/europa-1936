@@ -29,9 +29,9 @@ export const HIST_WARS = [
   { tag: 'SOV', target: 'EST', from: 1720, until: 2100, ratio: 0.6 },
   { tag: 'SOV', target: 'LAT', from: 1720, until: 2100, ratio: 0.6 },
   { tag: 'SOV', target: 'LIT', from: 1720, until: 2100, ratio: 0.6 },
-  { tag: 'GER', target: 'YUG', from: 1915, until: 2400, ratio: 0.5, force: 1 },   // M88: balkánské tažení na jaře 1941
-  { tag: 'GER', target: 'GRE', from: 1920, until: 2400, ratio: 0.5, force: 1 },
-  { tag: 'HUN', target: 'YUG', from: 1925, until: 2400, ratio: 1.0 },
+  { tag: 'GER', target: 'YUG', from: 1892, until: 2400, ratio: 0.5, force: 1 },   // M88: balkánské tažení na jaře 1941 (F4: s ospravedlněním válka 6. 4. 1941)
+  { tag: 'GER', target: 'GRE', from: 1893, until: 2400, ratio: 0.5, force: 1 },
+  { tag: 'HUN', target: 'YUG', from: 1898, until: 2400, ratio: 1.0 },
 ];
 
 /** Historické bloky: země `tag` ve dni `from` založí blok a zve `invite` (pozvaný přijme podle vztahů). */

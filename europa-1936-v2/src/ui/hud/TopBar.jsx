@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { gameStore, useGame } from '../store.js';
+import { gameStore, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { COUNTRIES } from '../../data/countries.js';
-import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension, fuelOf, SPEEDS } from '../../engine/index.js';
-import { setHelp, setMenuOpen, openOverview } from '../actions.js';
+import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension, fuelOf, SPEEDS, FOCUS_BY_ID, researchOf } from '../../engine/index.js';
+import { setHelp, setMenuOpen, openOverview, togglePanel, playerIdx } from '../actions.js';
 import { fmtInt, fmtPop, fmtSpeed } from '../format.js';
 
 /** Datum, hodiny a ovládání času. Samostatná komponenta: s během času se překresluje jen ona. */
@@ -34,6 +34,58 @@ function Clock() {
 }
 
 const getWorldIdx = (s) => getWorld().ownerIdx[s.player];
+
+/** Kruhový ukazatel postupu (SVG). */
+function Ring({ v, size = 44, children }) {
+  const r = size / 2 - 3, c = 2 * Math.PI * r;
+  return (
+    <span className="tb-ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} aria-hidden="true"><circle cx={size / 2} cy={size / 2} r={r} className="bg" /><circle cx={size / 2} cy={size / 2} r={r} className="fg" style={{ strokeDasharray: `${c * Math.max(0, Math.min(1, v))} ${c}` }} /></svg>
+      {children}
+    </span>
+  );
+}
+
+/** UI jako v HOI4: národní cíl vedle vlajky – kruh postupu, název a zbývající dny; klik otevře strom cílů. */
+function FocusWidget() {
+  const v = useGameSlow((s) => {
+    const me = playerIdx(s);
+    if (!me) return '';
+    const c = s.nat.own[me].cur, f = c && FOCUS_BY_ID[c.id];
+    return f ? `${f.n}|${Math.min(1, c.p / Math.max(1, f.days)).toFixed(3)}|${Math.max(0, Math.ceil(f.days - c.p))}` : '-';
+  }, 900);
+  if (!v) return null;
+  const [n, p, d] = v === '-' ? ['Vyberte národní cíl', 0, ''] : v.split('|');
+  return (
+    <button className={`tb-focus ${v === '-' ? 'idle' : ''}`} onClick={() => togglePanel('nat')} title={v === '-' ? 'Neplní se žádný národní cíl – otevřít strom cílů (C)' : `Národní cíl: ${n} · zbývá ${d} dní (C)`}>
+      <Ring v={+p}><Icon name="flag" size={18} /></Ring>
+      <span><b>{n}</b><i>{d ? `${d} dní` : 'žádný cíl'}</i></span>
+    </button>
+  );
+}
+
+/** UI jako v HOI4: výzkumné sloty jako malé dlaždice s postupem; prázdný slot bliká. Klik otevře výzkum. */
+function ResearchWidget() {
+  const v = useGameSlow((s) => {
+    const me = playerIdx(s);
+    if (!me) return '';
+    return researchOf(s, me).slots.map((x) => (x.id ? `${Math.min(1, x.p / Math.max(1, x.tech.days)).toFixed(2)}:${x.tech.n}:${Math.max(0, Math.ceil(x.eta))}` : '-')).join('|');
+  }, 900);
+  if (!v) return null;
+  const slots = v.split('|');
+  return (
+    <button className="tb-research" onClick={() => togglePanel('research')} title="Výzkum (W)" aria-label="Výzkum">
+      <Icon name="research" size={16} />
+      <span className="tb-slots">
+        {slots.map((x, i) => {
+          if (x === '-') return <i key={i} className="free" title="Volný výzkumný slot" />;
+          const [p, n, eta] = x.split(':');
+          return <i key={i} title={`${n} · ${eta} dní`}><em style={{ height: `${Math.round(+p * 100)}%` }} /></i>;
+        })}
+      </span>
+    </button>
+  );
+}
 
 /** M101: změna číselné hodnoty – krátké bliknutí a vyletující rozdíl (jen když je změna aspoň `min`). */
 function useDelta(num, min) {
@@ -91,13 +143,14 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="tb-country">
-        {tag ? <Flag tag={tag} width={48} /> : <span className="flag-none" />}
+        {tag ? <button className="tb-flag" onClick={() => togglePanel('politics')} title="Vláda (Q)" aria-label="Vláda"><Flag tag={tag} width={58} /></button> : <span className="flag-none" />}
         <div className="tb-name">
           <b>{tag ? countryName(tag) : 'Pozorovatel'}</b>
           <span>{info ? `${info.leader} · ${info.government}` : 'Hra bez vlastní země'}</span>
         </div>
       </div>
-      <Clock />
+      {tag && <FocusWidget />}
+      {tag && <ResearchWidget />}
       <div className="tb-right">
         {stats && (
           <div className="stats">
@@ -121,6 +174,7 @@ export function TopBar() {
         <button className="icon-btn" onClick={() => setHelp(true)} aria-label="Ovládání" title="Ovládání (F1)"><Icon name="help" /></button>
         <button className="icon-btn" onClick={() => setMenuOpen(true)} aria-label="Nabídka" title="Nabídka (Esc)"><Icon name="menu" /></button>
       </div>
+      <Clock />
     </header>
   );
 }

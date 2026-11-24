@@ -1137,6 +1137,27 @@ Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a da
   jako dlaždicemi a termín voleb u vůdce; bublina a lišta výběru označí dobrovolníky vlajkou původní země. Deník: `vol` (svět), `volback`,
   `att`, `lic`, `elect` (jen s hráčem), `gov` s `y = 1` = vláda z voleb.
 
+## 4zzzzz. Historie natvrdo a rozhraní jako v HOI4 (F4b)
+
+- **Historie natvrdo** (jako skriptované události HOI4, jen s historickou AI a nikdy pro hráčovu zemi): výsledky válek se už nedolaďují vyvážením,
+  ale vynucují kolejemi `HIST_STRATEGIES`. Řádek `armistice` umí nově `full` (běžná kapitulace s konferencí a exilem), `days` (vynucený konec N dní
+  po začátku války se zemí `armistice`, podle `dip.since`) a bez `held` rozhoduje jen `force` / `days`; konec provádí `forcedEnd` v `dip/day.js`
+  a platí i v občanské válce (tam vytrvání `holdout` zvedá hranici kapitulace na `DIP.HOLDOUT_SHARE`).
+  - **Španělsko („fronty ztuhly“)**: obě strany vytrvají, po tažení na Madrid (od 27. 10. 1936) a do listopadu 1938 jen brání (`nsp_front`,
+    `spr_front`), pak nacionalistická ofenziva (`nsp_push`) a nejpozději 1. 4. 1939 bezpodmínečná kapitulace republiky (`spr_end`, vítěz sjednotí zemi).
+  - **Pády zemí**: Polsko 6. 10. 1939, Nizozemsko 15. 5., Belgie 28. 5., Norsko 10. 6., Francie 22. 6. 1940 (dřív smí padnout bojem);
+    Jugoslávie 12 a Řecko 25 dní po vstupu Německa do války (válka podle plánů 6. 4. 1941); Itálie vytrvá do září 1943 (`ita_holdout`).
+- **Horní lišta jako v HOI4**: vlajka (klik = Vláda), vedle ní národní cíl (kruh postupu, název, dny; bez cíle bliká) a výzkumné sloty jako dlaždice
+  s postupem (volný slot bliká); ukazatele uprostřed; datum a rychlost vpravo nahoře.
+- **Přehled vpravo** (outliner, `ui/hud/Outliner.jsx`, data jen z `outlinerData` v `ui/hud/outliner.js`): oddíly Národní cíl, Výzkum, Bitvy (převaha
+  hráčovy strany), Armády (počet divizí, organizace, boj, zásoby), Výcvik, Flotily, Letectvo, Výroba (továrny, efektivita), Stavby (postup);
+  klik vede na mapu (armáda = výběr divizí a let kamery), do okna bitvy nebo do okna. Sbalitelný celý (`ui.outliner`) i po oddílech; skrytý,
+  když je otevřený pravý panel; střední lišty se pak středí mezi levým sloupcem a přehledem.
+- **Mapové režimy** jako řada ikon vedle minimapy (název a klávesa v nápovědě), ne rozbalovací seznam.
+- **Karta státu** (záložka Oblast): záhlaví s vlajkou vlastníka, vítěznými body a korunou hlavního města, vlastnosti jako ikony (terén, podnebí,
+  počasí, obyvatelé, plocha, železnice a přístav jako tečky úrovně), stavební sloty jako dlaždice (civilní a vojenské továrny, loděnice,
+  rozestavěné s postupem, volné), sdílené budovy s úrovní (infrastruktura, letiště, radar) a těžba jako ikony surovin.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1344,6 +1365,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **M104** | **Výroba jako v HOI4**: kreslené ikony výzbroje, řada továren u linky (klik a tažení), zásobník volných továren s přetahováním | **hotovo** |
 | **M105** | **Výzkum s ikonami a okna u kraje**: kreslené ikony technologií, klik na kartu zahájí výzkum, sedm oken jako panel vlevo nad mapou | **hotovo** |
 | **F4a** | **Funkce HOI4 – vlna 1**: dobrovolníci a expediční sbory, vojenský atašé, licenční výroba, volby v demokraciích, vrchní velení (náčelníci štábů) | **hotovo** |
+| **F4b** | **Historie natvrdo a rozhraní jako v HOI4**: vynucené konce válek (Španělsko „fronty ztuhly“, pády zemí 1939–1941), horní lišta s cílem a výzkumem, přehled vpravo, ikony režimů mapy, karta státu se sloty | **hotovo** |
 | později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
