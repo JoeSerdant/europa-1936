@@ -133,6 +133,7 @@ export function aiAir(state, o) {
       // bombardování končí mírem; podpora a hlídky se přehodnotí, když fronta zmizí
       if (wg.m === 'bomb' && state.stateOwner[wg.to] && hasWar(state.mil, o)) continue;
       if (wg.m === 'cas' && war) continue;
+      if ((wg.m === 'nav' || wg.m === 'int') && war) continue;   // F4c: úder na lodě a stíhání řídí aiAirMissions
     }
     let next = state;
     if (wg.t === 'sti') {

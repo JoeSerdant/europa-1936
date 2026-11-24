@@ -1181,6 +1181,12 @@ Tvar stavu: divize může mít `rd: 1` (strategický přesun), plán fronty `fb:
   `NAV.CFORT_ORG` organizace za úroveň; na nejvyšší úrovni se nepřítel vylodit nedokáže.
 - **Zásobovací uzel** (`hub`, stavba státu, max. 1, jen s železnicí v hlavní provincii státu): hlavní provincie státu se stane uzlem zásobování
   (jako železniční uzel ze světa). Postavené uzly nese neviditelná vlastnost `hubs` pole z `seaPorts` (`builtHubs`), takže je dostane každé volání `supplyFlow`.
+- **AI** (`engine/ai/hoi.js`, čísla `AI.F4C_*`, stejné příkazy jako hráč): za války `aiMines` odminuje domovská moře s nepřátelskými minami
+  a jednu nečinnou flotilu s torpédoborci a ponorkami (ne hlavní) pošle klást miny do domovského moře u nepřátelského pobřeží; `aiAirMissions`
+  pošle každé třetí úderné křídlo s cílem v doletu na nepřátelské flotily u vlastního pobřeží (`navStrikeTarget`) a sudé stíhací křídlo stíhat
+  nepřátelské úderné mise nad vlastním územím (`interceptTarget`), bez cíle mise ruší (`aiAir` je pak přidělí znovu); `aiRail` pošle vlakem divize
+  s cestou aspoň `AI.F4C_RAIL_STEPS` provincií jen vlastním územím; `aiBuildsF4c` (týdně) staví námořní základnu v nejlepším přístavu do úrovně
+  `AI.F4C_NB`, za války pobřežní pevnost v nejcennějším přístavu (`AI.F4C_CFORT_VP`) a zásobovací uzel ve státě s nejvíc divizemi bez zásob.
 - **Rozhraní**: stavby Námořní základna, Zásobovací uzel a Pobřežní pevnost v panelu Stavby; karta státu ukazuje základnu a uzel tečkami, pevnost
   provincie i pobřežní pevnost; moře ukazuje miny podle zemí; flotila ukazuje poškození; mise flotil a letectva jako ikony.
 
