@@ -292,6 +292,22 @@ export function boxSelect(ids, { shift = false } = {}) {
   setSelection(cur.concat(mine.filter((id) => !cur.includes(id))));
 }
 
+// ============================================================ přehled vpravo (outliner, UI jako HOI4)
+export const toggleOutliner = () => setUi({ outliner: !uiStore.getState().outliner });
+/** Klik na položku přehledu: armáda = výběr jejích divizí a let kamery k ní, bitva = okno bitvy, flotila, okno, provincie. */
+export function outlinerGo(go) {
+  if (!go) return;
+  if (go.k === 'army') {
+    selectArmy(go.id);
+    const s = gameStore.getState(), ids = divisionsOfArmy(s, go.id);
+    if (ids.length) mc.flyToLabel(s.mil.divs[ids[0]].p, 650);
+  } else if (go.k === 'battle') openBattle(go.id);
+  else if (go.k === 'fleet') { selectFleet(go.id); const f = gameStore.getState().nav.fleets[go.id]; if (f) mc.flyToLabel(f.p, 650); }
+  else if (go.k === 'ind') { if (!(uiStore.getState().panel === 'industry' && uiStore.getState().indTab === go.id)) toggleIndustry(go.id); }
+  else if (go.k === 'panel') { if (uiStore.getState().panel !== go.id) openPanel(go.id); }
+  else if (go.k === 'prov') selectLabel(go.id, true);
+}
+
 /** Vybere všechny divize armády (a zaměří ji v panelu). */
 export function selectArmy(armyId, { add = false } = {}) {
   const s = gameStore.getState();

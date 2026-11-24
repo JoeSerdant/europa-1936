@@ -8,6 +8,7 @@ import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, setI
 /** Otevře panel Stavby (bez přepínání – už otevřený zůstane). */
 const openBuild = () => { setIndTab('build'); openPanel('industry'); };
 import { fmtInt, fmtNum, fmtPop, fmtArea, plural } from '../format.js';
+import { ResIcon } from '../common/ResIcon.jsx';
 
 const KIND_NOTE = ['', 'přes řeku', 'průliv'];
 const PORT_NAMES = ['', 'malý přístav', 'přístav', 'velký přístav', 'hlavní námořní přístav', 'světový přístav'];
@@ -62,25 +63,49 @@ function ProvinceUnits({ p }) {
   );
 }
 
-/** Průmysl státu: kategorie, sloty, továrny, těžba; hráč může ve svém státě zadat stavbu. Překresluje se jen při změně průmyslu. */
+/** Úroveň jako řada teček (vyplněné = postaveno, obrys = rozestavěno). */
+function Pips({ n, max, q = 0 }) {
+  return <span className="st-pips">{Array.from({ length: max }, (_, i) => <i key={i} className={i < n ? 'on' : i < n + q ? 'q' : ''} />)}</span>;
+}
+
+/**
+ * Karta průmyslu státu (UI jako v HOI4): stavební sloty jako dlaždice s ikonou (civilní, vojenské továrny, loděnice, rozestavěné s postupem,
+ * volné), sdílené budovy s úrovní (infrastruktura, letiště, radar) a těžba surovin jako ikony. Hráč ve svém státě otevře panel Stavby.
+ */
 function StateIndustry({ s }) {
   const state = useGameSlow((g) => g, 600);
   const info = stateIndustry(state, s);
   const me = playerIdx(state);
   if (!info) return null;
   const mine = me && state.stateOwner[s] === me && state.ctrl[getWorld().states[s].cap] === me;
-  const res = Object.entries(info.res);
+  const res = Object.entries(info.res).filter(([, n]) => n > 0);
+  const q = (k) => info.queued.filter((b) => b.k === k);
+  const slotQ = info.queued.filter((b) => BUILDINGS[b.k].slot);
+  const tiles = [
+    ...Array.from({ length: info.civ }, () => ({ k: 'civ' })), ...Array.from({ length: info.mil }, () => ({ k: 'mil' })), ...Array.from({ length: info.dok }, () => ({ k: 'dok' })),
+    ...slotQ.map((b) => ({ k: b.k, pct: b.prog / BUILDINGS[b.k].cost })),
+  ];
+  const free = Math.max(0, info.slots - tiles.length);
   return (
     <section className="state-ind">
-      <h3>Průmysl státu</h3>
-      <dl className="kv">
-        <Row label="Kategorie">{info.cat.n} · sloty {info.used}/{info.slots}</Row>
-        <Row label="Továrny">{info.civ} civilních · {info.mil} vojenských{info.dok > 0 ? ` · ${info.dok} loděnic` : ''}</Row>
-        {info.inf > 0 && <Row label="Infrastruktura">+{info.inf}</Row>}
-        {info.radar > 0 && <Row label="Radar">úroveň {info.radar}</Row>}
-        {res.length > 0 && <Row label="Těžba">{res.map(([r, n]) => `${RESOURCES[r].n} ${fmtNum(n, 1)}`).join(' · ')}</Row>}
-        {info.queued.length > 0 && <Row label="Rozestavěno">{info.queued.length}</Row>}
-      </dl>
+      <h3>Průmysl státu <i className="muted">{info.cat.n} · sloty {info.used}/{info.slots}</i></h3>
+      <div className="st-slots" aria-label={`Sloty: ${info.civ} civilních, ${info.mil} vojenských továren, ${info.dok} loděnic, ${free} volných`}>
+        {tiles.map((t, i) => (
+          <span key={i} className={`st-slot ${t.k} ${t.pct != null ? 'q' : ''}`} title={`${BUILDINGS[t.k].n}${t.pct != null ? ` – rozestavěno ${Math.round(t.pct * 100)} %` : ''}`}>
+            <Icon name={t.k === 'dok' ? 'ship' : 'industry'} size={16} />
+            {t.pct != null ? <i style={{ height: `${Math.round(t.pct * 100)}%` }} /> : null}
+          </span>
+        ))}
+        {Array.from({ length: free }, (_, i) => <span key={`f${i}`} className="st-slot free" title="Volný stavební slot" />)}
+      </div>
+      <div className="st-shared">
+        <span title={`${BUILDINGS.inf.n}: úroveň ${info.inf} z ${BUILDINGS.inf.max}`}><Icon name="road" size={15} /><Pips n={info.inf} max={BUILDINGS.inf.max} q={q('inf').length} /></span>
+        <span title={`${BUILDINGS.afb.n}: úroveň ${info.afb} z ${BUILDINGS.afb.max}`}><Icon name="plane" size={15} /><Pips n={info.afb} max={BUILDINGS.afb.max} q={q('afb').length} /></span>
+        <span title={`${BUILDINGS.radar.n}: úroveň ${info.radar} z ${BUILDINGS.radar.max}`}><Icon name="eye" size={15} /><Pips n={info.radar} max={BUILDINGS.radar.max} q={q('radar').length} /></span>
+      </div>
+      {res.length > 0 && (
+        <div className="st-res">{res.map(([r, n]) => <span key={r} title={`${RESOURCES[r].n}: těžba ${fmtNum(n, 1)} za den`}><ResIcon r={r} size={20} /><b>{fmtNum(n, 1)}</b></span>)}</div>
+      )}
       {mine && (   /* F2 B6: stavby se zadávají jen v panelu Stavby (vybrat budovu, klikat na mapu) – tady jen odkaz */
         <div className="ind-btns"><button className="sbtn" onClick={openBuild} title="Otevře panel Stavby: vyberte budovu a klikejte na státy na mapě"><Icon name="build" size={14} />Stavby (T)</button></div>
       )}
@@ -200,25 +225,30 @@ function LandDossier({ p, owner, ctrl }) {
   const style = ai && ai.level && own.tag !== me ? personaOf({ ai }, owner[o.s]) : null;   // F3: styl velení AI země
   return (
     <>
-      <div className="head">
-        <h2>{o.n}</h2>
-        <div className="sub">{st.n} · {regionName}</div>
+      <div className="head st-head">
+        <Flag tag={own.tag} width={54} />
+        <div className="st-title">
+          <h2>{o.n}</h2>
+          <div className="sub">{st.n} · {regionName}</div>
+        </div>
+        {o.v > 0 && <span className="st-vp" title={`Vítězné body: ${o.v}`}><Icon name="victory" size={15} />{o.v}</span>}
+        {cap && <span className="st-cap" title="Hlavní město"><Icon name="crown" size={16} /></span>}
       </div>
       <div className="body">
-        <dl className="kv">
-          <Row label="Vlastník"><span className="who"><Flag tag={own.tag} width={22} />{own.name}</span></Row>
-          {style && <Row label="Velení AI"><span title={style.info}>{style.n}</span></Row>}
-          {ctrl[p] !== owner[o.s] && <Row label="Kontrola"><span className="who"><Flag tag={ctl.tag} width={22} />{ctl.name}</span></Row>}
-          {cap && <Row label="Postavení">hlavní město</Row>}
-          <Row label="Terén">{TERRAIN_CS[o.t]}</Row>
-          <Row label="Podnebí">{CLIMATE_CS[climate]}</Row>
-          <Row label="Obyvatelé">{fmtPop(o.p)}</Row>
-          <Row label="Plocha">{fmtArea(o.a)}</Row>
-          {o.v > 0 && <Row label="Vítězné body"><b className="gold">{o.v}</b></Row>}
-          {o.h && <Row label="Přístav">{PORT_NAMES[o.h[1]] || `úroveň ${o.h[1]}`} · {w.seaName(o.h[0])}</Row>}
-          <Row label="Železnice">{rail ? `úroveň ${rail} z 5` : 'žádná'}</Row>
-          <Row label="Počasí">{weather.label}, {Math.round(weather.t)} °C</Row>
-        </dl>
+        <div className="st-owner">
+          <span className="who" title="Vlastník"><Flag tag={own.tag} width={22} />{own.name}</span>
+          {ctrl[p] !== owner[o.s] && <span className="who occ" title="Provincii drží (okupuje)"><Icon name="swords" size={13} /><Flag tag={ctl.tag} width={22} />{ctl.name}</span>}
+          {style && <span className="muted" title={style.info}>Velení AI: {style.n}</span>}
+        </div>
+        <div className="st-chips">
+          <span title="Terén"><Icon name="terrain" size={15} />{TERRAIN_CS[o.t]}</span>
+          <span title="Podnebí"><Icon name="regions" size={15} />{CLIMATE_CS[climate]}</span>
+          <span title="Počasí"><Icon name="weather" size={15} />{weather.label}, {Math.round(weather.t)} °C</span>
+          <span title="Obyvatelé"><Icon name="population" size={15} />{fmtPop(o.p)}</span>
+          <span title="Plocha"><Icon name="provinces" size={15} />{fmtArea(o.a)}</span>
+          <span title={rail ? `Železnice: úroveň ${rail} z 5` : 'Bez železnice'}><Icon name="road" size={15} />{rail ? <Pips n={rail} max={5} /> : 'bez železnice'}</span>
+          {o.h && <span title={`${PORT_NAMES[o.h[1]] || `Přístav úrovně ${o.h[1]}`} · ${w.seaName(o.h[0])}`}><Icon name="ship" size={15} /><Pips n={o.h[1]} max={5} /></span>}
+        </div>
         <ProvinceBattle p={p} />
         <ProvinceFort p={p} />
         <ProvinceUnits p={p} />

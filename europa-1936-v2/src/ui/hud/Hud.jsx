@@ -33,6 +33,7 @@ import { DoctrinePanel } from '../doctrine/DoctrinePanel.jsx';
 import { DesignPanel } from '../design/DesignPanel.jsx';
 import { AirPanel } from '../air/AirPanel.jsx';
 import { MenuBar } from './MenuBar.jsx';
+import { Outliner } from './Outliner.jsx';
 import { Alerts } from './Alerts.jsx';
 import { Console } from './Console.jsx';
 import { Toast } from '../common/Toast.jsx';
@@ -47,7 +48,8 @@ export function Hud() {
   const panel = useUi((s) => s.panel);
   const buildTab = useUi((s) => (s.panel === 'industry' && s.indTab === 'build') || DOCKED.includes(s.panel));   // M103/M105: panel vlevo nad mapou – minimapa a mapové režimy se schovají
   useEffect(() => { mc.setInsets(INSETS.game); }, []);
-  const right = side ? 394 : 14;               // střední lišty se středí mezi levým sloupcem a pravým panelem
+  const outl = useUi((s) => s.outliner) && !side;   // UI (HOI4): přehled vpravo, když není otevřený pravý panel
+  const right = side ? 394 : outl ? 276 : 14;   // střední lišty se středí mezi levým sloupcem a pravým panelem (nebo přehledem)
   const tutOn = useTutorialOn();
   // F2 B5: průvodce a nápověda „Čas stojí“ jsou v levém sloupci (nad minimapou), s otevřeným panelem vlevo vedle něj – nikdy nad lištou armád;
   // nápověda se ukáže jen s vypnutým průvodcem (jeho první krok říká totéž)
@@ -68,6 +70,7 @@ export function Hud() {
           <div className="panel mini"><Minimap /></div>
         </div>
       )}
+      {!side && <Outliner />}
       <SidePanel />
       {panel === 'industry' && (buildTab ? <BuildPanel /> : <IndustryPanel />)}
       {panel === 'recruit' && <RecruitPanel />}

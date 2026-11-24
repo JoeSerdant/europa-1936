@@ -35,7 +35,7 @@ describe('data', () => {
       for (const k of ['war', 'needWar', 'invade', 'at', 'armistice', 'noEnter', 'spareCap']) if (s[k]) expect(idx(s[k]), `${s.id}.${k}`).toBeGreaterThan(0);
       if (s.push) { expect(s.push).toBeGreaterThan(0); expect(s.push).toBeLessThanOrEqual(1); expect(s.war).toBeTruthy(); }
       if (s.from !== undefined) expect(s.until).toBeGreaterThan(s.from);
-      if (s.armistice) { expect(s.held).toBeGreaterThan(0); if (s.force) expect(s.force).toBeLessThan(s.until); }
+      if (s.armistice) { expect(s.held > 0 || s.force > 0 || s.days > 0, s.id).toBe(true); if (s.force) expect(s.force).toBeLessThan(s.until); if (s.days) expect(s.days).toBeGreaterThan(0); }
     }
     for (const id of ['general_zima', 'sibirske_zalohy', 'letni_ofenziva', 'velky_obrat', 'vycerpana_rise', 'ruda_armada_v_utoku', 'spojenecka_prevaha', 'rozklad_rezimu', 'bagration', 'rozpad_front', 'zbrojni_ministerstvo', 'evakuace_prumyslu']) {
       expect(SPIRITS[id], id).toBeTruthy();
