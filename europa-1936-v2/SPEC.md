@@ -1273,7 +1273,7 @@ Historie mimo Evropu jde po **kolejích** stejně jako Evropa (pravidlo 110): da
 
 Spojené státy, Japonsko a Čína mají **velký strom cílů** jako evropské velmoci (`data/nat/focuses_world.js`, `WORLD_BIG`, sestavuje `big`):
 vlastní větve + politické cesty (`paths` z `focuses_alt.js`, historická cesta je jedna) + modernizace (`modern`). Nahrazují výchozí strom W1
-(řádek ve `WORLD_BASE`), rozšíření `XL_SMALL` a růst `ALT_GROW` / `MOD_GROW` (množina `WGP` v `focuses_alt.js`).
+(řádek v `NATION_SPEC`), rozšíření `XL_SMALL` a růst `ALT_GROW` / `MOD_GROW` (množina `WGP` v `focuses_alt.js`).
 - **USA** (84 cílů): Nový úděl a průmysl (přehrady, ocelárny, automobilky, ropa, výrobní linky, Rada válečné výroby), armáda (výběrová služba,
   obrněná síla, výsadkové divize, námořní pěchota), letectvo (létající pevnosti, doprovodné stíhačky), dvouoceánské loďstvo (letadlové lodě,
   rychlé bitevní lodě, lodě svobody), věda (radiační laboratoř, luštění šifer, atomový projekt), politika (zákony o neutralitě × konec izolace,
@@ -1283,6 +1283,14 @@ vlastní větve + politické cesty (`paths` z `focuses_alt.js`, historická cest
 - **Čína** (67): desetiletí výstavby, stěhování továren na západ, silnice přes hory; vzorové divize, milionová armáda, partyzánská válka;
   dobrovolní piloti; politika (jednotná fronta × potlačení komunistů, usmíření s generály, válka odporu, spojenecká velmoc).
 - Historická AI dává přednost historickým volbám (postup na jih, jednotná fronta – nižší `ai`).
+
+### Vlastní cíle ostatních zemí světa (W4)
+Zbylých 38 zemí mimo Evropu má strom z dat `NATION_SPEC` (`data/nat/focuses_nations.js`, staví `worldTree` ve `focuses_more.js`):
+osm základních cílů se stejnými id jako ve W1 (`<tag>_eco`, `_rail`, `_army`, `_sci`, `_arm`, `_trade`, `_unity`, `_staff`) s vlastními názvy
+a popisem země + 3–6 jedinečných cílů podle země (suroviny – ropa Venezuely, cín Bolívie, měď Chile; terén – horské, pouštní, džunglové
+a zimní jednotky; loďstvo; diplomacie s okolím; zvláštnosti – letecký výcvik Společenství v Kanadě, ocelárna v Brazílii, největší
+dobrovolnická armáda Indie, gurkhové v Nepálu, partyzánská válka čínských komunistů). Pod tím zůstává rozšíření `XL_SMALL`, politické cesty
+a modernizace (W1). Exkluzivní volby (Siam: Japonsko × Západ) mají historickou volbu dřív (nižší `ai`).
 
 ## 5. Rozhraní
 
@@ -1497,6 +1505,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W1** | **Dark Times – celý svět**: Mercatorova mapa dokola, 41 nových zemí, kolonie, výchozí cíle, počáteční loutky, tropy a jižní polokoule | ✅ |
 | **W2** | **Historie celého světa**: Habeš, čínsko-japonská válka, Indočína, Írán, Pearl Harbor a válka v Pacifiku, konec války v Asii, skutečné USA, posádky v koloniích, kolonie exilových vlád | ✅ |
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
+| **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | později | cíle všech zemí, rozhodnutí, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
