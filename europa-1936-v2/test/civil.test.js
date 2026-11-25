@@ -112,7 +112,7 @@ describe('rozdělení země', () => {
     expect(owned(t, NSP)).toBe(SPAIN.length);
   });
   it('po rozdělení hra běží: obě strany s AI vedou válku, invarianty drží', () => {
-    let t = splitCountry(base(), SPR, NSP, SPAIN, true);
+    let t = splitCountry({ ...base(), tick: 24 * 130 }, SPR, NSP, SPAIN, true);   // W2: po habešské válce (Itálie za války dobrovolníky neposílá)
     for (let k = 0; k < 10; k++) { t = advance(t, 24 * 15); expect(validateState(t)).toBeNull(); }
     expect(divisionCount(t, NSP)).toBeGreaterThan(0);
     expect(t.mil.armies.some((a) => a && a.o === NSP)).toBe(true);   // povstalecká AI si sestavila armády

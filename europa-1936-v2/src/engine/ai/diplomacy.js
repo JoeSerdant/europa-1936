@@ -8,7 +8,7 @@ import { justifyWar, startWar, proposePeace, justReady, warBlock, createFaction,
 import { subjectsOf, autonomyOf, tightenControl } from '../dip/subjects.js';
 import { guarantee } from '../dip/guarantee.js';
 import { campOf, hasCapitulated, warScore, pairKey, vpHeld } from '../dip/core.js';
-import { demandSpec, demandBlock, demandForce, demand } from '../dip/demand.js';
+import { demandSpec, demandBlock, demandForce, demand, lordBacks } from '../dip/demand.js';
 import { adjacency } from '../army/geo.js';
 import { pactOf, pactBlock, proposePact, breakBlock, breakPact } from '../dip/pact.js';
 import { HIST_PACTS } from '../../data/dip/pacts.js';
@@ -86,7 +86,7 @@ export function aiDiplomacy(state, o) {
       const spec = demandSpec(state, d, b);
       if (demandBlock(state, o, b, spec)) continue;
       const f = demandForce(state, o, b);
-      if (f.mine >= Math.max(1, f.theirs) * d.ratio) return demand(state, o, b, spec);   // jedno ultimátum za den
+      if (lordBacks(state, o, b, spec) || f.mine >= Math.max(1, f.theirs) * d.ratio) return demand(state, o, b, spec);   // jedno ultimátum za den (W2: loutku přiměje pán ze spojeneckého bloku)
     }
   }
   // historické pakty o neútočení (M75)

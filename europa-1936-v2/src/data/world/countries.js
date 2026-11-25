@@ -88,7 +88,7 @@ export const IND_WORLD = {
 
 /** Počáteční armády (viz army/national.js). */
 export const ARMY_WORLD = {
-  USA: { cult: 'en', divs: { pesi: 9, kav: 2, tank: 1 }, xp: 0.15, res: 0.6, man: 0.004, pool: 4 },
+  USA: { cult: 'en', divs: { pesi: 9, kav: 2, tank: 1 }, xp: 0.15, res: 0.6, man: 0.004, pool: 4, place: [{ states: ['Havaj'], divs: { pesi: 1 } }] },
   CAN: { cult: 'en', divs: { pesi: 3 }, xp: 0.12, res: 0.4, man: 0.006, pool: 1 },
   MEX: { cult: 'es', divs: { pesi: 8, kav: 4 }, xp: 0.12, res: 0.3, man: 0.008, pool: 1 },
   GUA: { cult: 'es', divs: { brig: 1 }, xp: 0.1, res: 0.2, man: 0.008, pool: 0 }, HON: { cult: 'es', divs: { brig: 1 }, xp: 0.1, res: 0.2, man: 0.008, pool: 0 },
@@ -103,7 +103,8 @@ export const ARMY_WORLD = {
   PAR: { cult: 'es', divs: { pesi: 4 }, xp: 0.25, res: 0.2, man: 0.012, pool: 1 }, BRA: { cult: 'pt', divs: { pesi: 12, kav: 3 }, xp: 0.12, res: 0.25, man: 0.006, pool: 2 },
   ETH: { cult: 'am', divs: { pesi: 12, brig: 6 }, xp: 0.08, res: 0.1, man: 0.01, pool: 2 }, LBR: { cult: 'en', divs: { brig: 1 }, xp: 0.1, res: 0.2, man: 0.006, pool: 0 },
   SAF: { cult: 'en', divs: { pesi: 3, motor: 1 }, xp: 0.15, res: 0.4, man: 0.008, pool: 1 },
-  JAP: { cult: 'ja', divs: { pesi: 32, hory: 2, kav: 4, tank: 1, motor: 1 }, xp: 0.35, res: 0.5, man: 0.012, pool: 5 },
+  JAP: { cult: 'ja', divs: { pesi: 32, hory: 2, kav: 4, tank: 1, motor: 1 }, xp: 0.35, res: 0.5, man: 0.012, pool: 5,
+    place: [{ states: ['Keidžó', 'Heidžó', 'Severní Korea'], divs: { pesi: 4 } }, { states: ['Taihoku'], divs: { brig: 1 } }] },   // Korejská armáda
   MAN: { cult: 'zh', divs: { pesi: 8, kav: 4 }, xp: 0.1, res: 0.2, man: 0.004, pool: 1 },
   CHI: { cult: 'zh', divs: { pesi: 70, brig: 20, kav: 6 }, xp: 0.1, res: 0.1, man: 0.003, pool: 6 },
   PRC: { cult: 'zh', divs: { brig: 6 }, xp: 0.25, res: 0.1, man: 0.02, pool: 1 }, SIK: { cult: 'zh', divs: { pesi: 3, kav: 3 }, xp: 0.1, res: 0.1, man: 0.008, pool: 1 },

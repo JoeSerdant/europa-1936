@@ -121,7 +121,8 @@ export function createMil(w = getWorld(), rngState = 1936) {
       mil.tpl.push({ o, nm: k.nm, short: k.short, reg: k.reg.map((c) => c.slice()), sup: k.sup.slice() });
       tplOf[kind] = id;
     }
-    const N = kinds.reduce((s, k) => s + nat.divs[k], 0);
+    const N0 = kinds.reduce((s, k) => s + nat.divs[k], 0);
+    const N = N0 + (nat.place || []).reduce((a, pl) => a + Object.values(pl.divs).reduce((x, y) => x + y, 0), 0);   // W2: s posádkami
     if (N === 0) continue;
 
     // ---- kam které divize ----
@@ -140,9 +141,9 @@ export function createMil(w = getWorld(), rngState = 1936) {
     const core = weights.map((x, i) => (w.states[w.provState[provs[i]]].c ? 0 : x));
     if (core.some((x) => x > 0)) for (let i = 0; i < weights.length; i++) weights[i] = core[i];
     const chosen = [];
-    let remaining = N;
+    let remaining = N0;
     const capIdx = provs.indexOf(ow.cap);
-    if (N >= 2 && capIdx >= 0) { chosen.push(ow.cap); remaining--; }
+    if (N0 >= 2 && capIdx >= 0) { chosen.push(ow.cap); remaining--; }
     const w2 = weights.slice();
     if (capIdx >= 0 && chosen.length) w2[capIdx] = 0;
     while (remaining > 0) {
@@ -178,6 +179,29 @@ export function createMil(w = getWorld(), rngState = 1936) {
     const restKinds = wanted.filter((k) => !['hory', 'tank', 'motor', 'kav'].includes(k));
     let ri = 0;
     for (let i = 0; i < slots.length; i++) if (!kindAt[i]) kindAt[i] = restKinds[ri++] || 'pesi';
+    // W2: posádky navíc v jmenovaných státech (`place`: italská východní Afrika, japonská armáda v Koreji, britské posádky v Asii…)
+    for (const pl of nat.place || []) {
+      const all = provs.filter((p) => pl.states.includes(w.states[w.provState[p]].n));
+      const fed = all.filter((p) => reach[p] > 0), cand = fed.length ? fed : all;   // jen tam, kam dosáhne zásobování (je-li kde)
+      if (!cand.length) continue;
+      cand.sort((a, b) => w.vp[b] - w.vp[a] || a - b);
+      const load = new Map();
+      for (const p of slots) load.set(p, (load.get(p) || 0) + 1);
+      const pick = () => {   // provincie s největší rezervou zásobování na divizi (divize se rozloží podle kapacity)
+        let best = cand[0], bs = -Infinity;
+        for (const p of cand) { const sc = (reach[p] + 0.01) / ((load.get(p) || 0) + 1); if (sc > bs) { bs = sc; best = p; } }
+        load.set(best, (load.get(best) || 0) + 1);
+        return best;
+      };
+      for (const kind of Object.keys(pl.divs)) {
+        if (tplOf[kind] == null) {
+          const t = TPL_KINDS[kind];
+          tplOf[kind] = mil.tpl.length;
+          mil.tpl.push({ o, nm: t.nm, short: t.short, reg: t.reg.map((c) => c.slice()), sup: t.sup.slice() });
+        }
+        for (let n = 0; n < pl.divs[kind]; n++) { slots.push(pick()); kindAt.push(kind); }
+      }
+    }
 
     // ---- divize ----
     const counters = {};

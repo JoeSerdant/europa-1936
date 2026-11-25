@@ -77,7 +77,7 @@ describe('zápisy ze systémů', () => {
   });
   it('pozorovatel nemá osobní záznamy, jen světové', () => {
     const o = day(createGame({ player: null, aiLevel: 2 }), 200);
-    expect(o.log.items.every((e) => ['war', 'peace', 'cap', 'faction', 'join', 'civil', 'lend'].includes(e.k))).toBe(true);   // španělská občanská válka a pomoc stranám (M69) jsou světové události
+    expect(o.log.items.every((e) => ['war', 'peace', 'cap', 'faction', 'join', 'civil', 'lend', 'puppet'].includes(e.k))).toBe(true);   // španělská občanská válka a pomoc stranám (M69) jsou světové události; W2: Habeš loutkou Itálie
   });
   it('stav s deníkem pokračuje deterministicky a zůstává čistý JSON', () => {
     const s = startFocus(s0, GER, 'ger_plan');

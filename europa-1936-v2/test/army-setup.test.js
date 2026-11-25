@@ -48,7 +48,7 @@ describe('počáteční armády', () => {
   it('počty divizí odpovídají národním sestavám', () => {
     for (const c of allCountries()) {
       const nat = NATIONAL[c.tag];
-      const want = nat ? Object.values(nat.divs).reduce((a, b) => a + b, 0) : 0;
+      const want = nat ? Object.values(nat.divs).reduce((a, b) => a + b, 0) + (nat.place || []).reduce((a, pl) => a + Object.values(pl.divs).reduce((x, y) => x + y, 0), 0) : 0;   // W2: s posádkami
       const have = m.divs.filter((d) => d && d.o === c.idx).length;
       expect(have, c.tag).toBe(want);
     }

@@ -31,7 +31,8 @@ describe('data ultimát', () => {
     for (const d of HIST_DEMANDS) {
       expect(idx(d.tag), d.id).toBeTruthy(); expect(idx(d.target), d.id).toBeTruthy();
       expect(['annex', 'cede']).toContain(d.kind);
-      if (d.kind === 'cede') expect(demandSpec(s, d, idx(d.target)).states.length, d.id).toBe(d.states.length);
+      if (d.kind === 'cede' && owned(s, idx(d.target))) expect(demandSpec(s, d, idx(d.target)).states.length, d.id).toBe(d.states.length);
+      if (d.kind === 'cede') for (const n of d.states) expect(W.states.some((st) => st && st.n === n), `${d.id}: ${n}`).toBe(true);   // W2: cíl může vzniknout až později (Vichy)
       if (d.after) expect(DEMAND_BY_ID[d.after], d.id).toBeTruthy();
       const ev = EVENT_BY_ID[`ult_${d.id}`];
       expect(ev, d.id).toBeTruthy();

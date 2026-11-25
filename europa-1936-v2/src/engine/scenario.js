@@ -125,9 +125,24 @@ function grantTechs(state, o, year) {
   return s;
 }
 
+/** Války na začátku scénáře: [útočník, obránce, 'att'?] – vyhlášení, počátek války a válečný cíl útočníka (AI se podle něj rozhoduje o útoku, M66). */
+function startWars(state, wars, tick) {
+  if (!wars.length) return state;
+  const w = getWorld();
+  let s = state;
+  const goal = { ...s.dip.goal }, since = { ...s.dip.since };
+  for (const [a, b, att] of wars) {
+    s = declareWar(s, a, b);
+    since[pairKeyOf(w.ownerIdx[a], w.ownerIdx[b])] = tick;
+    if (att === 'att') goal[`${w.ownerIdx[a]}>${w.ownerIdx[b]}`] = 'conquest';
+  }
+  return { ...s, dip: { ...s.dip, goal, since, ver: s.dip.ver + 1 } };
+}
+
 export function applyScenario(state, id) {
   const sc = SCENARIOS[id];
-  if (!sc || !sc.transfer) return state;
+  if (!sc) return state;
+  if (!sc.transfer) return startWars(state, sc.wars || [], sc.tick || 0);   // scénář bez přesunů: nanejvýš války na začátku
   const w = getWorld();
   let s = state;
   // 1) zaniklé země a přesuny států
@@ -173,14 +188,9 @@ export function applyScenario(state, id) {
     for (const o of mem) fac[o] = facs.length - 1;
   }
   s = { ...s, dip: { ...s.dip, fac, facs, ver: s.dip.ver + 1 } };
-  const goal = { ...s.dip.goal }, since = { ...s.dip.since };
-  for (const [a, b, att] of sc.wars) {
-    s = declareWar(s, a, b);
-    since[pairKeyOf(w.ownerIdx[a], w.ownerIdx[b])] = sc.tick;
-    if (att === 'att') goal[`${w.ownerIdx[a]}>${w.ownerIdx[b]}`] = 'conquest';   // útočník války (AI se podle toho rozhoduje o útoku, M66)
-  }
+  s = startWars(s, sc.wars, sc.tick);
   const nap = (sc.pacts || []).map(([a, b]) => ({ a: w.ownerIdx[a], b: w.ownerIdx[b], t: sc.tick })).filter((x) => x.a && x.b);   // M75: pakty o neútočení platné na začátku
-  s = { ...s, dip: { ...s.dip, goal, since, nap, ver: s.dip.ver + 1 } };
+  s = { ...s, dip: { ...s.dip, nap, ver: s.dip.ver + 1 } };
   // 4) čas
   return { ...s, tick: sc.tick };
 }

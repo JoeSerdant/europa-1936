@@ -103,12 +103,63 @@ export const HIST_STRATEGIES = [
   { id: 'ger_ruin', tag: 'GER', from: 3260, until: 3800, needWar: 'SOV', spirit: 'zhroucene_hospodarstvi' },   // M96: bombardované továrny, ztracená ropa
   // vylodění Spojenců: Sicílie a Itálie 1943, Normandie 1944
   // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
-  { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true },   // F3: do 8. 5. 1945
+  { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true },
+  { id: 'hun_holdout', tag: 'HUN', from: 2000, until: 3381, holdout: true },   // W2: Maďarsko vytrvá do dubna 1945 (Budapešť padla v únoru, poslední území 4. 4. 1945)
+  { id: 'slo_holdout', tag: 'SLO', from: 2000, until: 3395, holdout: true },   // Slovensko do dubna 1945   // F3: do 8. 5. 1945
   { id: 'ger_surrender', tag: 'GER', from: 3415, until: 3800, armistice: 'SOV', held: 20, force: 3415, conf: true },   // F4c: natvrdo 8. 5. 1945
   { id: 'ita_holdout', tag: 'ITA', from: 2400, until: 2795, holdout: true },   // F4: režim vydrží do vylodění na Sicílii a pádu v září 1943
   { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },
   { id: 'husky', tag: 'ENG', from: 2650, until: 2950, invade: 'ITA', at: 'ITA' },
   { id: 'overlord', tag: 'ENG', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },
+  { id: 'overlord_usa', tag: 'USA', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },
+  { id: 'usa_border', tag: 'USA', from: 2170, until: 3215, noEnter: 'GER' },
+  { id: 'usa_berlin', tag: 'USA', from: 2170, until: 3405, spareCap: 'GER' },
+  { id: 'usa_push44', tag: 'USA', war: 'GER', from: 3090, until: 3450, push: 0.6 },
+  { id: 'usa_rhine', tag: 'USA', war: 'GER', from: 3230, until: 3353, defend: true },   // jako Británie: přes zimu u Rýna
+  // W2: Západní spojenci se v dubnu 1945 zastaví na Labi (s americkou armádou by jinak Německo padlo před 8. 5. 1945)
+  { id: 'eng_elbe', tag: 'ENG', war: 'GER', from: 3395, until: 3420, defend: true },
+  { id: 'usa_elbe', tag: 'USA', war: 'GER', from: 3395, until: 3420, defend: true },
+  { id: 'fra_elbe', tag: 'FRA', war: 'GER', from: 3395, until: 3420, defend: true },
+  // ---- W2: Asie, Pacifik a zbytek světa ----
+  // Habeš 1935/36: italská armáda (posádky ve východní Africe) dobude zemi do 5. 5. 1936 – natvrdo, s mírovou konferencí
+  { id: 'ita_eth_push', tag: 'ITA', war: 'ETH', from: 0, until: 125, push: 0.5 },
+  { id: 'eth_fall', tag: 'ETH', from: 0, until: 400, armistice: 'ITA', force: 125, conf: true },
+  // Čína 1937–1945: Japonsko postupuje do pádu Wu-chanu (podzim 1938), pak fronta ztuhne; Čína se nevzdá. Operace Iči-gó (1944) je poslední velká ofenziva.
+  { id: 'chi_holdout', tag: 'CHI', from: 520, until: 3600, holdout: true },
+  { id: 'prc_holdout', tag: 'PRC', from: 520, until: 3600, holdout: true },
+  { id: 'jap_chi_shock', tag: 'JAP', war: 'CHI', after: 0, upto: 3, spirit: 'prekvapivy_uder', days: 120 },
+  { id: 'jap_chi_push', tag: 'JAP', war: 'CHI', from: 553, until: 1030, push: 0.5 },
+  { id: 'jap_chi_front', tag: 'JAP', war: 'CHI', from: 1030, until: 3031, defend: true },
+  { id: 'jap_ichigo', tag: 'JAP', war: 'CHI', from: 3031, until: 3266, push: 0.6 },
+  { id: 'jap_chi_front2', tag: 'JAP', war: 'CHI', from: 3266, until: 3600, defend: true },
+  { id: 'chi_front', tag: 'CHI', war: 'JAP', from: 553, until: 3600, defend: true },
+  { id: 'prc_front', tag: 'PRC', war: 'JAP', from: 553, until: 3600, defend: true },
+  { id: 'chi_resist', tag: 'CHI', war: 'JAP', after: 0, upto: 3, spirit: 'valka_odporu', days: 0 },
+  // Írán 1941: po třech týdnech příměří – obsazené státy připadnou okupantům, země přežije (územní mír)
+  { id: 'per_fall', tag: 'PER', from: 2060, until: 2300, armistice: 'ENG', days: 23, peace: true },
+  // Pacifik: překvapivý úder (Pearl Harbor, Malajsko, Filipíny), rychlé výboje do léta 1942, po Midway iniciativa Spojenců
+  { id: 'jap_pacific', tag: 'JAP', war: 'USA', after: 0, upto: 3, spirit: 'prekvapivy_uder', days: 150 },
+  { id: 'usa_shock', tag: 'USA', war: 'JAP', after: 0, upto: 3, spirit: 'sok_z_napadeni', days: 120 },
+  { id: 'usa_arsenal', tag: 'USA', from: 2167, until: 3600, spirit: 'arzenal_demokracie' },
+  { id: 'jap_push_eng', tag: 'JAP', war: 'ENG', from: 2167, until: 2346, push: 0.5 },
+  { id: 'jap_push_usa', tag: 'JAP', war: 'USA', from: 2167, until: 2346, push: 0.5 },
+  { id: 'jap_push_phi', tag: 'JAP', war: 'PHI', from: 2167, until: 2346, push: 0.5 },
+  { id: 'jap_inv_eng', tag: 'JAP', from: 2167, until: 2270, invade: 'ENG' },        // Malajsko, Borneo, Nizozemská Indie (v rukou exilu u Británie)
+  { id: 'jap_inv_phi', tag: 'JAP', from: 2167, until: 2320, invade: 'PHI' },        // Filipíny (do 6. 5. 1942)
+  { id: 'jap_inv_usa', tag: 'JAP', from: 2270, until: 2346, invade: 'USA' },        // Guam, Wake
+  { id: 'jap_def_usa', tag: 'JAP', war: 'USA', from: 2346, until: 3600, defend: true },   // po Midway jen obrana
+  { id: 'jap_def_eng', tag: 'JAP', war: 'ENG', from: 2346, until: 3600, defend: true },
+  { id: 'jap_overstretch', tag: 'JAP', from: 2880, until: 3600, needWar: 'USA', spirit: 'vycerpana_rise' },
+  { id: 'usa_def42', tag: 'USA', war: 'JAP', from: 2167, until: 2410, defend: true },     // do Guadalcanalu (7. 8. 1942) Spojené státy jen brání
+  { id: 'usa_inv_jap', tag: 'USA', from: 2410, until: 3514, invade: 'JAP' },               // ostrovní skoky: Guadalcanal, Tarawa, Mariany, Okinawa
+  { id: 'usa_push_jap', tag: 'USA', war: 'JAP', from: 2410, until: 3514, push: 0.6 },
+  { id: 'usa_tokyo', tag: 'USA', from: 2167, until: 3514, spareCap: 'JAP' },
+  { id: 'eng_burma', tag: 'ENG', war: 'JAP', from: 2167, until: 3100, defend: true },      // Barma a Indie se brání do roku 1944
+  { id: 'eng_burma_push', tag: 'ENG', war: 'JAP', from: 3100, until: 3514, push: 0.7 },
+  // konec války v Asii: Sovětský svaz napadne Mandžusko (9. 8. 1945), Japonsko bezpodmínečně kapituluje 15. 8. 1945
+  { id: 'sov_manchuria', tag: 'SOV', war: 'JAP', after: 0, upto: 3, spirit: 'bagration', days: 30 },
+  { id: 'jap_holdout', tag: 'JAP', from: 2167, until: 3514, holdout: true },
+  { id: 'jap_surrender', tag: 'JAP', from: 3514, until: 3700, armistice: 'USA', force: 3514, conf: true },
 ];
 
 /** Hranice kapitulace zemí (M92, obdoba surrender limit v HOI4): podíl bodů území v rukou nepřítele, při kterém se země vzdá (`share`), a totéž po pádu hlavního města (`capital`). Ostatní země mají výchozí hodnoty z `DIP`. */
@@ -118,4 +169,7 @@ export const CAP_LIMITS = {
   ENG: { share: 0.7, capital: 0.45 },   // ostrovní velmoc s impériem za mořem
   ITA: { share: 0.45, capital: 0.2 },   // režim se po vylodění Spojenců rychle rozpadne
   GER: { share: 0.8, capital: 0.7 },    // režim bojuje do posledního (Berlín 1945)
+  CHI: { share: 0.9, capital: 0.85 },   // W2: Čína ustoupí do vnitrozemí (Čchung-čching) a bojuje dál
+  JAP: { share: 0.8, capital: 0.7 },
+  USA: { share: 0.85, capital: 0.7 },
 };

@@ -39,7 +39,8 @@ export function scanArmies(state) {
 }
 
 const divsOf = (tag) => NATIONAL[tag]?.divs || DYN_DIVS[tag] || {};
-const initialDivs = (tag) => Object.values(divsOf(tag)).reduce((a, b) => a + b, 0);
+const sumDivs = (d) => Object.values(d).reduce((a, b) => a + b, 0);
+const initialDivs = (tag) => sumDivs(divsOf(tag)) + (NATIONAL[tag]?.place || []).reduce((a, pl) => a + sumDivs(pl.divs), 0);   // W2: i s posádkami
 
 const basePop = new WeakMap();   // svět → počet obyvatel zemí podle počátečního vlastnictví
 function startPop(o) {

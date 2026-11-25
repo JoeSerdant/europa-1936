@@ -1,6 +1,6 @@
 # Dark Times (dříve Evropa 1936 – 2. generace): specifikace
 
-Strategie v duchu **Hearts of Iron IV** (React + Canvas 2D): **celý svět** v lednu 1936 (W1; do verze 0.101 jen Evropa, Středomoří, severní Afrika a Blízký východ).
+Strategie v duchu **Hearts of Iron IV** (React + Canvas 2D): **celý svět** v lednu 1936 s historií celého světa (W1, W2; do verze 0.101 jen Evropa, Středomoří, severní Afrika a Blízký východ).
 Je to **nová hra od základů** – vlastní kód, vlastní mapa, vlastní texty i grafika; staré projekty (`europa-1936`, M0–M16) zůstávají nedotčené.
 Cíl: mechaniky věrné vzoru zhruba z 90 %, deset procent je záměrné zjednodušení (viz „Odchylky od vzoru“).
 
@@ -1232,7 +1232,41 @@ Hra se jmenuje **Dark Times** a hraje se na mapě **celého světa** (Amerika, A
   výběr myší i minimapa počítají přes šev; den a noc v Mercatorově projekci (`ui/map/sun.js`, stejná čísla jako generátor).
 - **Výkon**: mimoevropské země bez války hrají plné kolo AI jen každý třetí den (`AI.QUIET_DAYS`); herní den v roce 1941 asi 165 ms (dřív 59 ms).
 - **Historie Evropy** se nezměnila (koleje ze sekcí M92–F4b platí dál); ověřeno pozorovatelskou simulací se třemi semínky.
-- Zatím chybí: historie Asie a Pacifiku (čínsko-japonská válka, Pearl Harbor), skutečné USA místo zámořské pomoci, vlastní stromy cílů nových zemí.
+- Zatím chybí: vlastní stromy cílů nových zemí (historie Asie a Pacifiku a skutečné USA doplnil W2).
+
+## 4zzzzzzzz. Historie celého světa (W2)
+
+Historie mimo Evropu jde po **kolejích** stejně jako Evropa (pravidlo 110): data, žádné dolaďování čísel.
+- **Posádky mimo jádro** (`NATIONAL[tag].place`: `[{ states, divs }]`): startovní divize v jmenovaných státech (kolonie, zámořské základny) –
+  Itálie ve východní Africe (Eritrea, Somálsko), Japonsko v Koreji a na Tchaj-wanu, Británie v Malajsku, Hongkongu, Barmě a Keni, Nizozemsko na Jávě
+  a Sumatře, Francie v Indočíně, USA na Havaji. Rozmístí se podle kapacity zásobování (provincie s největší rezervou na divizi). AI je počítá
+  do počáteční velikosti armády (`initialDivs`). Francie má o tři divize méně v jádru (jsou v Indočíně).
+- **Kolonie exilové vlády** (`exileColonies`, `dip/exile.js`): když AI země odejde do exilu, její kolonie, které nepřítel neobsadil ani zčásti,
+  převezme hostitel (Nizozemská východní Indie bojuje dál pod Británií); při obnově země se vrátí. Hráčova země si kolonie ponechá.
+- **Války na začátku scénáře** (`startWars`, `engine/scenario.js`): platí i pro scénář bez přesunů. Scénář 1939: Etiopie patří Itálii,
+  dominia (Kanada, Austrálie, Nový Zéland, Jihoafrická unie) jsou ve Spojencích a ve válce s Německem, Japonsko válčí s Čínou a komunisty.
+- **Koleje** (dny hry od 1. 1. 1936):
+  - Habeš: Itálie napadne Etiopii na začátku února 1936 (`HIST_WARS`), Addis Abeba padne natvrdo 5. 5. 1936 (`eth_fall`, konference).
+  - Čína: incident u mostu Marca Pola 7. 7. 1937 (`JAP → CHI`, `force`), komunisté se přidají (`with: 'CHI'`); Japonsko postupuje do pádu
+    Wu-chanu (`jap_chi_push`), pak fronta ztuhne (`jap_chi_front`, `chi_front`) až do operace Iči-gó v roce 1944 (`jap_ichigo`). Čína se nevzdá
+    (`chi_holdout`, duch **Válka odporu**, `CAP_LIMITS.CHI`). Pomoc z USA Číně (`lend_chi`).
+  - Japonsko vstoupí do Osy Paktem tří (27. 9. 1940, `HIST_FACTIONS`), požaduje od Vichy severní a pak jižní Indočínu (`HIST_DEMANDS`
+    `indochina_n` / `indochina_s`, příznak `viaLord`: Vichy je loutka Německa a ustoupí vždy, když je její pán v bloku s Japonskem –
+    `lordBacks` v `dip/demand.js`) a uzavře pakt o neutralitě se SSSR (13. 4. 1941, `HIST_PACTS`).
+  - Írán: Británie a SSSR ho obsadí 25. 8. 1941, po 23 dnech územní mír (`per_fall`).
+  - Pacifik: Pearl Harbor 7. 12. 1941 (`JAP → USA`, `force`); týž den vstoupí Japonsko do válek Osy s Británií (`HIST_ENTRY`, se SSSR ne),
+    Německo a Itálie vyhlásí válku USA (`with: 'JAP'`), USA, Mexiko a Brazílie vstoupí do Spojenců. Japonsko má do Midway (4. 6. 1942)
+    ofenzivu a vylodění (Malajsko, Filipíny, Guam), pak jen brání; USA mají duch **Arzenál demokracie**, od Guadalcanalu (7. 8. 1942)
+    ostrovní skoky (`usa_inv_jap`) bez útoku na Tokio (`usa_tokyo`). Siam po boku Japonska, Mexiko a Brazílie proti Německu v roce 1942.
+  - Konec v Asii: SSSR napadne Japonsko 9. 8. 1945, Japonsko natvrdo bezpodmínečně kapituluje 15. 8. 1945 (`jap_holdout` + `jap_surrender`).
+  - USA se vyloďují v Normandii spolu s Británií (`overlord_usa`) a drží stejné tempo jako Británie (`usa_border`, `usa_berlin`, `usa_push44`,
+    `usa_rhine`); od 21. 4. 1945 se Západní spojenci zastaví na Labi (`eng_elbe`, `usa_elbe`, `fra_elbe`), aby Německo s americkou armádou
+    nepadlo dřív než na začátku května. Maďarsko a Slovensko vytrvají do jara 1945 (`hun_holdout`, `slo_holdout`).
+- **Zámořská pomoc má dárce** (`OVERSEAS_AID[].src = 'USA'`): zásilky chodí, jen když USA existují (nekapitulovaly) a neřídí je hráč.
+- Milníky pozorovatelské simulace (`npm run sim -- milestones`, do konce srpna 1945) hlásí i Habeš, Čínu, Indočínu, Írán, Pearl Harbor,
+  válku SSSR–Japonsko a kapitulaci Japonska. Semínka 7, 42 a 99: Habeš 5. 5. 1936, Čína 8. 7. 1937, Indočína 2. 10. 1940, Írán 25. 8. 1941,
+  Pearl Harbor 8. 12. 1941, Německo–USA 11. 12. 1941, SSSR–Japonsko 9. 8. 1945, kapitulace Japonska 15. 8. 1945; Evropa beze změny
+  (Německo 8. 5. 1945, u semínka 99 4. 5. 1945). Známá odchylka: Maďarsko v některých semínkách kapituluje už v roce 1943.
 
 ## 5. Rozhraní
 
@@ -1445,6 +1479,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **F4c** | **Mechaniky HOI4**: přesun po železnici, ústupová linie, poškození a opravy lodí s námořními základnami, miny, stíhání a úder na lodě, pobřežní pevnosti, zásobovací uzly | **hotovo** |
 | **F4e–F4g** | **Okna jako v HOI4**: výzkum a politika, výroba a stavby, nábor a návrhář | ✅ |
 | **W1** | **Dark Times – celý svět**: Mercatorova mapa dokola, 41 nových zemí, kolonie, výchozí cíle, počáteční loutky, tropy a jižní polokoule | ✅ |
-| později | historie Asie a Pacifiku, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
+| **W2** | **Historie celého světa**: Habeš, čínsko-japonská válka, Indočína, Írán, Pearl Harbor a válka v Pacifiku, konec války v Asii, skutečné USA, posádky v koloniích, kolonie exilových vlád | ✅ |
+| později | stromy cílů velmocí světa, cíle všech zemí, rozhodnutí, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

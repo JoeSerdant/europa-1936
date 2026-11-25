@@ -110,12 +110,12 @@ describe('diplomacie AI', () => {
     expect(atWar(day(w, 100), 'POR', 'BUL')).toBe(true);
     const later = day(w, AI.STALEMATE_DAYS + 20);
     expect(atWar(later, 'POR', 'BUL')).toBe(false);
-    expect(Object.keys(later.dip.since)).toHaveLength(0);
+    expect(Object.keys(later.dip.since).filter((k) => k === `${Math.min(POR, BUL)}-${Math.max(POR, BUL)}`)).toHaveLength(0);   // W2: jiné války (Habeš) běží dál
   });
   it('historický plán: SSSR ospravedlní a napadne Finsko v okně plánu; bez `hist` ne', () => {
     const start = { tick: 24 * 1395 };
     const a = day({ ...base(), ...start }, 75);
-    expect(atWar(a, 'SOV', 'FIN')).toBe(true);
+    expect(atWar(a, 'SOV', 'FIN') || a.log.items.some((l) => l.k === 'war' && l.a === idx('SOV') && l.b === idx('FIN'))).toBe(true);   // válka mohla už skončit územním mírem (fin_peace)
     const off = day({ ...createGame({ player: 'GER', aiLevel: 2, hist: false }), ...start }, 75);
     expect(atWar(off, 'SOV', 'FIN')).toBe(false);
     const before = day({ ...base(), tick: 24 * 100 }, 75);

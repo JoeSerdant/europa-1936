@@ -64,6 +64,23 @@ export function goIntoExile(state, loser, host, mem, ctrl) {
   return logAdd(next, { k: 'exile', o: loser, x: host, y: moved });
 }
 
+/**
+ * W2: kolonie (státy s `c` = 1) exilové země, které nepřítel neobsadil ani zčásti, převezme hostitel – jejich obrana pokračuje pod ním
+ * (Nizozemská východní Indie po pádu Nizozemska bojuje dál s Japonskem pod Británií). Při obnově země se vrátí (`restoreCountry`).
+ */
+export function exileColonies(state, loser, host) {
+  const w = getWorld();
+  let stateOwner = null, ctrl = null;
+  for (let s = 1; s < w.states.length; s++) {
+    const st = w.states[s];
+    if (!st || !st.c || state.stateOwner[s] !== loser || !st.v.every((p) => state.ctrl[p] === loser)) continue;
+    stateOwner ||= state.stateOwner.slice(); ctrl ||= state.ctrl.slice();
+    stateOwner[s] = host;
+    for (const p of st.v) ctrl[p] = host;
+  }
+  return stateOwner ? { ...state, stateOwner, ctrl, ownerVer: state.ownerVer + 1 } : state;
+}
+
 /** F2 B3: exilová vláda hráčovy země – jen zápis hostitele a záznam do deníku; jednotky, lodě a zásoby zůstávají hráči (bojují dál z území hostitele). */
 export function markExile(state, loser, host) {
   const exile = exileOf(state).slice();
