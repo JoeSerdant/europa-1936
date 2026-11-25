@@ -201,7 +201,7 @@ describe('oportunistické války', () => {
     // mimo okno a bez kolapsu cíle se neděje nic
     expect(aiDiplomacy({ ...s, tick: 24 * 100 }, SOV).mil.wars.length).toBe(s.mil.wars.length);
     expect(aiDiplomacy({ ...createGame({ player: null, aiLevel: 2 }), tick: 24 * 1300 }, SOV).mil.wars.length).toBe(0);
-  });
+  }, 240000);   // W1: celý svět – rok hry trvá déle
   it('oportunistická válka nepotřebuje ospravedlnění a zaručitelé cíle se nepřidají', () => {
     let s = createGame({ player: null, aiLevel: 2 });
     s = withDip(s, { gar: [{ g: ENG, t: POL }, { g: FRA, t: POL }] });

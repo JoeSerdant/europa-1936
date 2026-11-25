@@ -22,10 +22,10 @@ const insideLabel = (label, x, y) => {
 
 describe('svět: počty a struktura', () => {
   it('má dost provincií, moří a států', () => {
-    expect(W.L).toBeGreaterThan(2500);
-    expect(W.S).toBeGreaterThan(300);
-    expect(W.states.length - 1).toBeGreaterThan(400);
-    expect(W.owners.filter((o) => o && !o.dyn).length).toBe(35);   // země ze souboru; rezervní země (M69) přibývají za nimi
+    expect(W.L).toBeGreaterThan(4500);   // W1: celý svět
+    expect(W.S).toBeGreaterThan(1000);
+    expect(W.states.length - 1).toBeGreaterThan(1000);
+    expect(W.owners.filter((o) => o && !o.dyn).length).toBe(76);   // země ze souboru; rezervní země (M69) přibývají za nimi
     expect(W.nLabel).toBe(1 + W.L + W.S + W.K);
   });
   it('každá pevninská provincie má jméno, stát téhož vlastníka a kladnou plochu', () => {
@@ -61,8 +61,8 @@ describe('svět: počty a struktura', () => {
   it('počty obyvatel dávají smysl', () => {
     let sum = 0;
     for (let p = 1; p <= W.L; p++) { expect(W.pop[p]).toBeGreaterThanOrEqual(0); sum += W.pop[p]; }
-    expect(sum).toBeGreaterThan(500000);
-    expect(sum).toBeLessThan(700000);
+    expect(sum).toBeGreaterThan(1800000);   // W1: svět kolem 2,1 miliardy
+    expect(sum).toBeLessThan(2400000);
   });
 });
 

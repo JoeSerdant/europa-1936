@@ -47,7 +47,7 @@ function startPop(o) {
   let m = basePop.get(w);
   if (!m) {
     m = new Float64Array(w.owners.length);
-    for (let p = 1; p <= w.L; p++) m[w.provOwner0[p]] += w.pop[p];
+    for (let p = 1; p <= w.L; p++) m[w.provOwner0[p]] += w.manPop ? w.manPop[p] : w.pop[p];
     basePop.set(w, m);
   }
   return m[o] || 0;
@@ -57,7 +57,7 @@ function startPop(o) {
 export function sizeFactor(state, o) {
   const tag = getWorld().owners[o].tag, st = countryStats(state, tag), p0 = startPop(o);
   if (!st || !p0) return 1;
-  return Math.min(2.5, Math.max(0.35, Math.pow(st.pop / p0, 0.75)));
+  return Math.min(2.5, Math.max(0.35, Math.pow(st.manPop / p0, 0.75)));
 }
 
 /** Cílový počet divizí země v daném čase: historická křivka zbrojení × změna velikosti země × válka × obtížnost. */

@@ -23,10 +23,11 @@ export function geo(w = getWorld()) {
     const base = TERRAIN_RULES[w.terrain[p]].infra;
     infra[p] = Math.max(0, Math.min(5, base + (railMax[p] > 0 ? 1 : 0) + (w.vp[p] >= 6 ? 1 : 0)));
   }
-  const kmPerPx = w.frame.km;
+  // W1: vzdálenosti přes w.kmBetween (šev mapy, měřítko podle šířky); kmXY pro libovolné body (středy armád, divadla)
+  const kmXY = w.kmBetween;
   g = {
-    cx, cy, hub, railMax, infra, kmPerPx,
-    distKm: (a, b) => Math.hypot(cx[a] - cx[b], cy[a] - cy[b]) * kmPerPx,
+    cx, cy, hub, railMax, infra, kmXY,
+    distKm: (a, b) => kmXY(cx[a], cy[a], cx[b], cy[b]),
   };
   cache.set(w, g);
   return g;

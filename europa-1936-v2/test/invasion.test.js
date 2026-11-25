@@ -188,7 +188,7 @@ describe('plavba invazního sboru', () => {
     for (let d = 0; d < 20 && s.ctrl[landed.x] !== ENG; d++) s = advance(s, 24);
     expect(s.ctrl[landed.x]).toBe(ENG);
     expect(s.mil.divs.some((d) => d && d.o === ENG && d.p === landed.x)).toBe(true);
-    expect(seaPorts(s, ENG)).toContain(landed.x);
+    if (W.portLevel[landed.x] && !seaBlocked(s, ENG, W.portSea[landed.x])) expect(seaPorts(s, ENG)).toContain(landed.x);   // W1: přístav u moře s nepřátelskou flotilou zásoby nedostane
     expect(validateState(s)).toBeNull();
   }, 120000);
   it('po pauze po vyplutí záznam operace zaniká a krycí flotila se uvolní', () => {

@@ -94,7 +94,7 @@ function monthlyManpower(ctx) {
   const w = getWorld();
   for (let o = 1; o < w.owners.length; o++) {
     const st = countryStats(ctx.state, w.owners[o].tag);
-    if (st && st.pop > 0) addMan(ctx, o, Math.round(st.pop * 1000 * C.MAN_GROWTH_MONTH * manMult(ctx.state, o)));
+    if (st && st.manPop > 0) addMan(ctx, o, Math.round(st.manPop * 1000 * C.MAN_GROWTH_MONTH * manMult(ctx.state, o)));
   }
 }
 

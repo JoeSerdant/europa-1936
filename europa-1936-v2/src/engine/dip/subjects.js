@@ -10,6 +10,8 @@ import { WARGOALS } from '../../data/dip/wargoals.js';
 import { setRel } from './core.js';
 import { releaseBlock, releaseNation } from '../civil/index.js';
 import { RELEASES } from '../../data/dip/releases.js';
+import { START_SUBJECTS } from '../../data/dip/index.js';
+const FIXED_SUB = new Set(START_SUBJECTS.filter((r) => r[3]).map((r) => `${r[0]}>${r[1]}`));
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
 const tagOf = (o) => getWorld().owners[o].tag;
@@ -371,8 +373,8 @@ export function subjectsDay(state) {
     const foes = new Set(enemiesOf(state.mil, v).filter((e) => !(old && old.includes(e))));
     for (const e of foes) if (e !== p && !atWar(state.mil, p, e) && !state.dip.cap[e]) state = declareWar(state, tagOf(p), tagOf(e));
     for (const e of enemiesOf(state.mil, p)) if (!foes.has(e) && e !== v) state = makePeace(state, tagOf(p), tagOf(e));
-    // autonomie roste; při 100 se loutka osamostatní
-    const au0 = state.dip.au[p] + DIP.AU_GROW;
+    // autonomie roste; při 100 se loutka osamostatní (W1: historické loutky ze START_SUBJECTS s pevnou autonomií nerostou, dokud vládne týž pán)
+    const au0 = state.dip.au[p] + (FIXED_SUB.has(`${tagOf(p)}>${tagOf(v)}`) ? 0 : DIP.AU_GROW);
     if (au0 >= 100) {
       const nsub = state.dip.sub.slice(); nsub[p] = 0;
       const nau = state.dip.au.slice(); nau[p] = 0;

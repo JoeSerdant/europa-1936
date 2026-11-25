@@ -3,6 +3,7 @@ import { components, MinHeap } from './raster.js';
 import { nearest } from './placesStep.js';
 import { TERRAIN } from './terrainStep.js';
 import { PORT_BOOST, STRAIT_EXTRA, STRAIT_SKIP, RAIL_FACTOR } from './data/networkData.js';
+import { railAt } from './config.js';
 
 export const ADJ = { land: 0, river: 1, strait: 2 };
 
@@ -11,20 +12,22 @@ export function buildAdjacency(W, log) {
   const { W: GW, H: GH } = grid;
   const L = W.nLand, S = W.nSea;
   const N = GW * GH;
-  const K = 4096;
+  const K = 65536;
   const cnt = new Map(), riv = new Map();
-  const add = (a, b, i, j) => {
-    if (a === b) return;
+  const add = (a, b, i, j, km) => {
+    if (a === b || !a || !b) return;
     const lo = a < b ? a : b, hi = a < b ? b : a;
     const k = lo * K + hi;
-    cnt.set(k, (cnt.get(k) || 0) + 1);
-    if (river[i] || river[j]) riv.set(k, (riv.get(k) || 0) + 1);
+    cnt.set(k, (cnt.get(k) || 0) + km);
+    if (river[i] || river[j]) riv.set(k, (riv.get(k) || 0) + km);
   };
   for (let y = 0; y < GH; y++) {
+    const km = grid.kmAt(y);
     for (let x = 0; x < GW; x++) {
       const i = y * GW + x, a = lab[i];
-      if (x + 1 < GW) { const b = lab[i + 1]; if (b !== a) add(a, b, i, i + 1); }
-      if (y + 1 < GH) { const b = lab[i + GW]; if (b !== a) add(a, b, i, i + GW); }
+      if (x + 1 < GW) { const b = lab[i + 1]; if (b !== a) add(a, b, i, i + 1, km); }
+      else if (grid.wrap) { const j = y * GW, b = lab[j]; if (b !== a) add(a, b, i, j, km); }   // W1: šev mapy – sloupec W−1 sousedí se sloupcem 0
+      if (y + 1 < GH) { const b = lab[i + GW]; if (b !== a) add(a, b, i, i + GW, km); }
     }
   }
   const landAdj = Array.from({ length: L + 1 }, () => new Map());       // p -> Map(q -> {len, kind})
@@ -35,7 +38,7 @@ export function buildAdjacency(W, log) {
   for (const [k, c] of cnt) {
     const a = Math.floor(k / K), b = k % K;
     const ka = kinds[a], kb = kinds[b];
-    const len = Math.max(1, Math.round(c * grid.res));
+    const len = Math.max(1, Math.round(c));
     if (ka === 'land' && kb === 'land') {
       const isRiv = (riv.get(k) || 0) / c >= 0.35;
       const rec = { len, kind: isRiv ? ADJ.river : ADJ.land };
@@ -50,6 +53,32 @@ export function buildAdjacency(W, log) {
     }
   }
   log(`sousednosti: souš ${nl} (z toho přes řeku ${nr}), pobřeží ${nc}, moře ${ns}`);
+
+  // W1: moře bez mořského souseda (zátoka nebo mělčina za ostrůvky užšími než pixel) → spojení s nejbližším mořem do R px
+  {
+    const R = 7, isolated = new Set();
+    for (let sId = 1; sId <= S; sId++) if (!seaAdj[sId].size) isolated.add(L + sId);
+    const best = new Map();   // štítek → [vzdálenost², jiné moře]
+    if (isolated.size) {
+      for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+        const a = lab[y * GW + x];
+        if (!isolated.has(a)) continue;
+        for (let dy = -R; dy <= R; dy++) {
+          const yy = y + dy;
+          if (yy < 0 || yy >= GH) continue;
+          for (let dx = -R; dx <= R; dx++) {
+            const xx = (x + dx + GW) % GW, b = lab[yy * GW + xx];
+            if (b === a || kinds[b] !== 'sea') continue;
+            const d2 = dx * dx + dy * dy, cur = best.get(a);
+            if (!cur || d2 < cur[0]) best.set(a, [d2, b]);
+          }
+        }
+      }
+    }
+    let linked = 0;
+    for (const [a, [, b]] of best) { seaAdj[a - L].set(b - L, 1); seaAdj[b - L].set(a - L, 1); linked++; }
+    log(`  izolovaná moře: ${isolated.size}, propojeno s nejbližším mořem: ${linked}`);
+  }
 
   // ---- průlivy: dva ostrovy/pevniny, mezi nimiž je ≤ ~10 km vody (okno ±2 px) ----
   const okLand = new Uint8Array(N);
@@ -143,12 +172,14 @@ export function buildPorts(W, log) {
     }
     if (!lvl) continue;
     // moře u města = nejbližší mořský pixel
+    // W1: přístav jen u moře, které má mořského souseda (ne u jezera spojeného s oceánem jen tenkým kanálem)
+    const open = (sid) => sid > 0 && W.seaAdj[sid] && W.seaAdj[sid].size > 0;
     const s = nearest(GW, GH, c.x, c.y, 14, (i) => land[i] === 0 && seaOf[i] > 0);
     let sea = s ? seaOf[s.idx] : 0;
-    if (!sea || !W.coast[p].has(sea)) {
+    if (!sea || !W.coast[p].has(sea) || !open(sea)) {
       // nejdelší pobřeží provincie
       let best = 0, bl = -1;
-      for (const [sid, len] of W.coast[p]) if (len > bl) { bl = len; best = sid; }
+      for (const [sid, len] of W.coast[p]) if (len > bl && open(sid)) { bl = len; best = sid; }
       sea = best;
     }
     if (!sea) continue;
@@ -181,7 +212,11 @@ export function buildRails(W, log) {
       adj[p].push([q, w]); adj[q].push([p, w]);
     }
   }
-  const fac = (p) => RAIL_FACTOR[ownerTags[provOwner[p]]] ?? -1;
+  const facMemo = new Float32Array(L + 1).fill(NaN);
+  const fac = (p) => {
+    if (Number.isNaN(facMemo[p])) { const [lon, lat] = grid.toLonLat(X[p], Y[p]); const t = ownerTags[provOwner[p]]; facMemo[p] = railAt(t, lon, lat, RAIL_FACTOR[t] ?? -1); }
+    return facMemo[p];
+  };
   const hubs = [];
   const capSet = new Set(Object.values(W.capitalProv));
   for (let p = 1; p <= L; p++) {
@@ -214,7 +249,7 @@ export function buildRails(W, log) {
     return reached;
   };
   const use = new Map();     // klíč hrany -> { lvl, n }
-  const K = 4096;
+  const K = 65536;
   const addPath = (src, dst, strength) => {
     // prev[] platí pro poslední dijkstra(src)
     let v = dst;

@@ -19,6 +19,9 @@ const NAMES = {
   YUG: 'Jugoslávie', BUL: 'Bulharsko', GRE: 'Řecko', TUR: 'Turecko', SPR: 'Španělsko', POR: 'Portugalsko', SWE: 'Švédsko', FIN: 'Finsko', NOR: 'Norsko',
   DEN: 'Dánsko', HOL: 'Nizozemsko', BEL: 'Belgie', SWI: 'Švýcarsko', AUS: 'Rakousko', EST: 'Estonsko', LAT: 'Lotyšsko', LIT: 'Litva', ALB: 'Albánie', EGY: 'Egypt',
   IRE: 'Irsko', IRQ: 'Irák', PER: 'Persie', SAU: 'Saúdská Arábie', OMA: 'Omán', ICE: 'Island', LUX: 'Lucembursko',
+
+  // W1
+  USA: 'Spojené státy', CAN: 'Kanada', MEX: 'Mexiko', GUA: 'Guatemala', HON: 'Honduras', ELS: 'Salvador', NIC: 'Nikaragua', COS: 'Kostarika', PAN: 'Panama', CUB: 'Kuba', HAI: 'Haiti', DOM: 'Dominikánská republika', COL: 'Kolumbie', VEN: 'Venezuela', ECU: 'Ekvádor', PRU: 'Peru', BOL: 'Bolívie', CHL: 'Chile', ARG: 'Argentina', URG: 'Uruguay', PAR: 'Paraguay', BRA: 'Brazílie', ETH: 'Etiopie', LBR: 'Libérie', SAF: 'Jihoafrická unie', JAP: 'Japonsko', MAN: 'Mandžukuo', CHI: 'Čína', PRC: 'Čínští komunisté', SIK: 'Sin-ťiang', TIB: 'Tibet', MON: 'Mongolsko', TAN: 'Tuva', SIA: 'Siam', AFG: 'Afghánistán', RAJ: 'Indie', NEP: 'Nepál', YEM: 'Jemen', PHI: 'Filipíny', AST: 'Austrálie', NZL: 'Nový Zéland',
 };
 const rel = (tag, v) => ({ t: 'rel', tag, nm: NAMES[tag] || tag, v });
 
@@ -349,6 +352,48 @@ export const XL_SMALL = {
   PER: small('per', { ind: 'Transíránská železnice', dip: ['Rovnováha mocností', 'TUR', 'SOV'] }),
   SAU: small('sau', { ind: 'Ropné koncese', dip: ['Arabská spolupráce', 'IRQ', 'EGY'] }),
   OMA: small('oma', { ind: 'Obchodní přístavy', dip: ['Ochrana pobřeží', 'ENG', 'PER'] }),
+  // W1: země mimo Evropu
+  USA: small('usa', { ind: 'Průmysl Středozápadu', dip: ['Dobré sousedství', 'MEX', 'CAN'] }),
+  CAN: small('can', { ind: 'Hutě v Ontariu', dip: ['Společenství', 'ENG', 'USA'] }),
+  MEX: small('mex', { ind: 'Ropné rafinerie', dip: ['Panamerická spolupráce', 'USA', 'GUA'] }),
+  GUA: small('gua', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'MEX', 'HON'] }),
+  HON: small('hon', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'GUA', 'NIC'] }),
+  ELS: small('els', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'GUA', 'HON'] }),
+  NIC: small('nic', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'HON', 'COS'] }),
+  COS: small('cos', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'NIC', 'PAN'] }),
+  PAN: small('pan', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'COS', 'COL'] }),
+  CUB: small('cub', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'USA', 'HAI'] }),
+  HAI: small('hai', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'DOM', 'CUB'] }),
+  DOM: small('dom', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'HAI', 'CUB'] }),
+  COL: small('col', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'VEN', 'ECU'] }),
+  VEN: small('ven', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'COL', 'BRA'] }),
+  ECU: small('ecu', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'PRU', 'COL'] }),
+  PRU: small('pru', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ECU', 'BOL'] }),
+  BOL: small('bol', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'PAR', 'PRU'] }),
+  CHL: small('chl', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ARG', 'PRU'] }),
+  ARG: small('arg', { ind: 'Rafinerie YPF', dip: ['Obchod s Británií', 'ENG', 'BRA'] }),
+  URG: small('urg', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ARG', 'BRA'] }),
+  PAR: small('par', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'BOL', 'ARG'] }),
+  BRA: small('bra', { ind: 'Volta Redonda', dip: ['Panamerická spolupráce', 'USA', 'ARG'] }),
+  ETH: small('eth', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ITA', 'ENG'] }),
+  LBR: small('lbr', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ENG', 'FRA'] }),
+  SAF: small('saf', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ENG', 'POR'] }),
+  JAP: small('jap', { ind: 'Zaibacu', dip: ['Pakt proti kominterně', 'GER', 'ITA'] }),
+  MAN: small('man', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'JAP', 'CHI'] }),
+  CHI: small('chi', { ind: 'Arzenály v Chan-jangu', dip: ['Zahraniční poradci', 'GER', 'USA'] }),
+  PRC: small('prc', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'CHI', 'SOV'] }),
+  SIK: small('sik', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'SOV', 'CHI'] }),
+  TIB: small('tib', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'CHI', 'RAJ'] }),
+  MON: small('mon', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'SOV', 'CHI'] }),
+  TAN: small('tan', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'SOV', 'MON'] }),
+  SIA: small('sia', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'FRA', 'ENG'] }),
+  AFG: small('afg', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'RAJ', 'PER'] }),
+  RAJ: small('raj', { ind: 'Bombajské přádelny', dip: ['Věrnost koruně', 'ENG', 'NEP'] }),
+  NEP: small('nep', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'RAJ', 'TIB'] }),
+  YEM: small('yem', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'SAU', 'ENG'] }),
+  PHI: small('phi', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'USA', 'JAP'] }),
+  AST: small('ast', { ind: 'Hutě v Newcastlu', dip: ['Pacifická obrana', 'NZL', 'ENG'] }),
+  NZL: small('nzl', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'AST', 'ENG'] }),
 };
 
 // ---------------------------------------------------------------- další větve výchozího stromu

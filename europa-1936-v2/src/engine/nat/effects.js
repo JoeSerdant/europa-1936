@@ -102,7 +102,7 @@ function applyOne(state, o, e) {
     case 'tech': return grantTech(state, o, e.id);
     case 'man': {
       const st = countryStats(state, w.owners[o].tag);
-      const add = st ? Math.round(st.pop * 1000 * e.v) : 0;
+      const add = st ? Math.round(st.manPop * 1000 * e.v) : 0;
       if (!add) return state;
       const man = state.mil.man.slice();
       man[o] += add;

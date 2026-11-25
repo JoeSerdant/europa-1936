@@ -2,6 +2,7 @@
 import { boundaryDistance } from './raster.js';
 import { CITIES } from './data/citiesEurope.js';
 import { CITIES_EXTRA } from './data/citiesExtra.js';
+import { CITIES_WORLD } from './data/citiesWorld.js';
 import { OWNERS } from './config.js';
 
 // hodnota vítězných bodů podle počtu obyvatel města (v tisících)
@@ -63,7 +64,7 @@ export function buildPlaces(W, log) {
   // ---- 2) města → provincie ----
   const all = [];
   const seen = new Map();
-  for (const c of [...CITIES, ...CITIES_EXTRA]) {
+  for (const c of [...CITIES, ...CITIES_EXTRA, ...CITIES_WORLD]) {
     const [name, lon, lat, pop] = c;
     const key = name.toLowerCase();
     const prev = seen.get(key);
@@ -102,7 +103,7 @@ export function buildPlaces(W, log) {
     const s = nearest(GW, GH, x, y, 30, (i) => land[i] === 1 && ownerIdx[i] === own && provOf[i] > 0);
     if (!s) { console.warn(`!! hlavní město ${tag} mimo území`); continue; }
     capitalProv[tag] = provOf[s.idx];
-    if (s.dist > 8) console.warn(`   hlavní město ${tag} (${v[0]}) posunuto o ${(s.dist * grid.res).toFixed(0)} km`);
+    if (s.dist > 8) console.warn(`   hlavní město ${tag} (${v[0]}) posunuto o ${(s.dist * grid.kmAt(y)).toFixed(0)} km`);
   }
   W.capitalProv = capitalProv;
 

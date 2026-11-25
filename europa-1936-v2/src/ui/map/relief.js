@@ -4,7 +4,7 @@
 // Čisté výpočty (šum, rozmazání, stínování, vzdálenost, barva moře) jsou bez DOM a testují se v Node; `buildRelief` potřebuje prohlížeč (canvas, Path2D).
 import { labelPath } from './geometry.js';
 
-export const RELIEF_RES = 2.5;   // pixelů světa na buňku rastru
+export const RELIEF_RES = 4;     // pixelů světa na buňku rastru (W1: celý svět – hrubší, aby se reliéf postavil rychle)
 
 /** Výška a členitost podle terénu (index = kód terénu: rovina, les, pahorkatina, hory, bažiny, poušť, město). Vlastní hodnoty. */
 export const TERRAIN_RELIEF = [

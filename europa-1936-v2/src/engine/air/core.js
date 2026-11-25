@@ -21,7 +21,7 @@ export function stateKm(a, b) {
   const w = getWorld();
   if (a === b) return 0;
   const ca = stateCenter(a), cb = stateCenter(b);
-  return Math.hypot(ca[0] - cb[0], ca[1] - cb[1]) * w.frame.km;
+  return w.kmBetween(ca[0], ca[1], cb[0], cb[1]);
 }
 
 /** Úroveň techniky letounu země. */

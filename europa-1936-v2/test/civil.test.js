@@ -173,7 +173,7 @@ describe('konec občanské války', () => {
     for (let p = 1; p <= W.L; p++) if (s.stateOwner[W.provState[p]] === SPR) ctrl[p] = NSP;
     s = capitulate({ ...s, ctrl }, SPR);
     expect(owned(s, SPR)).toBe(0);
-    expect(owned(s, NSP)).toBe(SPAIN.length + 11);
+    expect(owned(s, NSP)).toBe(owned(base(), SPR));   // W1: celé Španělsko (i Kanáry, Sahara a Río Muni) připadne vítězi
     expect(s.dip.conf.length).toBe(0);
     expect(validateState(s)).toBeNull();
   });

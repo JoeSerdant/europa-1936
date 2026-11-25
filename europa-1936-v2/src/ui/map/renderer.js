@@ -4,7 +4,7 @@
 // Změna vlastníků, režimu nebo ztlumení zneplatní dlaždice (`version`), překreslí se jen ty, které jsou vidět.
 import { labelPath, arcsPath } from './geometry.js';
 import { SEA_COLOR, LAKE_COLOR, VOID_COLOR, fillColors, ownerLabelColor, hexToRgb } from './colors.js';
-import { viewRect, worldToScreen } from './camera.js';
+import { viewRect, worldToScreen, wrapCopies } from './camera.js';
 import { countryLabels, stateLabels } from './labels.js';
 import { TILE, MIN_LEVEL, MAX_LEVEL, levelFor, tileSize, tileKey, tileRange, Grid, LruCache, rectsOverlap } from './tiles.js';
 import { FONT_DISPLAY, FONT_TEXT } from './fonts.js';
@@ -469,7 +469,7 @@ export class MapRenderer {
     ctx.restore();
   }
 
-  drawTiles(cam, dpr, view) {
+  drawTiles(cam, dpr, view, used = new Set(), acc = false, fin = true) {
     const { ctx, world } = this;
     const lvl = levelFor(cam.zoom, dpr);
     const s = cam.zoom * dpr;
@@ -479,7 +479,6 @@ export class MapRenderer {
       return [Math.floor(ox + tx * sz * s), Math.floor(oy + ty * sz * s), Math.ceil(ox + (tx + 1) * sz * s), Math.ceil(oy + (ty + 1) * sz * s)];
     };
     const [tx0, ty0, tx1, ty1] = tileRange(view, lvl, world.frame.w, world.frame.h);
-    const used = new Set();
     const need = [];
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = true;
@@ -511,10 +510,10 @@ export class MapRenderer {
         rendered++;
       }
     }
-    this.pending = need.length - rendered;
-    this.urgent = false;
-    this.stats.drawn = drawn + rendered; this.stats.rendered = rendered; this.stats.pending = this.pending;
-    for (const t of this.tiles.trim(used)) this.pool.push(t);
+    // W1: u více kopií mapy se počty sčítají (acc) a mezipaměť se čistí až po poslední kopii (fin)
+    this.pending = (acc ? this.pending : 0) + need.length - rendered;
+    this.stats.drawn = (acc ? this.stats.drawn : 0) + drawn + rendered; this.stats.rendered = (acc ? this.stats.rendered : 0) + rendered; this.stats.pending = this.pending;
+    if (fin) { this.urgent = false; for (const t of this.tiles.trim(used)) this.pool.push(t); }
   }
 
   // ---------------------------------------------------------------- snímek
@@ -530,29 +529,44 @@ export class MapRenderer {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = OUTER;
     ctx.fillRect(0, 0, w, h);
-    this.drawTiles(cam, dpr, view);
+    // W1: mapa dokola – každá kopie světa ve výřezu se kreslí s kamerou posunutou o násobek šířky mapy
+    const W = this.world.frame.w;
+    const copies = wrapCopies(cam, view).map((k) => {
+      const c = k ? { ...cam, x: cam.x - k * W } : cam;
+      return { k, cam: c, view: k ? viewRect(c) : view };
+    });
+    const used = new Set();
+    copies.forEach((cp, i) => this.drawTiles(cp.cam, dpr, cp.view, used, i > 0, i === copies.length - 1));
     if (this.reliefJob && !this.relief && this.options.relief) this.pending = Math.max(this.pending, 1);   // M91: smyčka kreslí dál, dokud se nepostaví reliéf
 
     // zvýraznění označené oblasti a oblasti pod kurzorem (ve světových souřadnicích)
-    ctx.setTransform(z * dpr, 0, 0, z * dpr, (cam.w / 2 - cam.x * z) * dpr, (cam.h / 2 - cam.y * z) * dpr);
     const px = 1 / z;
-    this.drawShades(cam, dpr, view);
-    if (this.selected) this.drawOutline(this.selected, '#f2c14e', 2.6, 'rgba(255,240,200,0.22)', px);
-    if (this.hover && this.hover !== this.selected) this.drawOutline(this.hover, 'rgba(255,255,255,0.9)', 1.6, 'rgba(255,255,255,0.10)', px);
-    if (this.showUnits && this.options.units) {
-      this.units.drawPlan(ctx, cam, this.geo, this.planView);
-      if (this.options.front) this.drawFront(px);
-      this.units.drawWorld(ctx, cam, view, this.planView, this.route);
+    for (const cp of copies) {
+      const c = cp.cam;
+      ctx.setTransform(z * dpr, 0, 0, z * dpr, (c.w / 2 - c.x * z) * dpr, (c.h / 2 - c.y * z) * dpr);
+      this.drawShades(c, dpr, cp.view);
+      if (this.selected) this.drawOutline(this.selected, '#f2c14e', 2.6, 'rgba(255,240,200,0.22)', px);
+      if (this.hover && this.hover !== this.selected) this.drawOutline(this.hover, 'rgba(255,255,255,0.9)', 1.6, 'rgba(255,255,255,0.10)', px);
+      if (this.showUnits && this.options.units) {
+        this.units.drawPlan(ctx, c, this.geo, this.planView);
+        if (this.options.front) this.drawFront(px);
+        this.units.drawWorld(ctx, c, cp.view, this.planView, this.route);
+      }
     }
 
     // značky a popisky v obrazovkovém prostoru
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const placed = [];
-    if (this.options.labels) this.drawCountryNames(cam, view, placed);
-    if (this.options.vp && z > 1.0) this.drawMarkers(cam, view);
-    if (this.options.labels) { this.drawStateNames(cam, view, placed); this.drawCityNames(cam, view, placed); }
-    if (this.showUnits && this.options.units) { this.units.drawScreen(ctx, cam, view); this.stats.unitsMs = this.units.stats.ms; }
-    this.drawNeatline(cam);
+    for (const cp of copies) {
+      if (this.options.labels) this.drawCountryNames(cp.cam, cp.view, placed);
+      if (this.options.vp && z > 1.0) this.drawMarkers(cp.cam, cp.view);
+      if (this.options.labels) { this.drawStateNames(cp.cam, cp.view, placed); this.drawCityNames(cp.cam, cp.view, placed); }
+    }
+    if (this.showUnits && this.options.units) {
+      copies.forEach((cp, i) => this.units.drawScreen(ctx, cp.cam, cp.view, i > 0));
+      this.stats.unitsMs = this.units.stats.ms;
+    }
+    if (!this.world.frame.wrap) this.drawNeatline(cam);
     this.stats.ms = performance.now() - t0;
   }
 

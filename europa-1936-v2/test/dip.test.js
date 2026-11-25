@@ -4,6 +4,7 @@ import {
   createGame, getWorld, advance, declareWar, atWar, justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, inviteBlock, peaceBlock, warBlock,
   diplomacyOf, factionOf, relOf, baseRel, warScore, vpHeld, hasCapitulated, capitulate, sameFaction, campOf, DIP, START_FACTIONS, PAIR_REL, GAME_VERSION, divisionCount,
 } from '../src/engine/index.js';
+import { dipDay } from '../src/engine/dip/day.js';
 
 const W = getWorld();
 const idx = (t) => W.ownerIdx[t];
@@ -142,9 +143,10 @@ describe('kapitulace a anexe', () => {
     expect(vpHeld(me, POL)).toMatchObject({ capHeld: true });
     expect(vpHeld(me, POL).share).toBeGreaterThanOrEqual(DIP.CAP_CAPITAL_SHARE);
     expect(vpHeld(me, POL).share).toBeLessThan(DIP.CAP_SHARE);
-    expect(hasCapitulated(day(ai, 1), POL)).toBe(true);    // AI Polsko po pádu Varšavy kapituluje
-    expect(hasCapitulated(day(me, 1), POL)).toBe(false);   // hráč bojuje dál
-    const lost = day(fall('POL', DIP.CAP_SHARE), 1);       // při většině území ano (hráč případně pokračuje v exilu)
+    // W1: kapitulace se vyhodnotí přímo denním krokem diplomacie (za celý den by polské divize provincie znovu obsadily)
+    expect(hasCapitulated(dipDay(ai), POL)).toBe(true);    // AI Polsko po pádu Varšavy kapituluje
+    expect(hasCapitulated(dipDay(me), POL)).toBe(false);   // hráč bojuje dál
+    const lost = dipDay(fall('POL', DIP.CAP_SHARE));       // při většině území ano (hráč případně pokračuje v exilu)
     expect(atWar(lost, GER, POL)).toBe(false);
     expect(lost.dip.cap[POL] || lost.dip.exile[POL] || lost.dip.sub[POL] || !lost.stateOwner.includes(POL)).toBeTruthy();
   });
@@ -153,8 +155,9 @@ describe('kapitulace a anexe', () => {
     w = takeAll(w, GER, POL, 0.8);
     const h = vpHeld(w, GER);
     expect(h.share).toBeGreaterThanOrEqual(DIP.CAP_SHARE);
-    const a = day(w, 1);
-    expect(hasCapitulated(a, GER)).toBe(true);
+    const a = dipDay(w);   // W1: kapitulace denním krokem diplomacie (konference může z poraženého udělat loutku – pak `cap` zůstane 0)
+    expect(hasCapitulated(a, GER) || a.dip.sub[GER] > 0).toBe(true);
+    expect(a.log.items.some((it) => it.k === 'cap' && it.o === GER)).toBe(true);
     expect(atWar(a, GER, POL)).toBe(false);
     expect(a.pol.own[GER].stab).toBeLessThan(w.pol.own[GER].stab);
     let moved = 0;
@@ -163,8 +166,9 @@ describe('kapitulace a anexe', () => {
     for (let s = 1; s < W.states.length; s++) if (a.stateOwner[s] === GER) expect(a.ctrl[W.states[s].cap]).toBe(GER);   // zbytek nikdo neokupuje
     expect(a.ownerVer).toBeGreaterThan(w.ownerVer);
     expect(a.dip.ver).toBeGreaterThan(w.dip.ver);
-    expect(day(a, 5).dip.cap[GER]).toBe(1);
-    expect(capitulate(a, GER)).toBe(a);
+    const later = day(a, 5);
+    expect(later.dip.cap[GER] === 1 || later.dip.sub[GER] > 0).toBe(true);
+    if (hasCapitulated(a, GER)) expect(capitulate(a, GER)).toBe(a);
     // továrny jdou s vlastnictvím
     expect(a.stateOwner.some((o, s) => s > 0 && o === POL && w.stateOwner[s] === GER)).toBe(true);
     // divize kapitulované země nestojí v cizích provinciích

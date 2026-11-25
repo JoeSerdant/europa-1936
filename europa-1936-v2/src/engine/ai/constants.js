@@ -1,5 +1,6 @@
 // Vyvážení AI zemí (M24): všechna čísla na jednom místě.
 export const AI = {
+  QUIET_DAYS: 3,          // W1 (výkon): země mimo Evropu bez války hrají plné kolo AI jen každý N-tý den
   QUEUE: 3,                         // nejvíc rozestavěných staveb na AI zemi
   MIL_SHARE: 0.36,                  // cílový podíl vojenských továren v míru
   MIL_SHARE_WAR: 0.5,               // ve válce

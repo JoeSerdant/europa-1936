@@ -42,9 +42,16 @@ export function Minimap() {
       ctx.drawImage(base, 0, 0);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const [x0, y0, x1, y1] = viewRect(mc.cam);
-      const rx = Math.max(0, x0) * k, ry = Math.max(0, y0) * k, rw = (Math.min(w.frame.w, x1) - Math.max(0, x0)) * k, rh = (Math.min(w.frame.h, y1) - Math.max(0, y0)) * k;
-      ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(rx, ry, rw, rh);
-      ctx.strokeStyle = '#f2c14e'; ctx.lineWidth = 1.5; ctx.strokeRect(rx + 0.5, ry + 0.5, rw, rh);
+      const ry = Math.max(0, y0) * k, rh = (Math.min(w.frame.h, y1) - Math.max(0, y0)) * k;
+      // W1: mapa dokola – výřez přes šev se kreslí i posunutý o šířku mapy (plátno zbytek ořízne)
+      const shifts = w.frame.wrap ? [-w.frame.w, 0, w.frame.w] : [0];
+      for (const d of shifts) {
+        const a = w.frame.wrap ? x0 + d : Math.max(0, x0), b = w.frame.wrap ? x1 + d : Math.min(w.frame.w, x1);
+        if (b < 0 || a > w.frame.w) continue;
+        const rx = a * k, rw = (b - a) * k;
+        ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(rx, ry, rw, rh);
+        ctx.strokeStyle = '#f2c14e'; ctx.lineWidth = 1.5; ctx.strokeRect(rx + 0.5, ry + 0.5, rw, rh);
+      }
     };
     const off = mc.onChange(draw);
     const iv = setInterval(draw, 400);        // změny barev (režim, vlastníci) se projeví i bez pohybu kamery

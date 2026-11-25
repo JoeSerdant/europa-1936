@@ -76,5 +76,5 @@ describe('růst armády', () => {
     expect(divisionCount(a, 'FRA')).toBeGreaterThan(divisionCount(s0, 'FRA'));
     expect(divisionCount(a, 'FRA')).toBeLessThanOrEqual(targetDivs(a, FRA) + AI.TRAIN_MAX);
     expect(validateState(a)).toBeNull();
-  });
+  }, 240000);   // W1: celý svět – rok hry trvá déle
 });

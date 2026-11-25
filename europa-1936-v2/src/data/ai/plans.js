@@ -23,7 +23,7 @@ export const HIST_WARS = [
   { tag: 'SOV', target: 'ROM', from: 1552, until: 2000, ratio: 1.5, quiet: 1 },
   { tag: 'SOV', target: 'GER', from: 1886, until: 2600, ratio: 1.3, quiet: 1 },
   { tag: 'ITA', target: 'ALB', from: 1250, until: 1800, ratio: 1.0 },
-  { tag: 'ITA', target: 'GRE', from: 1730, until: 2200, ratio: 1.0 },
+  { tag: 'ITA', target: 'GRE', from: 1730, until: 2200, ratio: 1.0, force: 1 },   // W1: natvrdo (na mapě světa má Itálie i frontu ve východní Africe)
   { tag: 'SOV', target: 'FIN', from: 1400, until: 1900, ratio: 0.8 },
   { tag: 'FIN', target: 'SOV', from: 1972, until: 2400, ratio: 0.02, with: 'GER' },   // F3: pokračovací válka – Finsko po boku Německa (25. 6. 1941)
   { tag: 'SOV', target: 'EST', from: 1720, until: 2100, ratio: 0.6 },

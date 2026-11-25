@@ -103,7 +103,7 @@ export function createMil(w = getWorld(), rngState = 1936) {
     const provs = owned[o];
     // lidská síla: podíl obyvatel
     let popK = 0;
-    for (const p of provs) popK += w.pop[p];
+    for (const p of provs) popK += w.manPop ? w.manPop[p] : w.pop[p];   // W1: kolonie zlomkem
     mil.man[o] = Math.round(popK * 1000 * (nat ? nat.man : 0.01));
     mil.stock[o] = {};
     for (const e of EQUIP_IDS) mil.stock[o][e] = 0;
@@ -136,6 +136,9 @@ export function createMil(w = getWorld(), rngState = 1936) {
     // jen provincie, kde divize dostane zásoby (nemá-li země žádnou takovou, zůstanou původní váhy)
     const supplied = weights.map((x, i) => (reach[provs[i]] * C.SUP_CAPACITY >= 1 ? x : 0));
     if (supplied.some((x) => x > 0)) for (let i = 0; i < weights.length; i++) weights[i] = supplied[i];
+    // W1: startovní divize stojí na jádrovém území (kolonie, stát s c = 1, posádky na začátku nedostávají)
+    const core = weights.map((x, i) => (w.states[w.provState[provs[i]]].c ? 0 : x));
+    if (core.some((x) => x > 0)) for (let i = 0; i < weights.length; i++) weights[i] = core[i];
     const chosen = [];
     let remaining = N;
     const capIdx = provs.indexOf(ow.cap);

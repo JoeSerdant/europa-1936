@@ -1,3 +1,4 @@
+import { ARMY_WORLD } from '../world/countries.js';
 // Počáteční sestavy zemí v lednu 1936 (vlastní odhady, zaokrouhlené).
 //  divs  počet divizí podle druhu šablony (viz templates.js: pesi, brig, motor, tank, hory, kav)
 //  xp    výchozí zkušenost jednotek 0–1 (0,1 nováčci … 0,3 cvičení … 0,75 ostřílení)
@@ -42,4 +43,5 @@ export const NATIONAL = {
   PER: { cult: 'fa', divs: { pesi: 7, kav: 1 }, xp: 0.1, res: 0.2, man: 0.012, pool: 1 },
   SAU: { cult: 'ar', divs: { brig: 2, kav: 1 }, xp: 0.1, res: 0.2, man: 0.01, pool: 0 },
   OMA: { cult: 'ar', divs: { brig: 1 }, xp: 0.1, res: 0.2, man: 0.01, pool: 0 },
+  ...ARMY_WORLD,   // W1
 };

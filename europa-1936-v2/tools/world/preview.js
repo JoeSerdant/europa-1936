@@ -22,7 +22,7 @@ export function renderPreview(W, kind, dir, log) {
     if (land[i] === 1) {
       if (kind === 'sea') return ownerIdx[i] === 255 ? [50, 50, 50] : [120, 110, 90];
       if (ownerIdx[i] === 255) return [66, 66, 66];
-      if (kind === 'owners') return (pals.o ||= palette(40))[ownerIdx[i]];
+      if (kind === 'owners') return (pals.o ||= palette(256))[ownerIdx[i]];
       if (kind === 'states') return stateOf[i] ? (pals.s ||= palette(W.states.length))[stateOf[i]] : [255, 0, 255];
       return provOf[i] ? (pals.p ||= palette(W.provs.length))[provOf[i]] : [255, 0, 255];
     }

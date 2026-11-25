@@ -2,48 +2,39 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { geoConicConformal } from 'd3-geo';
-import { RES_KM, PROJECTION, FRAME_POINTS, FRAME_PAD_KM } from './config.js';
+import { geoMercator } from 'd3-geo';
+import { PROJECTION } from './config.js';
 
+const RAD = Math.PI / 180;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const CACHE = path.join(ROOT, 'tools/cache');
 
+/**
+ * Mřížka celého světa (W1, „Dark Times“): Mercatorova projekce (konformní – tvary jako dřív), mapa se vodorovně opakuje (šev v Pacifiku
+ * na poledníku `PROJECTION.seam`, jen oceán). Pixel má na rovníku `res` km a ve šířce φ `res · cos φ` km; šířka mapy je přesně celý obvod Země,
+ * takže sloupec W navazuje na sloupec 0. `km2At` / `kmAt` dávají skutečné měřítko pixelu podle řádku.
+ */
 export function makeGrid() {
-  const proj = geoConicConformal()
-    .rotate([-PROJECTION.centralMeridian, 0])
-    .parallels(PROJECTION.parallels)
-    .scale(6371)            // výstup v km
-    .translate([0, 0]);
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const p of FRAME_POINTS) {
-    const [x, y] = proj(p);
-    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
-  }
-  x0 -= FRAME_PAD_KM; y0 -= FRAME_PAD_KM; x1 += FRAME_PAD_KM; y1 += FRAME_PAD_KM;
-  const W = Math.ceil((x1 - x0) / RES_KM), H = Math.ceil((y1 - y0) / RES_KM);
+  const R = 6371;
+  const { seam, latN, latS, refLat, refKm } = PROJECTION;
+  const W = Math.round((2 * Math.PI * R * Math.cos(refLat * RAD)) / refKm);
+  const res = (2 * Math.PI * R) / W;                       // km na pixel na rovníku (přesně, aby šev navazoval)
+  const proj = geoMercator().rotate([-(seam + 180), 0]).scale(R).translate([0, 0]);
+  const x0 = -Math.PI * R, y0 = proj([seam + 180, latN])[1];
+  const H = Math.ceil((proj([seam + 180, latS])[1] - y0) / res);
   const toPx = (lon, lat) => {
-    const p = proj([lon, lat]);
-    return [(p[0] - x0) / RES_KM, (p[1] - y0) / RES_KM];
+    const p = proj([lon, Math.max(-85, Math.min(85, lat))]);
+    return [(p[0] - x0) / res, (p[1] - y0) / res];
   };
-  const toLonLat = (px, py) => proj.invert([px * RES_KM + x0, py * RES_KM + y0]);
-  // měřítko: km na pixel v daném místě (vůči délce 1° rovnoběžky) – konformní projekce, takže izotropní
-  const kmPerPx = (px, py) => {
-    const [lon, lat] = toLonLat(px, py);
-    const a = proj([lon, lat]), b = proj([lon + 0.1, lat]);
-    const proj_km = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    const real_km = 6371 * Math.cos((lat * Math.PI) / 180) * ((0.1 * Math.PI) / 180);
-    return RES_KM * (real_km / proj_km);
-  };
-  // hrubá mřížka měřítka (km² na pixel), aby se plochy nepočítaly pro každý pixel zvlášť
-  const SG = 32;
-  const sw = Math.ceil(W / SG) + 1, sh = Math.ceil(H / SG) + 1;
-  const sc = new Float32Array(sw * sh);
-  for (let j = 0; j < sh; j++) for (let i = 0; i < sw; i++) {
-    const k = kmPerPx(Math.min(W - 1, i * SG), Math.min(H - 1, j * SG));
-    sc[j * sw + i] = k * k;
-  }
-  const km2At = (x, y) => sc[Math.min(sh - 1, Math.round(y / SG)) * sw + Math.min(sw - 1, Math.round(x / SG))];
-  return { proj, W, H, x0, y0, res: RES_KM, toPx, toLonLat, kmPerPx, km2At };
+  const toLonLat = (px, py) => proj.invert([px * res + x0, py * res + y0]);
+  const latOfRow = (py) => toLonLat(0, py)[1];
+  const cosRow = new Float32Array(H + 1);
+  for (let y = 0; y <= H; y++) cosRow[y] = Math.cos(latOfRow(y + 0.5) * RAD);
+  const rowOf = (y) => Math.max(0, Math.min(H, Math.round(y)));
+  const kmAt = (y) => res * cosRow[rowOf(y)];             // km na pixel v řádku y (izotropně)
+  const kmPerPx = (px, py) => kmAt(py);
+  const km2At = (x, y) => { const k = kmAt(y); return k * k; };
+  return { proj, W, H, x0, y0, res, wrap: true, seam, toPx, toLonLat, kmAt, kmPerPx, km2At, latOfRow };
 }
 
 export function loadGeoJSON(name) {
@@ -61,7 +52,8 @@ export function polygonsOf(geometry) {
   });
 }
 
-// jen polygony, jejichž bbox zasáhne okno lon/lat
+// jen polygony, jejichž bbox zasáhne okno lon/lat; polygon, který přetíná šev mapy (W1), se vynechá (vyplnil by pás přes celou mapu)
 export function inWindow(bbox, win) {
+  if (bbox[0] < PROJECTION.seam && bbox[2] > PROJECTION.seam && bbox[2] - bbox[0] < 300) return false;
   return !(bbox[2] < win[0] || bbox[0] > win[2] || bbox[3] < win[1] || bbox[1] > win[3]);
 }

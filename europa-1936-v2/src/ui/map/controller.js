@@ -6,8 +6,9 @@ import { getWorld } from '../../engine/world.js';
 import { buildGeometry } from './geometry.js';
 import { MapRenderer, FONT_DISPLAY, FONT_TEXT } from './renderer.js';
 import {
-  createCamera, resizeCamera, zoomAt, panBy, screenToWorld, clampCamera, lerpView, fitZoom, MAX_ZOOM,
+  createCamera, resizeCamera, zoomAt, panBy, screenToWorld, clampCamera, lerpView, fitZoom, MAX_ZOOM, nearX,
 } from './camera.js';
+import { pxOf } from './sun.js';
 
 const CZ_SAMPLE = 'ěščřžýáíéúůňťďĚŠČŘŽÝÁÍÉÚŮŇŤĎ';
 const GAME_REDRAW_MS = 100;   // F2: změny ve hře (jednotky, dobytí) překreslí mapu nejvýš 10× za sekundu; pohyb kamery hned
@@ -16,7 +17,7 @@ export class MapController {
   constructor() {
     this.world = getWorld();
     this.geo = null;
-    this.cam = createCamera(this.world.frame.w, this.world.frame.h);
+    this.cam = createCamera(this.world.frame.w, this.world.frame.h, !!this.world.frame.wrap);
     this.renderer = null;
     this.canvas = null;
     this.anim = null;
@@ -193,12 +194,14 @@ export class MapController {
   /** Přesune střed kamery na světový bod (minimapa). */
   centerOn(wx, wy) { this.cancelAnim(); this.cam.x = wx; this.cam.y = wy; clampCamera(this.cam); this.dirty = true; this.emit(); }
   screenToWorld(sx, sy) { return screenToWorld(this.cam, sx, sy); }
-  pick(sx, sy) { const [x, y] = this.screenToWorld(sx, sy); return this.geo ? this.geo.pick(x, y) : 0; }
+  pick(sx, sy) { const [x, y] = this.wrapPt(...this.screenToWorld(sx, sy)); return this.geo ? this.geo.pick(x, y) : 0; }
+  /** W1: bod světa převedený do jedné šířky mapy (mapa dokola). */
+  wrapPt(x, y) { const W = this.world.frame.w; return [this.world.frame.wrap ? ((x % W) + W) % W : x, y]; }
 
   /** Plynulý přesun na pohled { x, y, zoom } za `ms` milisekund. */
   flyTo(view, ms = 700, done) {
     this.drift = null;
-    const to = { x: view.x, y: view.y, zoom: Math.max(0.05, Math.min(MAX_ZOOM, view.zoom)) };
+    const to = { x: nearX(this.cam, view.x, this.cam.x), y: view.y, zoom: Math.max(0.05, Math.min(MAX_ZOOM, view.zoom)) };   // W1: přes šev nejkratší cestou
     if (ms <= 0) { Object.assign(this.cam, to); clampCamera(this.cam); this.dirty = true; this.emit(); if (done) done(); return; }
     this.anim = { from: { x: this.cam.x, y: this.cam.y, zoom: this.cam.zoom }, to, t0: performance.now(), ms, done };
   }
@@ -255,7 +258,8 @@ export class MapController {
 
   /** Pohled na Evropu (výchozí pohled). */
   viewEurope(ms = 0) {
-    this.flyTo(this.viewForBox([380, 380, 2150, 1500], 0.02, 1.2), ms);
+    const [x0, y0] = pxOf(-12, 66), [x1, y1] = pxOf(45, 34);
+    this.flyTo(this.viewForBox([x0, y0, x1, y1], 0.02, 1.2), ms);
   }
 
   // ---------------------------------------------------------------- pomalé „dýchání“ kamery v menu

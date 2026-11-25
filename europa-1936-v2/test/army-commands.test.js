@@ -171,12 +171,13 @@ describe('rozkazy', () => {
   /** Vlastní řetěz provincií délky `n` v zemi (cesta po vlastním území). */
   function chain(tag, n, s) {
     const o = idx(tag);
+    const flat = (q) => W.terrain[q] === 0;   // W1: jen roviny (motorizované jednotky jsou v lese a bažinách pomalejší)
     for (let p = 1; p <= W.L; p++) {
-      if (s.ctrl[p] !== o) continue;
+      if (s.ctrl[p] !== o || !flat(p)) continue;
       const path = [p];
       let cur = p;
       for (let i = 1; i < n; i++) {
-        const next = neighbors(cur).find((q) => s.ctrl[q] === o && !path.includes(q));
+        const next = neighbors(cur).find((q) => s.ctrl[q] === o && flat(q) && !path.includes(q));
         if (!next) break;
         path.push(next); cur = next;
       }
@@ -187,17 +188,17 @@ describe('rozkazy', () => {
 
   it('divize dojde do cíle za přibližně očekaný čas', () => {
     let s = emptyBattlefield();
-    const ch = chain('GER', 4, s);
+    const ch = chain('GER', 6, s), dest = ch[5];   // W1: delší řetěz (krátká cesta po rovině bývá jen jeden krok)
     let id;
     [s, id] = addDivision(s, 'GER', 'pesi', ch[0]);
-    const t = orderMove(s, [id], ch[3]);
+    const t = orderMove(s, [id], dest);
     expect(t).not.toBe(s);
-    expect(t.mil.divs[id].path).toEqual(findPath(s.mil, s.ctrl, idx('GER'), ch[0], ch[3]));
+    expect(t.mil.divs[id].path).toEqual(findPath(s.mil, s.ctrl, idx('GER'), ch[0], dest));
     const hours = pathHours(ch[0], t.mil.divs[id].path);
     const early = advance(t, Math.floor(hours * 0.4));
-    expect(early.mil.divs[id].p).not.toBe(ch[3]);
+    expect(early.mil.divs[id].p).not.toBe(dest);
     const late = advance(t, Math.ceil(hours * 2) + 24);
-    expect(late.mil.divs[id].p).toBe(ch[3]);
+    expect(late.mil.divs[id].p).toBe(dest);
     expect(late.mil.divs[id].path).toEqual([]);
     expect(late.mil.divs[id].prog).toBe(0);
   });

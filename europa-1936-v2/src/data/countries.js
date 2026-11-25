@@ -1,3 +1,5 @@
+import { COUNTRIES_WORLD } from './world/countries.js';
+
 // Země hry (tagy odpovídají src/data/world.json): popis pro výběr země, vlajka (jednoduché geometrické vrstvy), vůdce a výchozí ideologie v lednu 1936.
 // Texty a vlajky jsou vlastní (zjednodušené; bez státních znaků a bez symbolů extremistických režimů).
 //
@@ -219,6 +221,7 @@ export const COUNTRIES = {
     blurb: 'Sultanát na kraji Arábie v dlouhé závislosti na Británii. Pobřeží, hory a především klid.',
     flag: [['r', '#db161b', 0, 0, 30, 20], ['r', '#f2f2f2', 0, 0, 30, 2.4], ['r', '#0e8a3b', 0, 17.6, 30, 2.4]],
   },
+  ...COUNTRIES_WORLD,   // W1: zbytek světa
 };
 
 export const TIER_NAMES = { 1: 'Velmoc', 2: 'Regionální mocnost', 3: 'Malý stát' };

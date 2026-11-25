@@ -1,6 +1,6 @@
 // Grafika mapy (M91): projekce a Slunce (den a noc), šum, stínování reliéfu, hloubka moře, maska mlhy a mřížka noci – čisté funkce bez prohlížeče.
 import { describe, it, expect } from 'vitest';
-import { geoConicConformal } from 'd3-geo';
+import { geoMercator } from 'd3-geo';
 import { getWorld } from '../src/engine/index.js';
 import { PROJ, pxOf, lonLatOf, utcOf, sunElevation, nightOf } from '../src/ui/map/sun.js';
 import { TERRAIN_RELIEF, hash2, valueNoise, ridged, boxBlur, hillshade, distanceToLand, seaColor } from '../src/ui/map/relief.js';
@@ -10,11 +10,15 @@ import { buildGeometry } from '../src/ui/map/geometry.js';
 const W = getWorld();
 
 describe('projekce a Slunce', () => {
-  const d3 = geoConicConformal().rotate([-PROJ.cm, 0]).parallels([PROJ.p1, PROJ.p2]).scale(PROJ.R).translate([0, 0]);
+  // W1: Mercator dokola se středem na poledníku PROJ.lon0 (jako generátor světa)
+  const d3 = geoMercator().rotate([-PROJ.lon0, 0]).scale(PROJ.R).translate([0, 0]);
   it('pixel světa odpovídá projekci generátoru (d3-geo) a převod tam a zpět sedí', () => {
-    for (const [lon, lat] of [[13.4, 52.52], [2.35, 48.86], [-0.12, 51.51], [37.6, 55.75], [-9, 39], [44, 33]]) {
+    expect(PROJ.w).toBe(W.frame.w);
+    expect(PROJ.km).toBeCloseTo(W.frame.km, 6);
+    expect(PROJ.y0).toBeCloseTo(W.frame.y0, 3);
+    for (const [lon, lat] of [[13.4, 52.52], [2.35, 48.86], [-0.12, 51.51], [37.6, 55.75], [-9, 39], [44, 33], [139.7, 35.7], [-77, 38.9], [151.2, -33.9]]) {
       const [x, y] = pxOf(lon, lat), p = d3([lon, lat]);
-      expect(x).toBeCloseTo((p[0] - PROJ.x0) / PROJ.km, 3);
+      expect(x).toBeCloseTo((p[0] + Math.PI * PROJ.R) / PROJ.km, 3);
       expect(y).toBeCloseTo((p[1] - PROJ.y0) / PROJ.km, 3);
       const [lo, la] = lonLatOf(x, y);
       expect(lo).toBeCloseTo(lon, 4);
@@ -113,7 +117,14 @@ describe('mlha a noc (vrstvy nad dlaždicemi)', () => {
     expect(fogMask(grid, land, null, W.L, W.S)[j]).toBe(0);
   });
   it('noc: o půlnoci je tma skoro všude, v poledne skoro nikde', () => {
-    const avg = (t) => { const g = nightGrid(W.frame, t, 64); return g.night.reduce((a, v) => a + v, 0) / g.night.length; };
+    // W1: na mapě celého světa se měří jen Evropa (10° z. d. – 40° v. d., 35°–65° s. š.)
+    const avg = (t) => {
+      const res = 64, g = nightGrid(W.frame, t, res), gw = Math.ceil(W.frame.w / res);
+      const [x0, y0] = pxOf(-10, 65), [x1, y1] = pxOf(40, 35);
+      let s = 0, n = 0;
+      for (let y = Math.floor(y0 / res); y <= Math.floor(y1 / res); y++) for (let x = Math.floor(x0 / res); x <= Math.floor(x1 / res); x++) { s += g.night[y * gw + x]; n++; }
+      return s / n;
+    };
     expect(avg(24 * 150 + 1)).toBeGreaterThan(0.6);
     expect(avg(24 * 150 + 13)).toBeLessThan(0.1);
   });
