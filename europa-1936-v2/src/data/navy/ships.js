@@ -1,3 +1,4 @@
+import { NAVY_WORLD } from '../world/countries.js';
 // Lodě a počáteční námořnictvo zemí (M27). Vlastní čísla; počty jsou zmenšené oproti skutečnosti, aby odpovídaly měřítku hry.
 //  hp síla   atk palebná síla   spd rychlost (km/h)   cost body výroby na kus   res suroviny na kus
 //  deck paluba (M90): kolik palubních letounů (`pal` v PLANES) loď nese; jejich úder přijde před palbou děl a oslabí ji   sub  ponorka: zasáhnou ji jen torpédoborce a letadlové lodě, proti konvojům je silnější
@@ -52,4 +53,5 @@ export const NAVY_NATIONAL = {
   SAU: { docks: 0, ships: { tr: 1 } },
   OMA: { docks: 0, ships: { tr: 1 } },
   ICE: { docks: 0, ships: { tr: 1 } },
+  ...NAVY_WORLD,   // W1
 };

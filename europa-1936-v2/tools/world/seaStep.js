@@ -5,7 +5,10 @@ import { mulberry32 } from '../lib/geom.js';
 
 const SEA_R0_KM = Number(process.env.SEA_R0 || 110);     // poloměr u pobřeží
 const SEA_K = Number(process.env.SEA_K || 0.5);        // přírůstek poloměru na km od pobřeží
-const SEA_R1_KM = Number(process.env.SEA_R1 || 300);    // maximální poloměr
+const SEA_R1_KM = Number(process.env.SEA_R1 || 300);    // maximální poloměr v okrajových mořích (původní rámec)
+const SEA_R2_KM = Number(process.env.SEA_R2 || 1000);    // W1: maximální poloměr na otevřeném oceánu
+const SEA_K2 = 0.8;                                      // W1: přírůstek poloměru na km od pobřeží v oceánu
+const SEA_R0_FAR = 190;                                  // W1: poloměr u pobřeží mimo původní rámec
 
 // vzdálenost od pevniny/jezer (px), chamfer 3-4 přes mořské pixely
 function distFromLand(GW, GH, land) {
@@ -40,28 +43,37 @@ export function buildSea(W, log) {
   const group = new Uint16Array(N);
   for (let i = 0; i < N; i++) if (land[i] === 0) group[i] = 1;
 
-  const radius = (d) => Math.min(SEA_R1_KM, SEA_R0_KM + SEA_K * d * grid.res) / grid.res;   // v px
-  // kandidáty: každý 3. pixel v náhodném pořadí
+  // W1: poloměr v km podle vzdálenosti od pobřeží; v původním rámci (Evropa) jako dřív, na oceánech až SEA_R2_KM; převod na px podle řádku
+  const oldFrame = (x, y) => { const [lon, lat] = grid.toLonLat(x, y); return lon >= -26 && lon <= 63.6 && lat >= 24 && lat <= 72; };
+  const radius = (d, x, y) => {
+    const k = grid.kmAt(y), dkm = d * k;
+    const km = oldFrame(x, y) ? Math.min(SEA_R1_KM, SEA_R0_KM + SEA_K * dkm) : Math.min(SEA_R2_KM, SEA_R0_FAR + SEA_K2 * dkm);
+    return km / k;
+  };
+  // kandidáty: každý 3. pixel (mimo původní rámec každý 6.) v náhodném pořadí
   const cand = [];
-  for (let y = 1; y < GH; y += 3) for (let x = 1; x < GW; x += 3) if (group[y * GW + x]) cand.push(y * GW + x);
+  for (let y = 1; y < GH; y += 3) for (let x = 1; x < GW; x += 3) {
+    if (!group[y * GW + x]) continue;
+    if ((x % 6 !== 1 || y % 6 !== 1) && !oldFrame(x, y)) continue;
+    cand.push(y * GW + x);
+  }
   for (let i = cand.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = cand[i]; cand[i] = cand[j]; cand[j] = t; }
 
   const CELL = 30;
   const gw = Math.ceil(GW / CELL), gh = Math.ceil(GH / CELL);
   const hash = Array.from({ length: gw * gh }, () => []);
   const seeds = [];
-  const rmaxPx = SEA_R1_KM / grid.res;
-  const reach = Math.ceil(rmaxPx / CELL);
   for (const i of cand) {
     const x = i % GW, y = (i / GW) | 0;
-    const r = radius(dL[i]);
+    const r = radius(dL[i], x, y);
     const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL);
     let ok = true;
-    const rr = Math.min(reach, Math.ceil(r / CELL) + Math.ceil(rmaxPx / CELL));
+    const rmaxPx = SEA_R2_KM / grid.kmAt(y);
+    const rr = Math.ceil((0.5 * (r + rmaxPx)) / CELL);
     for (let gy = Math.max(0, cy - rr); gy <= Math.min(gh - 1, cy + rr) && ok; gy++) {
       for (let gx = Math.max(0, cx - rr); gx <= Math.min(gw - 1, cx + rr); gx++) {
         for (const s of hash[gy * gw + gx]) {
-          const d = Math.hypot(s.x - x, s.y - y);
+          const d = Math.hypot(s.x - x, s.y - y);   // (šev je oceán: semínka u švu se neovlivňují – oblasti se tam stejně rozdělí)
           if (d < 0.5 * (r + s.r)) { ok = false; break; }
         }
         if (!ok) break;
@@ -136,7 +148,7 @@ export function buildSea(W, log) {
     if (!cnt[l]) { seas.push({ empty: true }); continue; }
     const cx = sx[l] / cnt[l], cy = sy[l] / cnt[l];
     let bn = 0, bd = Infinity;
-    regPts.forEach((r, j) => { const d = (r.p[0] - cx) ** 2 + (r.p[1] - cy) ** 2; if (d < bd) { bd = d; bn = j; } });
+    regPts.forEach((r, j) => { let dx = Math.abs(r.p[0] - cx); dx = Math.min(dx, GW - dx); const d = dx * dx + (r.p[1] - cy) ** 2; if (d < bd) { bd = d; bn = j; } });
     seas.push({ region: regPts[bn].name, px: cnt[l], seedIdx: seeds[k].idx });
   }
   W.seaOf = labels;

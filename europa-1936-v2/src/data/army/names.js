@@ -1,3 +1,4 @@
+import { NAMES_WORLD } from '../world/countries.js';
 // Jména velitelů: kultura → křestní jména a příjmení. Jména se skládají náhodně (vymyšlené osoby, bez historických velitelů).
 
 export const NAMES = {
@@ -101,4 +102,5 @@ export const NAMES = {
     first: ['Mohammad', 'Ali', 'Hossein', 'Reza', 'Hasan', 'Abbas', 'Mahmud', 'Ahmad', 'Jafar', 'Morteza', 'Nasser'],
     last: ['Ahmadi', 'Rahimi', 'Karimi', 'Hosseini', 'Mousavi', 'Jafari', 'Rezai', 'Najafi', 'Kazemi', 'Tehrani', 'Shirazi', 'Esfahani', 'Tabrizi', 'Bakhtiar', 'Zand', 'Afshar'],
   },
+  ...NAMES_WORLD,   // W1
 };

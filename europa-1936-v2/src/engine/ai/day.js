@@ -24,6 +24,8 @@ import { aiCommand } from '../cmd/index.js';
 import { aiLend } from '../dip/lend.js';
 import { aiVolunteers } from './volunteers.js';
 import { aiMines, aiAirMissions, aiRail, aiBuildsF4c } from './hoi.js';
+import { COUNTRIES_WORLD } from '../../data/world/countries.js';
+const QUIET_TAGS = new Set(Object.keys(COUNTRIES_WORLD));
 
 /** Válčí země a některá její armáda má jen automatický plán (nebo žádný)? Pak se strategie spustí hned, ne až za týden. */
 function newWar(state, o) {
@@ -45,8 +47,11 @@ export function* aiDaySteps(state) {
   const player = playerOf(state);
   const weekly = state.tick % (24 * AI.PLAN_DAYS) === 0, soon = state.tick % (24 * AI.PLAN_DAYS_WAR) === 0;
   const scan = scanArmies(state);
+  const day = Math.floor(state.tick / 24);
   for (let o = 1; o < w.owners.length; o++) {
     if (o === player || state.dip.cap[o]) continue;
+    // W1 (výkon): země mimo Evropu bez války hrají plné kolo AI jen každý třetí den (rozprostřeně podle země); evropské země beze změny
+    if (QUIET_TAGS.has(w.owners[o].tag) && (day + o) % AI.QUIET_DAYS !== 0 && !hasWar(state.mil, o)) continue;
     state = histStrategies(state, o);   // M92: historické strategie (duchové ze spouštěčů válek)
     state = aiDecisions(state, o);
     state = aiParties(state, o);

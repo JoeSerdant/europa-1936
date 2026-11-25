@@ -1,7 +1,9 @@
 // Krok 2: státy (provincie 1. řádu) – geodetický růst ze semínek uvnitř území vlastníka.
 import { STATE_SEEDS } from './data/states.js';
 import { growRegions, components, noiseCost } from './raster.js';
-import { OWNERS } from './config.js';
+import { OWNERS, inOldFrame } from './config.js';
+
+const COLONIAL = new Set(['ENG', 'FRA', 'HOL', 'BEL', 'POR', 'SPR', 'ITA', 'DEN']);   // W1: koloniální mocnosti
 
 const strip = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 
@@ -35,7 +37,7 @@ export function buildStates(W, log) {
 
   const states = [{ id: '', owner: '', name: '' }]; // index 0 nepoužit
   const seeds = [];
-  const mult = new Float32Array(2048).fill(1);
+  const mult = new Float32Array(4096).fill(1);
   const used = new Set();
   for (const tag of Object.keys(STATE_SEEDS)) {
     const own = ownerTags.indexOf(tag);
@@ -44,19 +46,21 @@ export function buildStates(W, log) {
       const [px, py] = grid.toPx(lon, lat);
       const snap = snapToGroup(GW, GH, group, own, px, py, 60);
       const label = states.length;
-      if (!snap) { console.warn(`!! stát ${tag}/${name}: semínko mimo území (${lon}, ${lat})`); states.push({ id: '', owner: tag, name, missing: true }); continue; }
-      const km = snap.dist * grid.res;
+      if (!snap) { console.warn(`!! stát ${tag}/${name}: semínko mimo území (${lon}, ${lat}) – vynechán`); continue; }
+      const km = snap.dist * grid.kmAt(py);
       if (km > 30) console.warn(`   stát ${tag}/${name}: semínko posunuto o ${km.toFixed(0)} km`);
       let id = `${tag.toLowerCase()}_${strip(name)}`;
       while (used.has(id)) id += '_';
       used.add(id);
-      states.push({ id, owner: tag, name, opts, seedIdx: snap.idx, w: opts.w ?? 1, sp: opts.sp ?? 1 });
+      // W1: kolonie (c) = stát evropské země mimo původní rámec nebo výslovně označený (opts.col) – dává jen zlomek lidské síly
+      const col = opts.col ? 1 : COLONIAL.has(tag) && !inOldFrame(lon, lat) ? 1 : 0;
+      states.push({ id, owner: tag, name, opts, seedIdx: snap.idx, w: opts.w ?? 1, sp: opts.sp ?? 1, col });
       seeds.push({ idx: snap.idx, label });
       mult[label] = 1 / (opts.w ?? 1);
     }
   }
   log(`semínek států: ${seeds.length}`);
-  if (states.length > 1500) throw new Error('moc států');
+  if (states.length > 4000) throw new Error('moc států');
 
   const { lab } = growRegions(GW, GH, group, seeds, cost, Infinity, mult);
 
@@ -77,7 +81,8 @@ export function buildStates(W, log) {
         if (d < bd) { bd = d; bestL = s.label; }
       }
       c.state = bestL;
-      if (c.size * grid.res * grid.res > 900) bad.push(`${ownerTags[own]}→${states[bestL]?.name} (${Math.round(c.size * grid.res * grid.res)} km² u ${grid.toLonLat(c.cx, c.cy).map((v) => v.toFixed(1))})`);
+      const ckm2 = c.size * grid.km2At(0, c.cy);
+      if (ckm2 > 900) bad.push(`${ownerTags[own]}→${states[bestL]?.name} (${Math.round(ckm2)} km² u ${grid.toLonLat(c.cx, c.cy).map((v) => v.toFixed(1))})`);
     }
     for (let i = 0; i < N; i++) if (miss[i]) lab[i] = list[comp[i]].state;
     log(`bez semínka: ${list.length} ostrovů (${nMiss} px)${bad.length ? ' větší: ' + bad.join('; ') : ''}`);
@@ -85,14 +90,15 @@ export function buildStates(W, log) {
 
   // plochy
   const area = new Float64Array(states.length);
+  const px = new Float64Array(states.length);
   for (let y = 0; y < GH; y++) {
-    const k = grid.kmPerPx(GW / 2, y);
+    const a = grid.km2At(0, y);
     for (let x = 0; x < GW; x++) {
       const l = lab[y * GW + x];
-      if (l) area[l] += 1;
+      if (l) { area[l] += a; px[l] += 1; }
     }
   }
-  for (let l = 1; l < states.length; l++) { states[l].px = area[l]; states[l].areaKm2 = Math.round(area[l] * grid.res * grid.res); }
+  for (let l = 1; l < states.length; l++) { states[l].px = px[l]; states[l].areaKm2 = Math.round(area[l]); }
   W.states = states;
   W.stateOf = lab;
   W.stateGroup = group;

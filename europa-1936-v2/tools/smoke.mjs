@@ -36,7 +36,7 @@ const shot = (n) => page.screenshot({ path: path.join(OUT, `smoke-${n}-${W}.png`
 try {
   await page.goto(`${BASE}/?debug=1`, { timeout: 15000 });
   await page.waitForSelector('h1', { timeout: 15000 });
-  check('hlavní menu se zobrazí', (await page.locator('h1').innerText()).toLowerCase().includes('evropa'));
+  check('hlavní menu se zobrazí', (await page.locator('h1').innerText()).toLowerCase().includes('dark times'));
   await page.waitForTimeout(1500);
   await shot('menu');
 
@@ -64,7 +64,25 @@ try {
   check('horní lišta má národní cíl a výzkumné sloty', (await page.locator('.tb-focus').count()) === 1 && (await page.locator('.tb-slots i').count()) >= 2);
   check('přehled vpravo má oddíly cíl, výzkum a armády', (await page.locator('.outliner .ol-sec').count()) >= 3 && (await page.locator('.outliner .ol-sec[aria-label="Armády"] .ol-item').count()) >= 1);
 
-  await page.mouse.click(Math.round(W * 0.5), Math.round(H * 0.55));
+  // W1: klik na německou provincii bez divizí, která je vidět (střed obrazovky může na mapě světa trefit žeton nebo moře)
+  const freeXY = await page.evaluate(() => {
+    const { engine, gameStore, map } = window.__e1936;
+    const w = engine.getWorld(), s = gameStore.getState(), ger = w.ownerIdx.GER;
+    const busy = new Set(s.mil.divs.filter(Boolean).map((d) => d.p));
+    const cam = map.cam;
+    let best = null;
+    for (let p = 1; p <= w.L; p++) {
+      if (w.provOwner0[p] !== ger || busy.has(p)) continue;
+      const [x, y] = w.land[p].c;
+      const sx = (x - cam.x) * cam.zoom + cam.w / 2, sy = (y - cam.y) * cam.zoom + cam.h / 2;
+      if (sx < cam.w * 0.3 || sx > cam.w * 0.7 || sy < cam.h * 0.3 || sy > cam.h * 0.75) continue;
+      const d = Math.hypot(sx - cam.w / 2, sy - cam.h * 0.55);
+      if (!best || d < best.d) best = { d, sx, sy };
+    }
+    const r = document.querySelector('.map-host canvas, canvas').getBoundingClientRect();
+    return best ? [r.left + best.sx, r.top + best.sy] : null;
+  });
+  await page.mouse.click(Math.round(freeXY ? freeXY[0] : W * 0.5), Math.round(freeXY ? freeXY[1] : H * 0.55));
   await page.waitForSelector('.dossier h2', { timeout: 3000 });
   check('klik na provincii otevře panel', (await page.locator('.dossier h2').innerText()).length > 0);
   check('karta státu ukazuje sloty budov a vlastnosti jako ikony', (await page.locator('.dossier .st-slot').count()) >= 2 && (await page.locator('.dossier .st-chips > span').count()) >= 5);
@@ -309,6 +327,7 @@ try {
   await page.waitForTimeout(250);
   const q1 = await E(() => window.__e1936.gameStore.getState().mil.queue.length);
   check('nábor: „Zařadit“ přidá divizi do výcviku', q1 === q0 + 1, `fronta ${q0} → ${q1}`);
+  await page.waitForTimeout(700);   // okno Nábor se překresluje nejvýš dvakrát za sekundu
   check('nábor: šablony se složením z praporů, výzbroj ikonami, výcvik jako karty', (await page.locator('.tpl-card .tpl-comp .tc-bat').count()) >= 5 && (await page.locator('.tpl-card .eq-chip').count()) >= 5 && (await page.locator('.q-cards .q-card').count()) >= 1 && (await page.locator('.recruit-panel .stk-tile').count()) >= 3, `komp ${await page.locator('.tpl-card .tpl-comp .tc-bat').count()} chip ${await page.locator('.tpl-card .eq-chip').count()} q ${await page.locator('.q-cards .q-card').count()} stk ${await page.locator('.recruit-panel .stk-tile').count()}`);
   await shot('recruit');
   const tplBefore = await page.locator('.tpl-card').count();

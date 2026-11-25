@@ -1,5 +1,5 @@
 // Krok 1: rastr zemí → vlastníci v r. 1936 → jezera → průlivy → úklid ostrůvků.
-import { OWNERS, OWNER_OF, TRANSFERS, STRAITS, MIN_LAKE_KM2, MIN_ISLAND_KM2, ISLAND_KEEP, RES_KM, EAST_LIMIT_LON } from './config.js';
+import { OWNERS, OWNER_OF, TRANSFERS, STRAITS, MIN_LAKE_KM2, MIN_ISLAND_KM2, MIN_ISLAND_FAR_KM2, ISLAND_KEEP, FORCE_ISLANDS, inOldFrame } from './config.js';
 import { makeGrid, loadGeoJSON, polygonsOf, inWindow } from './grid.js';
 import { fillRings, stampPolyline, components } from './raster.js';
 
@@ -7,11 +7,7 @@ import { fillRings, stampPolyline, components } from './raster.js';
 export const DELETE_AT = [
   [-8.5, 71.0],   // Jan Mayen
   [19.0, 74.4],   // Medvědí ostrov
-  [55.0, 72.0], [53.0, 71.0], [58.0, 71.0],   // Novaja Zemlja
-  [49.0, 69.1], [60.0, 69.9],                  // Kolgujev, Vajgač
-  [-15.4, 28.1], [-16.6, 28.3], [-13.9, 28.4], [-13.6, 29.0], [-17.9, 28.7], [-17.0, 28.1], [-16.3, 28.0], // Kanárské ostrovy
-  [-16.9, 32.7], [-16.4, 32.6],                // Madeira
-  [-25.5, 37.8], [-27.1, 38.6],                // Azory
+  [-170.3, 63.4], // ostrov sv. Vavřince (leží na švu mapy)
 ];
 
 export function buildOwners(W, log) {
@@ -19,17 +15,9 @@ export function buildOwners(W, log) {
   W.grid = grid;
   const { W: GW, H: GH } = grid;
   const N = GW * GH;
-  log(`mřížka ${GW}×${GH} px (${(N / 1e6).toFixed(1)} M), ${RES_KM} km/px, rámec ${(GW * RES_KM).toFixed(0)}×${(GH * RES_KM).toFixed(0)} km`);
+  log(`mřížka ${GW}×${GH} px (${(N / 1e6).toFixed(1)} M), na rovníku ${grid.res.toFixed(2)} km/px, v 50° ${grid.kmAt(grid.toPx(0, 50)[1]).toFixed(2)} km/px`);
 
-  // okno lon/lat, které rámec pokrývá (s rezervou)
-  let lo0 = 1e9, la0 = 1e9, lo1 = -1e9, la1 = -1e9;
-  for (let i = 0; i <= 40; i++) {
-    for (const [px, py] of [[i * GW / 40, 0], [i * GW / 40, GH], [0, i * GH / 40], [GW, i * GH / 40]]) {
-      const [lon, lat] = grid.toLonLat(px, py);
-      lo0 = Math.min(lo0, lon); lo1 = Math.max(lo1, lon); la0 = Math.min(la0, lat); la1 = Math.max(la1, lat);
-    }
-  }
-  const win = [lo0 - 1, la0 - 1, lo1 + 1, la1 + 1];
+  const win = [-181, -90, 181, 90];   // W1: celý svět
   log(`okno lon/lat ${win.map((v) => v.toFixed(1)).join(' ')}`);
   W.window = win;
 
@@ -38,7 +26,7 @@ export function buildOwners(W, log) {
   W.ownerTags = ownerTags;
   const land = new Uint8Array(N);      // 0 moře, 1 pevnina, 2 jezero
   const ownerIdx = new Uint8Array(N);  // 0 nic, 1.. vlastník, 255 prázdno
-  const neId = new Uint8Array(N);      // číslo země v Natural Earth (pro převody)
+  const neId = new Uint16Array(N);     // číslo země v Natural Earth (pro převody)
   const moved = new Uint8Array(N);
 
   const countries = loadGeoJSON('ne_10m_admin_0_countries');
@@ -49,7 +37,7 @@ export function buildOwners(W, log) {
     if (!parts.length) continue;
     const id = neNames.length;
     neNames.push(name);
-    if (id > 254) throw new Error('moc zemí v okně');
+    
     const tag = OWNER_OF[name];
     const own = tag ? ownerNum[tag] : 255;
     if (tag && own === undefined) throw new Error(`neznámý tag ${tag}`);
@@ -78,15 +66,8 @@ export function buildOwners(W, log) {
     if (!n) console.warn(`převod ${t.from} -> ${t.to}: žádný pixel`);
   }
 
-  // východní okraj hrací plochy: vše východněji je prázdno (pevnina bez vlastníka)
-  {
-    const ring = [];
-    for (let lat = 10; lat <= 84; lat += 1) ring.push(grid.toPx(EAST_LIMIT_LON, lat));
-    ring.push(grid.toPx(150, 84), grid.toPx(150, 10));
-    fillRings(GW, GH, [ring], (y, c0, c1) => {
-      for (let x = c0, i = y * GW + c0; x < c1; x++, i++) if (land[i] === 1) { ownerIdx[i] = 255; }
-    });
-  }
+  // země bez vlastníka v r. 1936 (chybí v OWNER_OF) – upozornění
+  { const miss = neNames.filter((n) => n && !OWNER_OF[n]); if (miss.length) log(`!! země bez vlastníka (prázdno): ${miss.join(', ')}`); }
 
   // jezera (velká) a průlivy = voda
   const lakes = loadGeoJSON('ne_10m_lakes');
@@ -98,8 +79,9 @@ export function buildOwners(W, log) {
       // plocha v km² (hrubě): pixely * RES²
       let cnt = 0;
       const tmp = [];
-      fillRings(GW, GH, rings, (y, c0, c1) => { for (let x = c0; x < c1; x++) { cnt++; tmp.push(y * GW + x); } });
-      if (cnt * RES_KM * RES_KM < MIN_LAKE_KM2) continue;
+      let km2 = 0;
+      fillRings(GW, GH, rings, (y, c0, c1) => { const a = grid.km2At(0, y); for (let x = c0; x < c1; x++) { cnt++; km2 += a; tmp.push(y * GW + x); } });
+      if (km2 < MIN_LAKE_KM2) continue;
       let hit = 0;
       for (const i of tmp) if (land[i] === 1) hit++;
       if (hit / Math.max(1, cnt) < 0.5) continue;   // jezero mimo pevninu (moře apod.)
@@ -110,10 +92,24 @@ export function buildOwners(W, log) {
   log(`jezer: ${nLakes}`);
   for (const [name, wkm, pts] of STRAITS) {
     const px = pts.map(([lon, lat]) => grid.toPx(lon, lat));
-    stampPolyline(GW, GH, px, wkm / RES_KM, (x, y) => {
+    stampPolyline(GW, GH, px, wkm / grid.kmAt(px[0][1]), (x, y) => {
       const i = y * GW + x;
       if (land[i] === 1) { land[i] = 0; ownerIdx[i] = 0; }
     });
+  }
+
+  // W1: vnitrozemská voda oddělená od oceánu (jezera vyříznutá z hranic států, ústí řek) → jezero; velké uzavřené moře (Kaspik) zůstává mořem
+  {
+    const wat = new Uint8Array(N);
+    for (let i = 0; i < N; i++) if (land[i] === 0) wat[i] = 1;
+    const { comp: wc, list: wl } = components(GW, GH, wat);
+    const km2 = (c) => c.size * grid.km2At(0, c.cy);
+    let ocean = null;
+    for (const c of wl) if (!ocean || c.size > ocean.size) ocean = c;
+    const toLake = new Set(wl.filter((c) => c !== ocean && km2(c) < 300000).map((c) => c.id));
+    let px = 0;
+    for (let i = 0; i < N; i++) if (wc[i] >= 0 && toLake.has(wc[i])) { land[i] = 2; ownerIdx[i] = 0; px++; }
+    log(`vnitrozemská voda → jezera: ${toLake.size} ploch (${px} px)`);
   }
 
   // vymazání ostrovů mimo dějiště + drobných ostrůvků
@@ -129,9 +125,8 @@ export function buildOwners(W, log) {
       if (c >= 0) del.add(c);
     }
   }
-  const minPx = MIN_ISLAND_KM2 / (RES_KM * RES_KM);
   const keep = new Set();
-  for (const [lon, lat] of ISLAND_KEEP) {
+  for (const [lon, lat] of [...ISLAND_KEEP, ...FORCE_ISLANDS.map((f) => [f[1], f[2]])]) {
     const [px, py] = grid.toPx(lon, lat);
     const x = Math.round(px), y = Math.round(py);
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
@@ -143,12 +138,27 @@ export function buildOwners(W, log) {
   }
   let removed = 0;
   for (const c of list) {
-    if (del.has(c.id) || (c.size < minPx && !keep.has(c.id))) { c.drop = true; removed++; }
+    if (del.has(c.id) || (c.size * grid.km2At(0, c.cy) < (inOldFrame(...grid.toLonLat(c.cx, c.cy)) ? MIN_ISLAND_KM2 : MIN_ISLAND_FAR_KM2) && !keep.has(c.id))) { c.drop = true; removed++; }
   }
   for (let i = 0; i < N; i++) {
     const c = comp[i];
     if (c >= 0 && list[c].drop) { land[i] = 0; ownerIdx[i] = 0; }
   }
   log(`odstraněno ostrovů/ostrůvků: ${removed}`);
+  // W1: strategické ostrůvky – vyrazit malý kotouč pevniny s daným vlastníkem (poloměr 0 = jen ponechat, ostrov je dost velký)
+  let forced = 0;
+  for (const [name, lon, lat, tag, r] of FORCE_ISLANDS) {
+    if (!r) continue;
+    const [px, py] = grid.toPx(lon, lat);
+    const own = ownerNum[tag];
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (dx * dx + dy * dy > r * r + 0.5) continue;
+      const x = Math.round(px) + dx, y = Math.round(py) + dy;
+      if (x < 0 || y < 0 || x >= GW || y >= GH) continue;
+      const i = y * GW + x;
+      if (land[i] !== 2) { land[i] = 1; ownerIdx[i] = own; forced++; }
+    }
+  }
+  log(`vynucené ostrůvky: ${FORCE_ISLANDS.filter((f) => f[4]).length} (${forced} px)`);
   W.land = land; W.ownerIdx = ownerIdx; W.neId = neId; W.neNames = neNames;
 }

@@ -2,7 +2,7 @@
 //  days  dny plnění     req  všechny předpoklady   any  aspoň jeden   excl  vylučující cíle   ai  priorita AI (nižší dřív)
 //  fx    okamžité účinky (viz SPEC § 4e)   mod   trvalé bonusy
 const F = (id, n, x, y, days, req, fx, extra = {}) => ({ id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', path: '', ...extra });
-import { MORE_TREES, EXTRA } from './focuses_more.js';
+import { MORE_TREES, WORLD_TREES, EXTRA } from './focuses_more.js';
 import { BIG_TREES, GROW, DEFAULT_BIG, grow } from './focuses_big.js';
 import { XL_GROW, XL_SMALL } from './focuses_xl.js';
 import { ALT_GROW, MOD_GROW } from './focuses_alt.js';
@@ -88,7 +88,7 @@ const BASE_TREES = {
   ],
 };
 
-export const FOCUS_TREES = { ...BASE_TREES, ...MORE_TREES };
+export const FOCUS_TREES = { ...BASE_TREES, ...MORE_TREES, ...WORLD_TREES };   // W1: výchozí stromy zemí mimo Evropu
 for (const tag in EXTRA) FOCUS_TREES[tag] = [...BASE_TREES[tag], ...EXTRA[tag]];
 // M94: velké stromy velmocí (nahrazují původní, id původních cílů zůstávají), rozšíření zajímavých zemí a velký výchozí strom
 Object.assign(FOCUS_TREES, BIG_TREES);

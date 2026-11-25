@@ -58,7 +58,9 @@ export function createInd(w, rng) {
     const list = byOwner[o];
     if (!list.length) continue;
     const slots = list.map((s) => categoryOf(w.states[s].p).slots);
-    const wt = list.map((s) => Math.pow(w.states[s].p, 0.8) * (1 + vpOf(s) / 60));
+    // W1: kolonie (c = 1) dostanou továrny jen výjimečně – průmysl zůstává v mateřské zemi
+    const colW = (s) => (w.states[s].c ? 0.03 : 1);
+    const wt = list.map((s) => Math.pow(w.states[s].p, 0.8) * (1 + vpOf(s) / 60) * colW(s));
     // továrny: nejdřív civilní, pak vojenské; vojenské dávají přednost státům s vítěznými body
     const civ = apportion(wt, nat.civ, slots);
     const free = slots.map((c, i) => c - civ[i]);
@@ -82,7 +84,7 @@ export function createInd(w, rng) {
     }
     // těžba: ve třech státech podle váhy (jádra nebo rozloha), podíly 50 / 30 / 20 %
     for (const r in natRes) {
-      const geoW = list.map((s) => (RESOURCES[r].geo === 'pop' ? w.states[s].p : Math.sqrt(w.states[s].a)) * (0.5 + rnd()));
+      const geoW = list.map((s) => (RESOURCES[r].geo === 'pop' ? w.states[s].p * colW(s) : Math.sqrt(w.states[s].a)) * (0.5 + rnd()));
       const picks = [];
       const wl = geoW.slice();
       for (let k = 0; k < Math.min(3, list.length); k++) {

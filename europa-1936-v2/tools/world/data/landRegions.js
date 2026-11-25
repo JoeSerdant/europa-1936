@@ -1,6 +1,8 @@
 // Pevninské strategické regiony: [název, lon, lat, podnebí]. Každá provincie patří k regionu s nejbližším středem
 // (geodeticky po pevnině). Podnebí určuje počasí (déšť, sníh, bahno, mráz) – viz pozdější milníky.
 // Podnebí: oceanic, temperate, continental, subarctic, arctic, mediterranean, steppe, semiarid, desert, alpine.
+import { LAND_REGIONS_WORLD } from './landRegionsWorld.js';
+
 export const LAND_REGIONS = [
   // Britské ostrovy
   ['Irsko', -8.0, 53.2, 'oceanic'], ['Skotsko', -4.3, 56.8, 'oceanic'], ['Severní Anglie', -2.3, 54.2, 'oceanic'],
@@ -57,4 +59,5 @@ export const LAND_REGIONS = [
   ['Tripolitánie', 13.5, 32.3, 'mediterranean'], ['Kyrenaika', 21.5, 32.3, 'mediterranean'], ['Fezzan', 13.0, 27.0, 'desert'],
   ['Tunisko', 9.5, 35.0, 'mediterranean'], ['Alžírské pobřeží', 3.0, 36.3, 'mediterranean'], ['Alžírská Sahara', 4.0, 28.0, 'desert'],
   ['Marocký Atlas', -4.0, 33.5, 'alpine'], ['Marocký Atlantik', -7.0, 32.5, 'mediterranean'], ['Saharský jih Maroka', -8.0, 28.5, 'desert'],
+  ...LAND_REGIONS_WORLD,   // W1: zbytek světa
 ];

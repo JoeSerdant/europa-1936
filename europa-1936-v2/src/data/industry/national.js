@@ -1,3 +1,4 @@
+import { IND_WORLD } from '../world/countries.js';
 // Počáteční průmysl zemí v lednu 1936 (vlastní odhady). civ/mil = počet továren, res = těžba surovin za den (kolonie jsou v číslech zahrnuty, protože mapa končí u Evropy),
 // cons = podíl spotřebního zboží (jinak podle velikosti země). Země bez záznamu nemá průmysl.
 export const IND_NATIONAL = {
@@ -36,6 +37,7 @@ export const IND_NATIONAL = {
   PER: { civ: 2, mil: 1, res: { ropa: 10 } },
   SAU: { civ: 1, mil: 0, res: { ropa: 5 } },
   OMA: { civ: 0, mil: 0, res: {} },
+  ...IND_WORLD,   // W1
 };
 
 /** Obchodní smlouvy na startu: vývozce → dovozce, surovina, množství za den. */

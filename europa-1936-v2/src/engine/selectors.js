@@ -40,11 +40,11 @@ export function countryStats(state, tag) {
   if (!idx) return null;
   return memo(state, `stats:${tag}`, () => {
     const list = provincesByOwner(state)[idx];
-    let pop = 0, area = 0, vp = 0;
+    let pop = 0, area = 0, vp = 0, manPop = 0;
     const states = new Set();
-    for (const p of list) { pop += w.pop[p]; area += w.area[p]; vp += w.vp[p]; states.add(w.provState[p]); }
+    for (const p of list) { pop += w.pop[p]; manPop += w.manPop ? w.manPop[p] : w.pop[p]; area += w.area[p]; vp += w.vp[p]; states.add(w.provState[p]); }
     const o = w.owners[idx];
-    return { tag, provinces: list.length, states: states.size, pop, area, vp, capital: o.cap };
+    return { tag, provinces: list.length, states: states.size, pop, manPop, area, vp, capital: o.cap };   // W1: manPop = obyvatelé pro lidskou sílu (kolonie zlomkem)
   });
 }
 

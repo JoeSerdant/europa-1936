@@ -505,7 +505,7 @@ export class UnitLayer {
   }
 
   /** Žetony a značky bitev v obrazovkovém prostoru (ctx s transformací dpr). Vrací nic; hit-testy se uloží do `hits`. */
-  drawScreen(ctx, cam, view) {
+  drawScreen(ctx, cam, view, more = false) {   // W1: more = další kopie mapy dokola – zásahy a bitvy se přidávají
     const t0 = performance.now();
     const s = counterScale(cam.zoom);
     const { w, total } = counterSize(s);
@@ -514,7 +514,7 @@ export class UnitLayer {
     const list = this.clustered(cam.zoom);
     const g = this.g;
     // značky bitev
-    this.battleHits = [];
+    if (!more) this.battleHits = [];
     for (const b of this.battles) {
       const bx = g.cx[b.p], by = g.cy[b.p];
       if (bx < vx0 - mx || bx > vx1 + mx || by < vy0 - my || by > vy1 + my) continue;
@@ -529,7 +529,7 @@ export class UnitLayer {
     // vzadu severní, vpředu jižní žetony; vybrané a pod kurzorem nakonec
     const rank = (c) => (this.isHover(c) ? 2e6 : this.selCount(c) ? 1e6 : 0) + c.y;
     shown.sort((a, b) => rank(a) - rank(b));
-    this.hits.length = 0;
+    if (!more) this.hits.length = 0;
     for (const c of shown) {
       const [sx, sy] = worldToScreen(cam, c.x, c.y);
       const sc = this.selCount(c);

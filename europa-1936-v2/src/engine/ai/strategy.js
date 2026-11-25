@@ -113,7 +113,7 @@ export function theatersOf(state, o, foes) {
   // blízkost hlavního města: hrozba pro hlavní město je přednější
   const cap = w.owners[o].cap;
   for (const t of theaters) {
-    const dk = Math.hypot(t.x - g.cx[cap], t.y - g.cy[cap]) * g.kmPerPx;
+    const dk = g.kmXY(t.x, t.y, g.cx[cap], g.cy[cap]);
     t.prio = t.enemy * 1.0 + t.vp * AI.THEATER_VP + (dk < AI.CAPITAL_KM ? AI.CAPITAL_BONUS : 0);
   }
   return theaters.sort((a, b) => b.prio - a.prio || a.label - b.label);
@@ -179,7 +179,7 @@ export function rearOf(state, o, posts, a, view, count, used = null) {
     }
     ring = next;
   }
-  const dist = (p) => Math.hypot(g.cx[p] - a.x, g.cy[p] - a.y);
+  const dist = (p) => g.kmXY(g.cx[p], g.cy[p], a.x, a.y);
   return out.sort((p, q) => dist(p) - dist(q) || p - q).slice(0, count).sort((p, q) => p - q);
 }
 
@@ -227,7 +227,7 @@ export function aiPeaceDeploy(state, o, armies, avoid = null) {
   for (const p of posts) { const h = holders.get(p); if (h >= 0) area[h].push(p); else rest.push(p); }
   for (const p of rest) {
     let best = 0, bd = Infinity;
-    armies.forEach((a, i) => { const dd = Math.hypot(g.cx[p] - a.x, g.cy[p] - a.y) + area[i].length * AI.PEACE_SPREAD; if (dd < bd) { bd = dd; best = i; } });
+    armies.forEach((a, i) => { const dd = g.kmXY(g.cx[p], g.cy[p], a.x, a.y) / 2.5 + area[i].length * AI.PEACE_SPREAD; if (dd < bd) { bd = dd; best = i; } });
     area[best].push(p);
   }
   armies.forEach((a, i) => {
@@ -320,7 +320,7 @@ export function decideStrategy(state, o) {
 
   // ---- přidělení armád divadlům ----
   const level = state.ai?.level ?? 2;
-  const dist = (a, t) => Math.hypot(a.x - t.x, a.y - t.y) * g.kmPerPx;
+  const dist = (a, t) => g.kmXY(a.x, a.y, t.x, t.y);
   const sticky = new Map();   // armáda → divadlo, na jehož postech už stojí (stabilita přidělení)
   for (const a of armies) {
     const cur = mil.armies[a.id].plan;
@@ -345,7 +345,7 @@ export function decideStrategy(state, o) {
   const zones = landZones(state, o);
   for (const a of armies) a.zone = zones[mil.divs[a.ds[0]].p];
   for (const t of theaters) t.zone = t.posts.length ? zones[t.posts[0]] : 0;
-  const { got, reserve } = allocateArmies(theaters, armies, { dist: (a, t) => (a.zone && t.zone && a.zone !== t.zone ? AI.UNREACH : Math.hypot(a.x - t.x, a.y - t.y) * g.kmPerPx), sticky, engaged, ratioNeed });
+  const { got, reserve } = allocateArmies(theaters, armies, { dist: (a, t) => (a.zone && t.zone && a.zone !== t.zone ? AI.UNREACH : g.kmXY(a.x, a.y, t.x, t.y)), sticky, engaged, ratioNeed });
   // M92: záměrná chyba z historické strategie – část armád zůstane v záloze v týlu (nejdřív ty z méně důležitých divadel, z každého divadla nejvzdálenější)
   const hold = Math.max(holdBackOf(state, o), persona.reserve), held = new Set();   // F3: styl velení „Obrana do hloubky“ drží zálohy
   if (hold > 0) {
@@ -505,7 +505,7 @@ export function aiStrategy(state, o) {
         const near = suppliedNear(state, o, a, view, Math.max(AI.SLICE_MIN, a.n));
         if (near.length) { state = plan(state, id, { k: 'area', area: near.sort((p, q) => p - q) }); continue; }
       }
-      const dist = (p) => Math.hypot(g.cx[p] - a.x, g.cy[p] - a.y);
+      const dist = (p) => g.kmXY(g.cx[p], g.cy[p], a.x, a.y);
       const fed = t.posts.filter(view.post);   // posty bez zásob armádu zbytečně vyhladoví – obsadí se, jen když zásobované chybí
       const sorted = (fed.length >= AI.SLICE_MIN ? fed : t.posts).slice().sort((p, q) => dist(p) - dist(q) || p - q);
       const slice = sorted.slice(0, Math.max(AI.SLICE_MIN, a.n * AI.SLICE_PER_DIV)).sort((p, q) => p - q);
@@ -517,7 +517,7 @@ export function aiStrategy(state, o) {
       }
       const score = (tp) => {
         const cap = w.owners[state.ctrl[tp]].cap;
-        const s0 = Math.hypot(g.cx[tp] - g.cx[cap], g.cy[tp] - g.cy[cap]) * g.kmPerPx - AI.TARGET_VP * w.vp[tp] + AI.TARGET_FORT * fortOf(state, tp);   // M88: pevnosti se obcházejí
+        const s0 = g.distKm(tp, cap) - AI.TARGET_VP * w.vp[tp] + AI.TARGET_FORT * fortOf(state, tp);   // M88: pevnosti se obcházejí
         return d.op === 'weak' ? s0 + AI.OP_WEAK_KM * defOf(tp) : s0;   // F3: styl „slabiny“ – slabě hájená místa mají přednost
       };
       let to = [], local = false;

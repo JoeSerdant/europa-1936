@@ -2,7 +2,7 @@
 import { loadGeoJSON, polygonsOf } from './grid.js';
 import { growRegions, components, noiseCost, lineCells } from './raster.js';
 import { mulberry32 } from '../lib/geom.js';
-import { PROV_BASE_KM2, PROV_MAX_PER_STATE, OWNER_SPARSE } from './config.js';
+import { PROV_BASE_KM2, PROV_MAX_PER_STATE, sparseAt } from './config.js';
 
 export function buildRivers(W, log) {
   const { grid, land } = W;
@@ -97,14 +97,23 @@ export function buildProvinces(W, log) {
   for (let l = 1; l < states.length; l++) {
     const s = states[l];
     if (!s.areaKm2) continue;
-    const sparse = (OWNER_SPARSE[s.owner] ?? 1) * s.sp;
+    const [lon, lat] = grid.toLonLat(s.seedIdx % GW, (s.seedIdx / GW) | 0);
+    const sparse = sparseAt(s.owner, lon, lat) * s.sp;
     nState[l] = Math.max(1, Math.min(PROV_MAX_PER_STATE, Math.round(s.areaKm2 / (PROV_BASE_KM2 * sparse))));
   }
 
   const seeds = [];
   const provs = [{ state: 0 }];
+  // W1: malé odtržené kusy státu (ostrůvky u pobřeží, souostroví) nedostanou vlastní provincii – připojí se k nejbližší provincii státu
+  const mainComp = new Int32Array(states.length).fill(-1);
+  list.forEach((c, k) => { const l = c.key; if (mainComp[l] < 0 || compKm2[k] > compKm2[mainComp[l]]) mainComp[l] = k; });
+  const attach = [];
   list.forEach((c, k) => {
     const l = c.key;
+    if (k !== mainComp[l] && nState[l]) {
+      const target = stateKm2[l] / nState[l];
+      if (compKm2[k] < Math.min(0.35 * target, 8000)) { attach.push(k); return; }
+    }
     const total = stateKm2[l];
     let n = Math.max(1, Math.round(nState[l] * (compKm2[k] / total)));
     // velký ostrov/komponenta dostane aspoň tolik, kolik mu podle plochy patří
@@ -135,7 +144,7 @@ export function buildProvinces(W, log) {
       seeds.push({ idx, label });
     }
   });
-  if (provs.length > 6000) throw new Error('moc provincií: ' + provs.length);
+  if (provs.length > 20000) throw new Error('moc provincií: ' + provs.length);
   log(`provincií: ${provs.length - 1} (cíl ${(20.6e6 / 6000).toFixed(0)}+)`);
 
   // růst provincií uvnitř států; hranice zvlněné šumem a mírně přitahované řekami
@@ -144,6 +153,22 @@ export function buildProvinces(W, log) {
   if (river) for (let i = 0; i < N; i++) if (river[i]) rv[i] = 1.2;
   const cost = noiseCost(GW, GH, { scale: Number(process.env.SCALE_P || 20), seed: 23, lo: Number(process.env.LO_P || 0.5), hi: Number(process.env.HI_P || 2.0), contrast: Number(process.env.CON_P || 3), oct: 3, extra: rv });
   const { lab } = growRegions(GW, GH, stateOf, seeds, cost);
+  // připojené kusy: nejbližší semínko provincie téhož státu (podle těžiště kusu)
+  {
+    const byState = new Map();
+    for (const sd of seeds) { const st = provs[sd.label].state; if (!byState.has(st)) byState.set(st, []); byState.get(st).push(sd); }
+    for (const k of attach) {
+      const c = list[k], cand = byState.get(c.key) || [];
+      let best = 0, bd = Infinity;
+      for (const sd of cand) {
+        let dx = Math.abs(sd.idx % GW - c.cx); dx = Math.min(dx, GW - dx);
+        const d = dx * dx + (((sd.idx / GW) | 0) - c.cy) ** 2;
+        if (d < bd) { bd = d; best = sd.label; }
+      }
+      if (best) for (const i of members[k]) lab[i] = best;
+    }
+    log(`připojené ostrůvky a kusy států: ${attach.length}`);
+  }
   // nepokryté (nemělo by být) → nejbližší provincie téhož státu
   let miss = 0;
   for (let i = 0; i < N; i++) if (stateOf[i] && !lab[i]) miss++;

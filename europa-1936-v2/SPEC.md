@@ -1,6 +1,6 @@
-# Evropa 1936 – 2. generace: specifikace
+# Dark Times (dříve Evropa 1936 – 2. generace): specifikace
 
-Strategie v duchu **Hearts of Iron IV** (React + Canvas 2D): Evropa, Středomoří, severní Afrika a Blízký východ v lednu 1936.
+Strategie v duchu **Hearts of Iron IV** (React + Canvas 2D): **celý svět** v lednu 1936 (W1; do verze 0.101 jen Evropa, Středomoří, severní Afrika a Blízký východ).
 Je to **nová hra od základů** – vlastní kód, vlastní mapa, vlastní texty i grafika; staré projekty (`europa-1936`, M0–M16) zůstávají nedotčené.
 Cíl: mechaniky věrné vzoru zhruba z 90 %, deset procent je záměrné zjednodušení (viz „Odchylky od vzoru“).
 
@@ -68,8 +68,11 @@ test/            world, game, map, ui, tools, army-* (commands, combat, setup, s
 
 ## 3. Generátor světa
 
-Surový rastr 2,5 km/pixel → sdílené hladké vektorové oblouky. Souřadnice světa jsou v **pixelech mapového listu** (2728 × 2048 px = 6820 × 5120 km),
-kuželová konformní projekce (centrální poledník 16° V, rovnoběžky 38° a 62° S). Co leží východněji než 63,6° V, je „prázdná pevnina“ (štítek 0).
+Surový rastr → sdílené hladké vektorové oblouky. Souřadnice světa jsou v **pixelech mapového listu**. **W1 (celý svět):** Mercatorova projekce
+(konformní), mapový list 10 292 × 5 632 px pokrývá celý obvod Země od 56° j. š. do 78° s. š.; pixel má v 50° s. š. 2,5 km (na rovníku 3,89 km,
+obecně `km · cos φ`). Mapa se **vodorovně opakuje**: šev vede na poledníku −169,3° (Beringovo moře a Pacifik, jen oceán; ostrov sv. Vavřince se
+vypouští), sloupec W−1 sousedí se sloupcem 0 (sousednosti přes šev přidává `buildAdjacency`). Do verze 0.101 byla mapa jen Evropa v kuželové
+konformní projekci (2728 × 2048 px).
 
 Kroky (`tools/generateWorld.js`, každý je modul v `tools/world/`):
 
@@ -1203,6 +1206,34 @@ Tvar stavu: divize může mít `rd: 1` (strategický přesun), plán fronty `fb:
 - **Rozhraní**: stavby Námořní základna, Zásobovací uzel a Pobřežní pevnost v panelu Stavby; karta státu ukazuje základnu a uzel tečkami, pevnost
   provincie i pobřežní pevnost; moře ukazuje miny podle zemí; flotila ukazuje poškození; mise flotil a letectva jako ikony.
 
+## 4zzzzzzz. Celý svět – Dark Times (W1, `GAME_VERSION = 52`)
+
+Hra se jmenuje **Dark Times** a hraje se na mapě **celého světa** (Amerika, Afrika, Asie, Austrálie a Oceánie), zatím s výchozími národními cíli.
+- **Formát světa** (`world.json`, `v = 1`): `frame` má navíc `proj: 'merc'`, `lon0` (poledník středu mapy), `y0` (horní okraj v km projekce)
+  a `wrap: 1` (mapa dokola); `km` je km na pixel na rovníku. Stát může mít `c: 1` = kolonie (stát evropské koloniální mocnosti mimo původní rámec
+  mapy nebo výslovně označený – Korea a Tchaj-wan Japonska, Papua Austrálie, Samoa Nového Zélandu).
+- **Vzdálenosti** v enginu jen přes `w.kmBetween(ax, ay, bx, by)` (`worldCore.js`): vodorovně nejkratší cestou přes šev (`w.wrapDx`) a s měřítkem
+  podle zeměpisné šířky; armáda čte `geo().distKm` / `geo().kmXY`, loďstvo `seaKm`, letectvo `stateKm` – nikdy `Math.hypot(...) * frame.km`.
+- **Generátor**: 1130 států (`data/statesWorld.js` – kolonie `EXTRA` a nové země `NEW`), 5084 provincií (řídkost mimo Evropu `sparseAt`,
+  malé kusy států se připojí k nejbližší provincii státu), 1577 moří (na oceánu až 1000 km, `SEA_R2_KM`), 313 strategických regionů
+  (`landRegionsWorld.js`, podnebí navíc `tropical`, `monsoon` a jižní polokoule s příponou `_s`), 140 mořských oblastí, ~1400 měst
+  (`citiesWorld.js`), přístavy světa (`PORT_BOOST`), Panamský průplav, lesy světa; vnitrozemská voda oddělená od oceánu je jezero; moře bez
+  mořského souseda se spojí s nejbližším mořem a přístav u něj nevznikne; strategické ostrůvky (Midway, Wake, Saipan, Iwodžima…) jsou na mapě
+  vždy (`FORCE_ISLANDS`). Mimo Evropu jsou provincie řidší (jako v HOI4) a železnice hustá jen v průmyslových zemích (`railAt`).
+- **41 nových zemí** (`data/world/countries.js`): USA, Kanada, Mexiko, Střední a Jižní Amerika, Etiopie, Libérie, Jihoafrická unie, Japonsko,
+  Mandžukuo, Čína, čínští komunisté, Sin-ťiang, Tibet, Mongolsko, Tuva, Siam, Afghánistán, Indie, Nepál, Jemen, Filipíny, Austrálie, Nový Zéland
+  – s průmyslem, armádou, loďstvem (v měřítku hry), vztahy, kulturami jmen velitelů a výchozím stromem cílů (`WORLD_TREES` + `small` + cesty).
+- **Počáteční loutky** `START_SUBJECTS` (Mandžukuo – Japonsko, Mongolsko a Tuva – SSSR, Filipíny – USA, Indie – Británie) s pevnou autonomií
+  (historický stav: neroste, dokud vládne týž pán); dominia v bloku **Britské společenství**.
+- **Kolonie** (`c = 1`): lidská síla jen z 10 % jejich obyvatel (`w.manPop`, `countryStats().manPop`), továrny se do nich na startu skoro
+  nedávají a startovní divize stojí jen na jádrovém území.
+- **Počasí**: tropy bez mrazu, monzun s blátem v červnu–září, jižní polokoule má roční období obráceně.
+- **Mapa dokola v rozhraní**: kamera drží x v jedné šířce mapy (`clampCamera`), renderer kreslí každou kopii světa ve výřezu (`wrapCopies`),
+  výběr myší i minimapa počítají přes šev; den a noc v Mercatorově projekci (`ui/map/sun.js`, stejná čísla jako generátor).
+- **Výkon**: mimoevropské země bez války hrají plné kolo AI jen každý třetí den (`AI.QUIET_DAYS`); herní den v roce 1941 asi 165 ms (dřív 59 ms).
+- **Historie Evropy** se nezměnila (koleje ze sekcí M92–F4b platí dál); ověřeno pozorovatelskou simulací se třemi semínky.
+- Zatím chybí: historie Asie a Pacifiku (čínsko-japonská válka, Pearl Harbor), skutečné USA místo zámořské pomoci, vlastní stromy cílů nových zemí.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1412,6 +1443,8 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **F4a** | **Funkce HOI4 – vlna 1**: dobrovolníci a expediční sbory, vojenský atašé, licenční výroba, volby v demokraciích, vrchní velení (náčelníci štábů) | **hotovo** |
 | **F4b** | **Historie natvrdo a rozhraní jako v HOI4**: vynucené konce válek (Španělsko „fronty ztuhly“, pády zemí 1939–1941), horní lišta s cílem a výzkumem, přehled vpravo, ikony režimů mapy, karta státu se sloty | **hotovo** |
 | **F4c** | **Mechaniky HOI4**: přesun po železnici, ústupová linie, poškození a opravy lodí s námořními základnami, miny, stíhání a úder na lodě, pobřežní pevnosti, zásobovací uzly | **hotovo** |
-| později | špionáž, vyvolání zákonů, loutkové státy a mírová konference, scénáře | |
+| **F4e–F4g** | **Okna jako v HOI4**: výzkum a politika, výroba a stavby, nábor a návrhář | ✅ |
+| **W1** | **Dark Times – celý svět**: Mercatorova mapa dokola, 41 nových zemí, kolonie, výchozí cíle, počáteční loutky, tropy a jižní polokoule | ✅ |
+| později | historie Asie a Pacifiku, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

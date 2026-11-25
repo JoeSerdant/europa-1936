@@ -1,3 +1,4 @@
+import { PAIR_REL_WORLD, FACTIONS_WORLD, START_SUBJECTS } from '../world/countries.js';
 // Počáteční diplomacie (M23): vztahy mezi zeměmi a bloky v lednu 1936. Vlastní odhady, zjednodušené.
 //  ideologie: základ vztahu dvou zemí podle ideologie (symetrické)
 export const IDEO_REL = {
@@ -21,6 +22,7 @@ export const PAIR_REL = [
   ['NSP', 'GER', 50], ['NSP', 'ITA', 50], ['NSP', 'SOV', -50], ['NSP', 'ENG', -10], ['NSP', 'FRA', -20], ['NSP', 'POR', 30], ['SPR', 'SOV', 25], ['SPR', 'GER', -40], ['SPR', 'ITA', -40],
   ['SLO', 'GER', 40], ['SLO', 'CZE', -30], ['SLO', 'POL', -20], ['CRO', 'GER', 30], ['CRO', 'ITA', 30], ['CRO', 'YUG', -40], ['VIC', 'GER', -10], ['VIC', 'ENG', -30],
   ['SWE', 'NOR', 40], ['SWE', 'DEN', 40], ['SWE', 'FIN', 30], ['NOR', 'DEN', 40],
+  ...PAIR_REL_WORLD,   // W1
   ['SPR', 'POR', -10], ['SAU', 'IRQ', 10], ['EGY', 'ENG', 10], ['IRQ', 'ENG', 20], ['PER', 'SOV', -10], ['PER', 'ENG', -10], ['PER', 'TUR', 20], ['PER', 'IRQ', 10], ['TUR', 'IRQ', 10],
 ];
 
@@ -30,4 +32,7 @@ export const START_FACTIONS = [
   { nm: 'Francouzský systém', ldr: 'FRA', mem: ['FRA', 'POL'] },   // Belgie je od roku 1936 neutrální (M88): do bloku ji přivede až záruka a útok
   { nm: 'Balkánská dohoda', ldr: 'TUR', mem: ['TUR', 'GRE'] },
   { nm: 'Pobaltská dohoda', ldr: 'LAT', mem: ['LAT', 'EST', 'LIT'] },
+  ...FACTIONS_WORLD,   // W1
 ];
+
+export { START_SUBJECTS };

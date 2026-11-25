@@ -1,29 +1,30 @@
 // Den a noc na mapě (M91): převod pixelů světa na zeměpisné souřadnice a výška Slunce podle herního času. Čisté funkce bez DOM (testují se v Node).
-// Svět je v kuželové konformní projekci (střední poledník 16° v. d., nedeformované rovnoběžky 38° a 62°, poloměr Země 6371 km, 2,5 km na pixel);
-// posun počátku odpovídá rámci generátoru (`tools/world/grid.js`) – test ho ověřuje proti d3-geo.
+// W1: svět je v Mercatorově projekci dokola (šev na poledníku −169,3°, v 50° s. š. 2,5 km na pixel, horní okraj 78° s. š.) – stejná čísla
+// jako `PROJECTION` v generátoru (`tools/world/config.js`, `grid.js`); test je ověřuje proti d3-geo.
 
 const RAD = Math.PI / 180;
-export const PROJ = { cm: 16, p1: 38, p2: 62, R: 6371, km: 2.5, x0: -2313.9501740663636, y0: -8613.754303785294 };
+const R = 6371, SEAM = -169.3, LAT_N = 78, REF_LAT = 50, REF_KM = 2.5;
+const W = Math.round((2 * Math.PI * R * Math.cos(REF_LAT * RAD)) / REF_KM);
+const KM = (2 * Math.PI * R) / W;
+const LON0 = SEAM + 180;
+const Y0 = -R * Math.log(Math.tan(Math.PI / 4 + (LAT_N * RAD) / 2));
+export const PROJ = { lon0: LON0, R, km: KM, y0: Y0, w: W };
 
-const tany = (y) => Math.tan((Math.PI / 2 + y) / 2);
-const N = Math.log(Math.cos(PROJ.p1 * RAD) / Math.cos(PROJ.p2 * RAD)) / Math.log(tany(PROJ.p2 * RAD) / tany(PROJ.p1 * RAD));
-const F = (Math.cos(PROJ.p1 * RAD) * Math.pow(tany(PROJ.p1 * RAD), N)) / N;
-
-/** Zeměpisná délka a šířka (stupně) → pixel světa [x, y]. */
+/** Zeměpisná délka a šířka (stupně) → pixel světa [x, y] (x v rozsahu 0..W). */
 export function pxOf(lon, lat) {
-  const l = (lon - PROJ.cm) * RAD, f = Math.max(-89.9, Math.min(89.9, lat)) * RAD;
-  const r = F / Math.pow(tany(f), N);
-  const x = r * Math.sin(N * l), y = F - r * Math.cos(N * l);
-  return [(x * PROJ.R - PROJ.x0) / PROJ.km, (-y * PROJ.R - PROJ.y0) / PROJ.km];
+  let l = (lon - LON0) % 360;
+  if (l < -180) l += 360; else if (l >= 180) l -= 360;
+  const f = Math.max(-85, Math.min(85, lat)) * RAD;
+  const x = R * l * RAD, y = -R * Math.log(Math.tan(Math.PI / 4 + f / 2));
+  return [(x + Math.PI * R) / KM, (y - Y0) / KM];
 }
 
 /** Pixel světa → [zeměpisná délka, šířka] ve stupních. */
 export function lonLatOf(px, py) {
-  const x = (px * PROJ.km + PROJ.x0) / PROJ.R, y = -(py * PROJ.km + PROJ.y0) / PROJ.R;
-  const fy = F - y, r = Math.sign(N) * Math.sqrt(x * x + fy * fy);
-  let l = Math.atan2(x, Math.abs(fy)) * Math.sign(fy);
-  if (fy * N < 0) l -= Math.PI * Math.sign(x) * Math.sign(fy);
-  return [l / N / RAD + PROJ.cm, (2 * Math.atan(Math.pow(F / r, 1 / N)) - Math.PI / 2) / RAD];
+  const x = px * KM - Math.PI * R, y = py * KM + Y0;
+  let lon = x / R / RAD + LON0;
+  if (lon > 180) lon -= 360; else if (lon < -180) lon += 360;
+  return [lon, (2 * Math.atan(Math.exp(-y / R)) - Math.PI / 2) / RAD];
 }
 
 /** Herní čas (tick = hodina od 1. 1. 1936 0:00 středoevropského času) → { day: den v roce od nuly, utc: hodina UTC 0–24 }. */

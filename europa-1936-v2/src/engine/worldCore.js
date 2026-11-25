@@ -7,6 +7,7 @@ export const ADJ = { LAND: 0, RIVER: 1, STRAIT: 2 };
 export const CLIMATE_CS = {
   oceanic: 'Oceánské', temperate: 'Mírné', continental: 'Kontinentální', subarctic: 'Subarktické', arctic: 'Arktické',
   mediterranean: 'Středomořské', steppe: 'Stepní', semiarid: 'Polosuché', desert: 'Pouštní', alpine: 'Horské',
+  tropical: 'Tropické', monsoon: 'Monzunové',
 };
 
 // sousednosti v „komprimovaném“ tvaru: start[i]..start[i+1] jsou záznamy souseda i
@@ -37,7 +38,7 @@ export function buildWorld(raw) {
 
   // ---- vlastnosti pevninských provincií ----
   const provOwner0 = new Uint8Array(L + 1), provState = new Uint16Array(L + 1), terrain = new Uint8Array(L + 1);
-  const vp = new Uint8Array(L + 1), pop = new Int32Array(L + 1), area = new Int32Array(L + 1), region = new Uint8Array(L + 1);
+  const vp = new Uint8Array(L + 1), pop = new Int32Array(L + 1), area = new Int32Array(L + 1), region = new Uint16Array(L + 1);
   const portSea = new Uint16Array(L + 1), portLevel = new Uint8Array(L + 1);
   for (let p = 1; p <= L; p++) {
     const o = raw.land[p];
@@ -59,13 +60,26 @@ export function buildWorld(raw) {
   const states = raw.states;
   const stateOwner0 = new Uint8Array(states.length);
   states.forEach((s, i) => { if (s) stateOwner0[i] = s.o; });
+  // W1: váha obyvatel provincie pro lidskou sílu – kolonie (stát s c = 1) dávají jen zlomek (jako nejádrová území v HOI4)
+  const COLONY_MAN = 0.1;
+  const manPop = new Float32Array(L + 1);
+  for (let p = 1; p <= L; p++) manPop[p] = pop[p] * (states[provState[p]] && states[provState[p]].c ? COLONY_MAN : 1);
+
+  // ---- W1: vzdálenosti na mapě světa (Mercator dokola): vodorovně přes šev nejkratší cestou, měřítko podle zeměpisné šířky ----
+  const F = raw.frame, merc = F.proj === 'merc', FW = F.w, R_EARTH = 6371;
+  const wrapDx = (dx) => (!F.wrap ? dx : dx > FW / 2 ? dx - FW : dx < -FW / 2 ? dx + FW : dx);
+  const latOfY = (y) => (merc ? 2 * Math.atan(Math.exp(-(y * F.km + F.y0) / R_EARTH)) - Math.PI / 2 : 0);
+  const cosRow = merc ? Float32Array.from({ length: F.h + 2 }, (_, y) => Math.cos(latOfY(y))) : null;
+  const cosY = (y) => (merc ? cosRow[Math.max(0, Math.min(F.h + 1, Math.round(y)))] : 1);
+  /** Vzdálenost dvou bodů mapy v km (přibližně: střední měřítko obou šířek). */
+  const kmBetween = (ax, ay, bx, by) => Math.hypot(wrapDx(bx - ax), by - ay) * F.km * (merc ? (cosY(ay) + cosY(by)) / 2 : 1);
 
   const world = {
-    raw, L, S, K, nLabel,
+    raw, L, S, K, nLabel, wrapDx, kmBetween, latOfY,
     owners, ownerIdx, tags: owners.map((o) => (o ? o.tag : '')),
     states, stateOwner0, regions: raw.regions, seaRegions: raw.seaRegions,
     land: raw.land, sea: raw.sea,
-    provOwner0, provState, terrain, vp, pop, area, region, portSea, portLevel,
+    provOwner0, provState, terrain, vp, pop, manPop, area, region, portSea, portLevel,
     landAdj, coast, seaAdj, seaCoast, rails,
     frame: raw.frame,
     kind(label) { return label === 0 ? 'void' : label <= L ? 'land' : label <= L + S ? 'sea' : 'lake'; },

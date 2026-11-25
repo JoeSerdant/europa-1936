@@ -7,7 +7,7 @@
 //          b obálka [x0,y0,x1,y1], c bod pro popisek [x,y], r region, k města [[jméno, tis., x, y]], j sousedé [[id, druh, délka km]] (druh 0 souš, 1 řeka, 2 průliv),
 //          q pobřeží [[moře, délka km]], h přístav [moře, úroveň]
 //  sea:    pole podle id moře (1..S; štítek = L + id): n jméno, r název oblasti, a plocha, b, c, j sousední moře [[id, délka]], q pevnina [[provincie, délka]]
-//  states: n jméno, id, o vlastník, p obyvatelé, a plocha, v provincie, cap hlavní provincie
+//  states: n jméno, id, o vlastník, p obyvatelé, a plocha, v provincie, cap hlavní provincie, c = 1 kolonie (W1)
 //  rails:  [[provincie A, provincie B, úroveň 1–5]]
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,6 +38,12 @@ export function exportWorld(W, file, log) {
   const ringOut = Array.from({ length: kinds.length }, () => []);
   for (const [lbl, rs] of rings) if (lbl >= 0) ringOut[lbl] = rs;        // 0 = prázdná pevnina (mimo hru)
 
+  // ---- W1: státy bez provincií (ostrůvek se ztratil při slučování drobných provincií) se vynechají; čísla států se přečíslují ----
+  const stMap = new Int32Array(W.states.length);
+  { let n = 0; W.states.forEach((st, l) => { if (l && st.provs && st.provs.length) stMap[l] = ++n; }); }
+  const dropped = W.states.filter((st, l) => l && !stMap[l]).map((st) => `${st.owner}/${st.name}`);
+  if (dropped.length) log(`  státy bez provincií (vynechány): ${dropped.join(', ')}`);
+
   // ---- provincie ----
   const bboxOf = (l) => [info.bb[l * 4], info.bb[l * 4 + 1], info.bb[l * 4 + 2] + 1, info.bb[l * 4 + 3] + 1];
   const ptOf = (l) => [info.bestI[l] % GW, (info.bestI[l] / GW) | 0];
@@ -47,7 +53,7 @@ export function exportWorld(W, file, log) {
     const j = [...W.landAdj[p]].sort((a, b) => a[0] - b[0]).map(([q, r]) => [q, r.kind, r.len]);
     const q = [...W.coast[p]].sort((a, b) => b[1] - a[1]).map(([s, len]) => [L + s, len]);
     const o = {
-      n: W.provName[p], s: W.provs[p].state, o: W.provOwner[p], t, v: W.provVP[p], p: Math.round(W.provPop[p]), a: Math.round(info.area[p]),
+      n: W.provName[p], s: stMap[W.provs[p].state], o: W.provOwner[p], t, v: W.provVP[p], p: Math.round(W.provPop[p]), a: Math.round(info.area[p]),
       b: bboxOf(p), c: ptOf(p), r: W.provRegion[p],
       k: W.provCities[p].slice(0, 3).map((c) => [c.name, c.pop, c.x, c.y]),
       j, q,
@@ -74,15 +80,18 @@ export function exportWorld(W, file, log) {
   // ---- státy, regiony, vlastníci ----
   const states = [null];
   W.states.forEach((s, l) => {
-    if (!l) return;
-    states.push({ id: s.id, n: s.name, o: W.ownerTags.indexOf(s.owner), p: s.pop || 0, a: s.areaKm2 || 0, v: s.provs || [], cap: s.capital || 0 });
+    if (!l || !stMap[l]) return;
+    const row = { id: s.id, n: s.name, o: W.ownerTags.indexOf(s.owner), p: s.pop || 0, a: s.areaKm2 || 0, v: s.provs || [], cap: s.capital || 0 };
+    if (s.col) row.c = 1;   // W1: kolonie (nejádrové území)
+    states.push(row);
   });
   const owners = [null];
   for (const [tag, v] of Object.entries(OWNERS)) owners.push({ tag, name: v[0], color: v[1], cap: W.capitalProv[tag] || 0 });
 
   const world = {
     v: WORLD_FORMAT,
-    frame: { w: grid.W, h: grid.H, km: grid.res },
+    // W1: Mercator dokola – km = km na pixel na rovníku, y0 = horní okraj (km v projekci), lon0 = poledník středu mapy, wrap = mapa se opakuje vodorovně
+    frame: { w: grid.W, h: grid.H, km: grid.res, proj: 'merc', lon0: grid.seam + 180, y0: grid.y0, wrap: 1 },
     counts: { land: L, sea: S, lake: K },
     terrains: TERRAIN_NAMES,
     owners, states,

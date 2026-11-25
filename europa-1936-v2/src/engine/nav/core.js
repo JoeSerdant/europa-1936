@@ -27,7 +27,7 @@ export function seaGraph(w = getWorld()) {
 /** Vzdálenost středů dvou mořských oblastí v km. */
 export function seaKm(w, a, b) {
   const ca = w.sea[a - w.L].c, cb = w.sea[b - w.L].c;
-  return Math.hypot(ca[0] - cb[0], ca[1] - cb[1]) * w.frame.km;
+  return w.kmBetween(ca[0], ca[1], cb[0], cb[1]);
 }
 
 export const isSeaLabel = (l) => { const w = getWorld(); return Number.isInteger(l) && l > w.L && l <= w.L + w.S; };
@@ -163,7 +163,7 @@ export function homeSea(state, o) {
   let best = null, bk = -Infinity;
   for (const p of portsOf(state, o)) {
     const c = w.land[p].c;
-    const k = w.portLevel[p] * 1e6 - Math.hypot(c[0] - cc[0], c[1] - cc[1]);
+    const k = w.portLevel[p] * 1e6 - w.kmBetween(c[0], c[1], cc[0], cc[1]);
     if (k > bk) { bk = k; best = p; }
   }
   return best ? { prov: best, sea: w.portSea[best] } : null;

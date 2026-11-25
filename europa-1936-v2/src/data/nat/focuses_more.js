@@ -327,3 +327,35 @@ export const EXTRA = {
     F('spr_unity', 'Národní smíření', 2, 3, 45, ['spr_mine', 'spr_arm'], [stab(0.08), ws(0.05)], { ai: 8 }),
   ],
 };
+
+// W1: výchozí strom pro země mimo Evropu (zatím obecný, se jménem země v cílech)
+const WORLD_BASE = {
+  USA: ['Nový úděl', 'Arzenál demokracie'], CAN: ['Kanadská železnice', 'Kanadský armádní sbor'], MEX: ['Znárodnění ropy', 'Revoluční armáda'],
+  GUA: ['Kávové plantáže', 'Národní garda'], HON: ['Banánové přístavy', 'Národní garda'], ELS: ['Kávový vývoz', 'Národní garda'],
+  NIC: ['Kanál přes jezera', 'Národní garda'], COS: ['Kávová republika', 'Civilní stráž'], PAN: ['Průplavové hospodářství', 'Národní policie'],
+  CUB: ['Cukrovary', 'Konstitucionální armáda'], HAI: ['Přístav Port-au-Prince', 'Haitská garda'], DOM: ['Cukerní hospodářství', 'Národní armáda'],
+  COL: ['Káva a ropa', 'Andská armáda'], VEN: ['Ropná pole Maracaiba', 'Bolívarovská armáda'], ECU: ['Kakaové plantáže', 'Obrana Amazonie'],
+  PRU: ['Doly v Andách', 'Armáda Inků'], BOL: ['Cínové doly', 'Obnova po Chacu'], CHL: ['Ledek a měď', 'Chilská armáda'],
+  ARG: ['Pampy a obilí', 'Armáda La Platy'], URG: ['Hovězí vývoz', 'Národní armáda'], PAR: ['Vítězové z Chaca', 'Veteráni války'],
+  BRA: ['Káva a guma', 'Brazilská armáda'], ETH: ['Císařská silnice', 'Obrana císařství'], LBR: ['Kaučukové plantáže', 'Pohraniční síly'],
+  SAF: ['Zlaté doly', 'Obranné síly Unie'], JAP: ['Hospodářství Východní Asie', 'Císařská armáda'], MAN: ['Mandžuské doly', 'Armáda Mandžukua'],
+  CHI: ['Nanjingské desetiletí', 'Národní revoluční armáda'], PRC: ['Pohraniční oblast', 'Rudá armáda'], SIK: ['Hedvábná stezka', 'Provinční armáda'],
+  TIB: ['Klášterní hospodářství', 'Tibetská armáda'], MON: ['Stepní kolektivy', 'Mongolská jízda'], TAN: ['Pastevecké družstvo', 'Tuvinská jízda'],
+  SIA: ['Modernizace Siamu', 'Královská armáda'], AFG: ['Kábulské dílny', 'Kmenové milice'], RAJ: ['Indický průmysl', 'Indická armáda'],
+  NEP: ['Himálajské průsmyky', 'Gurkhské pluky'], YEM: ['Imámovy přístavy', 'Kmenová vojska'], PHI: ['Společenství Filipín', 'Filipínská armáda'],
+  AST: ['Australský průmysl', 'Australské císařské síly'], NZL: ['Vlnařství a mléko', 'Novozélandské síly'],
+};
+function worldTree(tag, [eco, army]) {
+  const p = tag.toLowerCase();
+  return tree([
+    [`${p}_eco`, eco, 45, [], [civ(), pp(20)], { info: 'Hospodářský základ země.' }],
+    [`${p}_rail`, 'Silnice a železnice', 35, [`${p}_eco`], [infra(), pp(15)]],
+    [`${p}_army`, army, 35, [`${p}_eco`], [man(0.003), stock('pusky', 800)]],
+    [`${p}_sci`, 'Vysoké školy', 35, [`${p}_rail`], [slot()], { mod: { research: 0.03 } }],
+    [`${p}_arm`, 'Zbrojní dílny', 45, [`${p}_army`], [mil()]],
+    [`${p}_trade`, 'Zahraniční obchod', 35, [`${p}_rail`], [law('trd', 'free'), civ()]],
+    [`${p}_unity`, 'Národní jednota', 35, [`${p}_arm`], [stab(0.05), ws(0.03)]],
+    [`${p}_staff`, 'Generální štáb', 35, [`${p}_unity`], [xp('land', 15), pp(20)]],
+  ]);
+}
+export const WORLD_TREES = Object.fromEntries(Object.entries(WORLD_BASE).map(([t, x]) => [t, worldTree(t, x)]));

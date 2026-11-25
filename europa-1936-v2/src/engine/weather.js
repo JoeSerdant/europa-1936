@@ -7,8 +7,11 @@ import { dateOfHour } from './time.js';
 const CLIMATE_T = {
   oceanic: [10, 6], temperate: [9, 10], continental: [6, 15], subarctic: [0, 15], arctic: [-8, 14],
   mediterranean: [17, 8], steppe: [8, 16], semiarid: [18, 10], desert: [22, 10], alpine: [2, 10],
+  // W1: tropy (vedro bez mrazu; monzun = bláto v období dešťů červen–září) a jižní polokoule (přípona _s = roční období obráceně)
+  tropical: [26, 1.5], monsoon: [27, 3],
 };
 const MUDDY = new Set(['oceanic', 'temperate', 'continental', 'steppe']);
+const MONSOON_MUD = [6, 7, 8, 9];
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
 export const WEATHER = { ATK: 0.12, SPD: 0.35, ORG: 0.4, ATTR: 1 };   // největší účinky mrazu (násobí se silou 0–1)
@@ -20,10 +23,11 @@ export function weatherIn(month, climate) {
   const byClim = cache[month] || (cache[month] = Object.create(null));
   let r = byClim[climate];
   if (r) return r;
-  const [mean, amp] = CLIMATE_T[climate] || CLIMATE_T.temperate;
-  const t = mean - amp * Math.cos((2 * Math.PI * (month - 1)) / 12);
+  const south = climate.endsWith('_s'), base = south ? climate.slice(0, -2) : climate;
+  const [mean, amp] = CLIMATE_T[base] || CLIMATE_T.temperate;
+  const t = mean - (south ? -amp : amp) * Math.cos((2 * Math.PI * (month - 1)) / 12);
   const cold = clamp01(-t / 12);
-  const mud = MUDDY.has(climate) && t > 0 && t < 12 && [3, 4, 10, 11].includes(month) ? 0.6 : 0;
+  const mud = base === 'monsoon' ? (MONSOON_MUD.includes(month) ? 0.5 : 0) : MUDDY.has(base) && t > 0 && t < 12 && [3, 4, 10, 11].includes(month) ? 0.6 : 0;
   const heat = clamp01((t - 28) / 8);
   r = {
     t: Math.round(t * 10) / 10, cold, mud, heat,

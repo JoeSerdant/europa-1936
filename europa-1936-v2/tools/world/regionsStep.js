@@ -28,7 +28,7 @@ export function buildRegions(W, log) {
   const { lab } = growRegions(GW, GH, group, seeds, null);
   // ostrovy a oddělené kusy: nejbližší střed
   const sp = seeds.map((s) => [s.idx % GW, (s.idx / GW) | 0]);
-  const regionOfPx = new Uint8Array(N);
+  const regionOfPx = new Uint16Array(N);
   for (let i = 0; i < N; i++) if (lab[i]) regionOfPx[i] = lab[i];
   const cnt = new Int32Array((L + 1) * (regs.length + 1));
   const R1 = regs.length + 1;
@@ -36,7 +36,7 @@ export function buildRegions(W, log) {
     const p = provOf[i];
     if (p && land[i] === 1 && regionOfPx[i]) cnt[p * R1 + regionOfPx[i]]++;
   }
-  const provRegion = new Uint8Array(L + 1);
+  const provRegion = new Uint16Array(L + 1);
   for (let p = 1; p <= L; p++) {
     let b = 0, bc = 0;
     for (let r = 1; r <= regs.length; r++) if (cnt[p * R1 + r] > bc) { bc = cnt[p * R1 + r]; b = r; }
@@ -58,15 +58,19 @@ export function buildRegions(W, log) {
   const pop = new Float64Array(L + 1);     // tisíce
   const w = new Float64Array(L + 1);
   const groups = new Map();                // klíč skupiny -> { total, list }
+  const unmatched = new Set();
   for (let p = 1; p <= L; p++) {
     const t = ownerTags[W.provOwner[p]];
     const terr = W.provUrban && W.provUrban[p] ? 'urban' : TERRAIN[W.provTerrain[p]];
     const reg = regs[provRegion[p] - 1];
-    const dens = REGION_DENSITY[reg.name] ?? CLIMATE_DENSITY[reg.climate];
+    const dens = REGION_DENSITY[reg.name] ?? CLIMATE_DENSITY[reg.climate.replace(/_s$/, '')] ?? 0.5;
     const cp = W.provCityPop[p];
     w[p] = W.info.area[p] * TERRAIN_DENSITY[terr] * dens * (1 + 0.6 * Math.log(1 + cp / 50));
     let key = t, total = POP_1936[t];
-    for (const [names, n] of POP_AREAS[t] || []) if (names.includes(reg.name)) { key = `${t}:${names[0]}`; total = n; break; }
+    let hit = false;
+    for (const [names, n] of POP_AREAS[t] || []) if (names.includes(reg.name)) { key = `${t}:${names[0]}`; total = n; hit = true; break; }
+    // W1: kolonie mimo původní rámec bez zápisu v POP_AREAS – malá zbytková skupina (aby se lidé mateřské země nepřelili do kolonií)
+    if (!hit && W.states[W.provs[p].state].col) { key = `${t}:jinde`; total = 300; unmatched.add(`${t}/${reg.name}`); }
     if (!total) { console.warn(`!! chybí počet obyvatel pro ${key}`); continue; }
     if (!groups.has(key)) groups.set(key, { total, list: [], owner: t });
     groups.get(key).list.push(p);
@@ -82,6 +86,7 @@ export function buildRegions(W, log) {
     if (k < 1) short.push(key);
   }
   W.provPop = pop;
+  if (unmatched.size) log(`  !! kolonie bez odhadu obyvatel (zbytek 300 tis.): ${[...unmatched].join(', ')}`);
   if (short.length) log(`  města stažena na 70 % počtu obyvatel: ${short.join(', ')}`);
   const byOwner = new Map();
   for (const g of groups.values()) { if (!byOwner.has(g.owner)) byOwner.set(g.owner, []); byOwner.get(g.owner).push(...g.list); }

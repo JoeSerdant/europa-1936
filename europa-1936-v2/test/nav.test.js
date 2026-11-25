@@ -175,7 +175,7 @@ describe('námořní boj a blokáda', () => {
     expect(d.nav.fleets.at(-1) === null || powerOf(d.nav.fleets.at(-1).ships).n < 6).toBe(true);
   });
   it('blokáda: nepřátelská bojová flotila bez vlastní v oblasti; transporty bez děl neblokují', () => {
-    const open = W.L + 40;                                   // oblast bez flotil
+    const open = (() => { for (let l = W.L + 1; l <= W.L + W.S; l++) if (W.seaName(l) === 'Irské moře 1') return l; return 0; })();   // oblast bez flotil (W1: podle jména)
     const s = withFleet(war(), FRA, open, { dd: 2 }, 'F');
     expect(seaBlocked(s, ENG, open)).toBe(true);
     expect(seaBlocked(s, FRA, open)).toBe(false);
@@ -226,7 +226,7 @@ describe('přeprava a vylodění', () => {
     expect(sailBlock(peace, [id], dest)).toMatch(/neutrální/);
     const [s4] = addDivision(withTr, 'FRA', 'pesi', dest);
     expect(sailBlock(s4, [id], dest)).toMatch(/hájí/);
-    expect(sailBlock(withTr, [id], W.land[1] && 1)).toBeTruthy();
+    expect(sailBlock(withTr, [id], W.owners[W.ownerIdx.MON].cap)).toBeTruthy();   // W1: vnitrozemí daleko za mořem
   });
   it('přeplavba: divize zmizí z armády, po příchodu se vylodí a obsadí provincii; kapacita se hlídá', () => {
     const { s, id, dest } = scenario();

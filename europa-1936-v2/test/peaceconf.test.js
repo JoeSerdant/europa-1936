@@ -113,6 +113,8 @@ describe('hráč jako hlavní vítěz', () => {
       if (!row) break;
       u = confClaim(u, c.id, row.s);
     }
+    // W1: státy, které hráči nesousedí (Vilnius), si vzít nemůže – pak pasuje a konference přejde k rozhodnutí o zbytku
+    if (u.dip.conf.length && u.dip.conf[0].ph === 'bid') u = confClaimsDone(u, c.id);
     expect(u.dip.conf.length === 0 || u.dip.conf[0].ph === 'rump').toBe(true);
   });
 });

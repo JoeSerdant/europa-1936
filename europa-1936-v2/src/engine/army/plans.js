@@ -277,7 +277,7 @@ export function aiPlanCountry(ctx, o, byArmy, onlyAuto = false, threats = null) 
       if (!ds.length) return;
       let x = 0, y = 0;
       for (const d of ds) { x += g.cx[ctx.divs[d].p]; y += g.cy[ctx.divs[d].p]; }
-      const dd = Math.hypot(x / ds.length - g.cx[capP], y / ds.length - g.cy[capP]);
+      const dd = g.kmXY(x / ds.length, y / ds.length, g.cx[capP], g.cy[capP]);
       if (dd < gd) { gd = dd; gi = i; }
     });
     if (gi >= 0) {
@@ -297,7 +297,7 @@ export function aiPlanCountry(ctx, o, byArmy, onlyAuto = false, threats = null) 
   const area = mine.map(() => []);
   for (const p of belt) {
     let best = 0, bd = Infinity;
-    centers.forEach((c, i) => { const dd = Math.hypot(g.cx[p] - c.x, g.cy[p] - c.y); if (dd < bd) { bd = dd; best = i; } });
+    centers.forEach((c, i) => { const dd = g.kmXY(g.cx[p], g.cy[p], c.x, c.y); if (dd < bd) { bd = dd; best = i; } });
     area[best].push(p);
   }
   mine.forEach((id, i) => {

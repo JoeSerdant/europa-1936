@@ -4,21 +4,10 @@
 // Žádná data ani mapa ze hry, která posloužila jako vzor mechanik, se nepoužívá – hranice, jména, čísla jsou naše.
 
 // ---------------------------------------------------------------- rastr a projekce
-export const RES_KM = 2.5;                       // 1 pixel rastru = 2,5 km (souřadnice světa ve výstupu jsou v pixelech)
-export const PROJECTION = { centralMeridian: 16, parallels: [38, 62] };   // kuželová konformní
-export const FRAME_PAD_KM = 40;
-export const EAST_LIMIT_LON = 63.6;              // co leží východněji, je „prázdno“ (mimo hrací plochu)
-
-// Body, které musí být na mapě; z jejich obálky v projekci vznikne obdélníkový rámec.
-export const FRAME_POINTS = [
-  [-24.6, 66.5], [-13.5, 66.4], [-22.5, 63.4],                       // Island
-  [-10.0, 36.9], [-9.5, 43.1], [-5.0, 50.0], [-10.5, 51.5],          // Portugalsko, Galicie, Cornwall, Irsko
-  [-6.0, 35.8], [-1.5, 35.0],                                        // Gibraltar, Oran
-  [10.0, 30.5], [20.0, 30.0], [25.0, 29.5], [33.0, 25.0],            // Libye, Egypt
-  [43.0, 25.0], [48.0, 24.5], [56.5, 24.5], [60.0, 25.0],            // Arábie, Perský záliv
-  [62.0, 40.0], [62.0, 55.0], [62.0, 62.0],                          // východní okraj
-  [25.8, 71.2], [41.0, 67.6], [50.0, 69.0], [60.0, 67.0],            // Severní mys, Kola, Kanin
-];
+// W1: celý svět v Mercatorově projekci, mapa se vodorovně opakuje. Šev vede Beringovým mořem a Pacifikem (−169,3° – jen oceán; ostrov
+// sv. Vavřince, který jím prochází, se vypouští). V 50° s. š. má pixel `refKm` km (jako dřív v Evropě), na rovníku víc, na severu méně.
+export const PROJECTION = { seam: -169.3, latN: 78, latS: -56, refLat: 50, refKm: 2.5 };
+export const RES_KM = PROJECTION.refKm;          // jen pro starší výpisy; skutečné měřítko dává grid.kmAt(y)
 
 // ---------------------------------------------------------------- vlastníci (tagy) v roce 1936
 // Tag -> [česky, barva, hlavní město (lon, lat)]. Barvy jsou pro politickou mapu; jemně dolaďované později.
@@ -58,6 +47,48 @@ export const OWNERS = {
   PER: ['Persie', '#7aa87a', [51.39, 35.69]],
   SAU: ['Saúdská Arábie', '#6a9a6a', [46.7, 24.63]],
   OMA: ['Omán', '#a5806a', [58.4, 23.6]],
+  // W1: zbytek světa
+  USA: ['Spojené státy', '#4f7fa8', [-77.04, 38.9]],
+  CAN: ['Kanada', '#b8574e', [-75.7, 45.42]],
+  MEX: ['Mexiko', '#6f9a58', [-99.13, 19.43]],
+  GUA: ['Guatemala', '#5fa0b8', [-90.51, 14.63]],
+  HON: ['Honduras', '#8aa0c8', [-87.2, 14.08]],
+  ELS: ['Salvador', '#3d66a8', [-89.2, 13.7]],
+  NIC: ['Nikaragua', '#d2b05a', [-86.25, 12.13]],
+  COS: ['Kostarika', '#b55a6a', [-84.08, 9.93]],
+  PAN: ['Panama', '#c9796a', [-79.52, 8.98]],
+  CUB: ['Kuba', '#5a83c0', [-82.37, 23.13]],
+  HAI: ['Haiti', '#6a7fd0', [-72.33, 18.54]],
+  DOM: ['Dominikánská republika', '#c86a5a', [-69.9, 18.47]],
+  COL: ['Kolumbie', '#e0c050', [-74.07, 4.71]],
+  VEN: ['Venezuela', '#a8704a', [-66.9, 10.5]],
+  ECU: ['Ekvádor', '#d9a85a', [-78.5, -0.22]],
+  PRU: ['Peru', '#c95a50', [-77.04, -12.05]],
+  BOL: ['Bolívie', '#6aa070', [-68.15, -16.5]],
+  CHL: ['Chile', '#8a5a9a', [-70.65, -33.45]],
+  ARG: ['Argentina', '#7fb3d9', [-58.38, -34.6]],
+  URG: ['Uruguay', '#5a9ad0', [-56.16, -34.9]],
+  PAR: ['Paraguay', '#a0a058', [-57.58, -25.3]],
+  BRA: ['Brazílie', '#4f9a5a', [-43.2, -22.9]],
+  ETH: ['Etiopie', '#7aa04a', [38.74, 9.03]],
+  LBR: ['Libérie', '#c0705a', [-10.8, 6.3]],
+  SAF: ['Jihoafrická unie', '#d09a4a', [28.19, -25.75]],
+  JAP: ['Japonsko', '#e8e0d0', [139.69, 35.69]],
+  MAN: ['Mandžukuo', '#9a8a5a', [125.32, 43.88]],
+  CHI: ['Čína', '#c8b24a', [118.78, 32.06]],
+  PRC: ['Čínská sovětská republika', '#a04040', [109.49, 36.6]],
+  SIK: ['Sin-ťiang', '#8a9a70', [87.6, 43.8]],
+  TIB: ['Tibet', '#b89a7a', [91.1, 29.65]],
+  MON: ['Mongolsko', '#6a8ab0', [106.9, 47.9]],
+  TAN: ['Tuva', '#7a9a8a', [94.45, 51.72]],
+  SIA: ['Siam', '#5ab0a0', [100.5, 13.75]],
+  AFG: ['Afghánistán', '#8a7a5a', [69.17, 34.53]],
+  RAJ: ['Indie', '#d8884a', [77.2, 28.6]],
+  NEP: ['Nepál', '#b8506a', [85.32, 27.7]],
+  YEM: ['Jemen', '#9a7060', [44.2, 15.35]],
+  PHI: ['Filipíny', '#6a90c0', [120.98, 14.6]],
+  AST: ['Austrálie', '#5a8a6a', [149.13, -35.28]],
+  NZL: ['Nový Zéland', '#3a6a8a', [174.78, -41.29]],
 };
 
 export const VOID_OWNER = 'VOID';
@@ -80,6 +111,36 @@ export const OWNER_OF = {
   Egypt: 'EGY', Libya: 'ITA', Tunisia: 'FRA', Algeria: 'FRA', Morocco: 'FRA', 'W. Sahara': 'SPR', Mauritania: 'FRA',
   Syria: 'FRA', Lebanon: 'FRA', Israel: 'ENG', Palestine: 'ENG', Jordan: 'ENG',
   Iraq: 'IRQ', Iran: 'PER', 'Saudi Arabia': 'SAU', Kuwait: 'ENG', Bahrain: 'ENG', Qatar: 'ENG', 'United Arab Emirates': 'ENG', Oman: 'OMA',
+  // W1: Amerika
+  'United States of America': 'USA', 'Puerto Rico': 'USA', 'U.S. Virgin Is.': 'USA', Guam: 'USA', 'American Samoa': 'USA', 'U.S. Minor Outlying Is.': 'USA', 'USNB Guantanamo Bay': 'USA',
+  Philippines: 'PHI', Canada: 'CAN', Greenland: 'DEN', 'St. Pierre and Miquelon': 'FRA', Bermuda: 'ENG',
+  Mexico: 'MEX', Guatemala: 'GUA', Belize: 'ENG', Honduras: 'HON', 'El Salvador': 'ELS', Nicaragua: 'NIC', 'Costa Rica': 'COS', Panama: 'PAN',
+  Cuba: 'CUB', Haiti: 'HAI', 'Dominican Rep.': 'DOM', Jamaica: 'ENG', Bahamas: 'ENG', 'Turks and Caicos Is.': 'ENG', 'Cayman Is.': 'ENG',
+  'Trinidad and Tobago': 'ENG', Barbados: 'ENG', Grenada: 'ENG', 'St. Vin. and Gren.': 'ENG', 'Saint Lucia': 'ENG', Dominica: 'ENG', Montserrat: 'ENG',
+  'Antigua and Barb.': 'ENG', 'St. Kitts and Nevis': 'ENG', Anguilla: 'ENG', 'British Virgin Is.': 'ENG',
+  'Curaçao': 'HOL', Aruba: 'HOL', 'Sint Maarten': 'HOL', 'St-Martin': 'FRA', 'St-Barthélemy': 'FRA', 'Clipperton I.': 'FRA',
+  Colombia: 'COL', Venezuela: 'VEN', Ecuador: 'ECU', Peru: 'PRU', Bolivia: 'BOL', Chile: 'CHL', Argentina: 'ARG', 'Southern Patagonian Ice Field': 'ARG',
+  Uruguay: 'URG', Paraguay: 'PAR', Brazil: 'BRA', 'Brazilian I.': 'BRA', Guyana: 'ENG', Suriname: 'HOL', 'Falkland Is.': 'ENG', 'S. Geo. and the Is.': 'ENG',
+  // W1: Afrika
+  Ethiopia: 'ETH', Eritrea: 'ITA', Somalia: 'ITA', Somaliland: 'ENG', Djibouti: 'FRA', Liberia: 'LBR', 'South Africa': 'SAF', Namibia: 'SAF',
+  Nigeria: 'ENG', Ghana: 'ENG', 'Sierra Leone': 'ENG', Gambia: 'ENG', Kenya: 'ENG', Uganda: 'ENG', Tanzania: 'ENG', Malawi: 'ENG', Zambia: 'ENG',
+  Zimbabwe: 'ENG', Botswana: 'ENG', Lesotho: 'ENG', eSwatini: 'ENG', Sudan: 'ENG', 'S. Sudan': 'ENG', Mauritius: 'ENG', Seychelles: 'ENG', 'Saint Helena': 'ENG',
+  'Br. Indian Ocean Ter.': 'ENG',
+  Mali: 'FRA', Senegal: 'FRA', Guinea: 'FRA', "Côte d'Ivoire": 'FRA', 'Burkina Faso': 'FRA', Niger: 'FRA', Benin: 'FRA', Chad: 'FRA',
+  'Central African Rep.': 'FRA', Congo: 'FRA', Gabon: 'FRA', Cameroon: 'FRA', Togo: 'FRA', Madagascar: 'FRA', Comoros: 'FRA', 'Fr. S. Antarctic Lands': 'FRA',
+  'Dem. Rep. Congo': 'BEL', Rwanda: 'BEL', Burundi: 'BEL',
+  Angola: 'POR', Mozambique: 'POR', 'Guinea-Bissau': 'POR', 'Cabo Verde': 'POR', 'São Tomé and Principe': 'POR', 'Timor-Leste': 'POR', Macao: 'CHI',
+  'Eq. Guinea': 'SPR', 'Bir Tawil': 'EGY',
+  // W1: Asie a Oceánie
+  Japan: 'JAP', Taiwan: 'JAP', 'North Korea': 'JAP', 'South Korea': 'JAP', Palau: 'JAP', 'N. Mariana Is.': 'JAP', Micronesia: 'JAP', 'Marshall Is.': 'JAP',
+  China: 'CHI', 'Hong Kong': 'ENG', Mongolia: 'MON', Tajikistan: 'SOV', Kyrgyzstan: 'SOV', Afghanistan: 'AFG', Nepal: 'NEP', Bhutan: 'RAJ',
+  India: 'RAJ', Pakistan: 'RAJ', Bangladesh: 'RAJ', 'Siachen Glacier': 'RAJ', Myanmar: 'ENG', 'Sri Lanka': 'ENG', Maldives: 'ENG', Yemen: 'YEM',
+  Thailand: 'SIA', Vietnam: 'FRA', Laos: 'FRA', Cambodia: 'FRA', Malaysia: 'ENG', Singapore: 'ENG', Brunei: 'ENG', Indonesia: 'HOL',
+  'Indian Ocean Ter.': 'ENG',
+  Australia: 'AST', 'Papua New Guinea': 'AST', 'Norfolk Island': 'AST', 'Coral Sea Is.': 'AST', 'Ashmore and Cartier Is.': 'AST', Nauru: 'AST', 'Heard I. and McDonald Is.': 'AST',
+  'New Zealand': 'NZL', Samoa: 'NZL', 'Cook Is.': 'NZL', Niue: 'NZL',
+  Fiji: 'ENG', Tonga: 'ENG', 'Solomon Is.': 'ENG', Vanuatu: 'ENG', Kiribati: 'ENG', Tuvalu: 'ENG', 'Pitcairn Is.': 'ENG',
+  'New Caledonia': 'FRA', 'Fr. Polynesia': 'FRA', 'Wallis and Futuna Is.': 'FRA',
 };
 
 // ---------------------------------------------------------------- převody území na stav z r. 1936
@@ -126,7 +187,34 @@ const FRA_HATAY = ring([35.8, 35.85], [36.0, 35.85], [36.75, 36.05], [36.85, 36.
 const SPR_MOROCCO = ring(
   [-6.0, 35.98], [-1.9, 35.98], [-1.9, 34.9], [-2.5, 34.6], [-4.0, 34.7], [-5.2, 34.75], [-6.4, 35.0], [-6.4, 35.4]);
 
+// W1: převody mimo Evropu (hrubé obdélníky / mnohoúhelníky)
+const JAP_SAKHALIN = ring([141.5, 45.8], [145.0, 45.8], [145.0, 50.0], [141.5, 50.0]);
+const JAP_KURILS = ring([145.3, 43.3], [157.0, 43.3], [157.0, 51.0], [151.0, 51.0], [145.3, 45.0]);
+const MAN_MANCHURIA = ring(   // Mandžusko a Žehol (1936)
+  [119.5, 53.6], [127.0, 53.6], [135.2, 48.4], [131.3, 42.9], [130.0, 42.4], [128.0, 41.5], [124.3, 39.8], [121.0, 38.7], [119.5, 39.6],
+  [118.9, 40.0], [117.5, 40.6], [116.5, 41.6], [117.0, 42.6], [118.0, 43.5], [116.0, 44.8], [116.8, 46.5], [119.0, 47.6], [117.5, 49.6]);
+const PRC_YANAN = ring([107.3, 35.4], [110.6, 35.4], [110.6, 38.3], [107.3, 38.3]);
+const SIK_XINJIANG = ring(   // Sin-ťiang (hrubě podle hranice Čchinghaje a Kansu)
+  [73.0, 49.3], [91.0, 49.3], [96.4, 42.7], [95.4, 41.0], [93.5, 39.5], [91.0, 38.0], [86.0, 36.0], [80.3, 35.4], [77.8, 35.5], [73.0, 37.0]);
+const TIB_TIBET = ring(      // Tibet (dnešní autonomní oblast, hrubě)
+  [78.3, 34.9], [80.3, 35.6], [86.0, 36.2], [90.5, 36.0], [94.0, 34.0], [97.5, 33.0], [99.0, 31.5], [98.8, 28.5], [97.0, 28.0], [95.0, 28.5],
+  [91.5, 27.5], [88.0, 27.8], [85.0, 28.5], [81.0, 30.0], [78.5, 31.0]);
+const TAN_TUVA = ring([88.7, 49.8], [99.3, 49.8], [99.3, 53.0], [96.0, 53.8], [91.5, 53.0], [88.7, 52.0]);
+const ENG_ADEN = ring([43.3, 12.4], [53.2, 15.6], [53.2, 17.6], [49.0, 17.0], [46.5, 15.3], [44.8, 14.0], [43.6, 13.3]);
+const ENG_NEWFOUNDLAND = ring(   // Newfoundland a Labrador (samostatné panství, správa z Londýna)
+  [-59.5, 46.5], [-52.5, 46.5], [-52.5, 60.5], [-64.6, 60.5], [-64.0, 58.2], [-67.0, 58.0], [-67.0, 55.0], [-64.0, 54.0], [-64.0, 52.2],
+  [-60.0, 52.0], [-57.1, 51.4], [-59.5, 48.5]);
+
 export const TRANSFERS = [
+  { from: ['Russia'], to: 'JAP', ring: JAP_SAKHALIN },
+  { from: ['Russia'], to: 'JAP', ring: JAP_KURILS },
+  { from: ['China'], to: 'MAN', ring: MAN_MANCHURIA },
+  { from: ['China'], to: 'PRC', ring: PRC_YANAN },
+  { from: ['China'], to: 'SIK', ring: SIK_XINJIANG },
+  { from: ['China'], to: 'TIB', ring: TIB_TIBET },
+  { from: ['Russia'], to: 'TAN', ring: TAN_TUVA },
+  { from: ['Yemen'], to: 'ENG', ring: ENG_ADEN },
+  { from: ['Canada'], to: 'ENG', ring: ENG_NEWFOUNDLAND },
   { from: ['Poland'], to: 'GER', ring: GER_POMERANIA_SILESIA },
   { from: ['Poland'], to: 'GER', ring: GER_EAST_PRUSSIA },
   { from: ['Russia'], to: 'GER', ring: GER_KONIGSBERG },
@@ -164,15 +252,68 @@ export const STRAITS = [
   ['Suezský průplav', 3.5, [[32.33, 31.3], [32.3, 30.8], [32.37, 30.45], [32.56, 29.95]]],
   ['Samos', 3, [[26.9, 37.67], [27.1, 37.7]]],
   ['Korfu', 3, [[19.95, 39.8], [20.05, 39.62]]],
+  // W1
+  ['Panamský průplav', 3.5, [[-79.92, 9.38], [-79.85, 9.2], [-79.68, 9.05], [-79.55, 8.93]]],
 ];
 
 // ---------------------------------------------------------------- jezera, která bereme jako vodu (min. plocha km²)
 export const MIN_LAKE_KM2 = 1500;
 export const MIN_ISLAND_KM2 = 350;     // menší ostrůvky vypustíme (kromě těch v ISLAND_KEEP)
 export const ISLAND_KEEP = [[14.4, 35.9]];   // Malta
+export const MIN_ISLAND_FAR_KM2 = 2500;      // W1: mimo původní rámec vypouštíme menší ostrovy (zbytečné provincie)
+// W1: strategické ostrůvky, které musí na mapě být (i když je rastr nezachytí): [název, lon, lat, vlastník, poloměr px]
+export const FORCE_ISLANDS = [
+  ['Midway', -177.37, 28.21, 'USA', 2], ['Wake', 166.63, 19.29, 'USA', 2], ['Guam', 144.78, 13.45, 'USA', 3], ['Oahu', -157.98, 21.47, 'USA', 0],
+  ['Saipan', 145.75, 15.18, 'JAP', 3], ['Tinian', 145.63, 14.98, 'JAP', 2], ['Iwodžima', 141.32, 24.78, 'JAP', 2], ['Truk', 151.85, 7.42, 'JAP', 3],
+  ['Kwajalein', 167.73, 8.72, 'JAP', 2], ['Palau', 134.55, 7.45, 'JAP', 3], ['Okinawa', 127.8, 26.4, 'JAP', 0],
+  ['Tarawa', 172.98, 1.42, 'ENG', 2], ['Bermudy', -64.75, 32.3, 'ENG', 2], ['Malta', 14.4, 35.9, 'ENG', 0],
+  ['Aden', 45.0, 12.8, 'ENG', 0], ['Diego Garcia', 72.42, -7.32, 'ENG', 2], ['Kokosové ostrovy', 96.83, -12.17, 'ENG', 2],
+  ['Tonga', -175.2, -21.2, 'ENG', 2], ['Johnston', -169.53, 16.73, 'USA', 0],
+  // ponechané malé ostrovy (poloměr 0 = jen nevypouštět)
+  ['Guadeloupe', -61.55, 16.25, 'FRA', 0], ['Martinik', -61.0, 14.65, 'FRA', 0], ['Barbados', -59.55, 13.15, 'ENG', 0], ['Svatá Lucie', -60.97, 13.9, 'ENG', 0],
+  ['Grenada', -61.68, 12.12, 'ENG', 0], ['Mauricius', 57.55, -20.25, 'ENG', 0], ['Curaçao', -68.95, 12.18, 'HOL', 2], ['Kapverdy', -23.6, 15.05, 'POR', 0],
+  ['Santiago (Kapverdy)', -23.6, 15.05, 'POR', 2], ['Svatý Tomáš', 6.6, 0.25, 'POR', 0], ['Samoa', -172.4, -13.65, 'NZL', 0], ['Upolu', -171.75, -13.9, 'NZL', 0],
+  ['Tahiti', -149.45, -17.65, 'FRA', 0], ['Komory', 43.35, -11.65, 'FRA', 0], ['Bahamy', -77.35, 25.05, 'ENG', 0], ['Fernando Póo', 8.7, 3.5, 'SPR', 0],
+];
 
 // ---------------------------------------------------------------- provincie
 export const PROV_BASE_KM2 = 4200;      // základní plocha provincie v hustě osídlené Evropě
 export const PROV_MAX_PER_STATE = 26;
 // výchozí „řídkost“ provincií podle vlastníka (násobí PROV_BASE_KM2; navíc se bere sp ze semínka)
-export const OWNER_SPARSE = { SOV: 1.5, TUR: 1.25, PER: 1.5, EGY: 1.4, SAU: 1.5, NOR: 1.1, SWE: 1.1, FIN: 1.15, ITA: 1.0 };
+export const OWNER_SPARSE = {
+  SOV: 1.5, TUR: 1.25, PER: 1.5, EGY: 1.4, SAU: 1.5, NOR: 1.1, SWE: 1.1, FIN: 1.15, ITA: 1.0,
+  // W1: mimo Evropu řidší provincie (jako v HOI4) – řídkost ≈ plocha / (4200 km² × cílový počet provincií země)
+  USA: 9, CAN: 34, MEX: 9.5, GUA: 4.3, HON: 5.3, ELS: 2.5, NIC: 6, COS: 4, PAN: 4.5, CUB: 3.3, HAI: 3.3, DOM: 3.8,
+  COL: 11, VEN: 11, ECU: 7.7, PRU: 12, BOL: 17, CHL: 10, ARG: 15, URG: 7, PAR: 12, BRA: 25,
+  ETH: 10.5, LBR: 8.7, SAF: 13.5, JAP: 2.2, MAN: 7.7, CHI: 7, PRC: 6, SIK: 33, TIB: 28, MON: 31, TAN: 13, SIA: 8, AFG: 13, RAJ: 6.5, NEP: 12, YEM: 12,
+  PHI: 4.8, AST: 32, NZL: 8, ICE: 1.5, OMA: 2.5, IRQ: 1.8,
+};
+
+// ---------------------------------------------------------------- W1: hustota provincií a železnic podle oblasti
+// Původní rámec mapy (Evropa, severní Afrika, Blízký východ do 63,6° v. d.) zůstává jako dřív; mimo něj řidší provincie a železnice (jako v HOI4).
+export const NEW_TAGS = new Set(['USA', 'CAN', 'MEX', 'GUA', 'HON', 'ELS', 'NIC', 'COS', 'PAN', 'CUB', 'HAI', 'DOM', 'COL', 'VEN', 'ECU', 'PRU', 'BOL', 'CHL',
+  'ARG', 'URG', 'PAR', 'BRA', 'ETH', 'LBR', 'SAF', 'JAP', 'MAN', 'CHI', 'PRC', 'SIK', 'TIB', 'MON', 'TAN', 'SIA', 'AFG', 'RAJ', 'NEP', 'YEM', 'PHI', 'AST', 'NZL']);
+export const inOldFrame = (lon, lat) => lon >= -26 && lon <= 63.6 && lat >= 24 && lat <= 72;
+export function sparseAt(owner, lon, lat) {
+  if (NEW_TAGS.has(owner)) return OWNER_SPARSE[owner] ?? 8;
+  if (inOldFrame(lon, lat)) return OWNER_SPARSE[owner] ?? 1;
+  if (owner === 'SOV') return lon > 100 ? 30 : lon > 75 ? 20 : lat > 52 ? 12 : 9;   // Sibiř, Střední Asie
+  if (owner === 'DEN') return 60;                                                  // Grónsko
+  if (lon < -30) return 6;                                                         // kolonie v Americe (ostrovy, Guyany)
+  if (lon > 90 && lat > -12) return 6;                                             // jihovýchodní Asie
+  if (lon > 140 || lon < -140) return 8;                                           // Oceánie
+  if (lon > 55) return 6;                                                          // Cejlon, Indický oceán
+  return 11;                                                                       // Afrika a Arábie mimo starý rámec
+}
+// korekce hustoty železnic (0 = západní standard, ≤ -3 žádné) pro nové země a kolonie
+export const NEW_RAIL = {
+  USA: 0, CAN: -1, MEX: -2, GUA: -3, HON: -3, ELS: -2, NIC: -3, COS: -3, PAN: -3, CUB: -2, HAI: -3, DOM: -3, COL: -3, VEN: -3, ECU: -3, PRU: -2,
+  BOL: -2, CHL: -2, ARG: -1, URG: -1, PAR: -2, BRA: -2, ETH: -3, LBR: -3, SAF: -1, JAP: 0, MAN: -1, CHI: -2, PRC: -3, SIK: -3, TIB: -3, MON: -3,
+  TAN: -3, SIA: -2, AFG: -3, RAJ: -1, NEP: -3, YEM: -3, PHI: -2, AST: -1, NZL: -1,
+};
+export function railAt(owner, lon, lat, base) {
+  if (NEW_TAGS.has(owner)) return NEW_RAIL[owner] ?? -2;
+  if (inOldFrame(lon, lat)) return base;
+  if (owner === 'SOV') return lon > 100 ? -2 : -2;
+  return -2;
+}

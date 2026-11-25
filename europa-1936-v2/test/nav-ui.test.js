@@ -9,6 +9,9 @@ import { addDivision, emptyBattlefield } from './armyKit.js';
 
 const W = getWorld();
 const ENG = W.ownerIdx.ENG, FRA = W.ownerIdx.FRA;
+// W1: mořské oblasti v Evropě podle jména (čísla štítků se se světem mění)
+const seaNamed = (n) => { for (let l = W.L + 1; l <= W.L + W.S; l++) if (W.seaName(l) === n) return l; throw new Error(n); };
+const SEA_A = seaNamed('Keltské moře 1'), SEA_B = seaNamed('Irské moře 1'), SEA_C = seaNamed('Biskajský záliv 1');
 const game = () => gameStore.getState();
 const ui = () => uiStore.getState();
 
@@ -52,16 +55,16 @@ describe('akce', () => {
     expect(ui().fleetSel).toBe(t.find((x) => x.o === ENG).ids[0]);
   });
   it('rozkaz flotile: jen vlastní, jen na mořskou oblast; Esc zruší výběr; mizející flotila se odznačí', () => {
-    expect(A.orderFleetTo(W.L + 5)).toBe(false);                    // nic nevybráno
+    expect(A.orderFleetTo(SEA_A)).toBe(false);                    // nic nevybráno
     const id = game().nav.fleets.findIndex((f) => f && f.o === ENG);
     A.selectFleet(id);
-    expect(A.orderFleetTo(W.L + 5)).toBe(true);
-    expect(game().nav.fleets[id].to).toBe(W.L + 5);
-    expect(A.contextClick(W.L + 40)).toBe(true);                    // pravé tlačítko na moře
+    expect(A.orderFleetTo(SEA_A)).toBe(true);
+    expect(game().nav.fleets[id].to).toBe(SEA_A);
+    expect(A.contextClick(SEA_B)).toBe(true);                    // pravé tlačítko na moře
     expect(A.stopSelectedFleet()).toBe(true);
     const fr = game().nav.fleets.findIndex((f) => f && f.o === FRA);
     A.selectFleet(fr);
-    expect(A.orderFleetTo(W.L + 5)).toBe(false);                    // cizí flotilu hráč neřídí
+    expect(A.orderFleetTo(SEA_A)).toBe(false);                    // cizí flotilu hráč neřídí
     expect(A.stopSelectedFleet()).toBe(false);
   });
   it('sestavení flotily z rezervy a rozpuštění v domovské oblasti', () => {
@@ -93,7 +96,7 @@ describe('akce', () => {
     expect(ui().panel).toBe('navy');
     A.goMenu(); A.startGame(null);
     expect(A.newFleet({ dd: 1 })).toBe(false);
-    expect(A.orderFleetTo(W.L + 3)).toBe(false);
+    expect(A.orderFleetTo(SEA_C)).toBe(false);
   });
 });
 
@@ -112,7 +115,7 @@ describe('přeprava přes moře z rozhraní', () => {
       const g = goals(p);
       if (!g.size) continue;
       const r = seaRoute(W.portSea[port], g);
-      if (r && r.km < 700 && !A.routePreview(p)) dest = p;   // po souši se tam nedá
+      if (r && r.km < 1000 && !A.routePreview(p)) dest = p;   // po souši se tam nedá
     }
     expect(dest).toBeGreaterThan(0);
     expect(A.contextClick(dest)).toBe(true);

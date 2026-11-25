@@ -14,7 +14,8 @@ export const neighbors = (p) => adjList(p).filter((e) => e.kind !== 2).map((e) =
 /** Hra bez jednotek (zůstanou šablony, sklady a velitelé zemí). */
 export function emptyBattlefield(player = null) {
   const s = createGame({ player });
-  return { ...s, mil: { ...s.mil, divs: [null], armies: [null], groups: [null], battles: [], wars: [], queue: [] } };
+  // W1: bez obchodních smluv (konvoje by jinak vázaly transportní lodě – dovoz ropy do Británie jde na mapě světa po moři)
+  return { ...s, mil: { ...s.mil, divs: [null], armies: [null], groups: [null], battles: [], wars: [], queue: [] }, ind: { ...s.ind, trade: [] } };
 }
 
 /** Přidá divizi druhu `kind` (klíč TPL_KINDS) zemi `tag` do provincie `p`; vrací [stav, id]. */

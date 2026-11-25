@@ -106,7 +106,7 @@ describe('barvy a popisky', () => {
   });
   it('popisky zemí a států leží uvnitř svých území', () => {
     const labels = countryLabels(W, null);
-    expect(labels.length).toBe(35);
+    expect(labels.length).toBe(76);
     for (const l of labels) {
       expect(l.w).toBeGreaterThan(0);
       expect(l.x).toBeGreaterThan(0);

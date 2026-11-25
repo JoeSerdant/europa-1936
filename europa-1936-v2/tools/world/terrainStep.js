@@ -1,6 +1,7 @@
 // Krok 6a: terén. Rastr terénu vzniká vrstvením: les (hustota × šum) → plošiny → pouště → vlastní zóny → pohoří → bažiny → podhůří.
 // Terén provincie = většinové hlasování přes její pixely s prahy (hory a bažiny mají přednost před lesem a pahorkatinou).
 import { loadGeoJSON, polygonsOf, inWindow } from './grid.js';
+import { inOldFrame } from './config.js';
 import { fillRings, fbm } from './raster.js';
 import {
   MOUNTAIN_NAMES, HILL_RANGE_NAMES, HILL_PLATEAU_NAMES, DESERT_PLATEAU_NAMES, MARSH_NAMES, DESERT_PLAIN_NAMES,
@@ -73,6 +74,17 @@ export function buildTerrain(W, log) {
   for (const f of feats) if (f.cls === 'Desert' && f.name !== 'Jabal as Sawdä’') paintFeature(f, T.desert);
   for (const z of CUSTOM_ZONES) paint([toRing(z.ring)], T[z.type]);
   for (const f of feats) if (f.name === 'Jabal Nafüsah' || f.name === 'Jabal as Sawdä’' || f.name === 'Jabal bin Ghunaymah') paintFeature(f, T.hills);
+  // W1: mimo původní rámec podle třídy oblasti z Natural Earth (pohoří = hory, plošiny = pahorkatina, mokřady a delty = bažiny)
+  const farFeat = (f) => f.parts.some((p) => !inOldFrame((p.bbox[0] + p.bbox[2]) / 2, (p.bbox[1] + p.bbox[3]) / 2));
+  for (const f of feats) {
+    if (!farFeat(f)) continue;
+    if (f.cls === 'Plateau' || f.cls === 'Foothills') paintFeature(f, T.hills);
+  }
+  for (const f of feats) {
+    if (!farFeat(f)) continue;
+    if (f.cls === 'Range/mtn') paintFeature(f, T.mountains);
+    else if (f.cls === 'Wetlands' || f.cls === 'Delta') paintFeature(f, T.marsh);
+  }
   byName(HILL_RANGE_NAMES, T.hills);
   byName(MOUNTAIN_NAMES, T.mountains);
   for (const f of feats) if (f.name === 'Central Makran') paintFeature(f, T.mountains);

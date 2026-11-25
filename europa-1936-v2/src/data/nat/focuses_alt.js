@@ -26,6 +26,9 @@ const NAMES = {
   YUG: 'Jugoslávie', BUL: 'Bulharsko', GRE: 'Řecko', TUR: 'Turecko', SPR: 'Španělsko', POR: 'Portugalsko', SWE: 'Švédsko', FIN: 'Finsko', NOR: 'Norsko',
   DEN: 'Dánsko', HOL: 'Nizozemsko', BEL: 'Belgie', SWI: 'Švýcarsko', AUS: 'Rakousko', EST: 'Estonsko', LAT: 'Lotyšsko', LIT: 'Litva', ALB: 'Albánie', EGY: 'Egypt',
   IRE: 'Irsko', IRQ: 'Irák', PER: 'Persie', SAU: 'Saúdská Arábie', OMA: 'Omán', ICE: 'Island', LUX: 'Lucembursko',
+
+  // W1
+  USA: 'Spojené státy', CAN: 'Kanada', MEX: 'Mexiko', GUA: 'Guatemala', HON: 'Honduras', ELS: 'Salvador', NIC: 'Nikaragua', COS: 'Kostarika', PAN: 'Panama', CUB: 'Kuba', HAI: 'Haiti', DOM: 'Dominikánská republika', COL: 'Kolumbie', VEN: 'Venezuela', ECU: 'Ekvádor', PRU: 'Peru', BOL: 'Bolívie', CHL: 'Chile', ARG: 'Argentina', URG: 'Uruguay', PAR: 'Paraguay', BRA: 'Brazílie', ETH: 'Etiopie', LBR: 'Libérie', SAF: 'Jihoafrická unie', JAP: 'Japonsko', MAN: 'Mandžukuo', CHI: 'Čína', PRC: 'Čínští komunisté', SIK: 'Sin-ťiang', TIB: 'Tibet', MON: 'Mongolsko', TAN: 'Tuva', SIA: 'Siam', AFG: 'Afghánistán', RAJ: 'Indie', NEP: 'Nepál', YEM: 'Jemen', PHI: 'Filipíny', AST: 'Austrálie', NZL: 'Nový Zéland',
 };
 const rel = (tag, v) => ({ t: 'rel', tag, nm: NAMES[tag] || tag, v });
 
@@ -200,12 +203,16 @@ const NEAR = {   // sousedé pro „silnou ruku“ (neutrální cesta)
   FIN: ['SWE', 'EST'], GRE: ['TUR', 'YUG'], HOL: ['BEL', 'ENG'], BEL: ['HOL', 'FRA'], POR: ['SPR', 'ENG'], SWI: ['AUS', 'ITA'], NOR: ['SWE', 'DEN'], BUL: ['TUR', 'YUG'],
   IRE: ['ENG', 'ICE'], LUX: ['BEL', 'HOL'], AUS: ['HUN', 'SWI'], DEN: ['SWE', 'NOR'], EST: ['FIN', 'LAT'], LAT: ['EST', 'LIT'], LIT: ['LAT', 'POL'], ALB: ['GRE', 'YUG'],
   ICE: ['NOR', 'DEN'], EGY: ['TUR', 'SAU'], IRQ: ['SAU', 'PER'], PER: ['TUR', 'IRQ'], SAU: ['IRQ', 'EGY'], OMA: ['PER', 'SAU'],
+  // W1
+  USA: ['CAN', 'MEX'], CAN: ['USA', 'ENG'], MEX: ['USA', 'GUA'], GUA: ['MEX', 'HON'], HON: ['GUA', 'NIC'], ELS: ['GUA', 'HON'], NIC: ['HON', 'COS'], COS: ['NIC', 'PAN'], PAN: ['COS', 'COL'], CUB: ['USA', 'HAI'], HAI: ['DOM', 'CUB'], DOM: ['HAI', 'CUB'], COL: ['VEN', 'ECU'], VEN: ['COL', 'BRA'], ECU: ['PRU', 'COL'], PRU: ['ECU', 'BOL'], BOL: ['PAR', 'PRU'], CHL: ['ARG', 'PRU'], ARG: ['BRA', 'CHL'], URG: ['ARG', 'BRA'], PAR: ['BOL', 'ARG'], BRA: ['ARG', 'URG'], ETH: ['ITA', 'ENG'], LBR: ['ENG', 'FRA'], SAF: ['ENG', 'POR'], JAP: ['CHI', 'SOV'], MAN: ['JAP', 'CHI'], CHI: ['JAP', 'PRC'], PRC: ['CHI', 'SOV'], SIK: ['SOV', 'CHI'], TIB: ['CHI', 'RAJ'], MON: ['SOV', 'CHI'], TAN: ['SOV', 'MON'], SIA: ['FRA', 'ENG'], AFG: ['RAJ', 'PER'], RAJ: ['ENG', 'AFG'], NEP: ['RAJ', 'TIB'], YEM: ['SAU', 'ENG'], PHI: ['USA', 'JAP'], AST: ['NZL', 'ENG'], NZL: ['AST', 'ENG'],
 };
 const HIST_NAME = {
   POL: 'Vláda plukovníků', CZE: 'Hradní politika', SPR: 'Republika v krizi', HUN: 'Regentství', ROM: 'Královská diktatura', YUG: 'Regentská vláda', TUR: 'Odkaz zakladatele',
   SWE: 'Lidový domov', FIN: 'Mladá republika', GRE: 'Režim generála', HOL: 'Koloniální monarchie', BEL: 'Politika nezávislosti', POR: 'Nový stát', SWI: 'Spolková rada',
   NOR: 'Dělnická vláda', BUL: 'Carská vláda', IRE: 'Svobodný stát', LUX: 'Velkovévodství', AUS: 'Stavovský stát', DEN: 'Sociální smír', EST: 'Doba mlčení', LAT: 'Vůdcovský režim',
   LIT: 'Prezidentský režim', ALB: 'Královský dvůr', ICE: 'Althing', EGY: 'Král a parlament', IRQ: 'Hášimovská koruna', PER: 'Šáhova modernizace', SAU: 'Pouštní království', OMA: 'Sultanát',
+  // W1
+  USA: 'Nový úděl', CAN: 'Liberální vláda', MEX: 'Revoluční strana', GUA: 'Vláda generála', HON: 'Vláda caudilla', ELS: 'Vojenská vláda', NIC: 'Vláda národní gardy', COS: 'Kávová republika', PAN: 'Ústavní vláda', CUB: 'Vláda za armádou', HAI: 'Prezidentská vláda', DOM: 'Éra generalissima', COL: 'Liberální republika', VEN: 'Přechodná vláda', ECU: 'Vláda dekretů', PRU: 'Vojenská vláda', BOL: 'Poválečná vláda', CHL: 'Konzervativní republika', ARG: 'Konzervativní dekáda', URG: 'Terrova vláda', PAR: 'Vláda veteránů', BRA: 'Varguismus', ETH: 'Císařský dvůr', LBR: 'Pravá whigská strana', SAF: 'Spojená strana', JAP: 'Vláda pod tlakem armády', MAN: 'Loutkový trůn', CHI: 'Národní vláda', PRC: 'Sovětská oblast', SIK: 'Vláda guvernéra', TIB: 'Regentská vláda', MON: 'Lidová vláda', TAN: 'Lidová vláda', SIA: 'Konstituční vláda', AFG: 'Královská vláda', RAJ: 'Místokrálovská správa', NEP: 'Vláda Ranů', YEM: 'Imámova vláda', PHI: 'Vláda Společenství', AST: 'Spojenecká vláda', NZL: 'Labouristická vláda',
 };
 
 /** Cesty země `tag` (prefix `p`): historická + alternativy ke všem ostatním ideologiím. `ideo` = výchozí ideologie (null = všechny čtyři, výchozí strom). */

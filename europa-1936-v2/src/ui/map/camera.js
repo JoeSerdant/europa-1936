@@ -2,12 +2,12 @@
 
 export const MAX_ZOOM = 12;
 
-export function createCamera(mapW, mapH) {
-  return { mapW, mapH, w: 1280, h: 720, x: mapW / 2, y: mapH / 2, zoom: 0.5 };
+export function createCamera(mapW, mapH, wrap = false) {
+  return { mapW, mapH, wrap, w: 1280, h: 720, x: mapW / 2, y: mapH / 2, zoom: 0.5 };
 }
 
 /** Přiblížení, při kterém je vidět celá mapa. */
-export const fitZoom = (cam) => Math.min(cam.w / cam.mapW, cam.h / cam.mapH);
+export const fitZoom = (cam) => (cam.wrap ? cam.h / cam.mapH : Math.min(cam.w / cam.mapW, cam.h / cam.mapH));   // W1: mapa dokola – stačí výška
 export const minZoom = (cam) => fitZoom(cam) * 0.92;
 
 export function resizeCamera(cam, w, h) {
@@ -22,7 +22,8 @@ export function clampCamera(cam) {
   cam.zoom = Math.max(minZoom(cam), Math.min(MAX_ZOOM, cam.zoom));
   const hw = cam.w / cam.zoom / 2, hh = cam.h / cam.zoom / 2;
   const keep = 0.75;     // střed smí od okraje mapy ustoupit tak, že čtvrtina výřezu je mimo mapu
-  cam.x = hw * 2 >= cam.mapW ? cam.mapW / 2 : Math.max(hw * keep, Math.min(cam.mapW - hw * keep, cam.x));
+  if (cam.wrap) cam.x = ((cam.x % cam.mapW) + cam.mapW) % cam.mapW;   // W1: vodorovně dokola – x se jen převede do jedné šířky mapy
+  else cam.x = hw * 2 >= cam.mapW ? cam.mapW / 2 : Math.max(hw * keep, Math.min(cam.mapW - hw * keep, cam.x));
   cam.y = hh * 2 >= cam.mapH ? cam.mapH / 2 : Math.max(hh * keep, Math.min(cam.mapH - hh * keep, cam.y));
   return cam;
 }
@@ -59,6 +60,17 @@ export function fitRect(cam, [x0, y0, x1, y1], pad = 0.1) {
   cam.x = (x0 + x1) / 2; cam.y = (y0 + y1) / 2;
   return clampCamera(cam);
 }
+
+/** W1: posuny kopií mapy (násobky šířky), které zasahují do výřezu `view` – na mapě dokola může být vidět víc kopií najednou. */
+export function wrapCopies(cam, view) {
+  if (!cam.wrap) return [0];
+  const out = [];
+  for (let k = Math.floor(view[0] / cam.mapW); k <= Math.floor(view[2] / cam.mapW); k++) out.push(k);
+  return out;
+}
+
+/** W1: x bodu `x` posunuté o násobek šířky mapy co nejblíž k `ref` (nejkratší cesta přes šev). */
+export const nearX = (cam, x, ref) => (cam.wrap ? x + Math.round((ref - x) / cam.mapW) * cam.mapW : x);
 
 /** Plynulý přesun mezi dvěma pohledy: t ∈ [0,1] (easeInOut). Zoom se interpoluje geometricky. */
 export function lerpView(a, b, t) {

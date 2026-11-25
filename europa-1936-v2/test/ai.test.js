@@ -48,7 +48,7 @@ describe('průmysl AI', () => {
       expect(t1.civ + t1.mil).toBeGreaterThan(t0.civ + t0.mil);
     }
     expect(industryOf(a, 'GER').civ + industryOf(a, 'GER').mil).toBe(industryOf(s0, 'GER').civ + industryOf(s0, 'GER').mil);
-  });
+  }, 240000);   // W1: celý svět – rok hry trvá déle
 });
 
 describe('armáda AI', () => {

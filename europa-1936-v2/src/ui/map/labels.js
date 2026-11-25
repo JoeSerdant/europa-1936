@@ -54,6 +54,7 @@ export function stateLabels(world) {
   const out = new Array(world.states.length).fill(null);
   for (let s = 1; s < world.states.length; s++) {
     const st = world.states[s];
+    if (!st.v || !st.v.length) continue;
     const comps = components(world, st.v).map((c) => describe(world, c));
     comps.sort((a, b) => b.area - a.area);
     const d = comps[0];
