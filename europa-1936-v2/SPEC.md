@@ -1261,12 +1261,28 @@ Historie mimo Evropu jde po **kolejích** stejně jako Evropa (pravidlo 110): da
   - Konec v Asii: SSSR napadne Japonsko 9. 8. 1945, Japonsko natvrdo bezpodmínečně kapituluje 15. 8. 1945 (`jap_holdout` + `jap_surrender`).
   - USA se vyloďují v Normandii spolu s Británií (`overlord_usa`) a drží stejné tempo jako Británie (`usa_border`, `usa_berlin`, `usa_push44`,
     `usa_rhine`); od 21. 4. 1945 se Západní spojenci zastaví na Labi (`eng_elbe`, `usa_elbe`, `fra_elbe`), aby Německo s americkou armádou
-    nepadlo dřív než na začátku května. Maďarsko a Slovensko vytrvají do jara 1945 (`hun_holdout`, `slo_holdout`).
+    nepadlo dřív než na začátku května. Maďarsko a Slovensko vytrvají do jara 1945 (`hun_holdout`, `slo_holdout`); Rudá armáda a Západ
+    vstoupí na maďarské území až na podzim 1944 (`sov_hun_border`, `eng_hun_border`, `usa_hun_border`, `noEnter`).
 - **Zámořská pomoc má dárce** (`OVERSEAS_AID[].src = 'USA'`): zásilky chodí, jen když USA existují (nekapitulovaly) a neřídí je hráč.
 - Milníky pozorovatelské simulace (`npm run sim -- milestones`, do konce srpna 1945) hlásí i Habeš, Čínu, Indočínu, Írán, Pearl Harbor,
   válku SSSR–Japonsko a kapitulaci Japonska. Semínka 7, 42 a 99: Habeš 5. 5. 1936, Čína 8. 7. 1937, Indočína 2. 10. 1940, Írán 25. 8. 1941,
   Pearl Harbor 8. 12. 1941, Německo–USA 11. 12. 1941, SSSR–Japonsko 9. 8. 1945, kapitulace Japonska 15. 8. 1945; Evropa beze změny
-  (Německo 8. 5. 1945, u semínka 99 4. 5. 1945). Známá odchylka: Maďarsko v některých semínkách kapituluje už v roce 1943.
+  (Německo 8. 5. 1945, Maďarsko 4. 4. 1945).
+
+## 4zzzzzzzzz. Národní cíle velmocí světa (W3)
+
+Spojené státy, Japonsko a Čína mají **velký strom cílů** jako evropské velmoci (`data/nat/focuses_world.js`, `WORLD_BIG`, sestavuje `big`):
+vlastní větve + politické cesty (`paths` z `focuses_alt.js`, historická cesta je jedna) + modernizace (`modern`). Nahrazují výchozí strom W1
+(řádek ve `WORLD_BASE`), rozšíření `XL_SMALL` a růst `ALT_GROW` / `MOD_GROW` (množina `WGP` v `focuses_alt.js`).
+- **USA** (84 cílů): Nový úděl a průmysl (přehrady, ocelárny, automobilky, ropa, výrobní linky, Rada válečné výroby), armáda (výběrová služba,
+  obrněná síla, výsadkové divize, námořní pěchota), letectvo (létající pevnosti, doprovodné stíhačky), dvouoceánské loďstvo (letadlové lodě,
+  rychlé bitevní lodě, lodě svobody), věda (radiační laboratoř, luštění šifer, atomový projekt), politika (zákony o neutralitě × konec izolace,
+  Plať a odvez si, Zbrojnice demokracie, Atlantická charta, pomoc Číně, válečná mobilizace).
+- **Japonsko** (80): koncerny, Mandžusko, paliva z uhlí, mobilizace; noční boj, válka v džungli, armáda na pevnině; bitevní lodě × letadlové
+  lodě, dlouhá kopí, noční boj loďstva; námořní letectvo; politika (úder na sever × postup na jih, Sféra společné prosperity, Pakt tří).
+- **Čína** (67): desetiletí výstavby, stěhování továren na západ, silnice přes hory; vzorové divize, milionová armáda, partyzánská válka;
+  dobrovolní piloti; politika (jednotná fronta × potlačení komunistů, usmíření s generály, válka odporu, spojenecká velmoc).
+- Historická AI dává přednost historickým volbám (postup na jih, jednotná fronta – nižší `ai`).
 
 ## 5. Rozhraní
 
@@ -1480,6 +1496,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **F4e–F4g** | **Okna jako v HOI4**: výzkum a politika, výroba a stavby, nábor a návrhář | ✅ |
 | **W1** | **Dark Times – celý svět**: Mercatorova mapa dokola, 41 nových zemí, kolonie, výchozí cíle, počáteční loutky, tropy a jižní polokoule | ✅ |
 | **W2** | **Historie celého světa**: Habeš, čínsko-japonská válka, Indočína, Írán, Pearl Harbor a válka v Pacifiku, konec války v Asii, skutečné USA, posádky v koloniích, kolonie exilových vlád | ✅ |
-| později | stromy cílů velmocí světa, cíle všech zemí, rozhodnutí, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
+| **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
+| později | cíle všech zemí, rozhodnutí, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

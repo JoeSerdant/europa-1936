@@ -70,3 +70,24 @@ describe('nové účinky', () => {
     expect(fxText({ t: 'bld', k: 'radar', n: 2 })).toBe('2× radarová stanice');
   });
 });
+
+describe('W3: velmoci světa', () => {
+  it('USA, Japonsko a Čína mají velký strom s platnými předpoklady, cestami a modernizací', () => {
+    for (const t of ['USA', 'JAP', 'CHI']) {
+      const tree = FOCUS_TREES[t], ids = new Set(tree.map((f) => f.id));
+      expect(tree.length, t).toBeGreaterThan(65);
+      expect(ids.size, t).toBe(tree.length);
+      for (const f of tree) {
+        expect(f.id.startsWith(t.toLowerCase() + '_'), f.id).toBe(true);
+        for (const r of [...f.req, ...f.any, ...f.excl]) expect(ids.has(r), `${f.id} → ${r}`).toBe(true);
+      }
+      expect(tree.some((f) => !f.req.length && !f.any.length)).toBe(true);
+      expect(tree.filter((f) => f.path === 'hist').length).toBe(1);
+      expect(tree.some((f) => f.id === `${t.toLowerCase()}_mod_final`)).toBe(true);
+    }
+    // historické volby mají u AI přednost: postup na jih a jednotná fronta
+    const at = (id) => FOCUS_BY_ID[id];
+    expect(at('jap_southern').ai).toBeLessThan(at('jap_northern').ai);
+    expect(at('chi_front').ai).toBeLessThan(at('chi_purge').ai);
+  });
+});

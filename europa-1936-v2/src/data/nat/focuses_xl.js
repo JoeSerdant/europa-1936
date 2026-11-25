@@ -353,7 +353,6 @@ export const XL_SMALL = {
   SAU: small('sau', { ind: 'Ropné koncese', dip: ['Arabská spolupráce', 'IRQ', 'EGY'] }),
   OMA: small('oma', { ind: 'Obchodní přístavy', dip: ['Ochrana pobřeží', 'ENG', 'PER'] }),
   // W1: země mimo Evropu
-  USA: small('usa', { ind: 'Průmysl Středozápadu', dip: ['Dobré sousedství', 'MEX', 'CAN'] }),
   CAN: small('can', { ind: 'Hutě v Ontariu', dip: ['Společenství', 'ENG', 'USA'] }),
   MEX: small('mex', { ind: 'Ropné rafinerie', dip: ['Panamerická spolupráce', 'USA', 'GUA'] }),
   GUA: small('gua', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'MEX', 'HON'] }),
@@ -378,9 +377,7 @@ export const XL_SMALL = {
   ETH: small('eth', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ITA', 'ENG'] }),
   LBR: small('lbr', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ENG', 'FRA'] }),
   SAF: small('saf', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'ENG', 'POR'] }),
-  JAP: small('jap', { ind: 'Zaibacu', dip: ['Pakt proti kominterně', 'GER', 'ITA'] }),
   MAN: small('man', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'JAP', 'CHI'] }),
-  CHI: small('chi', { ind: 'Arzenály v Chan-jangu', dip: ['Zahraniční poradci', 'GER', 'USA'] }),
   PRC: small('prc', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'CHI', 'SOV'] }),
   SIK: small('sik', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'SOV', 'CHI'] }),
   TIB: small('tib', { ind: 'Národní průmysl', dip: ['Zahraniční vztahy', 'CHI', 'RAJ'] }),

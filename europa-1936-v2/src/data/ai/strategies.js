@@ -105,7 +105,11 @@ export const HIST_STRATEGIES = [
   // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
   { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true },
   { id: 'hun_holdout', tag: 'HUN', from: 2000, until: 3381, holdout: true },   // W2: Maďarsko vytrvá do dubna 1945 (Budapešť padla v únoru, poslední území 4. 4. 1945)
-  { id: 'slo_holdout', tag: 'SLO', from: 2000, until: 3395, holdout: true },   // Slovensko do dubna 1945   // F3: do 8. 5. 1945
+  { id: 'slo_holdout', tag: 'SLO', from: 2000, until: 3395, holdout: true },   // Slovensko do dubna 1945
+  // W2: Rudá armáda vstoupí do Maďarska až na podzim 1944 (Debrecín, říjen 1944) – dřív by ho přejela za pár týdnů v létě 1943
+  { id: 'sov_hun_border', tag: 'SOV', from: 2000, until: 3200, noEnter: 'HUN' },
+  { id: 'eng_hun_border', tag: 'ENG', from: 2000, until: 3200, noEnter: 'HUN' },
+  { id: 'usa_hun_border', tag: 'USA', from: 2000, until: 3200, noEnter: 'HUN' },   // F3: do 8. 5. 1945
   { id: 'ger_surrender', tag: 'GER', from: 3415, until: 3800, armistice: 'SOV', held: 20, force: 3415, conf: true },   // F4c: natvrdo 8. 5. 1945
   { id: 'ita_holdout', tag: 'ITA', from: 2400, until: 2795, holdout: true },   // F4: režim vydrží do vylodění na Sicílii a pádu v září 1943
   { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },

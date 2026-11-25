@@ -206,7 +206,7 @@ const NEAR = {   // sousedé pro „silnou ruku“ (neutrální cesta)
   // W1
   USA: ['CAN', 'MEX'], CAN: ['USA', 'ENG'], MEX: ['USA', 'GUA'], GUA: ['MEX', 'HON'], HON: ['GUA', 'NIC'], ELS: ['GUA', 'HON'], NIC: ['HON', 'COS'], COS: ['NIC', 'PAN'], PAN: ['COS', 'COL'], CUB: ['USA', 'HAI'], HAI: ['DOM', 'CUB'], DOM: ['HAI', 'CUB'], COL: ['VEN', 'ECU'], VEN: ['COL', 'BRA'], ECU: ['PRU', 'COL'], PRU: ['ECU', 'BOL'], BOL: ['PAR', 'PRU'], CHL: ['ARG', 'PRU'], ARG: ['BRA', 'CHL'], URG: ['ARG', 'BRA'], PAR: ['BOL', 'ARG'], BRA: ['ARG', 'URG'], ETH: ['ITA', 'ENG'], LBR: ['ENG', 'FRA'], SAF: ['ENG', 'POR'], JAP: ['CHI', 'SOV'], MAN: ['JAP', 'CHI'], CHI: ['JAP', 'PRC'], PRC: ['CHI', 'SOV'], SIK: ['SOV', 'CHI'], TIB: ['CHI', 'RAJ'], MON: ['SOV', 'CHI'], TAN: ['SOV', 'MON'], SIA: ['FRA', 'ENG'], AFG: ['RAJ', 'PER'], RAJ: ['ENG', 'AFG'], NEP: ['RAJ', 'TIB'], YEM: ['SAU', 'ENG'], PHI: ['USA', 'JAP'], AST: ['NZL', 'ENG'], NZL: ['AST', 'ENG'],
 };
-const HIST_NAME = {
+export const HIST_NAME = {
   POL: 'Vláda plukovníků', CZE: 'Hradní politika', SPR: 'Republika v krizi', HUN: 'Regentství', ROM: 'Královská diktatura', YUG: 'Regentská vláda', TUR: 'Odkaz zakladatele',
   SWE: 'Lidový domov', FIN: 'Mladá republika', GRE: 'Režim generála', HOL: 'Koloniální monarchie', BEL: 'Politika nezávislosti', POR: 'Nový stát', SWI: 'Spolková rada',
   NOR: 'Dělnická vláda', BUL: 'Carská vláda', IRE: 'Svobodný stát', LUX: 'Velkovévodství', AUS: 'Stavovský stát', DEN: 'Sociální smír', EST: 'Doba mlčení', LAT: 'Vůdcovský režim',
@@ -216,7 +216,7 @@ const HIST_NAME = {
 };
 
 /** Cesty země `tag` (prefix `p`): historická + alternativy ke všem ostatním ideologiím. `ideo` = výchozí ideologie (null = všechny čtyři, výchozí strom). */
-function paths(p, tag, ideo, histName) {
+export function paths(p, tag, ideo, histName) {
   const list = [], keys = Object.keys(IDEO).filter((i) => i !== ideo);
   const roots = [[`${p}_alt_hist`, histName || 'Osvědčený kurz', [pp(30), stab(0.02)], 'hist', 'Historická cesta: vláda zůstává.'],
     ...keys.map((i) => [`${p}_alt_${IDEO[i].k}`, IDEO[i].root, [party(i, 10), stab(-0.03)], 'alt', `Alternativní cesta: ${IDEO_NAME[i]}.`])];
@@ -236,8 +236,9 @@ function paths(p, tag, ideo, histName) {
   return list;
 }
 const GP = new Set(['GER', 'SOV', 'ENG', 'FRA', 'ITA']);
+const WGP = new Set(['USA', 'JAP', 'CHI']);   // W3: velmoci světa mají cesty a modernizaci přímo ve velkém stromu (`focuses_world.js`)
 export const ALT_GROW = {};
-for (const tag of Object.keys(NAMES)) if (!GP.has(tag)) ALT_GROW[tag] = paths(tag.toLowerCase(), tag, COUNTRIES[tag]?.ideology || 'neutrality', HIST_NAME[tag]);
+for (const tag of Object.keys(NAMES)) if (!GP.has(tag) && !WGP.has(tag)) ALT_GROW[tag] = paths(tag.toLowerCase(), tag, COUNTRIES[tag]?.ideology || 'neutrality', HIST_NAME[tag]);
 
 // ---------------------------------------------------------------- modernizace (všechny země)
 /** Větev pozdních technologií pro zemi s prefixem `p` (`x` = vlastní názvy). */
@@ -267,7 +268,7 @@ const MOD_NAMES = {
 export const MOD_BRANCHES = {};
 for (const tag of GP) MOD_BRANCHES[tag] = [{ prio: 9, list: modern(tag.toLowerCase(), MOD_NAMES[tag]) }];
 export const MOD_GROW = {};
-for (const tag of Object.keys(NAMES)) if (!GP.has(tag)) MOD_GROW[tag] = modern(tag.toLowerCase());
+for (const tag of Object.keys(NAMES)) if (!GP.has(tag) && !WGP.has(tag)) MOD_GROW[tag] = modern(tag.toLowerCase());
 
 // ---------------------------------------------------------------- výchozí strom (vydané a nové země)
 export const ALT_DEFAULT = [
