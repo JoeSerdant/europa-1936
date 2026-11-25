@@ -30,16 +30,16 @@ export function warBlock(state, a, b) {
   return null;
 }
 
-/** Ospravedlní válku `a` proti `b`: stojí politickou moc a trvá `JUST_DAYS` dní. */
-export function justifyWar(state, a, b, goal = 'conquest') {
+/** Ospravedlní válku `a` proti `b`: stojí politickou moc a trvá `JUST_DAYS` dní. `hist` = vynucená historická válka (W5): bez ceny, jako historický pakt. */
+export function justifyWar(state, a, b, goal = 'conquest', hist = false) {
   const G = WARGOALS[goal];
   if (!G || warBlock(state, a, b)) return state;
   if (state.dip.just.some((j) => j.a === a && j.b === b)) return state;
   if (state.dip.just.filter((j) => j.a === a).length >= DIP.JUST_MAX) return state;
-  const p = state.pol.own[a];
-  if (p.pp < G.pp) return state;
+  const p = state.pol.own[a], cost = hist ? 0 : G.pp;
+  if (p.pp < cost) return state;
   const pol = state.pol.own.slice();
-  pol[a] = { ...p, pp: p.pp - G.pp };
+  pol[a] = { ...p, pp: p.pp - cost };
   return { ...patch(state, { just: [...state.dip.just, { a, b, g: goal, ready: state.tick + G.days * 24 }] }), pol: { ...state.pol, own: pol } };
 }
 

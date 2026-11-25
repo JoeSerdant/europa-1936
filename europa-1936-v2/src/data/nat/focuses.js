@@ -4,6 +4,7 @@
 const F = (id, n, x, y, days, req, fx, extra = {}) => ({ id, n, x, y, days, req, fx, any: [], excl: [], mod: null, ai: 100, info: '', path: '', ...extra });
 import { MORE_TREES, WORLD_TREES, EXTRA } from './focuses_more.js';
 import { WORLD_BIG } from './focuses_world.js';
+import { pathRows } from './focuses_paths.js';
 import { BIG_TREES, GROW, DEFAULT_BIG, grow } from './focuses_big.js';
 import { XL_GROW, XL_SMALL } from './focuses_xl.js';
 import { ALT_GROW, MOD_GROW } from './focuses_alt.js';
@@ -99,7 +100,8 @@ for (const tag in XL_GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], XL_GROW[tag
 for (const tag in XL_SMALL) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], XL_SMALL[tag]);   // M98: rozšíření malých zemí
 for (const tag in ALT_GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], ALT_GROW[tag]);   // M100: politické cesty
 for (const tag in MOD_GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], MOD_GROW[tag]);   // M100: modernizace
-FOCUS_TREES.DEFAULT = DEFAULT_BIG;
+for (const tag in FOCUS_TREES) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], pathRows(tag));   // W5: doktrína, průmysl, zahraniční politika, podpůrné služby
+FOCUS_TREES.DEFAULT = grow(DEFAULT_BIG, pathRows('DEF'));
 
 /** Vyhledání cíle podle id (unikátní napříč stromy). */
 export const FOCUS_BY_ID = {};

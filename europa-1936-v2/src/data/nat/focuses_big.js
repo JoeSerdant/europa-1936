@@ -67,7 +67,7 @@ export function grow(base, list) {
   const depth = {}, rows = {};
   const ai0 = Math.max(...base.map((f) => f.ai)) + 1;
   return [...base, ...list.map(([id, n, days, req, fx, extra = {}], i) => {
-    const d = Math.max(0, ...req.map((r) => (depth[r] !== undefined ? depth[r] + 1 : 0)));
+    const d = Math.max(0, ...[...req, ...(extra.any || [])].map((r) => (depth[r] !== undefined ? depth[r] + 1 : 0)));   // W5: i alternativní předpoklady (`any`)
     depth[id] = d;
     const x = (rows[d] = (rows[d] || 0) + 1) - 1;
     return F(id, n, x, y0 + d, days, req, fx, { ai: ai0 + d * 10 + i / 100, ...extra });

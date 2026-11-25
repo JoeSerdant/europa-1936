@@ -134,7 +134,7 @@ export function aiDiplomacy(state, o) {
       const theirs = campOf(state, t).reduce((a, m) => a + divisionCount(state, m), 0);
       if (!theirs || mine / theirs >= plan.ratio) return startWar(state, o, t);
     } else if (!state.dip.just.some((j) => j.a === o && j.b === t)) {
-      const next = justifyWar(state, o, t);
+      const next = justifyWar(state, o, t, 'conquest', !!plan.force && !!state.ai.hist);   // W5: vynucená historická válka se ospravedlňuje zdarma (nečeká na politickou moc)
       if (next !== state) return next;
     }
   }

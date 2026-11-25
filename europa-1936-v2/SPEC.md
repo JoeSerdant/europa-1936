@@ -1292,6 +1292,21 @@ a zimní jednotky; loďstvo; diplomacie s okolím; zvláštnosti – letecký v�
 dobrovolnická armáda Indie, gurkhové v Nepálu, partyzánská válka čínských komunistů). Pod tím zůstává rozšíření `XL_SMALL`, politické cesty
 a modernizace (W1). Exkluzivní volby (Siam: Japonsko × Západ) mají historickou volbu dřív (nižší `ai`).
 
+## 4zzzzzzzzzz. Volby cest ve všech stromech (W5)
+
+Každý strom (všechny země i výchozí strom) se přes `grow` rozšíří o řádky z `pathRows(tag)` (`data/nat/focuses_paths.js`, id `<tag>_px_*`):
+- **Armádní doktrína** – tři vzájemně se vylučující cesty po čtyřech cílech: lidová armáda (lidská síla, zákopy, vyčerpání),
+  profesionální armáda (zkušenosti, elitní prapory, spolupráce zbraní), pohyblivá válka (motorizace, obrněné svazy, průlom).
+- **Průmysl** – těžký průmysl × spotřební průmysl × těžba surovin (po třech cílech) a společné vyústění „Průmyslová zralost“ (`any`).
+- **Zahraniční politika** (ne velmoci) – příklon k demokraciím × k Ose × k Moskvě × přísná neutralita (kořen + jeden další cíl; vztahy,
+  politická moc, stabilita).
+- **Podpůrné služby** – polní nemocnice, ženisté, spojaři, protiletadlová obrana, letecká škola, pobřežní obrana, velitelský sbor.
+Cíle hlavně urychlují výzkum a dávají zkušenosti; továrnu dávají jen kořeny průmyslu. Historickou volbu (doktrína `DOCTRINE`, průmysl
+`INDUSTRY`, příklon `ALIGN`, jinak výchozí podle velikosti země) řadí `choice` na první místo, takže ji AI vezme dřív (nižší `ai`).
+`grow` počítá řádek i z alternativních předpokladů (`any`). Celkem asi 7400 cílů (velmoci 113–159, ostatní země 85–100).
+Vynucená historická válka (`HIST_WARS` s `force`, historická AI) se ospravedlňuje zdarma (`justifyWar(…, hist = true)`, jako historický pakt) –
+s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji nastřádá.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1506,6 +1521,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W2** | **Historie celého světa**: Habeš, čínsko-japonská válka, Indočína, Írán, Pearl Harbor a válka v Pacifiku, konec války v Asii, skutečné USA, posádky v koloniích, kolonie exilových vlád | ✅ |
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
+| **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
 | později | cíle všech zemí, rozhodnutí, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.
