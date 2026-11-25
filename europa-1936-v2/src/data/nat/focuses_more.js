@@ -328,9 +328,9 @@ export const EXTRA = {
   ],
 };
 
-// W1: výchozí strom pro země mimo Evropu (zatím obecný, se jménem země v cílech)
+// W1: výchozí strom pro země mimo Evropu (obecný, se jménem země v cílech); velmoci USA, Japonsko a Čína mají velký strom (W3, `focuses_world.js`)
 const WORLD_BASE = {
-  USA: ['Nový úděl', 'Arzenál demokracie'], CAN: ['Kanadská železnice', 'Kanadský armádní sbor'], MEX: ['Znárodnění ropy', 'Revoluční armáda'],
+  CAN: ['Kanadská železnice', 'Kanadský armádní sbor'], MEX: ['Znárodnění ropy', 'Revoluční armáda'],
   GUA: ['Kávové plantáže', 'Národní garda'], HON: ['Banánové přístavy', 'Národní garda'], ELS: ['Kávový vývoz', 'Národní garda'],
   NIC: ['Kanál přes jezera', 'Národní garda'], COS: ['Kávová republika', 'Civilní stráž'], PAN: ['Průplavové hospodářství', 'Národní policie'],
   CUB: ['Cukrovary', 'Konstitucionální armáda'], HAI: ['Přístav Port-au-Prince', 'Haitská garda'], DOM: ['Cukerní hospodářství', 'Národní armáda'],
@@ -338,8 +338,8 @@ const WORLD_BASE = {
   PRU: ['Doly v Andách', 'Armáda Inků'], BOL: ['Cínové doly', 'Obnova po Chacu'], CHL: ['Ledek a měď', 'Chilská armáda'],
   ARG: ['Pampy a obilí', 'Armáda La Platy'], URG: ['Hovězí vývoz', 'Národní armáda'], PAR: ['Vítězové z Chaca', 'Veteráni války'],
   BRA: ['Káva a guma', 'Brazilská armáda'], ETH: ['Císařská silnice', 'Obrana císařství'], LBR: ['Kaučukové plantáže', 'Pohraniční síly'],
-  SAF: ['Zlaté doly', 'Obranné síly Unie'], JAP: ['Hospodářství Východní Asie', 'Císařská armáda'], MAN: ['Mandžuské doly', 'Armáda Mandžukua'],
-  CHI: ['Nanjingské desetiletí', 'Národní revoluční armáda'], PRC: ['Pohraniční oblast', 'Rudá armáda'], SIK: ['Hedvábná stezka', 'Provinční armáda'],
+  SAF: ['Zlaté doly', 'Obranné síly Unie'], MAN: ['Mandžuské doly', 'Armáda Mandžukua'],
+  PRC: ['Pohraniční oblast', 'Rudá armáda'], SIK: ['Hedvábná stezka', 'Provinční armáda'],
   TIB: ['Klášterní hospodářství', 'Tibetská armáda'], MON: ['Stepní kolektivy', 'Mongolská jízda'], TAN: ['Pastevecké družstvo', 'Tuvinská jízda'],
   SIA: ['Modernizace Siamu', 'Královská armáda'], AFG: ['Kábulské dílny', 'Kmenové milice'], RAJ: ['Indický průmysl', 'Indická armáda'],
   NEP: ['Himálajské průsmyky', 'Gurkhské pluky'], YEM: ['Imámovy přístavy', 'Kmenová vojska'], PHI: ['Společenství Filipín', 'Filipínská armáda'],

@@ -23,7 +23,8 @@ describe('rozsah', () => {
     }
     for (const t of ['GER', 'SOV', 'ENG', 'FRA', 'ITA']) expect(FOCUS_TREES[t].length, t).toBeGreaterThan(105);
     for (const t of Object.keys(ALT_GROW)) expect(FOCUS_TREES[t].length, t).toBeGreaterThanOrEqual(45);
-    expect(Object.keys(MOD_GROW).length).toBe(71);
+    expect(Object.keys(MOD_GROW).length).toBe(68);   // W3: USA, Japonsko a Čína mají modernizaci ve velkém stromu
+    for (const t of ['USA', 'JAP', 'CHI']) expect(FOCUS_TREES[t].length, t).toBeGreaterThan(65);
   });
   it('cesty se navzájem vylučují; alternativa má cíl se změnou vlády a duchy existují', () => {
     for (const t of tags) {
