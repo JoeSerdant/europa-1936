@@ -149,6 +149,11 @@ export const AI = {
   F4C_CFORT: 2,                     // pobřežní pevnost AI do této úrovně
   F4C_CFORT_VP: 5,                  // jen v přístavech s aspoň tolika vítěznými body
   F4C_HUB_SUP: 0.6,                 // divize pod tímto zásobováním se počítají jako bez zásob
+  S6_RAIL: 2,                       // S6: AI staví železnici do této úrovně
+  S6_RAIL_DIVS: 2,                  // S6: v provincii s aspoň tolika vlastními divizemi bez zásob
+  S6_LOG_STOCK: 1.2,
+  S6_LOG_W: 20,
+  S6_LOG_OVER: 2,                   // S6: nad tolikanásobkem žádané zásoby lokomotiv AI linku lokomotiv přepne jinam                     // S6: váha chybějící výzbroje zásobování ve výrobě (vůči potřebě výzbroje na jednu divizi)                // S6: AI chce ve skladu tolikanásobek potřeby lokomotiv a aut pro zásobování
   F4C_HUB_DIVS: 4,                  // zásobovací uzel ve státě s aspoň tolika takovými divizemi
   VOL_REL: 50,                      // F4: volná historie – AI pošle dobrovolníky jen zemi se shodnou ideologií a vztahem aspoň tolik
   VOL_N: 2,                         // a nejvýš tolik divizí najednou

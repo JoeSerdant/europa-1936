@@ -105,6 +105,15 @@ export const C = {
   SUP_PORT_LVL: 0.25,       // + tolik za úroveň přístavu
   SUP_PORT_MAX: 1.6,        // nejvyšší tok z přístavu
   SUP_MIN_FLOW: 0.05,       // pod tímto tokem se zásobování dál nešíří
+  // S6: výzbroj zásobování (lokomotivy `vlaky`, nákladní auta `auta`) – potřeba podle počtu divizí, za války se opotřebuje
+  SUP_TRAIN_PER_DIV: 0.5,   // lokomotiv na divizi
+  SUP_TRUCK_PER_DIV: 8,     // nákladních aut na divizi (navíc k autům v praporech)
+  SUP_TRAIN_MIN: 0.6,       // bez lokomotiv dorazí po železnici k uzlům jen tento podíl toku
+  SUP_TRUCK_PEN: 0.35,      // bez aut je úbytek toku od zdroje o tolik větší
+  SUP_LOG_STEP: 0.1,        // podíly pokrytí se zaokrouhlují (mezipaměť toku)
+  SUP_TRAIN_WEAR: 0.002,    // za války denně zničených lokomotiv (podíl potřeby)
+  SUP_TRUCK_WEAR: 0.005,    // za války denně opotřebovaných aut (podíl potřeby)
+  SUP_RAIL_BUILT: 3,        // nejvyšší úroveň spoje k existující trati, který vede z postavené železnice (podle úrovně stavby)
   SUP_GRACE: 72,            // hodin zásoby v batohu
   SUP_GRACE_REFILL: 2,      // hodin zásoby, které se vrátí za hodinu při plném zásobování
   SUP_ORG_CAP: 0.35,        // strop organizace při úplném nedostatku (podíl maxima)

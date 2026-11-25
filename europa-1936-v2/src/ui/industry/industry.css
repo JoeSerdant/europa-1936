@@ -991,3 +991,12 @@ button.st-row:hover { background: var(--ink-3); }
 .stk-tile b { font: 700 14px/1 var(--display); color: var(--paper); }
 .stk-tile.zero b { color: var(--text-3); }
 .ind-sum .stat-cell i svg { vertical-align: -3px; margin-right: 3px; }
+
+/* ------------------------------------------------------------------ S6: výzbroj zásobování v Logistice */
+.lg-sup { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.lg-sup-row { display: grid; grid-template-columns: 48px 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 10px; padding: 6px 8px; background: rgba(15, 24, 33, 0.7); box-shadow: inset 0 0 0 1px var(--rule); }
+.lg-sup-row .eq-tile { grid-row: 1 / span 2; }
+.lg-sup-row .nm { font: 600 13.5px/1.2 var(--display); color: var(--paper); }
+.lg-sup-row b { font: 600 13px/1 var(--display); color: var(--brass-hi); }
+.lg-sup-row .bar { grid-column: 2 / span 2; }
+.lg-sup-row.bad { box-shadow: inset 3px 0 0 var(--bad, #d9533a), inset 0 0 0 1px var(--rule); }

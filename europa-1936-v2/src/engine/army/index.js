@@ -7,5 +7,6 @@ export { C as ARMY, xpLevel, XP_NAMES } from './constants.js';
 export { PLAN_MODES, MODE_NAMES } from './plans.js';
 export { genLevel, xpForLevel, genMods } from './leaders.js';
 export { supplyFlow } from './supply.js';
+export { logNeed, logRatios, builtRailEdges, nearTrack, divCount } from './logistics.js';   // S6
 export { geo, adjacency } from './geo.js';
 export { marchEta, marchPreview } from './march.js';

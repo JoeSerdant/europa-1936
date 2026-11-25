@@ -1,5 +1,6 @@
 // Příkazy průmyslu (M19): čisté funkce `(state, …) → state`; neplatný vstup vrací tentýž objekt. Země jsou indexy (`o`), státy ids.
 // Příkazy nehlídají, komu věci patří vůči hráči – to dělá `ui/actions.js` (engine je neutrální pro AI).
+import { nearTrack } from '../army/logistics.js';
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { BUILDINGS, PROD, isShip, RESOURCES } from '../../data/industry/index.js';
@@ -35,7 +36,7 @@ export const hasRail = (w, p) => w.rails.start[p + 1] > w.rails.start[p];
 /** Leží provincie u moře? */
 export const isCoastal = (w, p) => { let c = false; w.forCoast(p, () => { c = true; }); return c; };
 /** Úroveň provinční stavby `kind` v provincii (pevnost `ind.fort`, F4c: pobřežní pevnost `ind.cf`). */
-export const provLevel = (ind, p, kind) => ((kind === 'cfort' ? ind.cf : ind.fort) || {})[p] || 0;
+export const provLevel = (ind, p, kind) => ((kind === 'cfort' ? ind.cf : kind === 'rail' ? ind.rail : ind.fort) || {})[p] || 0;   // S6: železnice `ind.rail`
 
 /** Zadá pevnost (nebo F4c pobřežní pevnost `cfort`) v provincii `p` (stát i kontrola patří stejné zemi); úroveň do `max`, stavby se řadí do fronty země. */
 export function buildFort(state, p, kind = 'fort') {
@@ -44,6 +45,7 @@ export function buildFort(state, p, kind = 'fort') {
   const s = w.provState[p], o = state.stateOwner[s];
   if (!o || state.ctrl[p] !== o) return state;
   if (B.coast && !isCoastal(w, p)) return state;
+  if (B.railNet && !nearTrack(w, ind.rail, p)) return state;   // S6: trať jen vedle existující
   if (provLevel(ind, p, kind) + ind.build.filter((b) => b.p === p && b.k === kind).length >= B.max) return state;
   if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return state;
   const id = ind.jn + 1;

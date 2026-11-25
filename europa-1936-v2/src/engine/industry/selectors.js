@@ -1,4 +1,5 @@
 // Dotazy na průmysl pro rozhraní a AI (čisté, bez změn stavu).
+import { nearTrack } from '../army/logistics.js';
 import { hasRail, isCoastal, provLevel } from './commands.js';
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
@@ -115,6 +116,7 @@ export function fortRoom(state, p, o, kind = 'fort') {
   if (!B || !B.province || !(p >= 1 && p <= w.L)) return { n: 0, why: 'Neplatná provincie.' };
   if (state.stateOwner[w.provState[p]] !== o || state.ctrl[p] !== o) return { n: 0, why: `${B.n}: stavět lze jen ve vlastní, neokupované provincii.` };
   if (B.coast && !isCoastal(w, p)) return { n: 0, why: `${B.n}: provincie neleží u moře.` };
+  if (B.railNet && !nearTrack(w, ind.rail, p)) return { n: 0, why: `${B.n}: stavět lze jen vedle existující trati.` };   // S6
   if (ind.build.filter((b) => b.o === o).length >= I.QUEUE_MAX) return { n: 0, why: 'Fronta staveb je plná.' };
   const n = B.max - provLevel(ind, p, kind) - ind.build.filter((b) => b.p === p && b.k === kind).length;
   return n > 0 ? { n, why: '' } : { n: 0, why: `${B.n}: nejvyšší úroveň.` };

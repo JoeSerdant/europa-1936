@@ -9,7 +9,7 @@ import { countryLabels, stateLabels } from './labels.js';
 import { TILE, MIN_LEVEL, MAX_LEVEL, levelFor, tileSize, tileKey, tileRange, Grid, LruCache, rectsOverlap } from './tiles.js';
 import { FONT_DISPLAY, FONT_TEXT } from './fonts.js';
 import { UnitLayer } from './units.js';
-import { frontEdges, fogOn, visibleLand, visibleSeas } from '../../engine/index.js';
+import { frontEdges, fogOn, visibleLand, visibleSeas, builtRailEdges } from '../../engine/index.js';
 import { buildRelief } from './relief.js';
 import { ShadeLayer, FOG_RES, NIGHT_RES } from './shade.js';
 
@@ -163,6 +163,8 @@ export class MapRenderer {
     const bq = game.ind ? game.ind.build : null;   // M103: režim Stavby se překreslí po zadání stavby
     if (!ownerChanged && this.mode.startsWith('build:') && (bq !== this.lastBuildQ || indChanged)) { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     this.lastBuildQ = bq;
+    const rail = game.ind ? game.ind.rail : null;   // S6: postavená železnice se kreslí do dlaždic
+    if (rail !== this.lastRail) { const had = this.lastRail && Object.keys(this.lastRail).length; this.lastRail = rail; this.builtRails = builtRailEdges(this.world, rail); if (had || this.builtRails.length) this.invalidate(); }
     this.units.player = game.player ? this.world.ownerIdx[game.player] : 0;
     if (this.units.player !== this.player) { this.player = this.units.player; this.rebuildBorders(); this.invalidate(); }   // M91: záře hranic země hráče
     if (this.showUnits) this.units.setGame(game);
@@ -375,6 +377,21 @@ export class MapRenderer {
         g.strokeStyle = '#3a2418';
         for (let lv = 1; lv <= 5; lv++) { g.lineWidth = (0.5 + lv * 0.22) * px * 1.2; g.stroke(byLevel[lv]); }
         g.globalAlpha = 1;
+      }
+      // S6: postavená železnice (spoje k sousedním tratím), tmavší a se světlým středem jako nová trať
+      if (this.builtRails && this.builtRails.length) {
+        const byLevel = [null, new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D()];
+        let any = false;
+        for (const [a, b, lv] of this.builtRails) {
+          const A = world.land[a].c, B = world.land[b].c;
+          if (Math.max(A[0], B[0]) < x0 || Math.min(A[0], B[0]) > x1 || Math.max(A[1], B[1]) < y0 || Math.min(A[1], B[1]) > y1) continue;
+          byLevel[lv].moveTo(A[0], A[1]); byLevel[lv].lineTo(B[0], B[1]); any = true;
+        }
+        if (any) {
+          g.globalAlpha = 0.8 * smooth(0.9, 1.5, z);
+          for (let lv = 1; lv <= 5; lv++) { g.strokeStyle = '#2a170e'; g.lineWidth = (0.6 + lv * 0.24) * px * 1.3; g.stroke(byLevel[lv]); g.strokeStyle = '#c9a46a'; g.lineWidth = 0.35 * px; g.stroke(byLevel[lv]); }
+          g.globalAlpha = 1;
+        }
       }
     }
     tile.ver = this.version;

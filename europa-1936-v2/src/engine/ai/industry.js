@@ -1,4 +1,5 @@
 // AI: průmysl (M24). Používá stejné příkazy jako hráč: build, addLine, setLineFactories.
+import { logNeed, divCount } from '../army/logistics.js';
 import { getWorld } from '../world.js';
 import { DEFAULT_SPLIT, EQUIP_PROD, PROD } from '../../data/industry/index.js';
 import { deriveStats } from '../army/stats.js';
@@ -43,6 +44,14 @@ export function demandSplit(state, o, war, res = null) {
     if (res && PROD[e]) for (const r in PROD[e].res) avail = Math.min(avail, res[r] ? res[r].f : 0);
     w[e] = need[e] * cost * f * Math.max(AI.RES_AVAIL_MIN, avail) * (pp[e] || 1);
     sum += w[e];
+  }
+  // S6: lokomotivy a auta pro zásobování – chybějící kusy (na divizi, aby byly srovnatelné s potřebou výzbroje divize)
+  const ln = logNeed(state.mil, o), nd = Math.max(1, divCount(state.mil, o));
+  for (const [e, want] of [['vlaky', ln.trains * AI.S6_LOG_STOCK], ['auta', ln.trucks * AI.S6_LOG_STOCK]]) {
+    const def = want - (stock[e] || 0);
+    if (def <= 0) continue;
+    const add = (def / nd) * (EQUIP_PROD[e] ? EQUIP_PROD[e].cost : 1) * AI.S6_LOG_W;   // silná váha: bez ní by druh nedostal ani jednu továrnu
+    w[e] = (w[e] || 0) + add; sum += add;
   }
   const out = {};
   let bs = 0;
@@ -123,6 +132,13 @@ export function aiIndustry(state, o) {
     free--;
   }
   void producibleEquip;
+  // S6: lokomotiv je dost – jejich linka přejde na nejpotřebnější výzbroj (jinak by vyráběla dál, rozdělení ji nevezme)
+  const over = state.ind.lines.find((l) => l.o === o && l.eq === 'vlaky');
+  if (over && (state.mil.stock[o].vlaky || 0) > logNeed(state.mil, o).trains * AI.S6_LOG_STOCK * AI.S6_LOG_OVER) {
+    let best = '', bv = -1;
+    for (const e of Object.keys(split).sort()) if (e !== 'vlaky' && !EQUIP[e].log && isUnlocked(state, o, EQUIP[e].unlock) && split[e] > bv) { bv = split[e]; best = e; }
+    if (best) { const next = setLineEquip(state, over.id, best); if (next !== state) return next; }
+  }
   return rebalanceLines(state, o, split);
 }
 

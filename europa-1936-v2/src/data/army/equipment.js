@@ -12,6 +12,7 @@ export const EQUIP = {
   mtanky:  { n: 'Střední tanky', ab: 'STK', unlock: 'mtank' },
   htanky:  { n: 'Těžké tanky', ab: 'TTK', unlock: 'htank' },
   podpora: { n: 'Podpůrná výzbroj', ab: 'POD', unlock: null },
+  vlaky:   { n: 'Lokomotivy a vagony', ab: 'VLK', unlock: null, log: true },   // S6: jen zásobování (žádný prapor je nepotřebuje)
 };
 
 export const EQUIP_IDS = Object.keys(EQUIP);

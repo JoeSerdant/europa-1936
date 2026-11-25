@@ -14,6 +14,7 @@ export const BUILDINGS = {
   nb: { n: 'Námořní základna', ab: 'NZ', cost: 400, days: 30, slot: false, max: 5, port: true, info: 'Opravuje poškozené lodě flotil v přilehlé mořské oblasti (rychleji s každou úrovní). Jen ve státě s přístavem.' },   // F4c
   hub: { n: 'Zásobovací uzel', ab: 'ZU', cost: 600, days: 45, slot: false, max: 1, rail: true, info: 'Nový zdroj zásob v hlavní provincii státu (jako železniční uzel): napojený železnicí na hlavní město zásobuje frontu daleko od domova.' },   // F4c
   cfort: { n: 'Pobřežní pevnost', ab: 'PPE', cost: 300, days: 35, slot: false, max: 3, province: true, coast: true, info: 'Opevnění pobřeží: vyloďující se nepřítel ztratí organizaci, na nejvyšší úrovni se vylodit nedokáže.' },   // F4c
+  rail: { n: 'Železnice', ab: 'ŽEL', cost: 220, days: 25, slot: false, max: 5, province: true, railNet: true, info: 'Trať v provincii (úroveň 1–5): napojí ji na železniční síť pro zásobování a zrychlí přísun zásob. Staví se jen vedle existující trati.' },   // S6
   inf: { n: 'Infrastruktura', ab: 'INF', cost: 500, days: 30, slot: false, max: 3, info: 'Zlepšuje silnice a železnici státu: rychlejší pochod, lepší zásobování, další stavební slot.' },
 };
 export const BUILDING_IDS = Object.keys(BUILDINGS);
@@ -38,6 +39,7 @@ export const EQUIP_PROD = {
   mtanky:  { cost: 14,  res: { ocel: 5, guma: 0.6, chrom: 0.5, hlinik: 0.3, ropa: 0.8 } },
   htanky:  { cost: 22,  res: { ocel: 8, guma: 0.8, chrom: 1, hlinik: 0.5, ropa: 1.2, wolfram: 0.3 } },
   podpora: { cost: 1.5, res: { ocel: 0.5, hlinik: 0.2 } },
+  vlaky:   { cost: 5,   res: { ocel: 2.5 } },   // S6: lokomotivy a vagony pro zásobování po železnici
 };
 
 /** Výchozí rozdělení vojenských továren mezi druhy výzbroje (zemím bez hráče a při startu hry). Pořadí = priorita při malém počtu továren. */

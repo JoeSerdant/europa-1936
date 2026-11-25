@@ -1,4 +1,5 @@
 // Denní krok armády (po půlnoci): zásobování, doplňování ze skladu, zakopání, plánování, zkušenosti velitelů, měsíční lidská síla.
+import { dailyLogistics } from './logistics.js';
 import { C } from './constants.js';
 import { dailySupply } from './supply.js';
 import { plansSteps } from './plans.js';
@@ -101,6 +102,7 @@ function monthlyManpower(ctx) {
 /** Denní krok armády jako generátor (F2): přestávky po zásobování a po každé plánované armádě (`plansSteps`). */
 export function* dailySteps(ctx) {
   dailySupply(ctx);
+  dailyLogistics(ctx);   // S6: opotřebení lokomotiv a aut za války
   yield;
   dailyReinforce(ctx);
   dailyDigIn(ctx);

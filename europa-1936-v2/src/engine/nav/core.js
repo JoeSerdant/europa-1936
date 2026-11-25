@@ -1,5 +1,6 @@
 // Společné pomůcky námořnictva (M27): mořský graf, vzdálenosti, cesty, domovská oblast, blokáda, kapacita přepravy.
 import { getWorld } from '../world.js';
+import { logRatios } from '../army/logistics.js';
 import { Heap } from '../army/heap.js';
 import { atWar } from '../army/war.js';
 import { sameFaction } from '../dip/core.js';
@@ -145,6 +146,8 @@ export function seaPorts(state, o) {
     for (const p of all) if (state.ctrl[p] === o && !seaBlocked(state, o, w.portSea[p])) out.push(p);
   }
   Object.defineProperty(out, 'hubs', { value: builtHubs(state, o), enumerable: false });   // F4c: postavené zásobovací uzly jedou s přístavy do každého volání `supplyFlow` (mimo výčet pole)
+  Object.defineProperty(out, 'log', { value: logRatios(state, o), enumerable: false });   // S6: pokrytí lokomotivami a auty
+  if (state.ind && state.ind.rail) Object.defineProperty(out, 'rail', { value: state.ind.rail, enumerable: false });   // S6: postavená železnice
   return out;
 }
 
