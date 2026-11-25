@@ -32,6 +32,19 @@ export const HIST_WARS = [
   { tag: 'GER', target: 'YUG', from: 1892, until: 2400, ratio: 0.5, force: 1 },   // M88: balkánské tažení na jaře 1941 (F4: s ospravedlněním válka 6. 4. 1941)
   { tag: 'GER', target: 'GRE', from: 1893, until: 2400, ratio: 0.5, force: 1 },
   { tag: 'HUN', target: 'YUG', from: 1898, until: 2400, ratio: 1.0 },
+  // W2: Asie, Pacifik a zbytek světa (natvrdo podle historie: `force` = válka ~31 dní po začátku okna bez ohledu na zaneprázdnění)
+  { tag: 'ITA', target: 'ETH', from: 0, until: 300, ratio: 0.1, force: 1 },           // Habeš: válka začala v říjnu 1935, ve hře na začátku února 1936
+  { tag: 'JAP', target: 'CHI', from: 522, until: 900, ratio: 0.05, force: 1 },        // incident na mostě Marca Pola, 7. 7. 1937
+  { tag: 'PRC', target: 'JAP', from: 560, until: 1200, ratio: 0.01, with: 'CHI' },     // komunisté proti Japonsku (druhá jednotná fronta)
+  { tag: 'ENG', target: 'PER', from: 2032, until: 2200, ratio: 0.3, force: 1 },        // obsazení Íránu, 25. 8. 1941
+  { tag: 'SOV', target: 'PER', from: 2032, until: 2200, ratio: 0.3, force: 1 },
+  { tag: 'JAP', target: 'USA', from: 2136, until: 2400, ratio: 0.05, force: 1 },       // Pearl Harbor, 7. 12. 1941 (s Británií vstupuje do války přes HIST_ENTRY)
+  { tag: 'GER', target: 'USA', from: 2140, until: 2500, ratio: 0.05, force: 1, with: 'JAP' },   // 11. 12. 1941
+  { tag: 'ITA', target: 'USA', from: 2140, until: 2500, ratio: 0.01, with: 'JAP' },
+  { tag: 'SIA', target: 'ENG', from: 2185, until: 2500, ratio: 0.01, with: 'JAP' },    // Siam po boku Japonska, 25. 1. 1942
+  { tag: 'MEX', target: 'GER', from: 2302, until: 2700, ratio: 0.01, with: 'USA' },    // Mexiko, 22. 5. 1942
+  { tag: 'BRA', target: 'GER', from: 2394, until: 2800, ratio: 0.01, with: 'USA' },    // Brazílie, 22. 8. 1942
+  { tag: 'SOV', target: 'JAP', from: 3477, until: 3700, ratio: 0.3, force: 1 },        // Mandžuská operace, 9. 8. 1945
 ];
 
 /** Historické bloky: země `tag` ve dni `from` založí blok a zve `invite` (pozvaný přijme podle vztahů). */
@@ -44,6 +57,7 @@ export const HIST_ENTRY = [
   { tag: 'ITA', from: 1622 },                     // 10. 6. 1940 – vstup Itálie do války
   { tag: 'BUL', from: 1886, skip: ['SOV'] },      // 1. 3. 1941 – přistoupení k Ose (se SSSR Bulharsko neválčilo)
   { tag: 'HUN', from: 2003 },                     // 27. 6. 1941 – Maďarsko proti SSSR
+  { tag: 'JAP', from: 2167, skip: ['SOV'] },      // W2: Japonsko vstupuje do války s Británií v den Pearl Harboru; se SSSR platí pakt až do srpna 1945
   { tag: 'ROM', from: Infinity },
   { tag: 'YUG', from: Infinity },
 ];
@@ -51,6 +65,8 @@ export const HIST_ENTRY = [
 export const HIST_FACTIONS = [
   { tag: 'GER', nm: 'Osa Berlín–Řím', invite: ['ITA', 'HUN', 'BUL'], from: 270 },
   { tag: 'ENG', nm: 'Britská spolupráce', invite: ['POR', 'GRE', 'EGY', 'IRQ'], from: 200 },
+  { tag: 'GER', nm: 'Osa Berlín–Řím', invite: ['JAP'], from: 1731 },                 // W2: Pakt tří, 27. 9. 1940
+  { tag: 'ENG', nm: 'Britská spolupráce', invite: ['USA', 'MEX', 'BRA'], from: 2172 },   // W2: Spojené státy a americké země po Pearl Harboru
 ];
 
 /** Historické záruky nezávislosti (M48): země `tag` ve dni `from` zaručí nezávislost země `target` (platí, jen když to hra dovolí). */

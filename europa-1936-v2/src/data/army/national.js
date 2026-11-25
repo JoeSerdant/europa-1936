@@ -6,18 +6,23 @@ import { ARMY_WORLD } from '../world/countries.js';
 //  cult  kultura jmen velitelů (viz names.js)
 //  man   podíl obyvatel jako počáteční zásoba lidské síly (např. 0,015 = 1,5 %)
 //  pool  počet velitelů navíc (nad potřebu armád), ze kterých si hráč vybírá
+//  place posádky mimo jádro (W2): [{ states: [názvy států], divs: { druh: počet } }] – divize stojí v daných státech (kolonie, zámořské základny)
 
 export const NATIONAL = {
   GER: { cult: 'de', divs: { pesi: 17, motor: 2, tank: 3, hory: 1, kav: 1 }, xp: 0.3, res: 0.45, man: 0.016, pool: 4 },
-  FRA: { cult: 'fr', divs: { pesi: 40, brig: 2, motor: 3, tank: 1, hory: 4, kav: 4 }, xp: 0.25, res: 0.5, man: 0.014, pool: 6 },
-  ENG: { cult: 'en', divs: { pesi: 11, motor: 1, tank: 1, kav: 1 }, xp: 0.35, res: 0.8, man: 0.012, pool: 3 },
+  FRA: { cult: 'fr', divs: { pesi: 37, brig: 2, motor: 3, tank: 1, hory: 4, kav: 4 }, xp: 0.25, res: 0.5, man: 0.014, pool: 6,
+    place: [{ states: ['Tonkin', 'Kočinčína', 'Annam'], divs: { pesi: 1, brig: 2 } }] },
+  ENG: { cult: 'en', divs: { pesi: 11, motor: 1, tank: 1, kav: 1 }, xp: 0.35, res: 0.8, man: 0.012, pool: 3,
+    place: [{ states: ['Singapur a Johor', 'Kuala Lumpur'], divs: { pesi: 2 } }, { states: ['Hongkong'], divs: { brig: 1 } }, { states: ['Rangún', 'Mandalaj'], divs: { brig: 1 } }, { states: ['Keňa'], divs: { brig: 1 } }] },
   IRE: { cult: 'ga', divs: { pesi: 2 }, xp: 0.12, res: 0.3, man: 0.012, pool: 1 },
-  HOL: { cult: 'nl', divs: { pesi: 6, kav: 1 }, xp: 0.12, res: 0.4, man: 0.014, pool: 1 },
+  HOL: { cult: 'nl', divs: { pesi: 6, kav: 1 }, xp: 0.12, res: 0.4, man: 0.014, pool: 1,
+    place: [{ states: ['Batávie', 'Střední Jáva', 'Východní Jáva'], divs: { pesi: 2, brig: 1 } }, { states: ['Medan', 'Palembang'], divs: { brig: 1 } }] },
   BEL: { cult: 'nl', divs: { pesi: 10, hory: 1, kav: 1 }, xp: 0.15, res: 0.4, man: 0.014, pool: 1 },
   LUX: { cult: 'fr', divs: { brig: 1 }, xp: 0.1, res: 0.2, man: 0.015, pool: 0 },
   SWI: { cult: 'de', divs: { pesi: 6, hory: 2 }, xp: 0.2, res: 0.5, man: 0.02, pool: 1 },
   AUS: { cult: 'de', divs: { pesi: 4, motor: 1, hory: 1 }, xp: 0.18, res: 0.3, man: 0.014, pool: 1 },
-  ITA: { cult: 'it', divs: { pesi: 29, brig: 1, motor: 3, tank: 1, hory: 5, kav: 1 }, xp: 0.2, res: 0.35, man: 0.014, pool: 5 },
+  ITA: { cult: 'it', divs: { pesi: 29, brig: 1, motor: 3, tank: 1, hory: 5, kav: 1 }, xp: 0.2, res: 0.35, man: 0.014, pool: 5,
+    place: [{ states: ['Eritrea', 'Danakil'], divs: { pesi: 2, brig: 1 } }, { states: ['Mogadišo', 'Jubaland', 'Mudug', 'Migiurtinie'], divs: { pesi: 2, brig: 2 } }] },   // armáda pro válku v Etiopii
   SPR: { cult: 'es', divs: { pesi: 20, hory: 2, kav: 2 }, xp: 0.15, res: 0.3, man: 0.013, pool: 3 },
   POR: { cult: 'pt', divs: { pesi: 5, kav: 1 }, xp: 0.12, res: 0.3, man: 0.013, pool: 1 },
   DEN: { cult: 'sc', divs: { pesi: 3 }, xp: 0.12, res: 0.3, man: 0.013, pool: 1 },

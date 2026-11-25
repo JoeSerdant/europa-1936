@@ -30,8 +30,11 @@ function stateByName(name) {
 /** Požadavek z dat: `{ id, kind, states }` (u `cede` jen státy, které cíl ještě vlastní). */
 export function demandSpec(state, d, b) {
   const states = d.kind === 'cede' ? (d.states || []).map(stateByName).filter((s) => s && state.stateOwner[s] === b) : [];
-  return { id: d.id, kind: d.kind, states };
+  return { id: d.id, kind: d.kind, states, ...(d.viaLord ? { lord: true } : {}) };
 }
+
+/** W2: požadavek `viaLord` vůči loutce, jejíž pán je v bloku požadující země (Indočína: Vichy ustoupí na nátlak Německa) – loutka ho přijme vždy. */
+export const lordBacks = (state, a, b, spec) => !!(spec && spec.lord && state.dip.sub[b] && sameFaction(state, a, state.dip.sub[b]));
 
 /** Síly stran: divize požadujícího bloku a obránců (blok cíle a zaručitelé, kteří by se přidali). */
 export function demandForce(state, a, b) {
@@ -59,7 +62,7 @@ export function demandBlock(state, a, b, spec) {
   if (atWar(state.mil, a, b)) return 'Ve válce se ultimátum nevznáší.';
   if (sameFaction(state, a, b)) return 'Člen téhož bloku je spojenec.';
   if (pactOf(state, a, b)) return 'Platí pakt o neútočení.';   // M75
-  if (state.dip.sub[a] || state.dip.sub[b]) return 'Loutkový stát požadavky nevznáší ani nepřijímá.';
+  if (state.dip.sub[a] || (state.dip.sub[b] && !lordBacks(state, a, b, spec))) return 'Loutkový stát požadavky nevznáší ani nepřijímá.';
   if (spec.kind !== 'annex' && !spec.states.length) return 'Země už požadované území nevlastní.';
   if (ultsOf(state).some((u) => u.a === a && u.b === b && (u.id === spec.id || u.ok === 2 || state.tick - u.t < DIP.ULT_COOLDOWN * 24))) return 'Ultimátum nedávno proběhlo.';
   if (state.pol.own[a].pp < DIP.ULT_PP) return `Chybí politická moc (${Math.ceil(DIP.ULT_PP - state.pol.own[a].pp)}).`;
@@ -143,7 +146,7 @@ export function demand(state, a, b, spec) {
     s = patch(s, { ult: [...ultsOf(s), { id: spec.id, a, b, t: s.tick, ok: 2 }] });
     return logAdd(askPlayer(s, b, spec.id), { k: 'ultq', a, b, x: spec.id });
   }
-  const r = acceptsDemand(s, a, b, (DEMAND_BY_ID[spec.id] || {}).ratio ?? DIP.ULT_RATIO);
+  const r = lordBacks(s, a, b, spec) ? { ok: true } : acceptsDemand(s, a, b, (DEMAND_BY_ID[spec.id] || {}).ratio ?? DIP.ULT_RATIO);
   s = patch(s, { ult: [...ultsOf(s), { id: spec.id, a, b, t: s.tick, ok: r.ok ? 1 : 0 }] });
   return r.ok ? grantDemand(s, a, b, spec) : refuseDemand(s, a, b, spec);
 }

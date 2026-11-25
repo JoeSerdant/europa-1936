@@ -4,16 +4,17 @@
 //  xp       nejmenší zkušenost jednotek podle zemí (0–1)
 //  tech     do kterého roku mají země hotové technologie podle velikosti (tier)   factions, wars, pacts: bloky, války a pakty o neútočení na začátku
 export const SCENARIOS = {
-  1936: { id: '1936', n: 'Leden 1936', info: 'Klidné předválečné roky. Čas na výstavbu průmyslu, zbrojení a diplomacii.', tick: 0 },
+  1936: { id: '1936', n: 'Leden 1936', info: 'Klidné předválečné roky. Čas na výstavbu průmyslu, zbrojení a diplomacii. Itálie se chystá dobýt Etiopii.', tick: 0 },
   1939: {
     id: '1939', n: 'Září 1939', info: 'Německo napadlo Polsko, Británie a Francie vyhlásily válku. Rakousko a Československo zanikly, země jsou vyzbrojené.',
     tick: 32184,
-    dead: ['AUS', 'CZE', 'ALB'],
+    dead: ['AUS', 'CZE', 'ALB', 'ETH'],
     transfer: [
       { to: 'GER', from: 'AUS' },
       { to: 'GER', from: 'CZE', except: ['Podkarpatská Rus'] },
       { to: 'HUN', states: ['Podkarpatská Rus'] },
       { to: 'ITA', from: 'ALB' },
+      { to: 'ITA', from: 'ETH' },   // W2: Etiopie dobyta v roce 1936
     ],
     growth: {
       GER: { ind: 1.5, mil: 2.4, army: 2.4, air: 2.2, navy: 1.5 },
@@ -28,9 +29,9 @@ export const SCENARIOS = {
     tech: { 1: 1939, 2: 1938, 3: 1937 },
     factions: [
       { nm: 'Osa Berlín–Řím', ldr: 'GER', mem: ['GER', 'ITA'] },
-      { nm: 'Spojenci', ldr: 'ENG', mem: ['ENG', 'FRA', 'POL'] },
+      { nm: 'Spojenci', ldr: 'ENG', mem: ['ENG', 'FRA', 'POL', 'CAN', 'AST', 'NZL', 'SAF'] },
     ],
-    wars: [['GER', 'POL', 'att'], ['ENG', 'GER'], ['FRA', 'GER']],   // třetí položka „att“ = útočník
+    wars: [['GER', 'POL', 'att'], ['ENG', 'GER'], ['FRA', 'GER'], ['CAN', 'GER'], ['AST', 'GER'], ['NZL', 'GER'], ['SAF', 'GER'], ['JAP', 'CHI', 'att'], ['PRC', 'JAP']],   // třetí položka „att“ = útočník; W2: dominia a válka v Číně
     pacts: [['GER', 'SOV']],   // pakty o neútočení platné na začátku (M75)
     pp: 150,
   },

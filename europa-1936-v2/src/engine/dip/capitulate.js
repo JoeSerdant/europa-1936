@@ -8,7 +8,7 @@ import { DIP } from './constants.js';
 import { logAdd } from '../log.js';
 import { conference, stateValue } from './subjects.js';
 import { addSpirit } from '../nat/spirits.js';
-import { exileCandidate, goIntoExile, dropExiles, markExile, exileHost } from './exile.js';
+import { exileCandidate, goIntoExile, dropExiles, markExile, exileHost, exileColonies } from './exile.js';
 import { divisionCount } from '../army/selectors.js';
 import { returnFrom } from './volunteers.js';
 
@@ -91,7 +91,8 @@ export function capitulate(state, loser, opts = {}) {
   let top = 0;   // M74: země, která dobyla nejvíc provincií poraženého, dostane dočasného ducha „Vítězná nálada“
   for (const c in by) if (!top || by[c] > by[top]) top = +c;
   let done = top ? addSpirit(next, top, 'vitezna_nalada', DIP.VICTORY_DAYS) : next;
-  if (host) done = playable ? markExile(done, loser, host) : goIntoExile(done, loser, host, allies, ctrl);   // F2 B3: hráčovi jednotky a lodě zůstanou
+  if (host && !playable) done = exileColonies(done, loser, host);   // W2: neobsazené kolonie převezme hostitel (divize v nich odejdou s exilem)
+  if (host) done = playable ? markExile(done, loser, host) : goIntoExile(done, loser, host, allies, done.ctrl);   // F2 B3: hráčovi jednotky a lodě zůstanou
   done = dropExiles(done, loser, host);   // exily u poražené země odcházejí s ní k jejímu hostiteli (F2), bez hostitele zanikají
   done = logAdd(withCtx(done, (ctx) => settleAfterPeace(ctx, loser, loser)), opts.peace ? { k: 'cede', o: loser, x: top } : { k: 'cap', o: loser });
   done = opts.armistice ? done : conference(done, loser, by, val, occ, foes);   // M93: po historickém příměří zbytek země zůstane samostatný a neutrální (bez konference)

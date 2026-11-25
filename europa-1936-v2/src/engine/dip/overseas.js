@@ -18,6 +18,11 @@ const due = (a, day) => day >= a.from && day <= a.until && (day - a.from) % a.ev
 export function aidBlock(state, a) {
   const w = getWorld(), to = w.ownerIdx[a.to];
   if (!to || hasCapitulated(state, to)) return 'Příjemce neexistuje.';
+  if (a.src) {   // W2: dárce je skutečná země na mapě
+    const src = w.ownerIdx[a.src];
+    if (!src || hasCapitulated(state, src)) return 'Dárce neexistuje.';
+    if (state.player && state.player === a.src) return 'Dárce řídí hráč.';
+  }
   if (!a.foes.some((t) => { const f = w.ownerIdx[t]; return f && atWar(state.mil, to, f); })) return 'Příjemce neválčí.';
   const home = state.nav ? homeSea(state, to) : null;
   if (!home) return 'Příjemce nemá přístav.';

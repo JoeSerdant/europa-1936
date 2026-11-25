@@ -43,6 +43,8 @@ export const SPIRITS = {
   sok_z_napadeni: { n: 'Šok z napadení', info: 'Pohraniční armády byly zaskočené, spojení selhává a velení se teprve sbírá.', tone: 'bad', mod: { stab: -0.05 }, army: { atk: -0.3, def: -0.3, orgRegen: -0.4 } },
   zimni_valka: { n: 'Duch zimní války', info: 'Lyžaři v bílém, Mannerheimova linie a mráz: malá armáda drží útočníka mnohonásobně silnějšího.', tone: 'good', mod: { stab: 0.05 }, army: { def: 0.35, atk: 0.1, orgRegen: 0.25 } },
   armada_po_cistkach: { n: 'Armáda po čistkách', info: 'Zkušení velitelé zmizeli v táborech; útoky v hlubokém sněhu vázne a nová taktika se rodí až z porážek.', tone: 'bad', mod: {}, army: { atk: -0.3, planGain: -0.3 } },
+  arzenal_demokracie: { n: 'Arzenál demokracie', info: 'Automobilky vyrábějí tanky a letadla, loděnice spouštějí lodě po desítkách a do armády nastupují miliony.', tone: 'good', mod: { prod: 0.3, build: 0.2, man: 0.4, ws: 0.15 } },
+  valka_odporu: { n: 'Válka odporu', info: 'Země ustupuje do hor a vnitrozemí, ale nevzdává se; každé město stojí útočníka měsíce.', tone: 'good', mod: { ws: 0.15, man: 0.1 }, army: { def: 0.2, orgRegen: 0.1 } },
   vlastenecka_valka: { n: 'Vlastenecká válka', info: 'Celá země se semkla k obraně vlasti: odvody rostou a vojáci se nevzdávají.', tone: 'good', mod: { man: 0.15, ws: 0.15, stab: 0.05 }, army: { def: 0.12, orgRegen: 0.1 } },
   // M94: duchové z národních cílů (trvalé; každá země je může získat jen jednou)
   f_motorizovana_valka: { n: 'Motorizovaná válka', info: 'Pěchota jezdí na nákladních autech a zásobovací kolony drží krok s tanky.', tone: 'good', mod: {}, army: { speed: 0.05, supUse: -0.03 } },

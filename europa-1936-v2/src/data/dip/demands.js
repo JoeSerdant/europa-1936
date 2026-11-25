@@ -2,6 +2,7 @@
 // buď celou zemi (`annex`), nebo vyjmenované státy (`cede`, jména států ze světa). AI ultimátum vznese, jen když má přesilu `ratio`-násobek
 // proti obráncům (s přidanými zaručiteli), takže ho cíl přijme; odmítnuté ultimátum dá útočníkovi hotové ospravedlnění války.
 //  after  id předchozího požadavku téže dvojice, který musel být přijat   release  ze zbytku země se uvolní národ podle `data/dip/releases.js` (M70)
+//  viaLord  W2: cíl smí být loutka, jejíž pán je v bloku požadující země – loutka ustoupí vždy (bez porovnání sil)
 export const HIST_DEMANDS = [
   { id: 'anschluss', n: 'Sjednocení s alpským sousedem', tag: 'GER', target: 'AUS', kind: 'annex', from: 795, until: 1100, ratio: 2 },
   { id: 'sudety', n: 'Pohraniční území s německou menšinou', tag: 'GER', target: 'CZE', kind: 'cede', states: ['Sudety-západ', 'Sudety-sever', 'Sudety-východ'], from: 980, until: 1150, ratio: 1.3 },
@@ -12,6 +13,9 @@ export const HIST_DEMANDS = [
   { id: 'bessarabia', n: 'Východní hranice Rumunska', tag: 'SOV', target: 'ROM', kind: 'cede', states: ['Besarábie-sever', 'Besarábie-střed', 'Budžak'], from: 1635, until: 2100, ratio: 1.6 },
   { id: 'baltic_est', n: 'Bezpečnost severozápadní hranice', tag: 'SOV', target: 'EST', kind: 'annex', from: 1630, until: 2100, ratio: 3 },
   { id: 'baltic_lat', n: 'Bezpečnost severozápadní hranice', tag: 'SOV', target: 'LAT', kind: 'annex', from: 1630, until: 2100, ratio: 3 },
+  // W2: Japonsko požaduje od Vichy základny v Indočíně (sever září 1940, jih červenec 1941)
+  { id: 'indochina_n', n: 'Základny v severní Indočíně', tag: 'JAP', target: 'VIC', kind: 'cede', states: ['Tonkin'], from: 1735, until: 1900, ratio: 1.5, viaLord: true },   // po Paktu tří
+  { id: 'indochina_s', n: 'Základny v jižní Indočíně', tag: 'JAP', target: 'VIC', kind: 'cede', states: ['Kočinčína', 'Jižní Annam', 'Kambodža', 'Annam', 'Laos', 'Horní Laos', 'Jižní Laos'], after: 'indochina_n', from: 2025, until: 2160, ratio: 1.5, viaLord: true },
   { id: 'baltic_lit', n: 'Bezpečnost severozápadní hranice', tag: 'SOV', target: 'LIT', kind: 'annex', from: 1630, until: 2100, ratio: 3 },
 ];
 

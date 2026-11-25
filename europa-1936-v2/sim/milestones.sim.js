@@ -1,11 +1,11 @@
 // Simulace F2: hlavní milníky války 1936–1945 (data událostí) pro kontrolu, že změna neposunula historii.
-// Proměnné jako ostatní simulace (SEED, PLAYER, HIST), END = poslední den (výchozí 3500 ≈ srpen 1945). Výstup sim/out/milestones-*.txt.
+// Proměnné jako ostatní simulace (SEED, PLAYER, HIST), END = poslední den (výchozí 3530 ≈ konec srpna 1945). Výstup sim/out/milestones-*.txt.
 import { it, expect } from 'vitest';
 import { getWorld } from '../src/engine/index.js';
 import { env, simulate, dateOf, writeReport, tagOf } from './run.js';
 
 it('milníky války', () => {
-  const w = getWorld(), cfg = env(), END = +(process.env.END || 3500);
+  const w = getWorld(), cfg = env(), END = +(process.env.END || 3530);
   const I = (t) => w.ownerIdx[t];
   const pair = (l, a, b) => (l.a === I(a) && l.b === I(b)) || (l.a === I(b) && l.b === I(a));
   const marks = [
@@ -24,6 +24,16 @@ it('milníky války', () => {
     ['Barbarossa', (l) => l.k === 'war' && pair(l, 'GER', 'SOV')],
     ['kapitulace Itálie', (l) => l.k === 'cap' && l.o === I('ITA')],
     ['kapitulace Německa', (l) => l.k === 'cap' && l.o === I('GER')],
+    // W2: svět mimo Evropu
+    ['kapitulace Etiopie', (l) => l.k === 'cap' && l.o === I('ETH')],
+    ['válka Japonsko–Čína', (l) => l.k === 'war' && pair(l, 'JAP', 'CHI')],
+    ['Indočína (sever)', (l) => l.k === 'ult' && l.a === I('JAP') && l.b === I('VIC') && l.y],
+    ['obsazení Íránu', (l) => l.k === 'war' && l.b === I('PER')],
+    ['Pearl Harbor', (l) => l.k === 'war' && pair(l, 'JAP', 'USA')],
+    ['válka Japonsko–Británie', (l) => l.k === 'war' && pair(l, 'JAP', 'ENG')],
+    ['válka Německo–USA', (l) => l.k === 'war' && pair(l, 'GER', 'USA')],
+    ['válka SSSR–Japonsko', (l) => l.k === 'war' && pair(l, 'SOV', 'JAP')],
+    ['kapitulace Japonska', (l) => l.k === 'cap' && l.o === I('JAP')],
   ];
   const got = new Map(), govs = [], wars = [], caps = [], vols = [];
   let seen = 0, capLost = '';

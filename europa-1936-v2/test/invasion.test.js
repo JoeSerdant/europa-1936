@@ -194,9 +194,10 @@ describe('plavba invazního sboru', () => {
   it('po pauze po vyplutí záznam operace zaniká a krycí flotila se uvolní', () => {
     let s = startInvasion(emptyGermany(), ENG, armiesOfCountry(emptyGermany(), ENG));
     for (let d = 0; d < 40 && s.ai.inv.find((x) => x.o === ENG)?.ph !== 1; d++) s = advance(s, 24);
-    expect(s.ai.inv.find((x) => x.o === ENG)?.ph).toBe(1);
+    const op = s.ai.inv.find((x) => x.o === ENG);
+    expect(op?.ph).toBe(1);
     for (let d = 0; d < AI.INV_COOL_DAYS + 2; d++) s = advance(s, 24);
-    expect(s.ai.inv.find((x) => x.o === ENG)).toBeUndefined();
+    expect(s.ai.inv.find((x) => x.o === ENG && x.t === op.t && x.army === op.army)).toBeUndefined();   // (po pauze smí začít nová operace)
   }, 120000);
   it('operace bez války nebo po vypršení lhůty se ruší a armáda se vrací do běžné správy', () => {
     const s = startInvasion(emptyGermany(), ENG, armiesOfCountry(emptyGermany(), ENG));
