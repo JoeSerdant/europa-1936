@@ -4,6 +4,7 @@ import { Icon } from '../common/Icon.jsx';
 import { getWorld, industryOf, projectEta, BUILDINGS, buildRoom, fortRoom } from '../../engine/index.js';
 import { playerIdx, closeSide, setIndTab, pickBuild, buildAt, cancelProject, moveProject, selectLabel } from '../actions.js';
 import { fmtNum, fmtDays } from '../format.js';
+import { queueFlow } from './flow.js';
 
 // Stavby jako v HOI4 (M103): úzký panel vlevo – nejdřív budova, pak klik na stát na mapě (mapa v režimu Stavby ukazuje, kde to jde).
 const KINDS = ['civ', 'mil', 'dok', 'inf', 'afb', 'radar', 'nb', 'hub', 'fort', 'cfort'];   // F4c: námořní základna, zásobovací uzel, pobřežní pevnost
@@ -21,6 +22,38 @@ function bestPlaces(state, me, kind) {
   return out.sort((a, b) => b.key - a.key || b.n - a.n).slice(0, 6);
 }
 
+/** Řada továren projektu (F4f, jako v HOI4): plné = civilní továrny, které na stavbě pracují, prázdné = kolik by jich stavba ještě vzala. */
+function FacRow({ f }) {
+  const cells = [];
+  for (let i = 0; i < f.facMax; i++) {
+    const part = Math.max(0, Math.min(1, f.fac - i));
+    cells.push(<i key={i} className={part >= 0.999 ? 'on' : part > 0 ? 'part' : ''} style={part > 0 && part < 0.999 ? { '--p': `${Math.round(part * 100)}%` } : undefined} />);
+  }
+  return <span className="bq-fac" title={`Civilní továrny na stavbě: ${fmtNum(f.fac, 1)} z nejvýš ${f.facMax} (${fmtNum(f.pts, 1)} z ${fmtNum(f.cap, 1)} bodů za den)`}>{cells}</span>;
+}
+
+/** Karta projektu ve frontě: ikona budovy, místo, druh, továrny, postup a dny do konce; posun ve frontě a zrušení. */
+function QueueCard({ b, i, n, eta, flow }) {
+  const B = BUILDINGS[b.k], w = getWorld();
+  const place = b.p ? w.provName(b.p) : w.states[b.s].n;
+  const share = Math.min(1, b.prog / B.cost);
+  const idle = !flow || flow.pts <= 0;
+  return (
+    <li className={`bq-card ${idle ? 'idle' : ''}`}>
+      <button className="bq-ic" onClick={() => selectLabel(b.p || w.states[b.s].cap, true)} title={`${B.n} – ukázat na mapě`} aria-label={`Ukázat ${place} na mapě`}><Icon name={KIND_ICON[b.k] || 'build'} size={22} /></button>
+      <span className="bq-nm"><b title={place}>{place}</b><small>{B.n}</small></span>
+      <span className="bq-eta" title="Dny do dokončení při současném přísunu bodů">{eta < 0 ? 'čeká' : fmtDays(eta)}</span>
+      <span className="bq-btns">
+        <button className="icon-btn sm" disabled={i === 0} onClick={() => moveProject(b.id, -Infinity)} aria-label="Na začátek fronty" title="Na začátek fronty"><Icon name="back" size={13} className="rot90" /></button>
+        <button className="icon-btn sm" disabled={i === n - 1} onClick={() => moveProject(b.id, 1)} aria-label="O místo níž" title="O místo níž"><Icon name="chevron" size={13} /></button>
+        <button className="icon-btn sm" onClick={() => cancelProject(b.id)} aria-label={`Zrušit stavbu ${B.n}`} title="Zrušit"><Icon name="close" size={13} /></button>
+      </span>
+      {flow && <FacRow f={flow} />}
+      <span className="bar prog bq-prog" title={`Postaveno ${Math.round(share * 100)} %`}><i style={{ width: `${(share * 100).toFixed(1)}%` }} /><em>{Math.round(share * 100)} %</em></span>
+    </li>
+  );
+}
+
 export function BuildPanel() {
   const state = useGameSlow((s) => s, 300);
   const kind = useUi((s) => s.buildKind);
@@ -30,6 +63,7 @@ export function BuildPanel() {
   const best = useMemo(() => (me && kind ? bestPlaces(state, me, kind) : []), [state.ind, state.stateOwner, state.ctrl, me, kind]);
   if (!me || !sum) return null;
   const list = sum.build;
+  const flow = queueFlow(list, sum.points);
   return (
     <aside className="panel build-panel" aria-label="Stavby">
       <header className="bp-head">
@@ -70,20 +104,7 @@ export function BuildPanel() {
       <div className="bp-qhead"><h3>Fronta{list.length ? ` (${list.length})` : ''}</h3></div>
       {!list.length ? <p className="empty">Nic se nestaví.</p> : (
         <ul className="queue bp-queue">
-          {list.map((b, i) => {
-            const B = BUILDINGS[b.k];
-            const eta = projectEta(state, me, b.id);
-            const w = getWorld();
-            return (
-              <li key={b.id}>
-                <Icon name={KIND_ICON[b.k] || 'build'} size={16} />
-                <span className="bq-nm" title={`${B.n} · ${b.p ? w.provName(b.p) : w.states[b.s].n}`}><b>{b.p ? w.provName(b.p) : w.states[b.s].n}</b><i>{eta < 0 ? 'bez bodů' : fmtDays(eta)}</i></span>
-                <button className="icon-btn sm" disabled={i === 0} onClick={() => moveProject(b.id, -Infinity)} aria-label="Na začátek fronty" title="Na začátek fronty"><Icon name="back" size={13} className="rot90" /></button>
-                <button className="icon-btn sm" onClick={() => cancelProject(b.id)} aria-label={`Zrušit stavbu ${B.n}`} title="Zrušit"><Icon name="close" size={13} /></button>
-                <span className="bar prog"><i style={{ width: `${((b.prog / B.cost) * 100).toFixed(1)}%` }} /></span>
-              </li>
-            );
-          })}
+          {list.map((b, i) => <QueueCard key={b.id} b={b} i={i} n={list.length} eta={projectEta(state, me, b.id)} flow={flow.get(b.id)} />)}
         </ul>
       )}
     </aside>

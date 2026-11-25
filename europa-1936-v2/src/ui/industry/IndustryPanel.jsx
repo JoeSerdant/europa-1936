@@ -22,19 +22,19 @@ const TABS = [
 const pct = (v) => `${Math.round(Math.max(0, v) * 100)} %`;
 const stateName = (s) => getWorld().states[s].n;
 
-function Sum({ label, value, title, cls }) {
-  return <span className={`stat-cell ${cls || ''}`} title={title}><i>{label}</i><b>{value}</b></span>;
+function Sum({ label, value, title, cls, icon }) {
+  return <span className={`stat-cell ${cls || ''}`} title={title}><i>{icon && <Icon name={icon} size={13} />}{label}</i><b>{value}</b></span>;
 }
 
 function Header({ sum }) {
   return (
     <section className="ind-sum" aria-label="Souhrn průmyslu">
-      <Sum label="Civilní" value={sum.civ} title="Civilní továrny celkem" />
-      <Sum label="Vojenské" value={sum.mil} title="Vojenské továrny celkem" />
-      <Sum label="Spotř. zboží" value={pct(sum.cons)} title={`Spotřební zboží ubírá ${fmtNum(sum.consFac, 1)} továren (nejdřív civilních)`} />
-      <Sum label="Body stavby" value={fmtNum(sum.points, 0)} title="Body stavby za den (civilní továrny po odečtení spotřebního zboží a dovozu)" />
-      {sum.dok > 0 && <Sum label="Loděnice" value={sum.dok} title={`Námořní loděnice (volné: ${sum.dockFree})`} />}
-      <Sum label="Volné" value={sum.milFree} title="Volné vojenské továrny: nejsou přiřazené žádné lince" cls={sum.milFree > 0 ? 'warn' : ''} />
+      <Sum icon="industry" label="Civilní" value={sum.civ} title="Civilní továrny celkem" />
+      <Sum icon="army" label="Vojenské" value={sum.mil} title="Vojenské továrny celkem" />
+      <Sum icon="box" label="Spotř. zboží" value={pct(sum.cons)} title={`Spotřební zboží ubírá ${fmtNum(sum.consFac, 1)} továren (nejdřív civilních)`} />
+      <Sum icon="build" label="Body stavby" value={fmtNum(sum.points, 0)} title="Body stavby za den (civilní továrny po odečtení spotřebního zboží a dovozu)" />
+      {sum.dok > 0 && <Sum icon="navy" label="Loděnice" value={sum.dok} title={`Námořní loděnice (volné: ${sum.dockFree})`} />}
+      <Sum icon="plus" label="Volné" value={sum.milFree} title="Volné vojenské továrny: nejsou přiřazené žádné lince" cls={sum.milFree > 0 ? 'warn' : ''} />
     </section>
   );
 }
@@ -95,6 +95,8 @@ function LineCard({ line, state, eqs, planes }) {
   const stock = state.stock ? (state.stock[line.eq] || 0) : 0;
   const free = line.naval ? state.dockFree : state.milFree;
   const [over, setOver] = useState(false);
+  const [open, setOpen] = useState(false);
+  const opts = line.naval ? SHIP_IDS : line.air ? planes : eqs;
   const accepts = () => facDrag && facDrag.from === 0 && free > 0;
   return (
     <article className={`ind-line prod-line ${warn ? 'lack' : ''} ${over ? 'drop' : ''}`} aria-label={`Linka ${nameOf(line.eq)}`}
@@ -102,12 +104,12 @@ function LineCard({ line, state, eqs, planes }) {
       onDrop={(e) => { e.preventDefault(); setOver(false); if (accepts()) setLineFac(line.id, line.fac + 1); facDrag = null; }}>
       <EqTile eq={line.eq} size={64} />
       <div className="pl-main">
-        <select value={line.eq} onChange={(e) => setLineEq(line.id, e.target.value)} aria-label={line.naval ? 'Druh lodi na lince' : 'Druh výzbroje na lince'} title="Změna druhu vynuluje efektivitu">
-          {(line.naval ? SHIP_IDS : line.air ? planes : eqs).map((e) => <option key={e} value={e}>{nameOf(e)}</option>)}
-        </select>
-        <div className="tpl-cost">
-          <span className="cost" title="Výrobní body na kus (vyšší úroveň výzbroje je dražší)">{fmtNum(line.cost, 1)} IC</span>
-          {need.map(([r, n]) => <span key={r} className={`cost ${(state.res[r]?.f ?? 0) < 0.999 ? 'lack' : ''}`} title={`${RESOURCES[r].n} na kus`}>{RESOURCES[r].ab} {fmtNum(n, 1)}</span>)}
+        <button className={`pl-pick ${open ? 'open' : ''}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={line.naval ? 'Druh lodi na lince' : 'Druh výzbroje na lince'} title="Klikněte pro změnu druhu (vynuluje efektivitu)">
+          <span>{nameOf(line.eq)}</span><Icon name="chevron" size={14} />
+        </button>
+        <div className="pl-need">
+          <span title="Výrobní body na kus (vyšší úroveň výzbroje je dražší)"><Icon name="industry" size={14} />{fmtNum(line.cost, 1)}</span>
+          {need.map(([r, n]) => <span key={r} className={(state.res[r]?.f ?? 0) < 0.999 ? 'lack' : ''} title={`${RESOURCES[r].n} na kus${(state.res[r]?.f ?? 0) < 0.999 ? ' – nedostatek' : ''}`}><ResIcon r={r} size={15} />{fmtNum(n, 1)}</span>)}
         </div>
       </div>
       <div className="ind-fac pl-fac">
@@ -126,6 +128,16 @@ function LineCard({ line, state, eqs, planes }) {
         <Sum label="Ve skladu" value={line.naval || line.air ? fmtInt(state.pool ? (state.pool[line.eq] || 0) : 0) : fmtInt(stock)} title="Kusů nahromaděných ve skladu" />
         <Sum label="Surovin" value={pct(line.f)} title={warn ? `Nedostatek: ${short.join(', ')}` : 'Suroviny stačí'} cls={warn ? 'warn' : ''} />
       </div>
+      {open && (
+        <div className="pl-opts" role="radiogroup" aria-label="Druh na lince">
+          {opts.map((e) => (
+            <button key={e} role="radio" aria-checked={e === line.eq} className={`pn-tile ${e === line.eq ? 'on' : ''}`} style={{ '--g': groupOf(e).color }}
+              onClick={() => { if (e !== line.eq) setLineEq(line.id, e); setOpen(false); }} title={e === line.eq ? 'Současný druh' : `Vyrábět ${nameOf(e)} (efektivita klesne)`}>
+              <EquipIcon eq={e} size={40} color={groupOf(e).color} /><span>{nameOf(e)}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </article>
   );
 }
@@ -194,9 +206,12 @@ function ProdTab({ state, me, sum }) {
         <NewLinePicker sum={sum} eqs={eqs} planes={planes} />
         <section className="stock ind-stock prod-stock" aria-label="Sklad">
           <div className="sec-head"><h3>Sklad výzbroje</h3></div>
-          <ul className="eq">
-            {eqs.map((e) => <li key={e} title={`${EQUIP[e].n} ve skladu`}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>)}
-          </ul>
+          <div className="stk-grid">
+            {eqs.map((e) => {
+              const n = stock[e] || 0;
+              return <span key={e} className={`stk-tile ${n ? '' : 'zero'}`} title={`${EQUIP[e].n} ve skladu`}><EquipIcon eq={e} size={34} color={groupOf(e).color} /><b>{fmtInt(n)}</b></span>;
+            })}
+          </div>
         </section>
       </aside>
     </div>

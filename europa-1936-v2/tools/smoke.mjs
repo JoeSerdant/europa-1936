@@ -361,7 +361,8 @@ try {
   await page.locator('.bp-best button').first().click();
   await page.waitForTimeout(700);   // seznam fronty se obnovuje se zpožděním (useGameSlow)
   const b2 = await nb();
-  check('klik na stát na mapě i na doporučené místo zadá stavbu do fronty', b1 === b0 + 1 && b2 === b1 + 1 && (await page.locator('.bp-queue li').count()) === b2, `fronta ${b0} → ${b1} → ${b2}`);
+  check('klik na stát na mapě i na doporučené místo zadá stavbu do fronty', b1 === b0 + 1 && b2 === b1 + 1 && (await page.locator('.bp-queue li.bq-card').count()) === b2, `fronta ${b0} → ${b1} → ${b2}`);
+  check('fronta staveb: karty s ikonou, továrnami a postupem', (await page.locator('.bq-card .bq-ic').count()) === b2 && (await page.locator('.bq-card .bq-fac i.on').count()) >= 1 && (await page.locator('.bq-card .bq-prog').count()) === b2);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(150);
   check('Esc ukončí stavění a vrátí mapový režim', (await E(() => window.__e1936.uiStore.getState().buildKind)) === null && (await E(() => window.__e1936.uiStore.getState().mode)) !== 'build:civ');
@@ -383,7 +384,14 @@ try {
   await page.locator('.fac-pool .fp-drag').dragTo(line0);
   await page.waitForTimeout(800);
   check('továrna ze zásobníku přetažená na linku se přidá', (await facSum()) === fac0, `${await facSum()}`);
-  await shot('industry-prod');
+  {
+    const l0 = page.locator('.ind-line').first();
+    await l0.locator('.pl-pick').click();
+    const nOpt = await l0.locator('.pl-opts .pn-tile').count();
+    check('výroba: druh na lince se vybírá dlaždicemi (žádný rozbalovací seznam), suroviny a sklad ikonami', nOpt >= 2 && (await page.locator('.industry-panel select').count()) === 0 && (await page.locator('.stk-tile .eq-icon').count()) >= 3, `${nOpt} voleb`);
+    await shot('industry-prod');
+    await l0.locator('.pl-pick').click();
+  }
   await page.getByRole('tab', { name: 'Obchod' }).click();
   await page.waitForSelector('.res-grid', { timeout: 3000 });
   check('obchod: šest karet surovin, trh a smlouvy', (await page.locator('.res-card').count()) === 6 && (await page.locator('.ind-trades li').count()) >= 1);
