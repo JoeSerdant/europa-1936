@@ -15,6 +15,7 @@ import {
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf, orderRail, railBlock,
   volKind, volBlock, sendVolunteers, recallVolunteers, attBlock, sendAttache, recallAttache, licBlock, buyLicence, PLANES,
   tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, setDesign, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS, buildRoom, fortRoom,
+  setOccLaw, setCollab, collabBlock, OCC_LAWS,   // S7
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
 import { achievedNow, ACH_BY_ID } from './achievements/list.js';
@@ -803,6 +804,25 @@ export const stopResearch = (slot) => { const me = playerIdx(); return !!me && r
 
 // ============================================================ politika (M21)
 /** Změní zákon hráče (stojí politickou moc); při neúspěchu napíše důvod. */
+/** S7: okupační zákon pro okupovanou zemi `o`. */
+export function changeOccLaw(o, id) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me) return false;
+  const ok = run(setOccLaw, me, o, id);
+  if (ok) { toast(`Okupační zákon „${OCC_LAWS[id].n}“: ${getWorld().owners[o].name}.`); play('click'); }
+  return ok;
+}
+/** S7: kolaborantská vláda na okupovaném území země `o`. */
+export function makeCollab(o) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me) return false;
+  const why = collabBlock(s, me, o);
+  if (why) { toast(why); play('error'); return false; }
+  const ok = run(setCollab, me, o);
+  if (ok) { toast(`Kolaborantská vláda: ${getWorld().owners[o].name}.`); play('click'); }
+  return ok;
+}
+
 export function changeLaw(cat, id) {
   const s = gameStore.getState(), me = playerIdx(s);
   if (!me) return false;

@@ -12,4 +12,12 @@ export const OCC = {
   R_REBEL: 0.9,         // odboj, při kterém se stát vzbouří (a garnizona je slabá)
   G_REBEL: 0.35,        // nejvyšší garnizona, při které povstání uspěje
   RES_BASE: 0.25,       // podíl těžby okupovaného státu, který dostane okupant bez poddajnosti
+  // S7: okupační zákony, posádky a kolaborantské vlády
+  MP_LOSS: 12,          // denní ztráta lidské síly posádek na jednu potřebnou divizi garnizony při plném odboji (× zákon `mp`)
+  COL_MIN: 3,           // kolaborantská vláda: aspoň tolik okupovaných států země
+  COL_C: 0.4,           // a průměrná poddajnost aspoň tolik
+  COL_PP: 75,           // cena v politické moci
+  COL_R: 0.5,           // násobek cílového odboje ve státech pod kolaborantskou vládou
+  COL_C_GAIN: 0.002,    // denní příplatek k poddajnosti
+  COL_RES: 0.1,         // příplatek k podílu těžby
 };

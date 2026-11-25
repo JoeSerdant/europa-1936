@@ -74,8 +74,8 @@ export function holdoutShare(state, o) {
  * Konec války z historické koleje (řádek `armistice`): `full` = běžná kapitulace (konference i exil, F4), `conf` = bezpodmínečná kapitulace
  * s konferencí bez exilu (M98), `peace` = územní mír (F3), jinak příměří bez konference (M93).
  */
-function forcedEnd(state, o, ar) {
-  if (ar.full) return capitulate(state, o);
+export function forcedEnd(state, o, ar) {
+  if (ar.full) return capitulate(state, o, { victor: getWorld().ownerIdx[ar.armistice] });   // S7: i bez okupace vede konferenci země z koleje (Vichy vznikne vždy)
   return capitulate(state, o, ar.conf ? { noExile: true, victor: getWorld().ownerIdx[ar.armistice] } : { armistice: true, peace: !!ar.peace });
 }
 

@@ -1,4 +1,5 @@
 // Společné pomůcky průmyslu (M19): sloty států, souhrn továren a těžby po zemích, využití továren, toky surovin. Čisté funkce nad `state.ind`.
+import { occResShare } from '../occ/laws.js';
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
 import { multOf } from '../design/core.js';
@@ -31,8 +32,8 @@ const tallyCache = new WeakMap();   // ind.st → { ctrl, so, tally }
 export function tallyOwners(state) {
   const { ind, ctrl, stateOwner: so } = state;
   const hit = tallyCache.get(ind.st);
-  const occSt = state.occ ? state.occ.st : null;
-  if (hit && hit.ctrl === ctrl && hit.so === so && hit.occ === occSt) return hit.tally;
+  const occSt = state.occ ? state.occ.st : null, occLaw = state.occ ? state.occ.law : null, occCol = state.occ ? state.occ.col : null;
+  if (hit && hit.ctrl === ctrl && hit.so === so && hit.occ === occSt && hit.law === occLaw && hit.col === occCol) return hit.tally;
   const w = getWorld();
   const tally = Array.from({ length: w.owners.length }, () => ({ civ: 0, mil: 0, dok: 0, res: {}, occ: 0 }));
   for (let s = 1; s < w.states.length; s++) {
@@ -45,11 +46,11 @@ export function tallyOwners(state) {
     } else {
       tally[o].occ++;
       const comp = state.occ && state.occ.st[s] ? state.occ.st[s].c : 0;
-      const f = OCC.RES_BASE + (1 - OCC.RES_BASE) * comp;   // M38: okupant dostane těžbu podle poddajnosti
+      const f = state.occ ? occResShare(state, c, o, comp) : OCC.RES_BASE + (1 - OCC.RES_BASE) * comp;   // M38: podle poddajnosti; S7: zákon a kolaborace
       for (const r in e.res) tally[c].res[r] = (tally[c].res[r] || 0) + e.res[r] * f;
     }
   }
-  tallyCache.set(ind.st, { ctrl, so, occ: occSt, tally });
+  tallyCache.set(ind.st, { ctrl, so, occ: occSt, law: occLaw, col: occCol, tally });
   return tally;
 }
 

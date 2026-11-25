@@ -149,6 +149,7 @@ export const AI = {
   F4C_CFORT: 2,                     // pobřežní pevnost AI do této úrovně
   F4C_CFORT_VP: 5,                  // jen v přístavech s aspoň tolika vítěznými body
   F4C_HUB_SUP: 0.6,                 // divize pod tímto zásobováním se počítají jako bez zásob
+  S7_COL_PP_KEEP: 60,               // S7: kolaborantskou vládu AI zřídí, jen když jí po zaplacení zbude tolik politické moci
   S6_RAIL: 2,                       // S6: AI staví železnici do této úrovně
   S6_RAIL_DIVS: 2,                  // S6: v provincii s aspoň tolika vlastními divizemi bez zásob
   S6_LOG_STOCK: 1.2,

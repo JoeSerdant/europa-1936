@@ -1000,3 +1000,13 @@ button.st-row:hover { background: var(--ink-3); }
 .lg-sup-row b { font: 600 13px/1 var(--display); color: var(--brass-hi); }
 .lg-sup-row .bar { grid-column: 2 / span 2; }
 .lg-sup-row.bad { box-shadow: inset 3px 0 0 var(--bad, #d9533a), inset 0 0 0 1px var(--rule); }
+
+/* ------------------------------------------------------------------ S7: okupovaná území v Politice */
+.occ-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.occ-card .occ-meters { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px 8px; }
+.occ-card .occ-meters > span { display: grid; grid-template-columns: 80px 1fr 40px; align-items: center; gap: 8px; font-size: 12.5px; }
+.occ-card .occ-meters b { text-align: right; color: var(--paper); }
+.occ-card .bar.bad i { background: var(--bad, #d9533a); }
+.occ-col { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+.occ-col.on { color: var(--brass-hi); }
+:root.uw-1500 .occ-grid { grid-template-columns: 1fr; }
