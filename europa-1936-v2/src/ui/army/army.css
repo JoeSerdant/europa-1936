@@ -440,3 +440,23 @@
 .sel-march b { color: var(--text); font-weight: 600; }
 .sel-march em { margin-left: auto; font-style: normal; color: #ff9c86; white-space: nowrap; }
 .tooltip .tip-march { color: #ffe39a; }
+
+/* F4g: nábor jako v HOI4 – složení šablony, výzbroj ikonami, výcvik jako karty */
+.eq-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px 2px 4px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); font: 600 12.5px/1 var(--display); color: var(--text); }
+.eq-chip.lack { box-shadow: inset 0 0 0 1px #6b3b30; color: var(--red); }
+.tpl-cost { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.tpl-comp { display: flex; align-items: flex-end; gap: 10px; padding: 4px 6px; background: rgba(8, 14, 20, 0.55); box-shadow: inset 0 0 0 1px var(--rule); }
+.tc-regs { display: flex; gap: 3px; }
+.tc-col { display: flex; flex-direction: column; gap: 2px; }
+.tc-bat { display: grid; place-items: center; width: 26px; height: 18px; background: var(--ink-3); color: var(--paper); }
+.tc-bat .cls-icon { width: 20px; height: 13px; }
+.tc-sup { display: flex; flex-wrap: wrap; gap: 2px; margin-left: auto; align-self: flex-end; }
+.tc-s { padding: 2px 4px; font: 600 10px/1 var(--display); letter-spacing: 0.04em; color: var(--brass-hi); background: var(--ink-3); }
+.q-cards li.q-card { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 8px; margin-bottom: 4px; border: 0;
+  background: linear-gradient(90deg, rgba(30, 46, 60, 0.85), rgba(15, 24, 33, 0.85)); box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 var(--brass-lo); color: var(--paper); }
+.q-card .q-mid { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.q-card .q-top b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.q-card .q-n { font: 700 13px/1 var(--display); font-style: normal; color: var(--brass-hi); }
+.q-card .q-bar { position: relative; height: 13px; }
+.q-card .q-bar em { position: absolute; inset: 0; display: grid; place-items: center; font: 600 10px/1 var(--display); font-style: normal; color: var(--paper); text-shadow: 0 1px 1px #000; }
+.dz-pick .cls-icon { flex: none; color: var(--brass-hi); }

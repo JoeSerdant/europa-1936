@@ -309,6 +309,7 @@ try {
   await page.waitForTimeout(250);
   const q1 = await E(() => window.__e1936.gameStore.getState().mil.queue.length);
   check('nábor: „Zařadit“ přidá divizi do výcviku', q1 === q0 + 1, `fronta ${q0} → ${q1}`);
+  check('nábor: šablony se složením z praporů, výzbroj ikonami, výcvik jako karty', (await page.locator('.tpl-card .tpl-comp .tc-bat').count()) >= 5 && (await page.locator('.tpl-card .eq-chip').count()) >= 5 && (await page.locator('.q-cards .q-card').count()) >= 1 && (await page.locator('.recruit-panel .stk-tile').count()) >= 3, `komp ${await page.locator('.tpl-card .tpl-comp .tc-bat').count()} chip ${await page.locator('.tpl-card .eq-chip').count()} q ${await page.locator('.q-cards .q-card').count()} stk ${await page.locator('.recruit-panel .stk-tile').count()}`);
   await shot('recruit');
   const tplBefore = await page.locator('.tpl-card').count();
   await page.getByRole('button', { name: 'Nová šablona' }).click();

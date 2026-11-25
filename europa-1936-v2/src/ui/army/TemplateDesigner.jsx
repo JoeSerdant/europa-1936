@@ -7,6 +7,7 @@ import { fmtInt, fmtNum, fmtDays } from '../format.js';
 import { placeBattalion, removeBattalion, toggleSupport, setName, prodCost, compareStats } from './designer.js';
 import { ClsIcon } from './parts.jsx';
 import { CLS_NAMES } from './helpers.js';
+import { EqChip } from '../industry/EqChip.jsx';
 
 const rows = (n) => Array.from({ length: n }, (_, i) => i);
 
@@ -38,7 +39,7 @@ function UnitInfo({ def }) {
         {def.spd < 99 && <span><i>Rychl.</i>{fmtNum(def.spd, 0)}</span>}
         <span><i>Výcvik</i>{fmtDays(def.days)}</span>
       </div>
-      <div className="tpl-cost">{need.map(([e, n]) => <span key={e} className="cost" title={EQUIP[e].n}>{EQUIP[e].ab} {fmtInt(n)}</span>)}</div>
+      <div className="tpl-cost">{need.map(([e, n]) => <EqChip key={e} e={e} n={n} title={EQUIP[e].n} />)}</div>
     </div>
   );
 }
@@ -124,7 +125,7 @@ export function TemplateDesigner() {
                     <div><dt>Lidská síla</dt><dd>{fmtInt(stats.men)}</dd></div>
                     <div><dt>Výcvik</dt><dd>{fmtDays(stats.days)}</dd></div>
                   </dl>
-                  <div className="tpl-cost">{Object.entries(stats.need).map(([e, n]) => <span key={e} className="cost" title={EQUIP[e].n}>{EQUIP[e].ab} {fmtInt(n)}</span>)}</div>
+                  <div className="tpl-cost">{Object.entries(stats.need).map(([e, n]) => <EqChip key={e} e={e} n={n} title={EQUIP[e].n} />)}</div>
                   <p className="dz-prodcost" title="Součet výrobních bodů výzbroje jedné divize">Odhad výrobních nákladů: <b>{fmtInt(Math.round(prodCost(stats, EQUIP_PROD)))}</b> výrobních bodů</p>
                   {diff.length > 0 && (
                     <ul className="dz-diff" aria-label="Změny proti uložené šabloně">
@@ -142,7 +143,7 @@ export function TemplateDesigner() {
                 <li key={id}>
                   <button className={`dz-pick ${brush === id ? 'on' : ''}`} disabled={!open(d)} onClick={() => setBrush(id)}
                     onMouseEnter={() => setPeek(id)} onMouseLeave={() => setPeek(null)} onFocus={() => setPeek(id)} onBlur={() => setPeek(null)} aria-pressed={brush === id}>
-                    <b>{d.ab}</b><span>{d.n}</span>{!open(d) ? <i>výzkum</i> : null}
+                    <ClsIcon cls={d.sym} size={26} /><span>{d.n}</span>{!open(d) ? <i>výzkum</i> : null}
                   </button>
                 </li>
               ))}
