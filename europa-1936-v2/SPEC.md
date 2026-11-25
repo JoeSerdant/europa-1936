@@ -1350,6 +1350,25 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
   postavené tratě se kreslí do dlaždic mapy (tmavá čára se světlým středem), okno Logistika má kartu Zásobování (lokomotivy a auta: sklad /
   potřeba, pruh pokrytí), Výroba má ikonu lokomotivy ve skupině Motorizace a zásobování.
 
+## 4zzzzzzzzzzzzz. Okupační zákony, posádky a kolaborace (S7, `GAME_VERSION = 54`)
+
+- **Stav**: `occ.law['okupant-vlastník']` = id zákona (chybí = výchozí `vojenska`), `occ.col[vlastník]` = okupant s kolaborantskou vládou
+  (`validateState` vyžaduje obě pole).
+- **Zákony** (`data/occ/laws.js`, `OCC_LAWS`; pro každou okupovanou zemi zvlášť, `setOccLaw`, zdarma): Vojenská správa (výchozí, jako dřív),
+  Civilní správa, Mírná správa, Tvrdá okupace. Klíče: `r` násobek cílového odboje, `c` násobek růstu poddajnosti, `res` příplatek k podílu
+  těžby, `pol` posádky (podíl potřebné garnizony, který drží bez divizí; jen když má okupant lidskou sílu), `mp` cena posádek – denně
+  `potřebná garnizona × OCC.MP_LOSS × mp × odboj` lidské síly (`occDay`).
+- **Těžba** z okupovaného státu: `occResShare` = podle poddajnosti + zákon + kolaborace (`tallyOwners`, mezipaměť podle `occ.st`, `occ.law`, `occ.col`).
+- **Kolaborantská vláda** (`setCollab`, kontroly `collabBlock`): aspoň `OCC.COL_MIN` okupovaných států země, průměrná poddajnost
+  `OCC.COL_C`, cena `OCC.COL_PP` politické moci; ve státech té země odboj × `COL_R`, poddajnost + `COL_C_GAIN` denně, těžba + `COL_RES`.
+  Zaniká, když okupant už žádný stát země nedrží. Záznam deníku `collab` (světový, skupina Války a mír).
+- **AI** (`ai/occ.js`, týdně): zákon podle `HIST_OCC_LAW` (historická AI: Německo tvrdě v SSSR, Polsku, Jugoslávii a Řecku, Japonsko
+  v Číně) nebo podle ideologie (`OCC_LAW_IDEO`); kolaborantskou vládu zřídí, když jí zbude `AI.S7_COL_PP_KEEP` politické moci.
+- **Rozhraní**: okno Politika, oddíl Okupovaná území – karta pro každou zemi (vlajka, počet států, odboj a poddajnost jako pruhy, zákon
+  jako slot s volbami, tlačítko Kolaborantská vláda s důvodem zákazu v nápovědě).
+- **Vynucená kapitulace** (řádek `armistice` s `full`, `forcedEnd`) předá `capitulate` vítěze z koleje: i když okupant zemi
+  ještě neobsadil, proběhne konference a uvolní se národ (Vichy) – jinak by kolej Francii vzala bez Vichy a bez Indočíny.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1565,6 +1584,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S7** | **Odboj a okupační zákony**: zákony pro okupovaná území, posádky za lidskou sílu, kolaborantské vlády | ✅ |
 | **S6** | **Zásobování jako v HOI4**: lokomotivy a nákladní auta jako výzbroj zásobování s opotřebením, stavba železnice po provinciích | ✅ |
 | **W6** | **Rozhodnutí jako v HOI4**: nové podmínky (rok, cíl, válka se zemí, státy), 7 kategorií, ~60 rozhodnutí včetně národních, cíle odemykající rozhodnutí | ✅ |
 | později | cíle všech zemí, rozhodnutí, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |

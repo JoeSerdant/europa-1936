@@ -38,6 +38,7 @@ export function logLine(e, me = 0) {
     case 'puppet': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.x].name} se stala loutkovým státem (${w.owners[e.o].name}).` };
     case 'annex': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.o].name} anektovala ${w.owners[e.x].name}.` };
     case 'doctrine': return { icon: 'general', tone: 'good', world: false, mine: true, text: `Přijata doktrína: ${DOCTRINES[e.x]?.n || e.x}.` };
+    case 'collab': return { icon: 'flag', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${w.owners[e.a].name} dosadila na okupovaném území (${w.owners[e.b].name}) kolaborantskou vládu.` };   // S7
     case 'rebel': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `Povstání ve státě ${w.states[e.s]?.n || ''}: ${w.owners[e.o].name} vyhnala okupační správu (${w.owners[e.x].name}).` };
     case 'spy': {
       const op = SPY_OPS[e.y], t = w.owners[e.x].name, me = w.owners[e.o].name;

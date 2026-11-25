@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Portrait } from '../army/Portrait.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { politicsOf, focusTree, spiritsOf, ADV_SLOTS, nextElection, formatDate } from '../../engine/index.js';
+import { politicsOf, focusTree, spiritsOf, ADV_SLOTS, nextElection, formatDate, occupiedBy, occLawOf, hasCollab, collabBlock, OCC_LAWS, OCC_LAW_IDS, getWorld } from '../../engine/index.js';
 import { COUNTRIES, IDEOLOGIES } from '../../data/countries.js';
 import { Flag } from '../common/Flag.jsx';
-import { playerIdx, changeLaw, hireAdv, dismissAdv, backParty } from '../actions.js';
+import { playerIdx, changeLaw, hireAdv, dismissAdv, backParty, changeOccLaw, makeCollab } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -40,6 +40,29 @@ function Picker({ options, onPick, mods, cost, activeText }) {
         </button>
       ))}
     </div>
+  );
+}
+
+const occMods = (l) => [l.r !== 1 ? `odboj ×${fmtNum(l.r, 2)}` : '', l.c !== 1 ? `poddajnost ×${fmtNum(l.c, 2)}` : '', l.res ? `těžba ${l.res > 0 ? '+' : ''}${Math.round(l.res * 100)} %` : '', l.pol ? `posádky ${Math.round(l.pol * 100)} %` : ''].filter(Boolean).join(' · ');
+
+/** S7: okupované území jedné země – odboj a poddajnost, okupační zákon (slot s volbami) a kolaborantská vláda. */
+function OccCard({ state, me, x, open, onOpen }) {
+  const w = getWorld(), law = occLawOf(state, me, x.o), col = hasCollab(state, me, x.o), why = collabBlock(state, me, x.o);
+  const options = OCC_LAW_IDS.map((id) => ({ id, ...OCC_LAWS[id], active: law.id === id }));
+  return (
+    <section className={`pol-law occ-card ${open ? 'open' : ''}`} aria-label={`Okupace: ${w.owners[x.o].name}`}>
+      <button className="pol-slot" onClick={onOpen} aria-expanded={open} title={`${law.n}: ${law.info}`}>
+        <span className="pol-slot-ic"><Flag tag={w.owners[x.o].tag} width={30} /></span>
+        <span className="pol-slot-txt"><i>{w.owners[x.o].name} · {x.states.length} {x.states.length === 1 ? 'stát' : x.states.length < 5 ? 'státy' : 'států'}</i><b>{law.n}</b><em>{occMods(law) || 'bez příplatků'}</em></span>
+      </button>
+      <div className="occ-meters">
+        <span title="Průměrný odboj: nad 50 % trpí garnizona, při slabé garnizoně hrozí povstání"><i>Odboj</i><span className="bar prog bad"><i style={{ width: `${Math.round(x.r * 100)}%` }} /></span><b>{Math.round(x.r * 100)} %</b></span>
+        <span title="Průměrná poddajnost: víc surovin, méně odboje"><i>Poddajnost</i><span className="bar prog"><i style={{ width: `${Math.round(x.comp * 100)}%` }} /></span><b>{Math.round(x.comp * 100)} %</b></span>
+        {col ? <span className="occ-col on" title="Kolaborantská vláda: poloviční odboj, rychlejší poddajnost, víc surovin"><Icon name="handshake" size={14} /> Kolaborantská vláda</span>
+          : <button className="sbtn occ-col" disabled={!!why} onClick={() => makeCollab(x.o)} title={why || 'Poloviční odboj, rychlejší poddajnost a víc surovin'}><Icon name="handshake" size={14} /> Kolaborantská vláda</button>}
+      </div>
+      {open ? <Picker options={options} onPick={(id) => changeOccLaw(x.o, id)} mods={occMods} cost={() => 'zdarma'} activeText="platí" /> : null}
+    </section>
   );
 }
 
@@ -182,6 +205,7 @@ export function PoliticsPanel() {
   if (!me) return <div className="prod-screen politics-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádnou politiku.</p></div></div>;
   const p = politicsOf(state, me);
   const [open, setOpen] = usePick();
+  const occ = occupiedBy(state, me);   // S7
   const spirits = [
     ...spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, icon: x.tone === 'bad' ? 'resistance' : 'flag', hint: `${x.info} ${modText(x.mod, x.army)}${x.days ? ` · ještě ${x.days} dní` : ''}` })),
     ...p.laws.map((c) => { const o = c.options.find((x) => x.active); return { k: `l${c.cat}`, n: o.n, kind: 'law', icon: LAW_ICON[c.cat] || 'gavel', hint: `${c.n}: ${o.info}` }; }),
@@ -205,6 +229,10 @@ export function PoliticsPanel() {
             <div className="law-grid">{p.laws.map((c) => <Law key={c.cat} cat={c} open={open === `l${c.cat}`} onOpen={() => setOpen(open === `l${c.cat}` ? '' : `l${c.cat}`)} />)}</div>
             <div className="sec-head"><h3>Vrchní velení</h3><span className="muted">náčelníci štábů: bonusy armády, námořnictva a letectva</span></div>
             <HighCommand list={p.advisors.filter((a) => ADV_SLOTS[a.slot].hc)} />
+            {occ.length ? <>
+              <div className="sec-head"><h3>Okupovaná území</h3><span className="muted">okupační zákon, odboj a poddajnost podle země</span></div>
+              <div className="occ-grid">{occ.map((x) => <OccCard key={x.o} state={state} me={me} x={x} open={open === `o${x.o}`} onOpen={() => setOpen(open === `o${x.o}` ? '' : `o${x.o}`)} />)}</div>
+            </> : null}
           </div>
           <aside className="prod-right">
             <div className="sec-head"><h3>Poradci</h3></div>
