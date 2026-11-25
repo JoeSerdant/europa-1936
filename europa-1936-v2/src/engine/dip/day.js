@@ -51,12 +51,23 @@ export function armisticeRow(state, o) {
   return null;
 }
 
+/** Řádek vytrvání země `o` (`holdout` v okně, M98), nebo null. */
+function holdoutRow(state, o) {
+  if (!state.ai || !state.ai.hist) return null;
+  const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
+  if (state.player && w.ownerIdx[state.player] === o) return null;
+  return HIST_STRATEGIES.find((s) => s.tag === tag && s.holdout && day >= s.from && day < s.until) || null;
+}
+
 /** Vytrvá země `o` podle historické strategie (`holdout` v okně, M98)? Pak kapituluje až při `DIP.HOLDOUT_SHARE` území v rukou nepřítele. */
 export function holdoutOf(state, o) {
-  if (!state.ai || !state.ai.hist) return false;
-  const w = getWorld(), tag = w.owners[o].tag, day = state.tick / 24;
-  if (state.player && w.ownerIdx[state.player] === o) return false;
-  return HIST_STRATEGIES.some((s) => s.tag === tag && s.holdout && day >= s.from && day < s.until);
+  return !!holdoutRow(state, o);
+}
+
+/** Hranice kapitulace při vytrvání: vlastní `share` řádku (W6), jinak `DIP.HOLDOUT_SHARE`. */
+export function holdoutShare(state, o) {
+  const r = holdoutRow(state, o);
+  return r ? r.share ?? DIP.HOLDOUT_SHARE : 0;
 }
 
 /**
@@ -81,12 +92,12 @@ export function dipDay(state) {
     if (state.dip.cap[o] || !hasWar(state.mil, o)) continue;
     const h = vpHeld(state, o);
     if (enemiesOf(state.mil, o).some((e) => isCivilWar(state, o, e))) {   // M69: občanskou válku neukončí pád hlavního města, až držení většiny země
-      const share = holdoutOf(state, o) ? DIP.HOLDOUT_SHARE : DIP.CIVIL_CAP_SHARE;   // F4: historické vytrvání platí i v občanské válce
+      const share = holdoutShare(state, o) || DIP.CIVIL_CAP_SHARE;   // F4: historické vytrvání platí i v občanské válce
       if (h.total && h.share >= share) state = capitulate(state, o);
       else { const ar = armisticeRow(state, o); if (ar) state = forcedEnd(state, o, ar); }   // F4: vynucený konec („fronty ztuhly“)
       continue;
     }
-    const lim = holdoutOf(state, o) ? { share: DIP.HOLDOUT_SHARE, capital: DIP.HOLDOUT_SHARE } : capLimitOf(o);   // M92: hranice kapitulace podle země; M98: vytrvání do konce
+    const hs = holdoutShare(state, o), lim = hs ? { share: hs, capital: hs } : capLimitOf(o);   // M92: hranice kapitulace podle země; M98: vytrvání do konce
     const capRule = o !== player;   // F3: hráčova země po pádu hlavního města nekapituluje hned – jako v HOI4 rozhoduje jen podíl ztraceného území
     if (h.total && (h.share >= lim.share || (capRule && h.capHeld && h.share >= lim.capital))) state = capitulate(state, o);
     else {

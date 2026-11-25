@@ -460,7 +460,11 @@ try {
   await page.keyboard.press('j');
   await page.waitForSelector('.decisions-panel .dec-card', { timeout: 3000 });
   const ppBefore = await E(() => window.__e1936.gameStore.getState().pol.own[window.__e1936.engine.getWorld().ownerIdx.GER].pp);
-  check('klávesa J otevře Rozhodnutí s kartami po kategoriích', (await ui()).panel === 'decisions' && (await page.locator('.dec-col').count()) >= 3 && (await page.locator('.dec-card').count()) >= 12);
+  check('klávesa J otevře Rozhodnutí se záložkami kategorií a kartami', (await ui()).panel === 'decisions' && (await page.locator('.dec-tabs [role=tab]').count()) >= 6 && (await page.locator('.dec-card').count()) >= 4);
+  await page.locator('.dec-tabs [role=tab]', { hasText: 'Diplomacie' }).click();
+  await page.waitForTimeout(200);
+  check('záložka Diplomacie ukáže diplomatické mise (W6)', (await page.locator('.dec-card', { hasText: 'Diplomatická mise' }).count()) >= 5);
+  await page.locator('.dec-tabs [role=tab]').first().click();
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(), o = engine.getWorld().ownerIdx.GER; gameStore.setState({ ...s, pol: { ...s.pol, own: s.pol.own.map((x, i) => (i === o ? { ...x, pp: 400 } : x)) } }); });
   await page.waitForTimeout(1000);
   await page.locator('.dec-card.ready .sbtn').first().click();

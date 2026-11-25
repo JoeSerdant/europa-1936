@@ -52,3 +52,43 @@ describe('rozhodnutí', () => {
     expect(unpackGame(JSON.parse(JSON.stringify(packGame(a)))).error).toBeUndefined();
   });
 });
+
+describe('W6: rozhodnutí jako v HOI4', () => {
+  const s0 = withPp(createGame({ player: 'GER' }), GER, 500);
+  const SOV = W.ownerIdx.SOV, USA = W.ownerIdx.USA, CAN = W.ownerIdx.CAN;
+  it('data: kategorie existují, státy a země v podmínkách existují, cíle z podmínek existují', async () => {
+    const { DECISION_CATS } = await import('../src/data/nat/decisions.js');
+    const { FOCUS_BY_ID } = await import('../src/data/nat/focuses.js');
+    const { focusIdFor } = await import('../src/engine/nat/decisions.js');
+    for (const d of DECISIONS) {
+      expect(DECISION_CATS[d.cat], d.id).toBeTruthy();
+      for (const t of [...(d.when.tag || []), ...(d.when.notTag || []), ...(d.when.atWar || [])]) expect(W.ownerIdx[t], `${d.id}: ${t}`).toBeTruthy();
+      for (const f of d.when.focus || []) for (const t of d.when.tag || ['GER', 'CAN', 'USA']) expect(FOCUS_BY_ID[focusIdFor(t, f)], `${d.id}: ${focusIdFor(t, f)}`).toBeTruthy();
+    }
+    expect(focusIdFor('CAN', '*_px_cmd')).toBe('can_px_cmd');
+    expect(focusIdFor('SLO', '*_px_cmd')).toBe('def_px_cmd');   // vydaná země má výchozí strom
+  });
+  it('podmínky: rok, splněný cíl, válka s konkrétní zemí, „ne pro tuto zemi“', () => {
+    expect(decisionBlock(s0, GER, 'ger_zapadni_val')).toMatch(/roku 1938/);
+    const y38 = { ...s0, tick: 24 * 800 };
+    expect(decisionBlock(y38, GER, 'ger_zapadni_val')).toMatch(/Návrat do Porýní/);
+    const own = y38.nat.own.slice(); own[GER] = { ...own[GER], done: { ...own[GER].done, ger_rhine: 1 } };
+    expect(decisionBlock({ ...y38, nat: { ...y38.nat, own } }, GER, 'ger_zapadni_val')).toBeNull();
+    const sov = withPp(s0, SOV, 500);
+    expect(decisionBlock(sov, SOV, 'sov_evakuace')).toMatch(/ve válce se zemí/);
+    expect(decisionBlock(declareWar(sov, 'GER', 'SOV'), SOV, 'sov_evakuace')).toBeNull();
+    expect(decisionBlock(s0, GER, 'mise_berlin')).toMatch(/zemi/);
+    expect(decisionsOf(s0, GER).some((d) => d.id === 'mise_berlin')).toBe(false);
+    expect(decisionsOf(s0, GER).some((d) => d.id === 'mise_londyn')).toBe(true);
+    // obecné rozhodnutí odemčené cílem ve vlastním stromu země
+    const war = withPp(declareWar(s0, 'GER', 'POL'), GER, 500);
+    expect(decisionBlock(war, GER, 'velka_ofenziva')).toMatch(/Velitelský sbor/);
+    const o2 = war.nat.own.slice(); o2[GER] = { ...o2[GER], done: { ...o2[GER].done, ger_px_cmd: 1 } };
+    const ok = { ...war, nat: { ...war.nat, own: o2 } };
+    expect(decisionBlock(ok, GER, 'velka_ofenziva')).toBeNull();
+    const t = takeDecision(ok, GER, 'velka_ofenziva');
+    expect(docMods(t, GER).atk).toBe(docMods(ok, GER).atk);   // bonus jde přes ducha, ne doktrínu
+    expect(t.nat.own[GER].sp.d_ofenziva).toBe(t.tick + 60 * 24);   // dočasný duch na 60 dní
+    void USA; void CAN;
+  });
+});

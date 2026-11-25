@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Screen } from '../common/Screen.jsx';
 import { decisionsOf, DECISION_CATS, getWorld } from '../../engine/index.js';
@@ -22,28 +22,30 @@ function Card({ d }) {
   );
 }
 
-/** Okno Rozhodnutí (klávesa J): jednorázové akce za politickou moc podle kategorií, s podmínkami a obnovovací dobou. */
+/** Okno Rozhodnutí (klávesa J): kategorie jako záložky (W6, jako v HOI4), pod nimi karty vybrané kategorie v mřížce. */
 export function DecisionsPanel() {
   const state = useGameSlow((s) => s, 700);
   const me = playerIdx(state);
+  const [tab, setTab] = useState('');
   const list = useMemo(() => (me ? decisionsOf(state, me) : []), [state.nat, state.pol, state.mil.wars, state.tick, me]);
   if (!me) return <div className="prod-screen decisions-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádná rozhodnutí.</p></div></div>;
   const pp = Math.floor(state.pol.own[me].pp);
-  const tag = getWorld().owners[me].tag;
-  void tag;
+  const cats = Object.entries(DECISION_CATS).map(([cat, name]) => ({ cat, name, items: list.filter((d) => d.cat === cat) })).filter((c) => c.items.length);
+  const cur = cats.find((c) => c.cat === tab) || cats[0];
   return (
     <Screen cls="decisions-panel" title="Rozhodnutí" icon="gavel" head={<div className="lg-use"><span title="Politická moc"><i>Politická moc</i><b>{fmtInt(pp)}</b></span></div>}>
-      <div className="prod-body dec-body">
-        {Object.entries(DECISION_CATS).map(([cat, name]) => {
-          const items = list.filter((d) => d.cat === cat);
-          if (!items.length) return null;
-          return (
-            <section key={cat} className="dec-col" aria-label={name}>
-              <div className="sec-head"><h3>{name}</h3><span className="muted">{items.filter((d) => !d.block).length} k dispozici</span></div>
-              {items.map((d) => <Card key={d.id} d={d} />)}
-            </section>
-          );
+      <nav className="ind-tabs dec-tabs" role="tablist" aria-label="Kategorie rozhodnutí">
+        {cats.map((c) => {
+          const n = c.items.filter((d) => !d.block).length;
+          return <button key={c.cat} role="tab" aria-selected={cur && cur.cat === c.cat} className={cur && cur.cat === c.cat ? 'on' : ''} onClick={() => setTab(c.cat)} title={`${n} k dispozici`}>{c.name}{n ? <span className="dec-n">{n}</span> : null}</button>;
         })}
+      </nav>
+      <div className="prod-body dec-body">
+        {cur && (
+          <section className="dec-col" aria-label={cur.name}>
+            <div className="dec-grid">{cur.items.map((d) => <Card key={d.id} d={d} />)}</div>
+          </section>
+        )}
       </div>
     </Screen>
   );

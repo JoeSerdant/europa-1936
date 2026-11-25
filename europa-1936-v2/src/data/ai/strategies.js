@@ -17,7 +17,7 @@
 //               okupantovi, ale země nekapituluje – dál vede vlastní politiku a války (moskevský mír Finska 1940)
 //               F4 (historie natvrdo, jako skriptované události HOI4): s `full` = běžná kapitulace (konference, exil); `days` = vynucený konec
 //               N dní po začátku války se zemí `armistice`; bez `held` rozhoduje jen `force` / `days`. Platí i v občanské válce.
-//  holdout      (s `from`/`until`) země bojuje do posledního: kapituluje až při `DIP.HOLDOUT_SHARE` území v rukou nepřítele (M98)
+//  holdout      (s `from`/`until`) země bojuje do posledního: kapituluje až při `DIP.HOLDOUT_SHARE` území v rukou nepřítele (M98); `share` = vlastní hranice (W6)
 //  invade       operace vylodění (s `from`/`until`): země se v okně vylodí u země `invade` i bez převahy na moři, z větší dálky a v plné síle sboru (Sicílie, Normandie);
 //               `at` = vylodění jen na původním území této země (Normandie: Němci držená Francie)
 export const HIST_STRATEGIES = [
@@ -103,7 +103,7 @@ export const HIST_STRATEGIES = [
   { id: 'ger_ruin', tag: 'GER', from: 3260, until: 3800, needWar: 'SOV', spirit: 'zhroucene_hospodarstvi' },   // M96: bombardované továrny, ztracená ropa
   // vylodění Spojenců: Sicílie a Itálie 1943, Normandie 1944
   // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
-  { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true },
+  { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true, share: 0.995 },   // W6: vlastní hranice – posledních pár provincií padne až s kapitulací 8. 5. 1945
   { id: 'hun_holdout', tag: 'HUN', from: 2000, until: 3381, holdout: true },   // W2: Maďarsko vytrvá do dubna 1945 (Budapešť padla v únoru, poslední území 4. 4. 1945)
   { id: 'slo_holdout', tag: 'SLO', from: 2000, until: 3395, holdout: true },   // Slovensko do dubna 1945
   // W2: Rudá armáda vstoupí do Maďarska až na podzim 1944 (Debrecín, říjen 1944) – dřív by ho přejela za pár týdnů v létě 1943
