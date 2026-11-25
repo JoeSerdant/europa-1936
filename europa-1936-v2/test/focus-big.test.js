@@ -91,3 +91,21 @@ describe('W3: velmoci světa', () => {
     expect(at('chi_front').ai).toBeLessThan(at('chi_purge').ai);
   });
 });
+
+describe('W4: vlastní cíle zemí světa', () => {
+  it('každá země mimo Evropu (kromě velmocí) má vlastní název hospodářského cíle a aspoň tři jedinečné cíle', async () => {
+    const { NATION_SPEC } = await import('../src/data/nat/focuses_nations.js');
+    const tags = Object.keys(NATION_SPEC);
+    expect(tags.length).toBe(38);
+    for (const t of tags) {
+      const p = t.toLowerCase(), x = NATION_SPEC[t];
+      expect(idx(t), t).toBeGreaterThan(0);
+      expect(x.eco[0], t).toBeTruthy();
+      expect((x.x || []).length, t).toBeGreaterThanOrEqual(3);
+      for (const [suf] of x.x) expect(FOCUS_BY_ID[`${p}_${suf}`], `${p}_${suf}`).toBeTruthy();
+      expect(FOCUS_BY_ID[`${p}_eco`].n).toBe(x.eco[0]);   // původní id zůstávají (uložené hry)
+      for (const id of ['rail', 'army', 'sci', 'arm', 'trade', 'unity', 'staff']) expect(FOCUS_BY_ID[`${p}_${id}`], `${p}_${id}`).toBeTruthy();
+    }
+    expect(FOCUS_BY_ID.sia_japan.ai).toBeLessThan(FOCUS_BY_ID.sia_west.ai);   // historická volba Siamu
+  });
+});

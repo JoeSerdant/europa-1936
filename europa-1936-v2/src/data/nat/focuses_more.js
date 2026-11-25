@@ -1,5 +1,6 @@
 // Národní cíle pro všechny země a rozšíření velmocí (M57). Vlastní obsah a čísla. Poloha cíle v mřížce se dopočítá z hloubky stromu (`tree`).
 //  Položka: [id, název, dny, předpoklady, účinky, doplňky { ai, info, mod, excl, any }]
+import { NATION_SPEC } from './focuses_nations.js';
 const civ = (n = 1) => ({ t: 'factory', k: 'civ', n });
 const mil = (n = 1) => ({ t: 'factory', k: 'mil', n });
 const stab = (v) => ({ t: 'stab', v });
@@ -328,34 +329,21 @@ export const EXTRA = {
   ],
 };
 
-// W1: výchozí strom pro země mimo Evropu (obecný, se jménem země v cílech); velmoci USA, Japonsko a Čína mají velký strom (W3, `focuses_world.js`)
-const WORLD_BASE = {
-  CAN: ['Kanadská železnice', 'Kanadský armádní sbor'], MEX: ['Znárodnění ropy', 'Revoluční armáda'],
-  GUA: ['Kávové plantáže', 'Národní garda'], HON: ['Banánové přístavy', 'Národní garda'], ELS: ['Kávový vývoz', 'Národní garda'],
-  NIC: ['Kanál přes jezera', 'Národní garda'], COS: ['Kávová republika', 'Civilní stráž'], PAN: ['Průplavové hospodářství', 'Národní policie'],
-  CUB: ['Cukrovary', 'Konstitucionální armáda'], HAI: ['Přístav Port-au-Prince', 'Haitská garda'], DOM: ['Cukerní hospodářství', 'Národní armáda'],
-  COL: ['Káva a ropa', 'Andská armáda'], VEN: ['Ropná pole Maracaiba', 'Bolívarovská armáda'], ECU: ['Kakaové plantáže', 'Obrana Amazonie'],
-  PRU: ['Doly v Andách', 'Armáda Inků'], BOL: ['Cínové doly', 'Obnova po Chacu'], CHL: ['Ledek a měď', 'Chilská armáda'],
-  ARG: ['Pampy a obilí', 'Armáda La Platy'], URG: ['Hovězí vývoz', 'Národní armáda'], PAR: ['Vítězové z Chaca', 'Veteráni války'],
-  BRA: ['Káva a guma', 'Brazilská armáda'], ETH: ['Císařská silnice', 'Obrana císařství'], LBR: ['Kaučukové plantáže', 'Pohraniční síly'],
-  SAF: ['Zlaté doly', 'Obranné síly Unie'], MAN: ['Mandžuské doly', 'Armáda Mandžukua'],
-  PRC: ['Pohraniční oblast', 'Rudá armáda'], SIK: ['Hedvábná stezka', 'Provinční armáda'],
-  TIB: ['Klášterní hospodářství', 'Tibetská armáda'], MON: ['Stepní kolektivy', 'Mongolská jízda'], TAN: ['Pastevecké družstvo', 'Tuvinská jízda'],
-  SIA: ['Modernizace Siamu', 'Královská armáda'], AFG: ['Kábulské dílny', 'Kmenové milice'], RAJ: ['Indický průmysl', 'Indická armáda'],
-  NEP: ['Himálajské průsmyky', 'Gurkhské pluky'], YEM: ['Imámovy přístavy', 'Kmenová vojska'], PHI: ['Společenství Filipín', 'Filipínská armáda'],
-  AST: ['Australský průmysl', 'Australské císařské síly'], NZL: ['Vlnařství a mléko', 'Novozélandské síly'],
-};
-function worldTree(tag, [eco, army]) {
-  const p = tag.toLowerCase();
+// W1/W4: strom zemí mimo Evropu – osm základních cílů s vlastními názvy země a jedinečné cíle podle země (`NATION_SPEC`,
+// `focuses_nations.js`); velmoci USA, Japonsko a Čína mají velký strom (W3, `focuses_world.js`)
+function worldTree(tag, x) {
+  const p = tag.toLowerCase(), id = (s) => `${p}_${s}`;
+  const [eco, ecoInfo] = x.eco;
   return tree([
-    [`${p}_eco`, eco, 45, [], [civ(), pp(20)], { info: 'Hospodářský základ země.' }],
-    [`${p}_rail`, 'Silnice a železnice', 35, [`${p}_eco`], [infra(), pp(15)]],
-    [`${p}_army`, army, 35, [`${p}_eco`], [man(0.003), stock('pusky', 800)]],
-    [`${p}_sci`, 'Vysoké školy', 35, [`${p}_rail`], [slot()], { mod: { research: 0.03 } }],
-    [`${p}_arm`, 'Zbrojní dílny', 45, [`${p}_army`], [mil()]],
-    [`${p}_trade`, 'Zahraniční obchod', 35, [`${p}_rail`], [law('trd', 'free'), civ()]],
-    [`${p}_unity`, 'Národní jednota', 35, [`${p}_arm`], [stab(0.05), ws(0.03)]],
-    [`${p}_staff`, 'Generální štáb', 35, [`${p}_unity`], [xp('land', 15), pp(20)]],
+    [id('eco'), eco, 45, [], [civ(), pp(20)], { info: ecoInfo || 'Hospodářský základ země.' }],
+    [id('rail'), x.rail || 'Silnice a železnice', 35, [id('eco')], [infra(), pp(15)]],
+    [id('army'), x.army || 'Národní armáda', 35, [id('eco')], [man(0.003), stock('pusky', 800)]],
+    [id('sci'), x.sci || 'Vysoké školy', 35, [id('rail')], [slot()], { mod: { research: 0.03 } }],
+    [id('arm'), x.arm || 'Zbrojní dílny', 45, [id('army')], [mil()]],
+    [id('trade'), x.trade || 'Zahraniční obchod', 35, [id('rail')], [law('trd', 'free'), civ()]],
+    [id('unity'), x.unity || 'Národní jednota', 35, [id('arm')], [stab(0.05), ws(0.03)]],
+    [id('staff'), x.staff || 'Generální štáb', 35, [id('unity')], [xp('land', 15), pp(20)]],
+    ...(x.x || []).map(([suf, n, days, req, fx, extra = {}]) => [id(suf), n, days, req.map(id), fx, extra]),
   ]);
 }
-export const WORLD_TREES = Object.fromEntries(Object.entries(WORLD_BASE).map(([t, x]) => [t, worldTree(t, x)]));
+export const WORLD_TREES = Object.fromEntries(Object.entries(NATION_SPEC).map(([t, x]) => [t, worldTree(t, x)]));
