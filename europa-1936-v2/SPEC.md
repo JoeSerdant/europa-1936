@@ -1153,6 +1153,11 @@ Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a da
   hráčovy strany), Armády (počet divizí, organizace, boj, zásoby), Výcvik, Flotily, Letectvo, Výroba (továrny, efektivita), Stavby (postup);
   klik vede na mapu (armáda = výběr divizí a let kamery), do okna bitvy nebo do okna. Sbalitelný celý (`ui.outliner`) i po oddílech; skrytý,
   když je otevřený pravý panel; střední lišty se pak středí mezi levým sloupcem a přehledem.
+- **Výroba a Stavby jako v HOI4** (F4f): fronta staveb jsou karty s ikonou budovy (klik ukáže místo na mapě), místem, druhem, dny do konce,
+  řadou civilních továren, které na stavbě pracují (plné / částečné / prázdné až do stropu stavby – počítá jen `queueFlow` v `ui/industry/flow.js`
+  stejným pravidlem jako `projectEta`), ukazatelem postupu a posunem ve frontě; výrobní linka mění druh klikem na název – volby jako dlaždice
+  s kreslenou ikonou (žádný rozbalovací seznam), cena a suroviny na kus jsou ikony (`ResIcon`), sklad výzbroje jsou dlaždice s ikonou a počtem,
+  souhrn průmyslu v záhlaví má ikony.
 - **Okna Výzkum a Politika jako v HOI4** (F4e): výzkumné sloty s ikonou technologie (`techIconOf`), názvem, postupem a dny, volný slot bliká;
   v Politice karta vůdce s portrétem, koláčovým grafem podpory stran (`PartyPie`, vládnoucí strana vysunutá) a národními duchy jako ikonami
   (název a účinek v nápovědě); zákony (ekonomika, odvod, obchod) a poradci jsou sloty – klik otevře volby jako dlaždice (`Picker`, cena,

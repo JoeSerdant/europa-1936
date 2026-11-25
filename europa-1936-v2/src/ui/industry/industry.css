@@ -950,3 +950,41 @@ button.st-row:hover { background: var(--ink-3); }
 .prod-screen.politics-panel .leader-card .lc-portrait { grid-row: span 3; width: 120px; height: 140px; }
 .prod-screen.politics-panel .leader-card > :not(.lc-portrait) { grid-column: 2; }
 .prod-screen.politics-panel .leader-card .lc-parties, .prod-screen.politics-panel .leader-card h4, .prod-screen.politics-panel .leader-card .lc-spirits, .prod-screen.politics-panel .leader-card .lc-warn, .prod-screen.politics-panel .leader-card .lc-elect { grid-column: 1 / -1; }
+
+/* F4f: fronta staveb jako karty (jako v HOI4) – ikona budovy, místo, továrny na stavbě, postup */
+.bp-queue { gap: 4px; }
+.bp-queue li.bq-card {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-rows: auto auto auto; align-items: center; gap: 3px 8px;
+  padding: 6px 8px 6px 6px; background: linear-gradient(90deg, rgba(30, 46, 60, 0.85), rgba(15, 24, 33, 0.85)); box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 var(--brass-lo);
+}
+.bp-queue li.bq-card.idle { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 var(--text-3); opacity: 0.8; }
+.bq-card .bq-ic { grid-row: 1 / 4; width: 40px; height: 40px; display: grid; place-items: center; border: 0; padding: 0; color: var(--brass-hi);
+  background: linear-gradient(145deg, var(--ink-3), var(--ink-1)); box-shadow: inset 0 0 0 1px var(--brass-lo); }
+.bq-card .bq-ic:hover { box-shadow: inset 0 0 0 1px var(--brass-hi); }
+.bq-card .bq-nm { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.bq-card .bq-nm b { overflow: hidden; font: 600 14px/1.15 var(--body); color: var(--paper); white-space: nowrap; text-overflow: ellipsis; }
+.bq-card .bq-nm small { font-size: 11.5px; color: var(--text-3); }
+.bq-card .bq-eta { font: 600 13px/1 var(--display); color: var(--brass-hi); white-space: nowrap; text-align: right; }
+.bq-card .bq-btns { grid-column: 3; grid-row: 2; display: flex; gap: 2px; justify-content: flex-end; }
+.bq-card .bq-fac { grid-column: 2; grid-row: 2; display: flex; flex-wrap: wrap; gap: 2px; }
+.bq-fac i { width: 9px; height: 9px; background: transparent; box-shadow: inset 0 0 0 1px var(--brass-lo); }
+.bq-fac i.on { background: var(--brass); }
+.bq-fac i.part { background: linear-gradient(90deg, var(--brass) var(--p), transparent var(--p)); }
+.bq-card .bq-prog { grid-column: 2 / 4; grid-row: 3; position: relative; height: 11px; }
+.bq-card .bq-prog em { position: absolute; inset: 0; display: grid; place-items: center; font: 600 9.5px/1 var(--display); font-style: normal; color: var(--paper); text-shadow: 0 1px 1px #000; }
+
+/* F4f: výroba – výběr výzbroje dlaždicemi, suroviny ikonami, sklad jako dlaždice */
+.pl-pick { display: flex; align-items: center; gap: 6px; width: 100%; padding: 3px 6px; border: 0; text-align: left; background: transparent; box-shadow: inset 0 0 0 1px var(--rule);
+  font: 600 15px/1.2 var(--display); color: var(--paper); }
+.pl-pick:hover, .pl-pick.open { box-shadow: inset 0 0 0 1px var(--brass); background: var(--ink-3); }
+.pl-pick span { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pl-opts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 4px; padding: 6px; background: var(--ink-1); box-shadow: inset 0 0 0 1px var(--rule-hi); }
+.pl-opts .pn-tile.on { box-shadow: inset 0 0 0 2px var(--brass); }
+.pl-need { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font: 600 12.5px/1 var(--display); color: var(--text-2); }
+.pl-need > span { display: inline-flex; align-items: center; gap: 3px; }
+.pl-need > span.lack { color: var(--red); }
+.stk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 4px; }
+.stk-tile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 3px 4px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); font-size: 11px; color: var(--text-3); text-align: center; }
+.stk-tile b { font: 700 14px/1 var(--display); color: var(--paper); }
+.stk-tile.zero b { color: var(--text-3); }
+.ind-sum .stat-cell i svg { vertical-align: -3px; margin-right: 3px; }
