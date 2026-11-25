@@ -1307,6 +1307,28 @@ Cíle hlavně urychlují výzkum a dávají zkušenosti; továrnu dávají jen k
 Vynucená historická válka (`HIST_WARS` s `force`, historická AI) se ospravedlňuje zdarma (`justifyWar(…, hist = true)`, jako historický pakt) –
 s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji nastřádá.
 
+## 4zzzzzzzzzzz. Rozhodnutí jako v HOI4 (W6)
+
+- **Nové podmínky** v `when` (`decisionBlock`, `engine/nat/decisions.js`): `year` (od roku), `focus` (splněné cíle; `*_px_cmd` = cíl ve stromu
+  vlastní země, vydané země prefix `def` – `focusIdFor`), `atWar` (válka aspoň s jednou ze zemí), `owns` (vlastní všechny státy), `notTag`
+  (ne pro tyto země; `decisionsOf` je skryje), `faction` (člen bloku). Důvod zákazu je český text („Až od roku 1938.“, „Vyžaduje národní cíl …“).
+- **Kategorie** `DECISION_CATS`: Hospodářství, Armáda, Válečné operace, Výzkum a vývoj, Diplomacie, Politika, Národní.
+- **Obecná rozhodnutí**: válečné dluhopisy, stavební brigády, geologický průzkum, výzkumný grant, zahraniční inženýři, radarová síť,
+  opevnění hranic, velká ofenziva (po cíli Velitelský sbor), povolání záloh (po cíli Mobilizační plán), polní letiště, rozšíření loděnic,
+  vláda národní jednoty (po cíli Mimořádné pravomoci), amnestie, diplomatické mise do sedmi hlavních měst (AI je nepoužívá).
+- **Národní rozhodnutí** (podmínky cílů, let a válek): Západní val a hydrogenační závody (Německo), evakuace továren na východ a úderníkovské
+  hnutí (SSSR), domobrana a řetěz radarů (Británie), prodloužení pevnostní linie (Francie), hospodářská soběstačnost (Itálie), projekt štěpné
+  zbraně a půjčka a pronájem (USA), zásoby ropy a ostrovní pevnosti (Japonsko), spálená země a letecký most (Čína), obranná linie (Finsko),
+  šifrovací úřad (Polsko), pohraniční pevnosti (Československo), horská pevnost (Švýcarsko), hlídání úžin (Turecko), ocelárna na úvěr
+  (Brazílie), Společenství ve zbrani (dominia a Indie).
+- Dočasné bonusy jdou přes vlastní dočasné duchy `d_*` (vypršení neodebere trvalého ducha z cíle).
+- **Stromy cílů** (W6): každý strom má cíle odemykající rozhodnutí – Velitelský sbor, Mobilizační plán (po kterékoli doktríně), Mimořádné
+  pravomoci (po zahraniční politice, u velmocí po průmyslové zralosti).
+- **Okno Rozhodnutí**: kategorie jako záložky (`.dec-tabs`, počet použitelných), karty vybrané kategorie v mřížce (`.dec-grid`).
+- AI rozhodnutí používá, takže je Rudá armáda v roce 1945 o něco silnější: řádek vytrvání má vlastní hranici kapitulace `share`
+  (`holdoutShare` v `dip/day.js`; Německo `ger_holdout` 0,995 místo `DIP.HOLDOUT_SHARE` 0,98) – poslední provincie padnou až s kapitulací
+  8. 5. 1945.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1522,6 +1544,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **W6** | **Rozhodnutí jako v HOI4**: nové podmínky (rok, cíl, válka se zemí, státy), 7 kategorií, ~60 rozhodnutí včetně národních, cíle odemykající rozhodnutí | ✅ |
 | později | cíle všech zemí, rozhodnutí, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
 
 Každý milník končí hratelnou verzí se zelenými testy, čistým buildem, kontrolou v prohlížeči (1920 × 1080 a 1366 × 768) a aktualizovanou dokumentací.

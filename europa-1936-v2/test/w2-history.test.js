@@ -129,3 +129,14 @@ describe('W5: vynucená historická válka', () => {
     expect(t.pol.own[GER].pp).toBe(0);
   });
 });
+
+describe('W6: vlastní hranice vytrvání', () => {
+  it('řádek holdout se `share` mění hranici kapitulace; bez ní platí DIP.HOLDOUT_SHARE', async () => {
+    const { holdoutShare } = await import('../src/engine/dip/day.js');
+    const { DIP } = await import('../src/engine/dip/constants.js');
+    const s = { ...createGame({ player: null, aiLevel: 2 }), tick: 24 * 3000 };
+    expect(holdoutShare(s, idx('GER'))).toBe(0.995);
+    expect(holdoutShare(s, idx('CHI'))).toBe(DIP.HOLDOUT_SHARE);
+    expect(holdoutShare(s, idx('SWE'))).toBe(0);
+  });
+});

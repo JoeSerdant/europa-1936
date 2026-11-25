@@ -46,6 +46,15 @@ export const SPIRITS = {
   arzenal_demokracie: { n: 'Arzenál demokracie', info: 'Automobilky vyrábějí tanky a letadla, loděnice spouštějí lodě po desítkách a do armády nastupují miliony.', tone: 'good', mod: { prod: 0.3, build: 0.2, man: 0.4, ws: 0.15 } },
   valka_odporu: { n: 'Válka odporu', info: 'Země ustupuje do hor a vnitrozemí, ale nevzdává se; každé město stojí útočníka měsíce.', tone: 'good', mod: { ws: 0.15, man: 0.1 }, army: { def: 0.2, orgRegen: 0.1 } },
   vlastenecka_valka: { n: 'Vlastenecká válka', info: 'Celá země se semkla k obraně vlasti: odvody rostou a vojáci se nevzdávají.', tone: 'good', mod: { man: 0.15, ws: 0.15, stab: 0.05 }, army: { def: 0.12, orgRegen: 0.1 } },
+  // W6: dočasní duchové z rozhodnutí (vlastní, aby jejich vypršení neodebralo trvalého ducha z cíle)
+  d_dluhopisy: { n: 'Válečné dluhopisy', info: 'Lidé půjčují státu na zbraně; továrny jedou naplno, ale úspory mizí.', tone: 'mixed', mod: { prod: 0.08, stab: -0.02 } },
+  d_stavebni_brigady: { n: 'Stavební brigády', info: 'Dobrovolníci a odvedenci staví silnice, mosty a továrny.', tone: 'good', mod: { build: 0.1 } },
+  d_prospektori: { n: 'Geologický průzkum', info: 'Nová ložiska a modernizované doly.', tone: 'good', mod: { extract: 0.08 } },
+  d_vedecky_program: { n: 'Vědecký program', info: 'Stát platí laboratoře, univerzity a zahraniční odborníky.', tone: 'good', mod: { research: 0.06 } },
+  d_obrana_hranic: { n: 'Opevněné hranice', info: 'Bunkry, zátarasy a minová pole na hlavních směrech.', tone: 'good', mod: {}, army: { def: 0.06 } },
+  d_ofenziva: { n: 'Velká ofenziva', info: 'Soustředěné zálohy, munice a letectvo pro jediný úder.', tone: 'good', mod: {}, army: { atk: 0.08, planGain: 0.2 } },
+  d_udernici: { n: 'Úderníkovské hnutí', info: 'Normy se plní na stovky procent a vítězové soutěží jsou hrdinové.', tone: 'good', mod: { prod: 0.06, stab: -0.01 } },
+  d_spalena_zeme: { n: 'Spálená země', info: 'Co nejde odvézt, se zničí; nepřítel nenajde nic.', tone: 'mixed', mod: { stab: -0.03 }, army: { def: 0.1 } },
   // M94: duchové z národních cílů (trvalé; každá země je může získat jen jednou)
   f_motorizovana_valka: { n: 'Motorizovaná válka', info: 'Pěchota jezdí na nákladních autech a zásobovací kolony drží krok s tanky.', tone: 'good', mod: {}, army: { speed: 0.05, supUse: -0.03 } },
   f_tankova_skola: { n: 'Tanková škola', info: 'Osádky se cvičí na polygonech a velitelé tanků vedou z věže.', tone: 'good', mod: {}, army: { atkArm: 0.05 } },

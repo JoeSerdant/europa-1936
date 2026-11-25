@@ -451,8 +451,11 @@ button.st-row:hover { background: var(--ink-3); }
 
 
 /* ------------------------------------------------------------------ rozhodnutí (M35) */
-.dec-body { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; overflow-y: auto; align-content: start; }
-.dec-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dec-body { display: block; overflow-y: auto; }
+.dec-col { min-width: 0; }
+.dec-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }   /* W6: karty vybrané kategorie */
+.dec-tabs { flex-wrap: wrap; }
+.dec-n { display: inline-block; min-width: 18px; margin-left: 6px; padding: 1px 5px; font: 600 11px/1.3 var(--display); color: var(--ink, #10161d); background: var(--brass); border-radius: 8px; text-align: center; }
 .dec-card { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: rgba(15, 24, 33, 0.7); box-shadow: inset 0 0 0 1px var(--rule); }
 .dec-card header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .dec-card header b { font: 600 15.5px/1.2 var(--display); color: var(--paper); }
@@ -462,7 +465,7 @@ button.st-row:hover { background: var(--ink-3); }
 .dec-card.ready { box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
 .dec-card.used { opacity: 0.5; }
 /* dřív @media (max-width: 1500px) – UI: podle šířky rozhraní po zvětšení */
-:root.uw-1500 .dec-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:root.uw-1500 .dec-grid { grid-template-columns: 1fr; }
 
 
 /* ------------------------------------------------------------------ konec hry (M36) */

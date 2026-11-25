@@ -1,8 +1,9 @@
 // Rozhodnutí (M35): jednorázové akce za politickou moc s obnovovací dobou. Vlastní texty a čísla.
 //  cat    kategorie v okně           cost   cena v politické moci       cd   dní do dalšího použití (99999 = jednou za hru)
-//  when   podmínky (data): war true/false, stab / ws [min, max], tag [tagy], ideo [ideologie], year (od roku)
+//  when   podmínky (data): war true/false, stab / ws [min, max], tag [tagy], notTag [tagy], ideo [ideologie], year (od roku),
+//         focus [id splněných cílů; '*_px_cmd' = cíl ve stromu vlastní země], atWar [tagy – válka aspoň s jednou], owns [jména států – všechny], faction true (W6)
 //  fx     účinky ve tvaru účinků cílů a událostí (nat/effects.js)    ai   smí je používat AI
-export const DECISION_CATS = { eco: 'Hospodářství', mil: 'Armáda', pol: 'Politika', nat: 'Národní' };
+export const DECISION_CATS = { eco: 'Hospodářství', mil: 'Armáda', war: 'Válečné operace', tech: 'Výzkum a vývoj', dip: 'Diplomacie', pol: 'Politika', nat: 'Národní' };   // W6: nové kategorie
 
 export const DECISIONS = [
   // ---- hospodářství ----
@@ -30,5 +31,48 @@ export const DECISIONS = [
   { id: 'fra_opevneni', cat: 'nat', n: 'Obranný program', info: 'Dokončení pohraničního opevnění a zásobování.', cost: 50, cd: 99999, when: { tag: ['FRA'] }, fx: [{ t: 'infra', n: 1 }, { t: 'stock', eq: 'dela', n: 120 }], ai: true },
   { id: 'ita_impero', cat: 'nat', n: 'Imperiální nadšení', info: 'Vlna vlastenectví v celé zemi.', cost: 45, cd: 99999, when: { tag: ['ITA'] }, fx: [{ t: 'ws', v: 0.08 }, { t: 'factory', k: 'civ', n: 1 }], ai: true },
   { id: 'pol_branna', cat: 'nat', n: 'Obranná výstavba', info: 'Pevnosti a sklady na východních hranicích.', cost: 40, cd: 99999, when: { tag: ['POL'] }, fx: [{ t: 'stock', eq: 'pusky', n: 600 }, { t: 'factory', k: 'mil', n: 1 }], ai: true },
+  // ---- W6: rozhodnutí jako v HOI4 (obecná) ----
+  { id: 'valecne_dluhopisy', cat: 'eco', n: 'Válečné dluhopisy', info: 'Půl roku vyšší výroba za cenu úspor obyvatel.', cost: 40, cd: 365, when: { war: true, year: 1938 }, fx: [{ t: 'spirit', id: 'd_dluhopisy', days: 180 }], ai: true },
+  { id: 'stavebni_brigady', cat: 'eco', n: 'Stavební brigády', info: 'Čtyři měsíce rychlejší stavby v celé zemi.', cost: 35, cd: 240, when: { war: false }, fx: [{ t: 'spirit', id: 'd_stavebni_brigady', days: 120 }], ai: true },
+  { id: 'geologicky_pruzkum', cat: 'eco', n: 'Geologický průzkum', info: 'Půl roku vyšší těžba surovin.', cost: 30, cd: 300, when: {}, fx: [{ t: 'spirit', id: 'd_prospektori', days: 180 }], ai: true },
+  { id: 'vyzkumny_grant', cat: 'tech', n: 'Výzkumný grant', info: 'Peníze navíc pro právě zkoumanou technologii.', cost: 40, cd: 150, when: {}, fx: [{ t: 'boostslot', v: 0.5 }], ai: true },
+  { id: 'zahranicni_inzenyri', cat: 'tech', n: 'Zahraniční inženýři', info: 'Půl roku rychlejší výzkum díky najatým odborníkům.', cost: 50, cd: 365, when: { year: 1937 }, fx: [{ t: 'spirit', id: 'd_vedecky_program', days: 180 }], ai: true },
+  { id: 'radarova_sit', cat: 'tech', n: 'Radarová síť', info: 'Radiolokační stanice v hlavním státě.', cost: 40, cd: 365, when: { year: 1939 }, fx: [{ t: 'bld', k: 'radar', n: 2 }], ai: true },
+  { id: 'opevneni_hranic', cat: 'war', n: 'Opevnění hranic', info: 'Půl roku silnější obrana všech divizí.', cost: 35, cd: 300, when: {}, fx: [{ t: 'spirit', id: 'd_obrana_hranic', days: 180 }], ai: true },
+  { id: 'velka_ofenziva', cat: 'war', n: 'Velká ofenziva', info: 'Dva měsíce silnější útok. Odemyká národní cíl Velitelský sbor.', cost: 50, cd: 365, when: { war: true, focus: ['*_px_cmd'] }, fx: [{ t: 'spirit', id: 'd_ofenziva', days: 60 }], ai: true },
+  { id: 'povolani_zaloh', cat: 'war', n: 'Povolání záloh', info: 'Další ročníky z mobilizačního plánu. Odemyká národní cíl Mobilizační plán.', cost: 40, cd: 180, when: { war: true, focus: ['*_px_mobplan'] }, fx: [{ t: 'man', v: 0.004 }, { t: 'stab', v: -0.02 }], ai: true },
+  { id: 'polni_letiste', cat: 'war', n: 'Polní letiště', info: 'Nová letiště pro letectvo.', cost: 30, cd: 240, when: {}, fx: [{ t: 'bld', k: 'afb', n: 2 }], ai: true },
+  { id: 'rozsireni_lodenic', cat: 'war', n: 'Rozšíření loděnic', info: 'Nové suché doky a skluzy.', cost: 40, cd: 365, when: {}, fx: [{ t: 'bld', k: 'dok', n: 2 }], ai: true },
+  { id: 'narodni_jednota', cat: 'pol', n: 'Vláda národní jednoty', info: 'V nejhorší chvíli se strany spojí. Odemyká národní cíl Mimořádné pravomoci.', cost: 50, cd: 99999, when: { war: true, stab: [0, 0.55], focus: ['*_px_decree'] }, fx: [{ t: 'stab', v: 0.1 }, { t: 'ws', v: 0.05 }], ai: true },
+  { id: 'amnestie', cat: 'pol', n: 'Amnestie', info: 'Propuštění politických vězňů uklidní zemi.', cost: 30, cd: 365, when: { war: false, stab: [0, 0.7] }, fx: [{ t: 'stab', v: 0.05 }], ai: true },
+  { id: 'mise_londyn', cat: 'dip', n: 'Diplomatická mise do Londýna', info: 'Vyslanec u britské vlády zlepší vztahy.', cost: 25, cd: 180, when: { notTag: ['ENG'] }, fx: [{ t: 'rel', tag: 'ENG', nm: 'Británie', v: 30 }] },
+  { id: 'mise_pariz', cat: 'dip', n: 'Diplomatická mise do Paříže', info: 'Vyslanec u francouzské vlády zlepší vztahy.', cost: 25, cd: 180, when: { notTag: ['FRA'] }, fx: [{ t: 'rel', tag: 'FRA', nm: 'Francie', v: 30 }] },
+  { id: 'mise_berlin', cat: 'dip', n: 'Diplomatická mise do Berlína', info: 'Vyslanec u německé vlády zlepší vztahy.', cost: 25, cd: 180, when: { notTag: ['GER'] }, fx: [{ t: 'rel', tag: 'GER', nm: 'Německo', v: 30 }] },
+  { id: 'mise_rim', cat: 'dip', n: 'Diplomatická mise do Říma', info: 'Vyslanec u italské vlády zlepší vztahy.', cost: 25, cd: 180, when: { notTag: ['ITA'] }, fx: [{ t: 'rel', tag: 'ITA', nm: 'Itálie', v: 30 }] },
+  { id: 'mise_moskva', cat: 'dip', n: 'Diplomatická mise do Moskvy', info: 'Vyslanec u sovětské vlády zlepší vztahy.', cost: 25, cd: 180, when: { notTag: ['SOV'] }, fx: [{ t: 'rel', tag: 'SOV', nm: 'SSSR', v: 30 }] },
+  { id: 'mise_washington', cat: 'dip', n: 'Diplomatická mise do Washingtonu', info: 'Vyslanec u americké vlády zlepší vztahy.', cost: 25, cd: 180, when: { notTag: ['USA'] }, fx: [{ t: 'rel', tag: 'USA', nm: 'Spojené státy', v: 30 }] },
+  { id: 'mise_tokio', cat: 'dip', n: 'Diplomatická mise do Tokia', info: 'Vyslanec u japonské vlády zlepší vztahy.', cost: 25, cd: 180, when: { notTag: ['JAP'] }, fx: [{ t: 'rel', tag: 'JAP', nm: 'Japonsko', v: 30 }] },
+  // ---- W6: národní rozhodnutí (podmínky cílů, let a válek) ----
+  { id: 'ger_zapadni_val', cat: 'nat', n: 'Západní val', info: 'Pás bunkrů na západní hranici (po cíli Návrat do Porýní).', cost: 50, cd: 99999, when: { tag: ['GER'], year: 1938, focus: ['ger_rhine'] }, fx: [{ t: 'spirit', id: 'd_obrana_hranic', days: 720 }, { t: 'stock', eq: 'dela', n: 150 }], ai: true },
+  { id: 'ger_hydrogenace', cat: 'nat', n: 'Hydrogenační závody', info: 'Benzín z uhlí ve velkém (po cíli Syntetické palivo).', cost: 60, cd: 99999, when: { tag: ['GER'], focus: ['ger_synth'] }, fx: [{ t: 'boost', id: 'synt2', v: 0.5 }, { t: 'factory', k: 'civ', n: 1 }], ai: true },
+  { id: 'sov_evakuace', cat: 'nat', n: 'Evakuace továren na východ', info: 'Vagony plné strojů míří za hory: nové zbrojovky daleko od fronty.', cost: 40, cd: 99999, when: { tag: ['SOV'], atWar: ['GER'] }, fx: [{ t: 'factory', k: 'mil', n: 2 }, { t: 'man', v: 0.003 }], ai: true },
+  { id: 'sov_udernici', cat: 'nat', n: 'Úderníkovské hnutí', info: 'Rok vyšší výroby (po cíli Úderníci).', cost: 45, cd: 730, when: { tag: ['SOV'], focus: ['sov_stakh'] }, fx: [{ t: 'spirit', id: 'd_udernici', days: 365 }], ai: true },
+  { id: 'eng_domobrana', cat: 'nat', n: 'Domobrana', info: 'Muži nad odvodní věk hlídkují na pobřeží.', cost: 30, cd: 99999, when: { tag: ['ENG'], atWar: ['GER'] }, fx: [{ t: 'man', v: 0.004 }, { t: 'stock', eq: 'pusky', n: 1500 }], ai: true },
+  { id: 'eng_radar', cat: 'nat', n: 'Řetěz radarových stanic', info: 'Radary podél celého pobřeží (po cíli Stíhací velení).', cost: 40, cd: 99999, when: { tag: ['ENG'], year: 1938, focus: ['eng_air'] }, fx: [{ t: 'bld', k: 'radar', n: 3 }], ai: true },
+  { id: 'fra_linie', cat: 'nat', n: 'Prodloužení pevnostní linie', info: 'Opevnění i podél severní hranice.', cost: 50, cd: 99999, when: { tag: ['FRA'], year: 1937 }, fx: [{ t: 'spirit', id: 'd_obrana_hranic', days: 720 }], ai: true },
+  { id: 'ita_autarkie', cat: 'nat', n: 'Hospodářská soběstačnost', info: 'Náhrady za dovážené suroviny po sankcích.', cost: 40, cd: 99999, when: { tag: ['ITA'], year: 1937 }, fx: [{ t: 'spirit', id: 'd_prospektori', days: 365 }, { t: 'factory', k: 'civ', n: 1 }], ai: true },
+  { id: 'usa_atom', cat: 'nat', n: 'Projekt štěpné zbraně', info: 'Tajná města v poušti (po cíli Atomový projekt).', cost: 80, cd: 99999, when: { tag: ['USA'], year: 1942, focus: ['usa_atom'] }, fx: [{ t: 'boost', id: 'jadro2', v: 0.6 }, { t: 'boost', id: 'jadro3', v: 0.4 }], ai: true },
+  { id: 'usa_pujcka', cat: 'nat', n: 'Půjčka a pronájem', info: 'Zbraně spojencům na úvěr – dřív, než Amerika vstoupí do války.', cost: 40, cd: 99999, when: { tag: ['USA'], year: 1941 }, fx: [{ t: 'rel', tag: 'ENG', nm: 'Británie', v: 40 }, { t: 'rel', tag: 'SOV', nm: 'SSSR', v: 30 }, { t: 'factory', k: 'mil', n: 1 }], ai: true },
+  { id: 'jap_ropa', cat: 'nat', n: 'Strategické zásoby ropy', info: 'Nádrže a rafinerie pro dlouhou válku.', cost: 45, cd: 99999, when: { tag: ['JAP'], year: 1940 }, fx: [{ t: 'boost', id: 'ind_rafin', v: 0.5 }, { t: 'boost', id: 'synt1', v: 0.3 }], ai: true },
+  { id: 'jap_ostrovy', cat: 'nat', n: 'Ostrovní pevnosti', info: 'Bunkry a letiště na tichomořských ostrovech.', cost: 45, cd: 99999, when: { tag: ['JAP'], atWar: ['USA'] }, fx: [{ t: 'spirit', id: 'd_obrana_hranic', days: 365 }, { t: 'bld', k: 'afb', n: 2 }], ai: true },
+  { id: 'chi_spalena_zeme', cat: 'nat', n: 'Spálená země', info: 'Rok silnější obrany za cenu zničeného venkova.', cost: 30, cd: 730, when: { tag: ['CHI'], atWar: ['JAP'] }, fx: [{ t: 'spirit', id: 'd_spalena_zeme', days: 365 }], ai: true },
+  { id: 'chi_most', cat: 'nat', n: 'Letecký most přes hory', info: 'Dopravní letadla vozí zbraně z Indie.', cost: 35, cd: 365, when: { tag: ['CHI'], atWar: ['JAP'], year: 1942 }, fx: [{ t: 'stock', eq: 'pusky', n: 2000 }, { t: 'stock', eq: 'podpora', n: 100 }], ai: true },
+  { id: 'fin_linie', cat: 'nat', n: 'Hlavní obranná linie', info: 'Bunkry na Karelské šíji.', cost: 35, cd: 99999, when: { tag: ['FIN'], year: 1938 }, fx: [{ t: 'spirit', id: 'd_obrana_hranic', days: 720 }], ai: true },
+  { id: 'pol_sifry', cat: 'nat', n: 'Šifrovací úřad', info: 'Matematici luští cizí šifrovací stroje.', cost: 35, cd: 99999, when: { tag: ['POL'], year: 1938 }, fx: [{ t: 'boost', id: 'el_sifr', v: 0.6 }, { t: 'boost', id: 'sup_sifr', v: 0.4 }], ai: true },
+  { id: 'spol_ve_zbrani', cat: 'nat', n: 'Společenství ve zbrani', info: 'Dominium posílá dobrovolníky do války po boku Británie.', cost: 35, cd: 99999, when: { tag: ['CAN', 'AST', 'NZL', 'SAF', 'RAJ'], atWar: ['GER', 'JAP'] }, fx: [{ t: 'man', v: 0.004 }, { t: 'xp', b: 'land', n: 25 }], ai: true },
+  { id: 'cze_pevnosti', cat: 'nat', n: 'Pohraniční pevnosti', info: 'Těžká opevnění v horách na hranicích.', cost: 40, cd: 99999, when: { tag: ['CZE'], year: 1936 }, fx: [{ t: 'spirit', id: 'd_obrana_hranic', days: 720 }], ai: true },
+  { id: 'swi_reduit', cat: 'nat', n: 'Horská pevnost', info: 'Armáda se stáhne do Alp, kde je téměř nedobytná.', cost: 35, cd: 99999, when: { tag: ['SWI'], year: 1939 }, fx: [{ t: 'spirit', id: 'd_obrana_hranic', days: 1500 }], ai: true },
+  { id: 'tur_neutralita', cat: 'nat', n: 'Hlídání úžin', info: 'Úžiny zůstanou zavřené pro válčící loďstva.', cost: 30, cd: 99999, when: { tag: ['TUR'], year: 1939 }, fx: [{ t: 'stab', v: 0.05 }, { t: 'bld', k: 'radar', n: 1 }], ai: true },
+  { id: 'bra_volta', cat: 'nat', n: 'Ocelárna za americký úvěr', info: 'Spojené státy financují ocelárnu (za příklon k nim).', cost: 40, cd: 99999, when: { tag: ['BRA'], year: 1940 }, fx: [{ t: 'factory', k: 'civ', n: 1 }, { t: 'factory', k: 'mil', n: 1 }, { t: 'rel', tag: 'USA', nm: 'Spojené státy', v: 30 }], ai: true },
 ];
 export const DECISION_BY_ID = Object.fromEntries(DECISIONS.map((d) => [d.id, d]));

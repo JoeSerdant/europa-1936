@@ -2,7 +2,8 @@
 //  - armádní doktrína: lidová armáda × profesionální armáda × pohyblivá válka (vzájemně se vylučují),
 //  - průmysl: těžký průmysl × spotřební průmysl × těžba surovin, společné vyústění „Průmyslová zralost“,
 //  - zahraniční politika (ne velmoci): demokracie × Osa × Moskva × přísná neutralita,
-//  - podpůrné služby: zdravotníci, ženisté, spojaři, protiletadlová obrana, letecká škola, pobřežní obrana, velitelský sbor.
+//  - podpůrné služby: zdravotníci, ženisté, spojaři, protiletadlová obrana, letecká škola, pobřežní obrana, velitelský sbor,
+//  - W6: cíle odemykající rozhodnutí (velitelský sbor → Velká ofenziva, mobilizační plán → Povolání záloh, mimořádné pravomoci → Vláda národní jednoty).
 // Cíle hlavně urychlují výzkum a dávají zkušenosti; továrny jen výjimečně (pravidlo 92). Historická AI bere volbu, která je
 // v seznamu první (`grow` řadí AI podle pořadí v řádku) – historické volby zemí jsou v `DOCTRINE`, `INDUSTRY` a `ALIGN`.
 import { COUNTRIES } from '../countries.js';
@@ -105,7 +106,13 @@ export function pathRows(tag) {
     [q('aa'), 'Protiletadlová obrana', 35, [q('med')], [boost('art_pl', 0.4)]],
     [q('air'), 'Letecká škola', 35, [q('aa')], [xp('air', 15), boost('pal2', 0.2)]],
     [q('coast'), 'Pobřežní obrana', 35, [q('sig')], [boost('dd2', 0.2), xp('sea', 10)]],
-    [q('cmd'), 'Velitelský sbor', 70, [q('air'), q('coast')], [xp('land', 15), pp(25)]],
+    [q('cmd'), 'Velitelský sbor', 70, [q('air'), q('coast')], [xp('land', 15), pp(25)], { info: 'Odemkne rozhodnutí Velká ofenziva.' }],
+  );
+  // ---- W6: cíle, které odemykají rozhodnutí
+  rows.push(
+    [q('mobplan'), 'Mobilizační plán', 35, [], [man(0.002), xp('land', 10)], { any: [q('mass4'), q('qual4'), q('mob4')], info: 'Odemkne rozhodnutí Povolání záloh.' }],
+    [q('decree'), 'Mimořádné pravomoci', 35, MAJOR.has(tag) ? [q('indfin')] : [], [pp(40), stab(0.02)],
+      { ...(MAJOR.has(tag) ? {} : { any: [q('dem2'), q('axis2'), q('com2'), q('neut2')] }), info: 'Odemkne rozhodnutí Vláda národní jednoty.' }],
   );
   return rows;
 }
