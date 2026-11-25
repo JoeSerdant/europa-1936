@@ -7,15 +7,17 @@ import { fmtNum, fmtDays } from '../format.js';
 import { queueFlow } from './flow.js';
 
 // Stavby jako v HOI4 (M103): úzký panel vlevo – nejdřív budova, pak klik na stát na mapě (mapa v režimu Stavby ukazuje, kde to jde).
-const KINDS = ['civ', 'mil', 'dok', 'inf', 'afb', 'radar', 'nb', 'hub', 'fort', 'cfort'];   // F4c: námořní základna, zásobovací uzel, pobřežní pevnost
-const KIND_ICON = { civ: 'industry', mil: 'army', dok: 'navy', inf: 'supply', afb: 'air', radar: 'eye', nb: 'ship', hub: 'box', fort: 'shield', cfort: 'flag' };
+const KINDS = ['civ', 'mil', 'dok', 'inf', 'rail', 'afb', 'radar', 'nb', 'hub', 'fort', 'cfort'];   // F4c: námořní základna, zásobovací uzel, pobřežní pevnost; S6: železnice
+const KIND_ICON = { civ: 'industry', mil: 'army', dok: 'navy', inf: 'supply', afb: 'air', radar: 'eye', nb: 'ship', hub: 'box', fort: 'shield', cfort: 'flag', rail: 'road' };
 const TABS = [{ id: 'build', name: 'Stavby' }, { id: 'prod', name: 'Výroba' }, { id: 'trade', name: 'Obchod' }];
 
 /** Státy (pevnost: provincie) s nejvíc volného místa pro budovu `kind` – rychlá volba bez hledání na mapě. */
 function bestPlaces(state, me, kind) {
   const w = getWorld(), out = [];
   if (BUILDINGS[kind].province) {
-    for (let p = 1; p <= w.L; p++) if (state.ctrl[p] === me && state.stateOwner[w.provState[p]] === me && (kind === 'cfort' ? w.portLevel[p] > 0 : w.vp[p] > 0)) { const r = fortRoom(state, p, me, kind); if (r.n) out.push({ l: p, n: r.n, nm: w.provName(p), key: w.vp[p] + w.portLevel[p] }); }
+    const hungry = new Map();   // S6: železnice – provincie s vlastními divizemi bez plných zásob
+    if (kind === 'rail') for (const d of state.mil.divs) if (d && d.o === me && d.sup < 0.99) hungry.set(d.p, (hungry.get(d.p) || 0) + 1);
+    for (let p = 1; p <= w.L; p++) if (state.ctrl[p] === me && state.stateOwner[w.provState[p]] === me && (kind === 'cfort' ? w.portLevel[p] > 0 : kind === 'rail' ? hungry.has(p) || w.vp[p] > 2 : w.vp[p] > 0)) { const r = fortRoom(state, p, me, kind); if (r.n) out.push({ l: p, n: r.n, nm: w.provName(p), key: (hungry.get(p) || 0) * 10 + w.vp[p] + w.portLevel[p] }); }
   } else {
     for (let s = 1; s < w.states.length; s++) if (state.stateOwner[s] === me) { const r = buildRoom(state, s, kind, me); if (r.n) out.push({ l: w.states[s].cap, n: r.n, nm: w.states[s].n, key: r.n }); }
   }

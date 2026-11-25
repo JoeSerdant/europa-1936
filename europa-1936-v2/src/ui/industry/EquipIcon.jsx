@@ -30,6 +30,7 @@ const SHAPES = {
   dela: <g><path d="M8 18 L42 8 L43 10 L10 21 Z" /><path d="M4 22 L18 17 L20 20 L8 25 Z" /><circle cx="16" cy="22" r="6" fill="none" stroke="currentColor" strokeWidth="2.4" /><circle cx="16" cy="22" r="1.6" /></g>,
   pdela: <g><path d="M10 18 L44 14 L44 16 L11 21 Z" /><path d="M12 11 L20 10 L22 21 L13 22 Z" /><path d="M4 25 L18 20 L19 23 L6 27 Z" /><circle cx="17" cy="23" r="4.5" fill="none" stroke="currentColor" strokeWidth="2.2" /></g>,
   auta: <g><path d="M3 9 H27 V22 H3 Z" /><path d="M28 13 H37 L42 18 V22 H28 Z" /><rect x="30" y="14.5" width="5" height="3" fill="#0b1117" /><circle cx="10" cy="24" r="3.6" /><circle cx="35" cy="24" r="3.6" /><circle cx="10" cy="24" r="1.2" fill="#0b1117" /><circle cx="35" cy="24" r="1.2" fill="#0b1117" /></g>,
+  vlaky: <g><path d="M4 10 H22 V22 H4 Z" /><path d="M22 14 H34 L38 18 V22 H22 Z" /><rect x="26" y="9" width="4" height="5" /><rect x="7" y="13" width="5" height="4" fill="#0b1117" /><path d="M2 25 H44" stroke="currentColor" strokeWidth="1.4" /><circle cx="9" cy="24" r="2.6" /><circle cx="17" cy="24" r="2.6" /><circle cx="28" cy="24" r="2.6" /><circle cx="35" cy="24" r="2.6" /></g>,   // S6: lokomotiva
   vozy: <g><path d="M4 20 L8 12 H38 L44 18 V21 Z" /><path d="M16 12 L19 7 H29 L31 12 Z" /><rect x="28" y="8" width="13" height="2" /><circle cx="11" cy="23" r="3.6" /><circle cx="22" cy="23" r="3.6" /><circle cx="35" cy="23" r="3.6" /></g>,
   ltanky: TANK(0.82),
   mtanky: TANK(0.95),

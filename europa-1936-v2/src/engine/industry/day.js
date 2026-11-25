@@ -95,7 +95,7 @@ export function industryDay(state) {
   }
 
   // 4) dokončené stavby
-  let st = ind.st, inf = ind.inf, stOwn = false, infOwn = false, fort = ind.fort, cf = ind.cf || {};
+  let st = ind.st, inf = ind.inf, stOwn = false, infOwn = false, fort = ind.fort, cf = ind.cf || {}, rail = ind.rail || {};
   const doneIds = new Set();
   for (const b of done) {
     doneIds.add(b.id);
@@ -103,6 +103,8 @@ export function industryDay(state) {
       fort = { ...fort, [b.p]: Math.min(BUILDINGS.fort.max, (fort[b.p] || 0) + 1) };
     } else if (b.k === 'cfort') {
       cf = { ...cf, [b.p]: Math.min(BUILDINGS.cfort.max, (cf[b.p] || 0) + 1) };   // F4c: pobřežní pevnost
+    } else if (b.k === 'rail') {
+      rail = { ...rail, [b.p]: Math.min(BUILDINGS.rail.max, (rail[b.p] || 0) + 1) };   // S6: železnice
     } else if (b.k === 'inf') {
       if (!infOwn) { inf = inf.slice(); infOwn = true; }
       inf[b.s] = Math.min(I.INF_MAX, inf[b.s] + 1);
@@ -112,7 +114,7 @@ export function industryDay(state) {
     }
   }
   const build = ind.build.filter((b) => !doneIds.has(b.id) && !dropped.has(b.id)).map((b) => (progress.has(b.id) ? { ...b, prog: progress.get(b.id) } : b));
-  const next = { ...ind, st, inf, fort, cf, build, lines, trade, ver: ind.ver + (done.length || dropped.size ? 1 : 0) };
+  const next = { ...ind, st, inf, fort, cf, rail, build, lines, trade, ver: ind.ver + (done.length || dropped.size ? 1 : 0) };
   const mil = stockOwn ? { ...state.mil, stock } : state.mil;
   const player = state.player ? w.ownerIdx[state.player] : 0;
   const nav = poolOwn ? { ...state.nav, pool: navPool, ver: state.nav.ver + 1 } : state.nav;

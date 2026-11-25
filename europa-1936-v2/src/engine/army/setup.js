@@ -226,6 +226,8 @@ export function createMil(w = getWorld(), rngState = 1936) {
       for (const e in st.need) need[e] = (need[e] || 0) + st.need[e];
     }
     for (const e of EQUIP_IDS) if (!EQUIP[e].unlock) mil.stock[o][e] = Math.ceil((need[e] || 0) * nat.res);
+    mil.stock[o].vlaky = Math.ceil(N * C.SUP_TRAIN_PER_DIV * 1.5);   // S6: lokomotivy a auta pro zásobování (s rezervou na růst armády)
+    mil.stock[o].auta += Math.ceil(N * C.SUP_TRUCK_PER_DIV * 1.3);
     const reserve = { pusky: 1, dela: 0.02, pdela: 0.02, auta: 0.25, vozy: 0.03, ltanky: 0.08, podpora: 0.1 };
     const rb = tier === 1 ? 900 : tier === 2 ? 450 : 150;
     for (const e in reserve) if (!EQUIP[e].unlock) mil.stock[o][e] = Math.max(mil.stock[o][e], Math.ceil(rb * reserve[e]));

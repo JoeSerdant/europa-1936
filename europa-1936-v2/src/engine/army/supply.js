@@ -10,13 +10,23 @@ import { editDiv } from './ctx.js';
 import { statsOf, modsOf } from './unit.js';
 import { friendsOf } from '../dip/accessCore.js';
 import { seaPorts } from '../nav/core.js';
+import { builtRailEdges } from './logistics.js';
 
 const cache = new Map();   // země → { sig, reach }
+const railSigs = new WeakMap();
+/** Podpis postavené železnice (mezipaměť podle objektu `ind.rail`). */
+function railSig(rail) {
+  let v = railSigs.get(rail);
+  if (v === undefined) { let n = 0, x = 0; for (const k in rail) { n += rail[k]; x = (x * 31 + (+k) * 7 + rail[k]) >>> 0; } v = `${n}:${x}`; railSigs.set(rail, v); }
+  return v;
+}
 
 /** Podpis množiny provincií, které země (a její přátelé) ovládá (počet, součet, součet čtverců, xor), seznamu přátel a námořně zásobovaných přístavů – kvůli mezipaměti. */
 function signature(ctrl, o, L, friends, ports) {
   const hubs = ports && ports.hubs && ports.hubs.length ? `h${ports.hubs.join(',')}` : '';   // F4c: postavené uzly
-  const tail = (ports && ports.length ? `|${ports.join(',')}` : '') + hubs;
+  const log = ports && ports.log ? `l${ports.log.tr.toFixed(1)},${ports.log.tk.toFixed(1)}` : '';   // S6: pokrytí lokomotivami a auty
+  const rl = ports && ports.rail ? `r${railSig(ports.rail)}` : '';   // S6: postavená železnice
+  const tail = (ports && ports.length ? `|${ports.join(',')}` : '') + hubs + log + rl;
   let n = 0, s = 0, q = 0, x = 0;
   if (friends && friends.length) {
     const mine = new Uint8Array(ctrl.length ? Math.max(o, ...friends) + 1 : 0);
@@ -41,7 +51,7 @@ export function supplyFlow(ctrl, o, infra = geo().infra, friends = null, ports =
   const sig = signature(ctrl, o, w.L, fr, ports);
   const hit = cache.get(o);
   if (hit && hit.sig === sig && hit.L === w.L && hit.infra === infra) return hit.reach;
-  const reach = computeReach(ctrl, o, w, infra, fr, pt, hubs);
+  const reach = computeReach(ctrl, o, w, infra, fr, pt, hubs, ports && ports.log, ports && ports.rail);
   cache.set(o, { sig, reach, L: w.L, infra });
   return reach;
 }
@@ -53,7 +63,14 @@ export function flowDrop(w, g, infra, p, q, kind) {
   return (t.flow * (1 - C.SUP_INFRA_RELIEF * infra[q] / 5) + (kind === 1 ? RIVER.flow : 0)) * dist;
 }
 
-function computeReach(ctrl, o, w, infra, friends, ports, hubs = null) {
+function computeReach(ctrl, o, w, infra, friends, ports, hubs = null, log = null, railBuilt = null) {
+  const extra = new Map();   // S6: spoje postavené železnice (oběma směry)
+  for (const [a, b, lv] of builtRailEdges(w, railBuilt)) {
+    if (!extra.has(a)) extra.set(a, []); if (!extra.has(b)) extra.set(b, []);
+    extra.get(a).push(b, lv); extra.get(b).push(a, lv);
+  }
+  const trainK = log ? C.SUP_TRAIN_MIN + (1 - C.SUP_TRAIN_MIN) * log.tr : 1;   // S6: bez lokomotiv dorazí k uzlům méně
+  const truckK = log ? 1 + C.SUP_TRUCK_PEN * (1 - log.tk) : 1;               // S6: bez aut zásoby slábnou rychleji
   const built = hubs ? new Set(hubs) : null;   // F4c: postavené zásobovací uzly se chovají jako uzly železnice
   const fset = friends ? new Set(friends) : null;
   const mine = (c) => c === o || (fset !== null && fset.has(c));   // vlastní nebo přátelské území
@@ -78,8 +95,15 @@ function computeReach(ctrl, o, w, infra, friends, ports, hubs = null) {
         const nd = d + C.SUP_RAIL_DROP / w.rails.level[k];
         if (nd < dist[q] && nd < 1) { dist[q] = nd; heap.push(nd, q); }
       }
+      const ex = extra.get(p);
+      if (ex) for (let i = 0; i < ex.length; i += 2) {
+        const q = ex[i];
+        if (!mine(ctrl[q])) continue;
+        const nd = d + C.SUP_RAIL_DROP / ex[i + 1];
+        if (nd < dist[q] && nd < 1) { dist[q] = nd; heap.push(nd, q); }
+      }
     }
-    for (let p = 1; p <= L; p++) if (dist[p] < Infinity) rail[p] = 1 - dist[p];
+    for (let p = 1; p <= L; p++) if (dist[p] < Infinity) rail[p] = (1 - dist[p]) * trainK;
   }
 
   // B) šíření po provinciích z hlavního města a z uzlů (největší hodnota vyhrává)
@@ -106,7 +130,7 @@ function computeReach(ctrl, o, w, infra, friends, ports, hubs = null) {
       for (const e of adj[p]) {
         const q = e.to;
         if (!mine(ctrl[q]) || e.kind === 2) continue;
-        push(q, v - flowDrop(w, g, infra, p, q, e.kind));
+        push(q, v - flowDrop(w, g, infra, p, q, e.kind) * truckK);
       }
     }
   };

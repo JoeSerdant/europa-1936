@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { Screen } from '../common/Screen.jsx';
-import { industryOf, fuelOf, EQUIP, EQUIP_IDS, RESOURCES, RES_IDS, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, transportsOf, isUnlocked } from '../../engine/index.js';
+import { industryOf, fuelOf, EQUIP, EQUIP_IDS, RESOURCES, RES_IDS, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, transportsOf, isUnlocked, logNeed, logRatios } from '../../engine/index.js';
 import { playerIdx } from '../actions.js';
 import { fmtInt, fmtNum } from '../format.js';
 import { EQUIP_GROUPS } from '../../data/industry/groups.js';
@@ -23,6 +23,27 @@ function FuelCard({ f }) {
       <div className="sec-head"><h3><ResIcon r="ropa" size={20} /> Palivo</h3><b className="fuel-num">{fmtInt(f.stock)} / {fmtInt(f.cap)}</b></div>
       <span className="fuel-tank"><i style={{ width: `${Math.min(100, (f.stock / Math.max(1, f.cap)) * 100)}%` }} /><em className={f.gain >= f.use ? 'up' : 'down'}>{f.gain >= f.use ? '▲' : '▼'} {fmtNum(f.gain - f.use, 1)} / den</em></span>
       <p className="muted">Výroba {fmtNum(f.gain, 1)} − spotřeba {fmtNum(f.use, 1)} za den{f.days !== Infinity ? ` · vystačí na ${Math.max(0, Math.floor(f.days))} dní` : ''}{f.ratio < 1 ? ` · pokrytí ${pct(f.ratio)}` : ''}</p>
+    </div>
+  );
+}
+
+/** S6: výzbroj zásobování – lokomotivy vozí zásoby po železnici k uzlům, nákladní auta od uzlů k frontě. */
+function SupplyCard({ need, have, ratio }) {
+  const rows = [
+    { e: 'vlaky', n: 'Lokomotivy', need: need.trains, have: have.vlaky || 0, r: ratio.tr, info: 'Vozí zásoby po železnici z hlavního města k uzlům. Bez nich dorazí k uzlům jen 60 % zásob.' },
+    { e: 'auta', n: 'Nákladní auta', need: need.trucks, have: have.auta || 0, r: ratio.tk, info: 'Rozvážejí zásoby od uzlů a hlavního města k divizím. Bez nich zásoby se vzdáleností slábnou rychleji.' },
+  ];
+  return (
+    <div className="lg-sup">
+      <div className="sec-head"><h3><Icon name="supply" size={18} /> Zásobování</h3><span className="muted">sklad / potřeba</span></div>
+      {rows.map((x) => (
+        <div key={x.e} className={`lg-sup-row${x.r < 0.999 ? ' bad' : ''}`} title={`${x.info} Za války se denně část opotřebuje.`}>
+          <Tile eq={x.e} color={groupColor(x.e)} />
+          <span className="nm">{x.n}</span>
+          <b>{fmtInt(x.have)} / {fmtInt(x.need)}</b>
+          <span className="bar prog"><i style={{ width: `${Math.min(100, x.r * 100)}%` }} /></span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -109,6 +130,7 @@ export function LogisticsPanel() {
               })}
             </div>
             <FuelCard f={fuelOf(state, me)} />
+            <SupplyCard need={logNeed(state.mil, me)} have={stock} ratio={logRatios(state, me)} />
             <p className="muted">Zelená bilance znamená přebytek, červená nedostatek: linky pak vyrábějí pomaleji. Chybějící suroviny doplníte v okně Obchod (R).</p>
           </aside>
         </div>

@@ -1329,6 +1329,27 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
   (`holdoutShare` v `dip/day.js`; Německo `ger_holdout` 0,995 místo `DIP.HOLDOUT_SHARE` 0,98) – poslední provincie padnou až s kapitulací
   8. 5. 1945.
 
+## 4zzzzzzzzzzzz. Zásobování jako v HOI4 (S6, `GAME_VERSION = 53`)
+
+- **Výzbroj zásobování** (`engine/army/logistics.js`): nová výzbroj `vlaky` (lokomotivy a vagony, `EQUIP.vlaky`, výroba 5 b., ocel)
+  a stávající `auta`. Potřeba země `logNeed` = `SUP_TRAIN_PER_DIV` (0,5) lokomotivy a `SUP_TRUCK_PER_DIV` (8) aut na divizi (navíc k autům
+  v praporech). Pokrytí `logRatios` = sklad / potřeba (0–1, po `SUP_LOG_STEP`).
+- **Účinek na tok** (`supplyFlow`, přes `seaPorts(...).log`): podíl toku, který dorazí po železnici k uzlům, se násobí
+  `SUP_TRAIN_MIN + (1 − SUP_TRAIN_MIN) × pokrytí lokomotivami` (bez lokomotiv 60 %); úbytek toku od zdroje k divizím se násobí
+  `1 + SUP_TRUCK_PEN × (1 − pokrytí auty)` (bez aut o 35 % rychlejší). Pokrytí je součástí podpisu mezipaměti toku.
+- **Opotřebení za války** (`dailyLogistics` v denním kroku armády): denně `SUP_TRAIN_WEAR` (0,2 %) potřeby lokomotiv a `SUP_TRUCK_WEAR`
+  (0,5 %) potřeby aut. Na začátku hry má každá země 1,5× potřebu lokomotiv a 1,3× potřebu aut ve skladu navíc.
+- **Stavba železnice po provinciích**: provinční stavba `rail` (Železnice, 220 b., 25 dní, úroveň 1–5, `ind.rail[p]`; jen ve vlastní
+  provincii s tratí nebo vedle ní – `nearTrack`, hlídá `buildFort` i `fortRoom`). `builtRailEdges(w, ind.rail)` dává spoje mezi provincií
+  s postavenou tratí a sousedem s tratí (úroveň = menší z obou konců, světová trať bez stavby počítá `SUP_RAIL_BUILT` 3); tyto spoje přidává
+  železniční síť toku zásob (přes `seaPorts(...).rail`). Pohyb divizí po železnici zatím jezdí jen po světových tratích.
+- **AI**: výroba (`demandSplit`) přidává lokomotivy a auta podle chybějících kusů do `AI.S6_LOG_STOCK` (1,2× potřeby, váha `AI.S6_LOG_W`,
+  jinak by druh nedostal ani jednu továrnu); nad `AI.S6_LOG_OVER`násobkem lokomotiv přepne jejich linku na nejpotřebnější výzbroj; za války staví
+  železnici (do úrovně `AI.S6_RAIL`) v provincii s aspoň `AI.S6_RAIL_DIVS` vlastními divizemi bez zásob (`aiBuildsF4c`).
+- **Rozhraní**: stavba Železnice ve stavebním panelu (rychlá volba provincií s hladovějícími divizemi, režim mapy ukazuje, kde jde stavět),
+  postavené tratě se kreslí do dlaždic mapy (tmavá čára se světlým středem), okno Logistika má kartu Zásobování (lokomotivy a auta: sklad /
+  potřeba, pruh pokrytí), Výroba má ikonu lokomotivy ve skupině Motorizace a zásobování.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1544,6 +1565,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S6** | **Zásobování jako v HOI4**: lokomotivy a nákladní auta jako výzbroj zásobování s opotřebením, stavba železnice po provinciích | ✅ |
 | **W6** | **Rozhodnutí jako v HOI4**: nové podmínky (rok, cíl, válka se zemí, státy), 7 kategorií, ~60 rozhodnutí včetně národních, cíle odemykající rozhodnutí | ✅ |
 | později | cíle všech zemí, rozhodnutí, zásobování, odboj, letecké zóny, námořnictvo, frakce, mechaniky zemí, rozšíření | |
 
