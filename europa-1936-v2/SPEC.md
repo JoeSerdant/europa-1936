@@ -1153,6 +1153,9 @@ Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a da
   hráčovy strany), Armády (počet divizí, organizace, boj, zásoby), Výcvik, Flotily, Letectvo, Výroba (továrny, efektivita), Stavby (postup);
   klik vede na mapu (armáda = výběr divizí a let kamery), do okna bitvy nebo do okna. Sbalitelný celý (`ui.outliner`) i po oddílech; skrytý,
   když je otevřený pravý panel; střední lišty se pak středí mezi levým sloupcem a přehledem.
+- **Nábor jako v HOI4** (F4g): karta šablony ukazuje složení (pluky jako sloupce značek praporů, podpůrné roty), cenu jako ikony výzbroje
+  (`EqChip` v `ui/industry/EqChip.jsx`, chybějící červeně), sklad jako dlaždice; divize ve výcviku jsou karty se značkou, počtem, místem
+  a ukazatelem výcviku; v návrháři mají prapory v nabídce vojenskou značku a potřeba výzbroje je v ikonách.
 - **Výroba a Stavby jako v HOI4** (F4f): fronta staveb jsou karty s ikonou budovy (klik ukáže místo na mapě), místem, druhem, dny do konce,
   řadou civilních továren, které na stavbě pracují (plné / částečné / prázdné až do stropu stavby – počítá jen `queueFlow` v `ui/industry/flow.js`
   stejným pravidlem jako `projectEta`), ukazatelem postupu a posunem ve frontě; výrobní linka mění druh klikem na název – volby jako dlaždice

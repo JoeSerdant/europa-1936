@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
-import { isUnlocked, templatesOf, templateView, queueOf, EQUIP, EQUIP_IDS, ARMY, getWorld } from '../../engine/index.js';
+import { isUnlocked, templatesOf, templateView, queueOf, EQUIP, EQUIP_IDS, ARMY, getWorld, BATTALIONS, SUPPORT } from '../../engine/index.js';
 import { playerIdx, closeSide, hideFull, recruitSite, recruitDivisions, cancelTraining, openDesigner, removeTemplate } from '../actions.js';
 import { fmtInt, fmtNum, fmtDays } from '../format.js';
 import { ClsIcon } from './parts.jsx';
+import { EqChip, eqColor } from '../industry/EqChip.jsx';
+import { EquipIcon } from '../industry/EquipIcon.jsx';
 import { provName, CLS_NAMES } from './helpers.js';
 
 /** Kolik divizí z této šablony lze zařadit hned (muži, výzbroj, místo ve frontě), nejvýš 20. */
@@ -16,6 +18,20 @@ export function affordable(view, man, stock, room) {
 
 function Stat({ label, value, title }) {
   return <span className="stat-cell" title={title}><i>{label}</i><b>{value}</b></span>;
+}
+
+/** Miniatura složení šablony (F4g, jako v HOI4): pluky jako sloupce značek praporů, podpůrné roty pod nimi. */
+function Composition({ tpl }) {
+  return (
+    <div className="tpl-comp" aria-label="Složení divize">
+      <span className="tc-regs">
+        {tpl.reg.map((col, c) => (
+          <span key={c} className="tc-col">{col.map((t, r) => <span key={r} className="tc-bat" title={BATTALIONS[t] ? BATTALIONS[t].n : t}><ClsIcon cls={BATTALIONS[t] ? BATTALIONS[t].sym : 'inf'} size={20} /></span>)}</span>
+        ))}
+      </span>
+      {tpl.sup.length > 0 && <span className="tc-sup">{tpl.sup.map((t) => <span key={t} className="tc-s" title={SUPPORT[t] ? SUPPORT[t].n : t}>{SUPPORT[t] ? SUPPORT[t].ab : t}</span>)}</span>}
+    </div>
+  );
 }
 
 function TemplateCard({ view, man, stock, room, used }) {
@@ -33,6 +49,7 @@ function TemplateCard({ view, man, stock, room, used }) {
         <button className="icon-btn sm" onClick={() => openDesigner(view.id)} aria-label={`Upravit šablonu ${view.tpl.nm}`} title="Upravit šablonu"><Icon name="edit" size={16} /></button>
         <button className="icon-btn sm" onClick={() => removeTemplate(view.id)} aria-label={`Smazat šablonu ${view.tpl.nm}`} title={used ? 'Šablonu používají divize nebo výcvik' : 'Smazat šablonu'} disabled={used}><Icon name="trash" size={16} /></button>
       </header>
+      <Composition tpl={view.tpl} />
       <div className="tpl-stats">
         <Stat label="Síla" value={fmtNum(st.hp, 0)} title="Síla divize (hit pointy)" />
         <Stat label="Org." value={fmtNum(st.org, 0)} title="Organizace" />
@@ -44,7 +61,7 @@ function TemplateCard({ view, man, stock, room, used }) {
       <div className="tpl-cost" aria-label="Cena">
         <span className={`cost ${man < view.men ? 'lack' : ''}`} title="Lidská síla"><Icon name="population" size={14} />{fmtInt(view.men)}</span>
         {needs.map(([e, n]) => (
-          <span key={e} className={`cost ${(stock[e] || 0) < n ? 'lack' : ''}`} title={`${EQUIP[e].n}: potřeba ${fmtInt(n)}, ve skladu ${fmtInt(stock[e] || 0)}`}>{EQUIP[e].ab} {fmtInt(n)}</span>
+          <EqChip key={e} e={e} n={n} lack={(stock[e] || 0) < n} title={`${EQUIP[e].n}: potřeba ${fmtInt(n)}, ve skladu ${fmtInt(stock[e] || 0)}`} />
         ))}
       </div>
       <div className="tpl-actions">
@@ -70,7 +87,7 @@ function Queue({ state, me }) {
   }, [state.mil.queue, me]);
   if (!rows.length) return <p className="empty">Nic se necvičí. Zařaďte divize z některé šablony.</p>;
   return (
-    <ul className="queue">
+    <ul className="queue q-cards">
       {rows.map((r) => {
         const tpl = state.mil.tpl[r.tpl];
         const v = templateView(state, r.tpl);
@@ -78,13 +95,16 @@ function Queue({ state, me }) {
         const left = r.done - state.tick;
         const frac = Math.max(0, Math.min(1, 1 - left / total));
         return (
-          <li key={r.key}>
-            <div className="q-top">
-              <b>{tpl ? tpl.nm : 'Šablona'}{r.items.length > 1 ? ` × ${r.items.length}` : ''}</b>
-              <span className="muted">{provName(r.p)} · zbývá {fmtDays(daysLeft(r, state.tick))}</span>
-              <button className="icon-btn sm" onClick={() => cancelTraining(r.items[r.items.length - 1])} aria-label="Zrušit výcvik jedné divize" title="Zrušit jednu divizi (lidská síla a výzbroj se vrátí)"><Icon name="close" size={14} /></button>
+          <li key={r.key} className="q-card">
+            <ClsIcon cls={v ? v.stats.cls : 'inf'} size={34} />
+            <div className="q-mid">
+              <div className="q-top">
+                <b>{tpl ? tpl.nm : 'Šablona'}</b>{r.items.length > 1 && <em className="q-n" title="Počet divizí">× {r.items.length}</em>}
+                <span className="muted" title="Místo nasazení">{provName(r.p)}</span>
+              </div>
+              <span className="bar prog q-bar" title={`Výcvik ${Math.round(frac * 100)} %`}><i style={{ width: `${(frac * 100).toFixed(1)}%` }} /><em>{fmtDays(daysLeft(r, state.tick))}</em></span>
             </div>
-            <span className="bar prog"><i style={{ width: `${(frac * 100).toFixed(1)}%` }} /></span>
+            <button className="icon-btn sm" onClick={() => cancelTraining(r.items[r.items.length - 1])} aria-label="Zrušit výcvik jedné divize" title="Zrušit jednu divizi (lidská síla a výzbroj se vrátí)"><Icon name="close" size={14} /></button>
           </li>
         );
       })}
@@ -126,11 +146,12 @@ export function RecruitPanel() {
           <aside className="prod-right">
             <section className="stock">
               <div className="sec-head"><h3>Sklad výzbroje</h3></div>
-              <ul className="eq">
-                {EQUIP_IDS.filter((e) => isUnlocked(state, me, EQUIP[e].unlock)).map((e) => (
-                  <li key={e} title={EQUIP[e].n}><i>{EQUIP[e].ab}</i><b>{fmtInt(stock[e] || 0)}</b></li>
-                ))}
-              </ul>
+              <div className="stk-grid">
+                {EQUIP_IDS.filter((e) => isUnlocked(state, me, EQUIP[e].unlock)).map((e) => {
+                  const n = stock[e] || 0;
+                  return <span key={e} className={`stk-tile ${n ? '' : 'zero'}`} title={`${EQUIP[e].n} ve skladu`}><EquipIcon eq={e} size={34} color={eqColor(e)} /><b>{fmtInt(n)}</b></span>;
+                })}
+              </div>
             </section>
             <div className="sec-head"><h3>Ve výcviku{queued ? ` (${queued})` : ''}</h3></div>
             <Queue state={state} me={me} />
