@@ -12,7 +12,7 @@ describe('rozsah stromů', () => {
   it('velmoci mají přes 40 cílů, zajímavé země aspoň 16, výchozí strom přes 30; celkem přes 600', () => {
     for (const t of ['GER', 'SOV', 'ENG', 'FRA', 'ITA']) expect(FOCUS_TREES[t].length, t).toBeGreaterThan(70);   // M98
     for (const t of Object.keys(GROW)) expect(FOCUS_TREES[t].length, t).toBeGreaterThanOrEqual(16);
-    expect(FOCUS_TREES.DEFAULT).toBe(DEFAULT_BIG);
+    expect(FOCUS_TREES.DEFAULT.slice(0, DEFAULT_BIG.length)).toEqual(DEFAULT_BIG);   // W5: pod ním rozšíření o volby cest
     expect(DEFAULT_BIG.length).toBeGreaterThan(50);
     expect(Object.values(FOCUS_TREES).reduce((a, t) => a + t.length, 0)).toBeGreaterThan(1000);   // M98
     for (const t of ['IRE', 'LUX', 'EGY', 'OMA']) expect(FOCUS_TREES[t].length, t).toBeGreaterThanOrEqual(14);
@@ -109,3 +109,26 @@ describe('W4: vlastní cíle zemí světa', () => {
     expect(FOCUS_BY_ID.sia_japan.ai).toBeLessThan(FOCUS_BY_ID.sia_west.ai);   // historická volba Siamu
   });
 });
+
+describe('W5: volby cest ve všech stromech', () => {
+  it('každá země i výchozí strom má doktrínu, průmysl a podpůrné služby; malé země i zahraniční politiku; volby se vylučují', () => {
+    for (const t of Object.keys(FOCUS_TREES)) {
+      const p = `${t === 'DEFAULT' ? 'def' : t.toLowerCase()}_px_`, tree = FOCUS_TREES[t];
+      const has = (s) => tree.some((f) => f.id === p + s);
+      for (const s of ['mass', 'qual', 'mob', 'heavy', 'cons', 'res', 'indfin', 'med', 'cmd']) expect(has(s), `${t} ${s}`).toBe(true);
+      const major = ['GER', 'SOV', 'ENG', 'FRA', 'ITA', 'USA', 'JAP', 'CHI'].includes(t);
+      expect(has('neut'), t).toBe(!major);
+      const mass = tree.find((f) => f.id === p + 'mass');
+      expect(mass.excl.sort()).toEqual([p + 'mob', p + 'qual'].sort());
+    }
+    // historické volby jsou první (nižší ai): Maďarsko k Ose, Mongolsko k Moskvě, Švýcarsko neutralita, Německo pohyblivá válka
+    const ai = (id) => FOCUS_BY_ID[id].ai;
+    expect(ai('hun_px_axis')).toBeLessThan(ai('hun_px_dem'));
+    expect(ai('mon_px_com')).toBeLessThan(ai('mon_px_dem'));
+    expect(ai('swi_px_neut')).toBeLessThan(ai('swi_px_dem'));
+    expect(ai('ger_px_mob')).toBeLessThan(ai('ger_px_mass'));
+    const fin = FOCUS_BY_ID.can_px_indfin;
+    expect(fin.y).toBeGreaterThan(FOCUS_BY_ID.can_px_heavy3.y);   // společné vyústění je pod větvemi (předpoklady `any`)
+  });
+});
+

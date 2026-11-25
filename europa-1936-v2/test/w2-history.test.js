@@ -115,3 +115,17 @@ describe('W2: ultimátum loutce přes spojeneckého pána (Indočína)', () => {
   });
 });
 
+
+describe('W5: vynucená historická válka', () => {
+  it('ospravedlnění z koleje s `force` nestojí politickou moc, běžné ano', async () => {
+    const { justifyWar } = await import('../src/engine/dip/commands.js');
+    let s = createGame({ player: null });
+    const GER = idx('GER'), SOV = idx('SOV');
+    const own = s.pol.own.slice(); own[GER] = { ...own[GER], pp: 0 };
+    s = { ...s, pol: { ...s.pol, own } };
+    expect(justifyWar(s, GER, SOV)).toBe(s);   // bez moci běžné ospravedlnění nejde
+    const t = justifyWar(s, GER, SOV, 'conquest', true);
+    expect(t.dip.just.some((j) => j.a === GER && j.b === SOV)).toBe(true);
+    expect(t.pol.own[GER].pp).toBe(0);
+  });
+});
