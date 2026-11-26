@@ -20,6 +20,17 @@ export const SPIRITS = {
   rozdelena_spolecnost: { n: 'Rozdělená společnost', info: 'Země je rozťatá vejpůl a obě poloviny se ozbrojují.', tone: 'bad', mod: { stab: -0.08 } },
   tradice_neutrality: { n: 'Tradice neutrality', info: 'Země se válkám dlouho vyhýbala a nechce na tom nic měnit.', tone: 'mixed', mod: { ws: -0.05, stab: 0.03 } },
   ropne_bohatstvi: { n: 'Ropné bohatství', info: 'Vrty chrlí ropu a cizí společnosti stojí ve frontě.', tone: 'good', mod: { extract: 0.1 } },
+  // S4: pásma národních mechanik (přidává a odebírá je `mechDay` podle ukazatele v `MECHS`)
+  velky_teror: { n: 'Velký teror', info: 'Zatýkání dosáhlo vrcholu: režim nikdo neohrozí, armáda ale přišla o velitele.', tone: 'bad', mod: { stab: 0.03, ws: -0.03 }, army: { atk: -0.08, def: -0.1, orgRegen: -0.1 } },
+  jednota_fronty: { n: 'Jednotná fronta', info: 'Frakce táhnou za jeden provaz pod společným velením.', tone: 'good', mod: { stab: 0.03 }, army: { def: 0.05 } },
+  rozkol_fronty: { n: 'Rozkol frakcí', info: 'Frakce se přou o moc a místo s nepřítelem bojují mezi sebou.', tone: 'bad', mod: { stab: -0.05 }, army: { orgRegen: -0.1 } },
+  prevaha_armady: { n: 'Převaha armády', info: 'Rozpočet a suroviny jdou pozemní armádě.', tone: 'mixed', mod: { man: 0.03 }, army: { atk: 0.03 } },
+  prevaha_lodstva: { n: 'Převaha loďstva', info: 'Rozpočet jde loďstvu a letectvu, armáda v Číně dostává méně.', tone: 'mixed', mod: { research: 0.03 }, army: { atk: -0.02 } },
+  rozdrobena_cina: { n: 'Rozdrobená země', info: 'Provinční armády poslouchají své generály, ne vládu.', tone: 'bad', mod: { stab: -0.05, man: -0.05 } },
+  jednotna_fronta: { n: 'Jednotná fronta proti vetřelci', info: 'Vláda i povstalci odložili spory a bojují společně.', tone: 'good', mod: { man: 0.05, stab: 0.03 } },
+  izolacionismus: { n: 'Izolacionismus', info: 'Veřejnost odmítá jakoukoli účast v cizích válkách.', tone: 'bad', mod: { ws: -0.1 } },
+  opatrna_neutralita: { n: 'Opatrná neutralita', info: 'Země pomáhá, ale jen za hotové a na vlastních lodích odběratelů.', tone: 'mixed', mod: { ws: -0.05, prod: 0.02 } },
+  arzenal_demokracie: { n: 'Arzenál demokracie', info: 'Továrny pracují pro celý svobodný svět.', tone: 'good', mod: { prod: 0.05, build: 0.05 } },
   // dočasní duchové (přidává je engine nebo účinek `spirit`)
   porevolucni_chaos: { n: 'Porevoluční chaos', info: 'Po převratu se úřady teprve skládají a továrny stojí.', tone: 'bad', mod: { prod: -0.1, build: -0.1 } },
   vitezna_nalada: { n: 'Vítězná nálada', info: 'Vítězství ve válce stmelilo zemi.', tone: 'good', mod: { stab: 0.04, ws: 0.04 } },

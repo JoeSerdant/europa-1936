@@ -190,7 +190,7 @@ const SOV_B = [
   ] },
   { prio: 2, list: [
     ['sov_spy', 'Bezpečnostní aparát', 35, ['sov_tank'], [pp(50), stab(0.04)], { ai: 9 }],
-    ['sov_purge_end', 'Konec čistek', 70, ['sov_spy'], [{ t: 'unspirit', id: 'cistky' }, stab(0.05)], { info: 'Uvěznění důstojníci se vracejí k jednotkám.' }],
+    ['sov_purge_end', 'Konec čistek', 70, ['sov_spy'], [{ t: 'unspirit', id: 'cistky' }, { t: 'mech', id: 'purge', v: -60 }, stab(0.05)], { info: 'Uvěznění důstojníci se vracejí k jednotkám.' }],
     ['sov_comintern', 'Komunistická internacionála', 35, ['sov_spy'], [pp(40), rel('CZE', 20), rel('FRA', 15)]],
     ['sov_collective', 'Kolektivní bezpečnost', 35, ['sov_comintern'], [rel('FRA', 30), rel('ENG', 20), rel('CZE', 30)], { excl: ['sov_pact'] }],
     ['sov_pact', 'Smlouva se západním sousedem', 35, ['sov_comintern'], [rel('GER', 40), pp(40)], { excl: ['sov_collective'], info: 'Získat čas a území dohodou.' }],

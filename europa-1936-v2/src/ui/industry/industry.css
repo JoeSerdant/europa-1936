@@ -1014,6 +1014,18 @@ button.st-row:hover { background: var(--ink-3); }
 
 /* ------------------------------------------------------------------ S7: okupovaná území v Politice */
 .occ-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mech-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }   /* S4: národní mechaniky */
+.mech-card { padding: 10px 12px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+.mech-card.off { opacity: 0.55; }
+.mech-card header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mech-band { font-size: 12px; padding: 2px 7px; box-shadow: inset 0 0 0 1px var(--rule); color: var(--brass-hi); }
+.mech-band.good { color: #8fd08a; } .mech-band.bad { color: #e08a6a; } .mech-band.mixed { color: #d9c46a; }
+.mech-gauge { position: relative; height: 10px; background: rgba(255,255,255,0.08); }
+.mech-gauge > i { display: block; height: 100%; background: linear-gradient(90deg, #6f8fb0, #c9a24a); }
+.mech-gauge > em { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--paper); opacity: 0.7; }
+.mech-ends { display: flex; justify-content: space-between; font-size: 12px; margin: 4px 0 2px; color: var(--text-3); }
+.mech-ends b { color: var(--text-1, inherit); }
+.mech-card p { margin: 4px 0 0; font-size: 12px; }
 .occ-card .occ-meters { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px 8px; }
 .occ-card .occ-meters > span { display: grid; grid-template-columns: 80px 1fr 40px; align-items: center; gap: 8px; font-size: 12.5px; }
 .occ-card .occ-meters b { text-align: right; color: var(--paper); }
