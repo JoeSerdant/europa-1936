@@ -38,7 +38,7 @@ export function deriveStats(tpl, lvl = null) {
   };
   let orgW = 0, lineMen = 0, hardW = 0, allMen = 0, pierceMax = 0, pierceW = 0, pierceMen = 0, armorMax = 0, armorW = 0;
   const share = { arm: 0, mot: 0, cav: 0, mtn: 0 };
-  const dOf = (kind) => (lvl && lvl.des ? multOf(lvl, kind) : ONE);   // M97: návrh varianty (tanky)
+  const dOf = (kind) => (lvl && (lvl.des || lvl.bu) ? multOf(lvl, kind) : ONE);   // M97: návrh varianty (tanky); S5a: konstrukční kanceláře
   for (const u of all) {
     const m = levelMult(lvl, u.kind), dm = dOf(u.kind);
     s.hp += u.hp; s.men += u.men; s.sup += u.sup; s.fuel += u.fuel || 0;

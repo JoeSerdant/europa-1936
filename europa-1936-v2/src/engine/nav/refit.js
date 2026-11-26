@@ -16,6 +16,7 @@ export function shipLvSnap(state, o, ships) {
     if (lv.des && lv.des[id]) des[id] = lv.des[id];
   }
   if (Object.keys(des).length) out.des = des;
+  if (lv.bu && lv.bu.ship) out.bu = { ship: lv.bu.ship };   // S5a: loďařská kancelář se u lodí projeví až po přestavbě
   return out;
 }
 
@@ -26,7 +27,8 @@ export function refitNeed(state, f) {
   for (const id of SHIP_IDS) {
     if (!f.ships[id]) continue;
     const cur = lv[id] || 1, des = lv.des && lv.des[id], old = f.lv.des && f.lv.des[id];
-    if ((f.lv[id] || 1) < cur || JSON.stringify(des || null) !== JSON.stringify(old || null)) out.push(id);
+    const bu = JSON.stringify((lv.bu && lv.bu.ship) || null) !== JSON.stringify((f.lv.bu && f.lv.bu.ship) || null);   // S5a
+    if ((f.lv[id] || 1) < cur || JSON.stringify(des || null) !== JSON.stringify(old || null) || bu) out.push(id);
   }
   return out;
 }

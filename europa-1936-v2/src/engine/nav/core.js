@@ -50,7 +50,7 @@ export function fleetPower(state, o, ships, flv = null) {
     if (!c) continue;
     // S9: flotila počítá s úrovní a návrhem ze stavby nebo poslední přestavby (`f.lv`); typ, který snímek nezná, má úroveň země
     const src = flv && flv[id] ? flv : lv || {};
-    const l = (src[id] || 1) - 1, dm = src.des ? multOf(src, id) : ONE;   // M97: návrh varianty lodi
+    const l = (src[id] || 1) - 1, dm = src.des || src.bu ? multOf(src, id) : ONE;   // M97: návrh varianty lodi
     hp += c * SHIPS[id].hp * (1 + NAV.LV_HP * l) * dm.hp; atk += c * SHIPS[id].atk * (1 + NAV.LV_ATK * l) * dm.atk; n += c;
   }
   return { hp, atk, n };
