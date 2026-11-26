@@ -810,6 +810,13 @@ button.st-row:hover { background: var(--ink-3); }
 /* ---- UI: obchod – karty surovin, trh a smlouvy ---- */
 .trade-cols { grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr); }
 .res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(170px, calc(14 * var(--uvw)), 230px), 1fr)); gap: 8px; }
+.mkt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; margin-bottom: 14px; }   /* S5b: trh se zbraněmi */
+.mkt-card { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+.mkt-mid { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mkt-mid .muted { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+.mkt-sell { display: flex; flex-wrap: wrap; gap: 8px; }
+.mkt-tile { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); border: 0; color: inherit; font: inherit; cursor: pointer; }
+.mkt-tile:disabled { opacity: 0.5; cursor: default; }
 .res-card { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; border: 0; color: var(--text); text-align: left; cursor: pointer;
   background: linear-gradient(180deg, rgba(30, 44, 58, 0.85), rgba(14, 22, 30, 0.9)); box-shadow: inset 0 0 0 1px var(--rule); }
 .res-card:hover { box-shadow: inset 0 0 0 1px var(--rule-hi); }

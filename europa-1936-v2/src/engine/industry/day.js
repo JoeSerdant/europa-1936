@@ -10,6 +10,7 @@ import { fuelDay } from '../fuel/index.js';
 import { AIR } from '../air/constants.js';
 import { refitDok } from '../nav/refit.js';
 import { bureauDay } from '../design/bureau.js';
+import { marketDay, marketFac } from './market.js';
 import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
 
 const warKey = (a, b) => (a < b ? a * 1000 + b : b * 1000 + a);
@@ -86,7 +87,7 @@ export function industryDay(state) {
     // stavby: civilní továrny po odečtení spotřebního zboží a dovozu
     let imports = 0;
     for (const r in res) imports += res[r].imp;
-    let pool = Math.max(0, use[o].civAfterCons - imports * I.TRADE_CIV * (1 + pm.imp)) * I.IC_PER_FAC * (1 + mods.build + pm.build) * out;
+    let pool = Math.max(0, use[o].civAfterCons + marketFac(state, o) - imports * I.TRADE_CIV * (1 + pm.imp)) * I.IC_PER_FAC * (1 + mods.build + pm.build) * out;   // S5b: platby za výzbroj z trhu
     for (const b of buildBy[o]) {
       if (BUILDINGS[b.k].province ? state.ctrl[b.p] !== o || state.stateOwner[b.s] !== o : state.stateOwner[b.s] !== o || state.ctrl[w.states[b.s].cap] !== o) { dropped.add(b.id); continue; }
       const B = BUILDINGS[b.k];
@@ -128,5 +129,5 @@ export function industryDay(state) {
   const player = state.player ? w.ownerIdx[state.player] : 0;
   const nav = poolOwn ? { ...state.nav, pool: navPool, ver: state.nav.ver + 1 } : state.nav;
   const air = airOwn ? { ...state.air, pool: airPool, ver: state.air.ver + 1 } : state.air;
-  return logAddMany(bureauDay(fuelDay({ ...state, mil, nav, air, ind: next }, oil, tally)), done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k, p: b.p })));
+  return logAddMany(marketDay(bureauDay(fuelDay({ ...state, mil, nav, air, ind: next }, oil, tally))), done.filter((b) => b.o === player).map((b) => ({ k: 'built', o: b.o, s: b.s, x: b.k, p: b.p })));
 }

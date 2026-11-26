@@ -15,6 +15,7 @@ import { EQUIP } from '../data/army/index.js';
 import { BUILDINGS } from '../data/industry/buildings.js';
 import { SHIPS } from '../data/navy/ships.js';
 
+const fmtNum0 = (n) => Math.round(n).toLocaleString('cs-CZ');
 const eqName = (k) => (EQUIP[k] || PLANES[k] || SHIPS[k])?.n || k;
 const divs = (n) => `${n} ${n === 1 ? 'divizi' : n < 5 ? 'divize' : 'divizí'}`;
 
@@ -34,6 +35,7 @@ export function logLine(e, me = 0) {
     case 'focus': return { icon: 'flag', tone: 'good', world: false, mine: true, text: `Národní cíl splněn: ${FOCUS_BY_ID[e.x]?.n || e.x}.` };
     case 'built': return { icon: 'industry', tone: 'good', world: false, mine: true, text: `Stavba dokončena: ${BUILDINGS[e.x]?.n || e.x}${e.p ? ` (${w.provName(e.p)})` : e.s && w.states[e.s] ? ` (${w.states[e.s].n})` : ''}.` };
     case 'landing': return { icon: 'army', tone: e.a ? 'good' : 'info', world: false, mine: true, text: e.a ? `Vylodění dokončeno: ${w.provName(e.x)}.` : `Vylodění se nezdařilo, divize se vrátila: ${w.provName(e.x)}.` };
+    case 'mkt': return { icon: 'trade', tone: 'info', world: false, mine: e.a === me || e.b === me, text: e.a === me ? `${w.owners[e.b].name} kupuje na trhu vaši výzbroj: ${fmtNum0(e.y)} ks (${eqName(e.x)}).` : `Nákup na trhu od ${w.owners[e.a].name}: ${fmtNum0(e.y)} ks (${eqName(e.x)}).` };   // S5b
     case 'refit': return { icon: 'navy', tone: 'good', world: false, mine: true, text: `Přestavba flotily ${e.x} je hotová – lodě mají nejnovější techniku.` };   // S9
     case 'bombed': return { icon: 'air', tone: 'bad', world: false, mine: true, text: `Letecký útok na ${w.states[e.s]?.n || 'váš stát'}: klesla podpora války a část zásob byla zničena.` };
     case 'convoy': return { icon: 'close', tone: 'bad', world: false, mine: true, text: `Nepřátelské lodě potopily ${e.x} ${e.x === 1 ? 'konvoj' : e.x < 5 ? 'konvoje' : 'konvojů'} s vaším zbožím.` };

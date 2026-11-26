@@ -39,6 +39,7 @@ export function validateState(s) {
   if (!isArr(s.nav.fleets) || !s.nav.fleets.every((f) => f === null || (Number.isInteger(f.pl) && f.pl >= 0))) return 'Uložená hra je poškozená (palubní letouny).';   // M90
   if (!s.nav.mn || typeof s.nav.mn !== 'object' || !s.ind.cf || typeof s.ind.cf !== 'object') return 'Uložená hra je poškozená (miny a pobřežní pevnosti).';   // F4c
   if (!s.ind.rail || typeof s.ind.rail !== 'object') return 'Uložená hra je poškozená (železnice).';   // S6
+  if (!s.ind.mkt || !Array.isArray(s.ind.mkt.off) || !Array.isArray(s.ind.mkt.deals)) return 'Uložená hra je poškozená (trh s výzbrojí).';   // S5b
   if (!s.ind.bux || typeof s.ind.bux !== 'object') return 'Uložená hra je poškozená (konstrukční kanceláře).';   // S5a
   if (!s.nat.mech || typeof s.nat.mech !== 'object') return 'Uložená hra je poškozená (národní mechaniky).';   // S4
   if (s.nav.fleets.some((f) => f && (!f.lv || typeof f.lv !== 'object'))) return 'Uložená hra je poškozená (úrovně lodí flotil).';   // S9

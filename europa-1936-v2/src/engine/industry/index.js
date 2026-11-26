@@ -6,3 +6,4 @@ export { infraOf } from './infra.js';
 export { categoryOf, slotsOf, slotsUsed, tallyOwners, lineRate } from './core.js';
 export { createInd } from './setup.js';
 export { BUILDINGS, BUILDING_IDS, STATE_CATEGORIES, EQUIP_PROD, DEFAULT_SPLIT, RESOURCES, RES_IDS, IND_NATIONAL, TRADE_SEED } from '../../data/industry/index.js';
+export { MKT, marketPrice, marketFac, offerBlock, offerOnMarket, withdrawOffer, buyBlock, buyFromMarket, marketOffers, marketDeals, freeCivFor } from './market.js';   // S5b

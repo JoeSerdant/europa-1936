@@ -145,7 +145,12 @@ export const AI = {
   F4C_MINE_SHIPS: 3,                // klade miny flotila s aspoň tolika torpédoborci a ponorkami
   F4C_NAV_EVERY: 3,                 // každé tolikáté úderné křídlo útočí na lodě (když je cíl)
   F4C_RAIL_STEPS: 8,                // divize s cestou aspoň tolika provincií vlastním územím jede vlakem
-  S5_BU_PP_KEEP: 60,                // S5a: AI najme konstrukční kancelář, jen když jí zbude tolik politické moci
+  S5_BU_PP_KEEP: 60,
+  MKT_SURPLUS: [['pusky', 6000], ['dela', 900], ['pdela', 600], ['podpora', 900]],   // S5b: AI v míru prodává nad tento sklad
+  MKT_SHARE: 0.25,                  // podíl přebytku na jednu nabídku
+  MKT_LOT: 1500,                    // nejvíc kusů v jedné nabídce
+  MKT_LOW: [['pusky', 400], ['dela', 40], ['podpora', 40]],   // AI ve válce kupuje, když má méně (jen volná historie)
+  MKT_CIV: 0.25,                    // nejvýš tento podíl civilních továren na jeden nákup                // S5a: AI najme konstrukční kancelář, jen když jí zbude tolik politické moci
   S9_PORT_EVERY: 3,                 // S9: každé tolikáté křídlo strategických bombardérů útočí na přístav s nepřátelskou flotilou
   S8_AA_DMG: 0.1,                   // S8: AI staví protiletadlovou obranu ve státě s aspoň takovým poškozením továren
   S8_AA_MAX: 3,                     // do této úrovně

@@ -1459,6 +1459,21 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Rozhraní**: okno Konstrukční kancelář, záložka Kanceláře – karta oboru s najatou kanceláří (úroveň jako tečky, postup jako pruh)
   a nabídkou kanceláří jako dlaždic (účinek a cena v nápovědě).
 
+## 4zzzzzzzzzzzzzzzzzzz. Mezinárodní trh s výzbrojí (S5b, `GAME_VERSION = 60`)
+
+- **Stav**: `ind.mkt = { n, off: [{ id, o, eq, n }], deals: [{ id, s, b, eq, left, rate, fac, days }] }` (`validateState`).
+- **Nabídka** (`offerOnMarket`, kontroly `offerBlock`: aspoň `MKT.MIN_N` kusů ze skladu, nejvýš `MKT.MAX_OFF` nabídek): kusy se
+  ze skladu přesunou do nabídky; `withdrawOffer` je vrátí.
+- **Nákup** (`buyFromMarket`, kontroly `buyBlock`: ne vlastní, ne od nepřítele, dost volných civilních továren `freeCivFor`):
+  cena `marketPrice` = výrobní body kusů × `MKT.MARKUP`, placená `fac` civilními továrnami po `MKT.DAYS` dní; obchod dodává
+  `rate` kusů denně (`marketDay` v `industryDay`). `marketFac` = čisté továrny země z obchodů (kupující −, prodávající +) – přičítá
+  se ke stavebním bodům v `industryDay` a k přehledu průmyslu. Válka mezi stranami obchod ruší, zbytek se vrátí prodávajícímu.
+  Záznam deníku `mkt` jen s hráčem.
+- **AI** (`ai/market.js`, týdně): v míru vystaví část přebytku nad `AI.MKT_SURPLUS`; ve válce při nedostatku (`AI.MKT_LOW`)
+  kupuje – jen ve volné historii (s historickou AI by nákupy měnily průběh války).
+- **Rozhraní**: okno Průmysl, záložka Trh se zbraněmi – nabídky jako karty (výzbroj, prodávající, cena za 100 kusů, tlačítko
+  koupit, kolik unesou volné továrny), prodej ze skladu dlaždicemi, vlastní nabídky a probíhající obchody s průběhem.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1674,6 +1689,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S5b** | **Mezinárodní trh**: nabídky výzbroje ze skladu, nákup za civilní továrny po dobu dodávky, AI prodává přebytky | ✅ |
 | **S5a** | **Konstrukční kanceláře**: kancelář v každém oboru výzbroje (pěchota, obrněná technika, letectví, loďařství) se zaměřením, úrovně ze zkušeností výroby | ✅ |
 | **S4** | **Mechaniky jednotlivých zemí**: Velká čistka (SSSR), jednota frakcí obou stran ve Španělsku, armáda vs. loďstvo (Japonsko), jednota Číny, izolacionismus USA – ukazatele s pásmy a rozhodnutími | ✅ |
 | **S10** | **Frakce**: společné cíle bloků s trvalými bonusy pro členy, vážené hlasování o přijetí a vyloučení členů | ✅ |
