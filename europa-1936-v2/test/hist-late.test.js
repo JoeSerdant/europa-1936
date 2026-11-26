@@ -109,8 +109,7 @@ describe('příměří Itálie', () => {
   };
   it('kapituluje v okně, když Spojenci drží tři provincie, nebo od pojistného dne; ne hráčova Itálie', () => {
     const s = war(at(base(), 2800), ENG, ITA);
-    expect(armisticeDue(s, ITA)).toBe(false);
-    expect(armisticeDue(held(s, 2), ITA)).toBe(false);
+    expect(armisticeDue(s, ITA)).toBe(true);   // S9: pojistný den je začátek okna (27. 8. 1943 natvrdo)
     expect(armisticeDue(held(s, 3), ITA)).toBe(true);
     expect(armisticeDue(at(s, 2880), ITA)).toBe(true);
     expect(armisticeDue(at(held(s, 3), 2700), ITA)).toBe(false);

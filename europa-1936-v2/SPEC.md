@@ -1400,7 +1400,9 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Úder na přístav** (mise křídla `port`, letouny `bit`, `tac`, `str`): cílem je nepřátelský stát s přístavem; flotily nepřítele, které
   stojí (bez cesty) v mořích přístavů státu, dostanou poškození jako úder na lodě × `AIR.PORT_K`; protiletadlová obrana státu sestřeluje.
   AI: každé `AI.S9_PORT_EVERY`-té křídlo strategických bombardérů (`portStrikeTarget`), přestavba zastaralé flotily doma bez mise
-  a bez krytí vylodění (`aiRefit`, jedna najednou, týdně).
+  a bez krytí vylodění (`aiRefit`, jedna najednou, týdně). S historickou AI úder na přístav nepoužívá (ochromení flotil ve Středomoří
+  měnilo průběh války); koleje `egy_holdout` (Egypt kapituluje jen při úplné okupaci) a `ita_armistice` s `force` = začátek okna
+  (příměří Itálie 27. 8. 1943 natvrdo).
 - **Příprava vylodění**: divize má `d.ip` (0–1) – roste o 1/`NAV.PREP_DAYS` denně, když stojí ve vlastním přístavu mimo boj a pochod
   (`dailyPrep`), jinde zmizí. Na nepřátelské pobřeží vypluje jen s `NAV.PREP_MIN` (`sailBlock`); při vylodění ztratí navíc
   `NAV.PREP_ORG × (1 − ip)` organizace a příprava se vynuluje.
