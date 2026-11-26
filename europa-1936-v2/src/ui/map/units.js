@@ -58,16 +58,37 @@ function dominant(kinds) {
   return best;
 }
 
-/** Sloučí žetony stejné země, které leží ve stejné buňce mřížky (buňka ve světových pixelech). Samostatné žetony zůstanou stejné objekty. */
+/**
+ * Sloučí blízké žetony stejné země (ZM1: podle vzdálenosti, ne podle hranice mřížky – dva sousední žetony na hraně buňky se
+ * tak nerozdělí do dvou překrývajících se skupin). Žeton se přidá k nejbližší skupině své země, jejíž střed je blíž než `cell`
+ * (světové pixely); pořadí je pevné (větší žetony první), takže výsledek je deterministický. Samostatné žetony zůstanou stejné objekty.
+ */
 export function clusterCounters(counters, cell) {
-  const groups = new Map();
-  for (const c of counters) {
-    const key = ((c.o * 4096 + Math.floor(c.x / cell)) * 4096) + Math.floor(c.y / cell);
-    const a = groups.get(key);
-    if (a) a.push(c); else groups.set(key, [c]);
+  const order = counters.slice().sort((a, b) => b.n - a.n || a.key - b.key || a.o - b.o);
+  const grid = new Map(), groups = [];
+  const gk = (o, gx, gy) => ((o * 8192 + gx + 4096) * 8192) + gy + 4096;
+  for (const c of order) {
+    const gx = Math.floor(c.x / cell), gy = Math.floor(c.y / cell);
+    let best = null, bd = cell * cell;
+    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+      const arr = grid.get(gk(c.o, gx + dx, gy + dy));
+      if (!arr) continue;
+      for (const g of arr) { const d = (g.x - c.x) ** 2 + (g.y - c.y) ** 2; if (d < bd) { bd = d; best = g; } }
+    }
+    if (best) {
+      const n = best.n + c.n;
+      best.x = (best.x * best.n + c.x * c.n) / n; best.y = (best.y * best.n + c.y * c.n) / n; best.n = n;
+      best.list.push(c);
+    } else {
+      const g = { x: c.x, y: c.y, n: c.n, list: [c] };
+      groups.push(g);
+      const k = gk(c.o, gx, gy);
+      const arr = grid.get(k);
+      if (arr) arr.push(g); else grid.set(k, [g]);
+    }
   }
   const out = [];
-  for (const arr of groups.values()) {
+  for (const { list: arr } of groups) {
     if (arr.length === 1) { out.push(arr[0]); continue; }
     let n = 0, x = 0, y = 0, hp = 0, org = 0, fight = 0, lack = 0, retreat = 0;
     const ids = [], kinds = {};
@@ -80,6 +101,19 @@ export function clusterCounters(counters, cell) {
     out.push({ key: arr[0].key, o: arr[0].o, p: arr[0].p, next: 0, ids, n, hp: hp / n, org: org / n, prog: 0, fight, lack, retreat, kinds, cls: dominant(kinds), x: x / n, y: y / n, merged: arr.length });
   }
   return out;
+}
+
+/**
+ * ZM1: zjednodušení mapy při oddálení (jako v HOI4). Zblízka (zoom ≥ FULL) se slučují jen překrývající se žetony; mezi FULL a GROUP
+ * se okruh slučování plynule zvětšuje na SPREAD šířek žetonu (divize jedné země se seskupí podle polohy); pod HIDE žetony zmizí
+ * (přechod přes FADE). Vrací { spread (v šířkách žetonu), alpha (0–1), hidden }.
+ */
+export const UNIT_LOD = { FULL: 1.5, GROUP: 1.0, SPREAD: 2.6, HIDE: 0.62, FADE: 0.12 };
+export function unitLod(zoom) {
+  const L = UNIT_LOD;
+  const t = clamp((L.FULL - zoom) / (L.FULL - L.GROUP), 0, 1);
+  const alpha = clamp((zoom - L.HIDE) / L.FADE, 0, 1);
+  return { spread: 0.95 + (L.SPREAD - 0.95) * t, alpha, hidden: alpha <= 0 };
 }
 
 /** Buňka shlukování (mocnina dvou, aby se shluky při posunu mapy neměnily): žetony bližší než `minPx` obrazovkových pixelů se sloučí. */
@@ -278,7 +312,7 @@ export class UnitLayer {
   /** Žetony po shlukování pro dané přiblížení (mezipaměť podle zdroje a buňky). */
   clustered(zoom) {
     const s = counterScale(zoom);
-    const cell = clusterCell(zoom, COUNTER.W * s * 0.95);
+    const cell = clusterCell(zoom, COUNTER.W * s * unitLod(zoom).spread);   // ZM1: při oddálení větší skupiny
     const c = this.cluster;
     if (c.src !== this.counters || c.cell !== cell) {
       c.src = this.counters; c.cell = cell;
@@ -310,6 +344,7 @@ export class UnitLayer {
     const strokeRoutes = (list, width, color, alpha, head) => {
       if (!list.length) return;
       ctx.globalAlpha = alpha;
+      if (!ctx.globalAlpha) return;
       ctx.lineWidth = (width + 2.4) * px; ctx.strokeStyle = 'rgba(6,10,14,0.85)';
       ctx.beginPath();
       for (const r of list) { const [sx, sy] = routeStart(g, r); ctx.moveTo(sx, sy); for (let i = 1; i < r.nodes.length; i++) ctx.lineTo(g.cx[r.nodes[i]], g.cy[r.nodes[i]]); }
@@ -326,9 +361,10 @@ export class UnitLayer {
       }
       ctx.globalAlpha = 1;
     };
-    strokeRoutes(lines.enemy, 1.4, '#b8c4cf', 0.55, 7);
-    strokeRoutes(lines.own, 2.2, '#8fdc72', 0.9, 9);
-    strokeRoutes(lines.atk, 2.8, '#ff6a47', 0.95, 10);
+    const la = unitLod(cam.zoom).alpha;   // ZM1: šipky nevybraných divizí mizí spolu s žetony
+    strokeRoutes(lines.enemy, 1.4, '#b8c4cf', 0.55 * la, 7);
+    strokeRoutes(lines.own, 2.2, '#8fdc72', 0.9 * la, 9);
+    strokeRoutes(lines.atk, 2.8, '#ff6a47', 0.95 * la, 10);
     strokeRoutes(lines.sel, 3.2, '#ffd25a', 1, 11);
     // F3: cíle vybraných divizí – kroužek v cílové provincii (štítek s odhadem příjezdu kreslí drawScreen)
     if (lines.sel.length) {
@@ -346,19 +382,22 @@ export class UnitLayer {
       ctx.setLineDash([8 * px, 6 * px]);
       for (const r of this.fleetRoutes) {
         const mine = r.ids.includes(this.fleetSel);
+        ctx.globalAlpha = mine ? 1 : la;
+        if (!ctx.globalAlpha) continue;
         ctx.lineWidth = (mine ? 3 : 2) * px; ctx.strokeStyle = mine ? '#ffd25a' : this.relation(r.o) === 'own' ? '#7fd0ff' : 'rgba(190,200,210,0.6)';
         ctx.beginPath(); ctx.moveTo(r.nodes[0][0], r.nodes[0][1]);
         for (let i = 1; i < r.nodes.length; i++) ctx.lineTo(r.nodes[i][0], r.nodes[i][1]);
         ctx.stroke();
       }
       ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
     }
 
     // letecké mise hráče: tenká čára z letiště do cíle, u hlídek kruh kolem cíle
     if (this.air.lines.length) {
       for (const l of this.air.lines) {
         const col = MISSION_COLOR[l.m];
-        ctx.lineWidth = 1.8 * px; ctx.strokeStyle = col; ctx.globalAlpha = 0.85; ctx.setLineDash([3 * px, 6 * px]);
+        ctx.lineWidth = 1.8 * px; ctx.strokeStyle = col; ctx.globalAlpha = 0.85 * la; ctx.setLineDash([3 * px, 6 * px]);
         ctx.beginPath(); ctx.moveTo(l.a[0], l.a[1]); ctx.lineTo(l.b[0], l.b[1]); ctx.stroke();
         ctx.setLineDash([]);
         ctx.lineWidth = 2.4 * px;
@@ -513,8 +552,22 @@ export class UnitLayer {
     const mx = (w + 30) / cam.zoom, my = (total + 30) / cam.zoom;
     const list = this.clustered(cam.zoom);
     const g = this.g;
+    const lod = unitLod(cam.zoom);   // ZM1: v dálce žetony mizí (vybrané zůstávají)
+    if (!more) { this.battleHits = []; this.hits.length = 0; this.fleetHits.length = 0; }
+    if (lod.hidden) {
+      const kept = this.selected.size ? list.filter((c) => this.selCount(c)) : [];
+      for (const c of kept) {
+        if (c.x < vx0 - mx || c.x > vx1 + mx || c.y < vy0 - my || c.y > vy1 + my) continue;
+        const [sx, sy] = worldToScreen(cam, c.x, c.y);
+        drawCounter(ctx, c, sx, sy, this.looks[c.o], { s, rel: this.relation(c.o), sel: this.selCount(c) >= c.n ? 2 : 1, hover: false });
+        this.hits.push({ x0: sx - w / 2 - 1, y0: sy - COUNTER.H * s / 2 - 1, x1: sx + w / 2 + 1, y1: sy - COUNTER.H * s / 2 + total, c });
+      }
+      this.stats.counters = this.counters.length; this.stats.shown = this.hits.length; this.stats.ms = performance.now() - t0;
+      return;
+    }
+    ctx.save();
+    ctx.globalAlpha = lod.alpha;
     // značky bitev
-    if (!more) this.battleHits = [];
     for (const b of this.battles) {
       const bx = g.cx[b.p], by = g.cy[b.p];
       if (bx < vx0 - mx || bx > vx1 + mx || by < vy0 - my || by > vy1 + my) continue;
@@ -529,7 +582,6 @@ export class UnitLayer {
     // vzadu severní, vpředu jižní žetony; vybrané a pod kurzorem nakonec
     const rank = (c) => (this.isHover(c) ? 2e6 : this.selCount(c) ? 1e6 : 0) + c.y;
     shown.sort((a, b) => rank(a) - rank(b));
-    if (!more) this.hits.length = 0;
     for (const c of shown) {
       const [sx, sy] = worldToScreen(cam, c.x, c.y);
       const sc = this.selCount(c);
@@ -538,7 +590,6 @@ export class UnitLayer {
     }
     this.drawEta(ctx, cam, view, s);   // F3: odhady příjezdu nad žetony
     // flotily: žetony ve středech mořských oblastí
-    this.fleetHits.length = 0;
     if (this.fleetTokens.length) {
       const fw = FLEET.W * s, fh = FLEET.H * s;
       for (const t of this.fleetTokens) {
@@ -554,6 +605,7 @@ export class UnitLayer {
       const [sx, sy] = worldToScreen(cam, b.x, b.y);
       drawAirBadge(ctx, b, sx, sy + 22 * s, s);
     }
+    ctx.restore();
     this.stats.counters = this.counters.length; this.stats.shown = shown.length; this.stats.ms = performance.now() - t0;
   }
 

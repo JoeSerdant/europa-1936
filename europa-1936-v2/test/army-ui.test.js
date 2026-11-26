@@ -9,7 +9,7 @@ import { gameStore, uiStore, NONE } from '../src/ui/store.js';
 import * as A from '../src/ui/actions.js';
 import { summarize, planText, provName } from '../src/ui/army/helpers.js';
 import { placeBattalion, removeBattalion, toggleSupport, setName } from '../src/ui/army/designer.js';
-import { buildCounters, clusterCounters, clusterCell, routesOf, battlesOf } from '../src/ui/map/units.js';
+import { buildCounters, clusterCounters, clusterCell, routesOf, battlesOf, unitLod, UNIT_LOD } from '../src/ui/map/units.js';
 import { fillColors, supplyColor, rgbCss, MODES } from '../src/ui/map/colors.js';
 import { buildGeometry } from '../src/ui/map/geometry.js';
 import { MapRenderer } from '../src/ui/map/renderer.js';
@@ -175,6 +175,28 @@ describe('žetony na mapě: data', () => {
     const tiny = clusterCounters(list, 0.001);
     expect(tiny.length).toBe(3);
     expect(tiny.every((c) => list.includes(c))).toBe(true);
+  });
+
+  it('ZM1: při oddálení se divize seskupují podle polohy a pak zmizí', () => {
+    const near = unitLod(UNIT_LOD.FULL + 1), mid = unitLod(UNIT_LOD.GROUP), far = unitLod(UNIT_LOD.HIDE - 0.01);
+    expect(near.alpha).toBe(1); expect(near.hidden).toBe(false);
+    expect(mid.spread).toBeGreaterThan(near.spread * 2);             // skupiny jsou při oddálení výrazně větší
+    expect(mid.alpha).toBe(1);
+    expect(far.hidden).toBe(true);
+    const fade = unitLod(UNIT_LOD.HIDE + UNIT_LOD.FADE / 2);
+    expect(fade.alpha).toBeGreaterThan(0); expect(fade.alpha).toBeLessThan(1);
+    for (let z = 0.2; z < 4; z += 0.1) expect(unitLod(z + 0.1).spread).toBeLessThanOrEqual(unitLod(z).spread);   // plynule
+  });
+
+  it('ZM1: shlukování podle vzdálenosti – sousedé na hraně buňky jsou jedna skupina, vzdálení dvě', () => {
+    const mk = (key, x, y) => ({ key, o: 1, p: key, ids: [key], n: 1, hp: 1, org: 1, fight: 0, lack: 0, retreat: 0, kinds: { inf: 1 }, cls: 'inf', x, y });
+    const edge = clusterCounters([mk(1, 63.5, 10), mk(2, 64.5, 10)], 64);   // mřížka by je rozdělila
+    expect(edge.length).toBe(1);
+    expect(edge[0].n).toBe(2);
+    const far = clusterCounters([mk(1, 0, 0), mk(2, 200, 0)], 64);
+    expect(far.length).toBe(2);
+    const again = clusterCounters([mk(2, 64.5, 10), mk(1, 63.5, 10)], 64);
+    expect(again[0].x).toBeCloseTo(edge[0].x);                      // pořadí vstupu výsledek nemění
   });
 
   it('buňka shlukování je mocnina dvou (shluky se při posunu mapy nemění)', () => {
