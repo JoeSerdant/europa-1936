@@ -47,6 +47,12 @@ export const DIP = {
   FAC_PP: 50,             // cena založení bloku
   FAC_MAX_MEM: 12,        // největší blok
   INVITE_MIN: 20,         // nejmenší skóre pozvání, aby pozvaný přijal
+  FAC_GOAL_SLOTS: 2,      // S10: nejvíc rozpracovaných společných cílů bloku
+  VOTE_LDR: 2,            // S10: váha hlasu vedoucího bloku (ostatní: 1 + továrny / VOTE_FAC)
+  VOTE_FAC: 50,           // S10: továren na jeden hlas navíc
+  VOTE_REL: 0,            // S10: člen hlasuje pro přijetí, když má s kandidátem vztah aspoň takový (a nebojuje s ním)
+  VOTE_KICK_REL: 0,       // S10: člen hlasuje pro vyloučení, když má s vylučovaným vztah pod touto hodnotou
+  KICK_REL: -30,          // S10: vztah vyloučeného k vedoucímu po vyloučení
   INVITE_ENEMY: 30,       // bonus skóre za společného nepřítele
   INVITE_IDEO: 15,
   AU_START: 30,           // autonomie nové loutky (0–100)

@@ -1,4 +1,5 @@
 // Společné pomůcky politiky (M21): bonusy zákonů a poradců, dopady stability a podpory války, kontrola zákonů.
+import { facModsOf, facModsKey } from '../dip/facmods.js';
 import { LAWS, ADVISORS, ADV_SLOT_IDS } from '../../data/politics/index.js';
 import { I } from '../industry/constants.js';
 import { POL } from './constants.js';
@@ -54,6 +55,9 @@ function spiritModsOf(state, o) {
 const withCont = new WeakMap();   // bonusy bez průběžného cíle → Map(id cíle → součet)
 /** Všechny bonusy země: zákony, poradci, hotové cíle, národní duchové a průběžný cíl (M85). */
 export function polModsOf(state, o) {
+  return withFac(state, o, contModsOf(state, o));
+}
+function contModsOf(state, o) {
   const base = spiritModsOf(state, o);
   const id = state.nat?.own[o]?.cont, C = id ? CONT_FOCUSES[id] : null;
   if (!C) return base;
@@ -61,6 +65,16 @@ export function polModsOf(state, o) {
   if (!byId) { byId = new Map(); withCont.set(base, byId); }
   let m = byId.get(id);
   if (!m) { m = { ...base }; for (const k in C.mod) m[k] = (m[k] || 0) + C.mod[k]; byId.set(id, m); }
+  return m;
+}
+const withFacCache = new WeakMap();   // S10: základ → Map(klíč splněných cílů bloku → bonusy)
+function withFac(state, o, base) {
+  const key = facModsKey(state, o);
+  if (!key) return base;
+  let byKey = withFacCache.get(base);
+  if (!byKey) { byKey = new Map(); withFacCache.set(base, byKey); }
+  let m = byKey.get(key);
+  if (!m) { m = { ...base }; const f = facModsOf(state, o); for (const k in f) m[k] = (m[k] || 0) + f[k]; byKey.set(key, m); }
   return m;
 }
 

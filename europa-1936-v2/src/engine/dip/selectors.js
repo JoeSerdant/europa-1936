@@ -1,4 +1,6 @@
 // Dotazy na diplomacii pro rozhraní a AI (čisté, bez změn stavu).
+import { facVote, kickBlock, facProgress, facGoalBlock } from './facgoals.js';
+import { FAC_GOAL_IDS } from '../../data/dip/facgoals.js';
 import { getWorld } from '../world.js';
 import { DIP } from './constants.js';
 import { WARGOALS, WARGOAL_IDS } from '../../data/dip/wargoals.js';
@@ -57,6 +59,8 @@ export function diplomacyOf(state, o) {
       friend: lendFriend(state, o, t) && !hasCapitulated(state, t) && !war,
       peaceBlock: war ? peaceBlock(state, o, t) : 'Nejste ve válce.',
       inviteBlock: fac ? inviteBlock(state, o, t) : 'Nejste v žádném bloku.',
+      vote: fac && fac.ldr === o && !state.dip.fac[t] ? facVote(state, o, t, 'join') : null,   // S10: předpověď hlasování o přijetí
+      kick: fac && fac.ldr === o && fac.mem.includes(t) && t !== o ? { block: kickBlock(state, o, t) } : null,   // S10: vyloučení z bloku (jen vedoucí)
       score: war ? warScore(state, o, t) : 0,
       overlord: overlordOf(state, t), mine: overlordOf(state, t) === o,
       au: autonomyOf(state, t), auLevel: autonomyLevel(autonomyOf(state, t)), tightBlock: autonomyBlock(state, o, t, true), looseBlock: autonomyBlock(state, o, t, false),
@@ -67,7 +71,8 @@ export function diplomacyOf(state, o) {
       annexBlock: overlordOf(state, t) !== o ? 'Není to vaše loutka.' : state.pol.own[o].pp < DIP.ANNEX_PP ? `Chybí politická moc (${Math.ceil(DIP.ANNEX_PP - state.pol.own[o].pp)}).` : null,
     });
   }
-  return { o, offers: pactOffers(state, o).map((x) => ({ ...x, tag: w.owners[x.a].tag, name: w.owners[x.a].name })), faction: fac, canFound: !fac && !hasCapitulated(state, o) && state.pol.own[o].pp >= DIP.FAC_PP, capitulated: hasCapitulated(state, o), held: vpHeld(state, o), list };
+  const goals = fac ? { act: (fac.g || []).map((g) => ({ id: g, ...facProgress(state, fac, g) })), done: fac.gd || [], open: FAC_GOAL_IDS.map((g) => ({ id: g, block: facGoalBlock(state, o, g), ...facProgress(state, fac, g) })) } : null;   // S10
+  return { o, offers: pactOffers(state, o).map((x) => ({ ...x, tag: w.owners[x.a].tag, name: w.owners[x.a].name })), faction: fac, goals, canFound: !fac && !hasCapitulated(state, o) && state.pol.own[o].pp >= DIP.FAC_PP, capitulated: hasCapitulated(state, o), held: vpHeld(state, o), list };
 }
 
 export { relOf, factionOf, warScore, vpHeld };

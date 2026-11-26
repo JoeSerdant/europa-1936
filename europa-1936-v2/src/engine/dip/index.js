@@ -27,3 +27,5 @@ export { coBelligerent, volKind, volAway, volCap, volDest, volBlock, sendVolunte
 export { attachesOf, attachesAt, attBlock, sendAttache, recallAttache, attDay } from './attache.js';
 export { attCount, attMods } from './attCore.js';
 export { LIC_KEYS, licCost, licBlock, licOffers, buyLicence } from './licence.js';
+export { facProgress, facGoalBlock, setFacGoal, dropFacGoal, facVote, voteWeight, kickBlock, kickFromFaction } from './facgoals.js';   // S10
+export { FAC_GOALS, FAC_GOAL_IDS } from '../../data/dip/facgoals.js';

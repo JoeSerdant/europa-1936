@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { diplomacyOf, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS, capLimitOf, ideologyOf, divisionCount, WARGOALS, volBlock } from '../../engine/index.js';
+import { diplomacyOf, FAC_GOALS, DIP, AUTONOMY_NAMES, getWorld, EQUIP, EQUIP_IDS, capLimitOf, ideologyOf, divisionCount, WARGOALS, volBlock } from '../../engine/index.js';
 import { EquipIcon } from '../industry/EquipIcon.jsx';
 import { EQUIP_GROUPS } from '../../data/industry/groups.js';
 import { IDEOLOGIES, COUNTRIES } from '../../data/countries.js';
-import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, offerPactTo, breakPactWith, answerPactFrom, improveWith, demandFrom, foundBloc, inviteBloc, leaveBloc, selectLabel, volunteerIds, volunteersTo, recallVolunteersFrom, attacheTo, licenceFrom } from '../actions.js';
+import { playerIdx, annexOwnPuppet, tightenPuppet, loosenPuppet, justifyOn, declareWarOn, makePeaceWith, lendTo, guaranteeFor, revokeGuaranteeFor, requestAccessFrom, grantAccessTo, revokeAccessFrom, offerPactTo, breakPactWith, answerPactFrom, improveWith, demandFrom, foundBloc, inviteBloc, leaveBloc, blocGoal, kickBloc, selectLabel, volunteerIds, volunteersTo, recallVolunteersFrom, attacheTo, licenceFrom } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -171,7 +171,9 @@ function Detail({ c, state, me, onClose }) {
               : <Act icon="handshake" n="Pakt o neútočení" cost={`${DIP.NAP_PP} PM · ${c.pactOdds ? 'přijme' : 'odmítne'}`} onClick={() => offerPactTo(c.tag)} block={c.pactBlock} />)}
             {c.garMine ? <Act icon="shield" n="Zrušit záruku" onClick={() => revokeGuaranteeFor(c.tag)} />
               : <Act icon="shield" n="Zaručit nezávislost" cost={`${DIP.GAR_PP} PM`} onClick={() => guaranteeFor(c.tag)} block={c.garBlock} />}
-            <Act icon="flag" n="Pozvat do bloku" onClick={() => inviteBloc(c.tag)} block={c.inviteBlock} />
+            <Act icon="flag" n="Pozvat do bloku" cost={c.vote ? `hlasy pro ${Math.round((100 * c.vote.yes) / Math.max(0.1, c.vote.yes + c.vote.no))} %` : ''} onClick={() => inviteBloc(c.tag)} block={c.inviteBlock}
+              hint={c.vote ? `Hlasování členů (váha podle továren, vedoucí dvojnásob): ${c.vote.list.map((v) => `${getWorld().owners[v.o].name} ${v.y ? 'pro' : 'proti'} (${v.w})`).join(', ')}` : ''} />
+            {c.kick ? <Act icon="close" n="Vyloučit z bloku" tone="danger" onClick={() => kickBloc(c.tag)} block={c.kick.block} hint="O vyloučení hlasují ostatní členové podle vztahů k vylučovanému." /> : null}
             {!c.access && <Act icon="road" n="Požádat o přístup" cost={`${DIP.ACC_PP} PM`} onClick={() => requestAccessFrom(c.tag)} block={c.accBlock} />}
             {c.accMine ? <Act icon="road" n="Odvolat přístup" onClick={() => revokeAccessFrom(c.tag)} />
               : !c.accGiven && <Act icon="road" n="Dát přístup" cost="zdarma" onClick={() => grantAccessTo(c.tag)} block={c.giveBlock} />}
@@ -197,6 +199,28 @@ function Detail({ c, state, me, onClose }) {
     </section>
   );
 }
+
+/** S10: společné cíle bloku – splněné (bonus), rozpracované s postupem a nabídka pro vedoucího jako dlaždice. */
+function BlocGoals({ g, ldr }) {
+  if (!g) return null;
+  const bonus = (id) => Object.entries(FAC_GOALS[id].mod).map(([k, v]) => `${MOD_N[k] || k} +${Math.round(v * 100)} %`).join(', ');
+  return (
+    <div className="bloc-goals" aria-label="Společné cíle bloku">
+      {g.done.map((id) => <span key={id} className="bg-tile done" title={`${FAC_GOALS[id].n} – splněno. Bonus pro všechny členy: ${bonus(id)}.`}><Icon name={FAC_GOALS[id].icon} size={16} /><Icon name="check" size={12} /></span>)}
+      {g.act.map((x) => (
+        <span key={x.id} className="bg-tile act" title={`${FAC_GOALS[x.id].n}: ${FAC_GOALS[x.id].info} Odměna: ${bonus(x.id)}.${ldr ? ' Klik cíl zruší.' : ''}`} onClick={ldr ? () => blocGoal(x.id, false) : undefined} role={ldr ? 'button' : undefined}>
+          <Icon name={FAC_GOALS[x.id].icon} size={16} /><span className="bg-bar"><i style={{ width: `${Math.min(100, (100 * x.cur) / x.need)}%` }} /></span>
+        </span>
+      ))}
+      {ldr && g.open.filter((x) => !x.block).map((x) => (
+        <button key={x.id} className="bg-tile pick" onClick={() => blocGoal(x.id)} title={`Zvolit společný cíl: ${FAC_GOALS[x.id].n}. ${FAC_GOALS[x.id].info} Postup ${Math.round(x.cur)} / ${x.need}. Odměna: ${bonus(x.id)}.`} aria-label={`Zvolit cíl ${FAC_GOALS[x.id].n}`}>
+          <Icon name={FAC_GOALS[x.id].icon} size={16} /><Icon name="plus" size={11} />
+        </button>
+      ))}
+    </div>
+  );
+}
+const MOD_N = { man: 'lidská síla', prod: 'výroba', research: 'výzkum', stab: 'stabilita', build: 'stavby' };
 
 const FILTERS = [['all', 'Vše'], ['war', 'Válka'], ['ally', 'Spojenci'], ['near', 'Sousedé']];
 
@@ -256,6 +280,7 @@ export function DiplomacyPanel() {
                 <>
                   <div className="q-top"><Icon name="flag" size={18} /><b>{f.nm}</b><button className="sbtn" onClick={leaveBloc} title="Opustit blok">Opustit</button></div>
                   <div className="bloc-flags">{f.mem.map((o) => <span key={o} className={`bloc-mem ${o === f.ldr ? 'ldr' : ''}`} title={`${getWorld().owners[o].name}${o === f.ldr ? ' – vedoucí' : ''}`}><Flag tag={getWorld().owners[o].tag} width={34} />{o === f.ldr ? <Icon name="crown" size={12} /> : null}</span>)}</div>
+                  <BlocGoals g={d.goals} ldr={f.ldr === me} />
                 </>
               ) : d.capitulated ? <p className="muted">Země kapitulovala.</p> : (
                 <div className="dip-found">

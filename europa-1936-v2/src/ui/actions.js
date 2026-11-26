@@ -6,7 +6,7 @@ import {
   createArmy, renameArmy, disbandArmy, assignDivisions, createGroup, renameGroup, disbandGroup, assignArmies, assignCommander,
   setPlan, clearPlan, setPlanMode, suggestFront, takeCommand, marchPreview,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
-  justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, warBlock, peaceBlock, inviteBlock, justReady,
+  justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, setFacGoal, dropFacGoal, facGoalBlock, kickBlock, kickFromFaction, warBlock, peaceBlock, inviteBlock, justReady,
   formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, setFleetMission, refitFleet, orderSail, sailBlock, navyOf, SHIPS,
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID, setContinuous, contBlock,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
@@ -518,6 +518,25 @@ export function foundBloc(name) {
   return true;
 }
 /** Pozve zemi do bloku hráče; pozvaný přijme podle vztahů. */
+/** S10: vedoucí bloku zvolí nebo zruší společný cíl. */
+export function blocGoal(id, on = true) {
+  const s = gameStore.getState(), me = playerIdx(s);
+  if (!me) return false;
+  if (!on) return run(dropFacGoal, me, id);
+  const why = facGoalBlock(s, me, id);
+  if (why) { toast(why); return false; }
+  return run(setFacGoal, me, id);
+}
+/** S10: návrh na vyloučení člena bloku (rozhodne hlasování). */
+export function kickBloc(tag) {
+  const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
+  if (!me || !t) return false;
+  const why = kickBlock(s, me, t);
+  if (why) { toast(why); return false; }
+  if (!run(kickFromFaction, me, t)) return false;
+  toast(`${countryName(tag)} byla z bloku vyloučena.`);
+  return true;
+}
 export function inviteBloc(tag) {
   const s = gameStore.getState(), me = playerIdx(s), t = getWorld().ownerIdx[tag];
   if (!me || !t) return false;

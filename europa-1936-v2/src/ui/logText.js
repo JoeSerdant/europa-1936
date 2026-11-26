@@ -9,6 +9,7 @@ import { DEMAND_BY_ID } from '../data/dip/demands.js';
 import { IDEOLOGIES } from '../data/countries.js';
 import { OVERSEAS } from '../data/dip/overseas.js';
 import { PLANES } from '../data/air/planes.js';
+import { FAC_GOALS } from '../data/dip/facgoals.js';
 import { ACE_NAMES } from '../engine/air/constants.js';
 import { EQUIP } from '../data/army/index.js';
 import { BUILDINGS } from '../data/industry/buildings.js';
@@ -39,6 +40,8 @@ export function logLine(e, me = 0) {
     case 'puppet': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.x].name} se stala loutkovým státem (${w.owners[e.o].name}).` };
     case 'annex': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `${w.owners[e.o].name} anektovala ${w.owners[e.x].name}.` };
     case 'doctrine': return { icon: 'general', tone: 'good', world: false, mine: true, text: `Přijata doktrína: ${DOCTRINES[e.x]?.n || e.x}.` };
+    case 'facgoal': return { icon: 'flag', tone: 'good', world: true, mine: e.o === me, text: `Blok ${e.x} splnil společný cíl: ${FAC_GOALS[e.y]?.n || e.y}. Všichni členové dostávají trvalý bonus.` };   // S10
+    case 'kick': return { icon: 'flag', tone: 'bad', world: true, mine: e.o === me, text: `${w.owners[e.o].name} byla vyloučena z bloku ${e.x}.` };   // S10
     case 'collab': return { icon: 'flag', tone: 'info', world: true, mine: e.a === me || e.b === me, text: `${w.owners[e.a].name} dosadila na okupovaném území (${w.owners[e.b].name}) kolaborantskou vládu.` };   // S7
     case 'rebel': return { icon: 'flag', tone: 'info', world: true, mine: true, text: `Povstání ve státě ${w.states[e.s]?.n || ''}: ${w.owners[e.o].name} vyhnala okupační správu (${w.owners[e.x].name}).` };
     case 'spy': {
