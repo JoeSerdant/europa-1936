@@ -5,7 +5,7 @@ import { Icon } from '../common/Icon.jsx';
 import { politicsOf, focusTree, spiritsOf, ADV_SLOTS, nextElection, formatDate, occupiedBy, occLawOf, hasCollab, collabBlock, OCC_LAWS, OCC_LAW_IDS, getWorld, mechsOf, MECHS, SPIRITS } from '../../engine/index.js';
 import { COUNTRIES, IDEOLOGIES } from '../../data/countries.js';
 import { Flag } from '../common/Flag.jsx';
-import { playerIdx, changeLaw, hireAdv, dismissAdv, backParty, changeOccLaw, makeCollab } from '../actions.js';
+import { playerIdx, changeLaw, hireAdv, dismissAdv, backParty, changeOccLaw, makeCollab, togglePanel } from '../actions.js';
 import { fmtNum } from '../format.js';
 import { Screen } from '../common/Screen.jsx';
 
@@ -139,20 +139,31 @@ function Elections({ state, me }) {
   );
 }
 
+/** UI14: tlačítko národního cíle u portrétu (jako v HOI4) – plněný cíl s postupem, nebo výzva k výběru; klik otevře strom cílů. */
+function FocusButton({ state, me }) {
+  const cur = state.nat.own[me] && state.nat.own[me].cur;
+  const f = cur ? focusTree(state, me).find((x) => x.status === 'active') : null;
+  return (
+    <button className={`lc-focus ${f ? '' : 'idle'}`} onClick={() => togglePanel('nat')} title={f ? `Národní cíl: ${f.n} · zbývá ${Math.ceil(f.days - f.p)} dní` : 'Vyberte národní cíl (C)'}>
+      <Icon name="flag" size={20} />
+      <span><i>Národní cíl</i><b>{f ? f.n : 'Vyberte národní cíl'}</b></span>
+      {f ? <span className="bar prog"><i style={{ width: `${(f.p / f.days) * 100}%` }} /></span> : null}
+    </button>
+  );
+}
+
 /** Karta státu vlevo: portrét vůdce (vlastní silueta), vláda, podpora ideologií a „národní duchové“ (platné zákony, poradci, splněné cíle). */
 function LeaderCard({ tag, p, spirits, state, me }) {
   const info = COUNTRIES[tag];
   const pa = p.parties, gov = IDEOLOGIES[pa.gov];
   return (
     <aside className="leader-card" aria-label="Vůdce a vláda">
-      <div className="lc-portrait" aria-hidden="true">
-        <svg viewBox="0 0 120 140" width="100%" height="100%" role="img">
-          <defs><linearGradient id="lcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2b4258" /><stop offset="1" stopColor="#0f1821" /></linearGradient></defs>
-          <rect width="120" height="140" fill="url(#lcg)" />
-          <circle cx="60" cy="52" r="23" fill="#0b121a" opacity="0.85" />
-          <path d="M14 140c2-34 20-50 46-50s44 16 46 50z" fill="#0b121a" opacity="0.85" />
-        </svg>
-        <span className="lc-flag"><Flag tag={tag} width={34} /></span>
+      <div className="lc-top">
+        <div className="lc-portrait" aria-hidden="true">
+          <Portrait name={info.leader} color={getWorld().owners[me].color} rank="L" w={120} h={140} />
+          <span className="lc-flag"><Flag tag={tag} width={34} /></span>
+        </div>
+        <FocusButton state={state} me={me} />
       </div>
       <h3>{info.leader}</h3>
       <p className="muted">{pa.gov === info.ideology ? info.government : `Vláda: ${gov.name}`}</p>
@@ -171,8 +182,8 @@ function LeaderCard({ tag, p, spirits, state, me }) {
       {pa.risk && <p className="lc-warn" role="alert">Hrozí převrat: strana „{IDEOLOGIES[pa.rival].name}“ se blíží vládnoucí straně.</p>}
       <h4>Národní duch</h4>
       <ul className="lc-spirits">
-        {spirits.map((x) => <li key={x.k} className={x.kind} title={`${x.n}: ${x.hint}`}><Icon name={x.icon} size={18} /><span>{x.n}</span></li>)}
-        {!spirits.length && <li className="muted">Zatím žádný</li>}
+        {spirits.map((x) => <li key={x.k} className={x.kind} title={`${x.n}: ${x.hint}`} aria-label={x.n}><Icon name={x.icon} size={20} /></li>)}
+        {!spirits.length && <li className="muted none">Zatím žádný</li>}
       </ul>
     </aside>
   );
@@ -206,12 +217,7 @@ export function PoliticsPanel() {
   const [open, setOpen] = usePick();
   const occ = occupiedBy(state, me);   // S7
   const mechs = mechsOf(state, me);   // S4
-  const spirits = [
-    ...spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, icon: x.tone === 'bad' ? 'resistance' : 'flag', hint: `${x.info} ${modText(x.mod, x.army)}${x.days ? ` · ještě ${x.days} dní` : ''}` })),
-    ...p.laws.map((c) => { const o = c.options.find((x) => x.active); return { k: `l${c.cat}`, n: o.n, kind: 'law', icon: LAW_ICON[c.cat] || 'gavel', hint: `${c.n}: ${o.info}` }; }),
-    ...p.advisors.filter((a) => a.current).map((a) => ({ k: `a${a.slot}`, n: a.current.n, kind: 'adv', icon: ADV_ICON[a.slot] || 'general', hint: `${a.n}: ${a.current.info}` })),
-    ...focusTree(state, me).filter((f) => f.status === 'done').map((f) => ({ k: `f${f.id}`, n: f.n, kind: 'focus', icon: 'focus', hint: f.info || 'Splněný národní cíl' })),
-  ];
+  const spirits = spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, icon: x.tone === 'bad' ? 'resistance' : x.tone === 'mixed' ? 'chain' : 'flag', hint: `${x.info} ${modText(x.mod, x.army)}${x.days ? ` · ještě ${x.days} dní` : ''}` }));   // UI14: jen národní duchové jako ikony (zákony a poradci mají sloty)
   return (
     <Screen cls="politics-panel" title="Politika" icon="politics" head={(
       <section className="pol-head" aria-label="Souhrn politiky">
