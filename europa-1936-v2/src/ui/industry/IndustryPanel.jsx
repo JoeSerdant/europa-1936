@@ -5,9 +5,10 @@ import { Icon } from '../common/Icon.jsx';
 import {
   getWorld, industryOf, stateIndustry, projectEta, allCountries, countryName, slotsUsed, slotsOf, atWar,
   BUILDINGS, BUILDING_IDS, producibleEquip, EQUIP, EQUIP_PROD, RESOURCES, RES_IDS, IND, SHIPS, SHIP_IDS, PLANES, PLANE_IDS, isUnlocked, tradeStatus, convoysOf, tradeRoute,
+  MKT, marketPrice, marketOffers, marketDeals, offerBlock, buyBlock, freeCivFor,
 } from '../../engine/index.js';
 import {
-  playerIdx, closeSide, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel,
+  playerIdx, closeSide, setIndTab, buildIn, cancelProject, moveProject, newLine, setLineFac, setLineEq, newTrade, changeTrade, dropTrade, selectLabel, sellOnMarket, buyOnMarket, pullOffer,
 } from '../actions.js';
 import { fmtInt, fmtNum, fmtDays } from '../format.js';
 import { EQUIP_GROUPS } from '../../data/industry/groups.js';
@@ -18,6 +19,7 @@ const TABS = [
   { id: 'build', name: 'Stavby' },
   { id: 'prod', name: 'Výroba' },
   { id: 'trade', name: 'Obchod' },
+  { id: 'mkt', name: 'Trh se zbraněmi' },   // S5b
 ];
 const pct = (v) => `${Math.round(Math.max(0, v) * 100)} %`;
 const stateName = (s) => getWorld().states[s].n;
@@ -334,6 +336,71 @@ function TradeTab({ state, me, sum }) {
   );
 }
 
+/** S5b: mezinárodní trh s výzbrojí – nabídky jako karty (výzbroj, prodávající, cena), vlastní nabídky a obchody, prodej ze skladu. */
+const MKT_EQ = ['pusky', 'dela', 'pdela', 'podpora', 'auta', 'vozy', 'ltanky', 'mtanky', 'htanky', 'vlaky'];
+function MarketTab({ state, me, sum }) {
+  const offers = marketOffers(state), deals = marketDeals(state, me), free = freeCivFor(state, me, sum.civAfterCons);
+  const st = state.mil.stock[me] || {};
+  const w = getWorld();
+  const buyN = (x) => Math.min(x.n, Math.max(1, Math.floor((free * MKT.DAYS * IND.IC_PER_FAC) / Math.max(1, EQUIP_PROD[x.eq].cost))));
+  return (
+    <div className="prod-cols trade-cols">
+      <div className="prod-left">
+        <div className="sec-head"><h3>Nabídky</h3><span className="muted">platí se civilními továrnami po {MKT.DAYS} dní dodávky · volné {fmtNum(free, 1)}</span></div>
+        {!offers.filter((x) => x.o !== me).length ? <p className="empty">Na trhu teď nikdo nic nenabízí. Přebytky vystavují hlavně země v míru.</p> : (
+          <div className="mkt-grid">
+            {offers.filter((x) => x.o !== me).map((x) => {
+              const n = buyN(x), p = marketPrice(x.eq, n), why = buyBlock(state, me, x.id, n, sum.civAfterCons);
+              return (
+                <article key={x.id} className="mkt-card">
+                  <EqTile eq={x.eq} size={48} />
+                  <span className="mkt-mid"><b>{EQUIP[x.eq].n}</b><span className="muted"><Flag tag={w.owners[x.o].tag} width={20} /> {fmtInt(x.n)} ks · 100 ks = {fmtNum(marketPrice(x.eq, 100).fac, 1)} továren</span></span>
+                  <button className="sbtn" disabled={!!why} onClick={() => buyOnMarket(x.id, n)} title={why || `Koupit ${fmtInt(n)} ks za ${fmtNum(p.fac, 1)} civilních továren na ${MKT.DAYS} dní`}>Koupit {fmtInt(n)}</button>
+                </article>
+              );
+            })}
+          </div>
+        )}
+        <div className="sec-head"><h3>Prodat ze skladu</h3><span className="muted">klik vystaví čtvrtinu skladu</span></div>
+        <div className="mkt-sell">
+          {MKT_EQ.filter((eq) => (st[eq] || 0) >= MKT.MIN_N).map((eq) => {
+            const n = Math.max(MKT.MIN_N, Math.floor((st[eq] || 0) / 4)), why = offerBlock(state, me, eq, n);
+            return (
+              <button key={eq} className="mkt-tile" disabled={!!why} onClick={() => sellOnMarket(eq, n)} title={why || `Vystavit ${fmtInt(n)} ks (${EQUIP[eq].n}); kupec zaplatí ${fmtNum(marketPrice(eq, n).fac, 1)} civilních továren na ${MKT.DAYS} dní`}>
+                <EqTile eq={eq} size={40} /><b>{fmtInt(st[eq])}</b>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <aside className="prod-right">
+        <div className="sec-head"><h3>Vaše nabídky</h3></div>
+        {!offers.filter((x) => x.o === me).length ? <p className="empty">Nic nenabízíte.</p> : (
+          <ul className="deal-list">
+            {offers.filter((x) => x.o === me).map((x) => (
+              <li key={x.id} className="deal"><EqTile eq={x.eq} size={32} /><span className="deal-mid"><b>{EQUIP[x.eq].n}</b><span className="muted">{fmtInt(x.n)} ks čeká na kupce</span></span>
+                <button className="icon-btn sm" onClick={() => pullOffer(x.id)} aria-label="Stáhnout nabídku" title="Stáhnout – kusy se vrátí do skladu"><Icon name="trash" size={15} /></button></li>
+            ))}
+          </ul>
+        )}
+        <div className="sec-head"><h3>Probíhající obchody</h3></div>
+        {!deals.length ? <p className="empty">Žádné obchody.</p> : (
+          <ul className="deal-list">
+            {deals.map((d) => {
+              const sell = d.s === me, partner = sell ? d.b : d.s;
+              return (
+                <li key={d.id} className="deal"><EqTile eq={d.eq} size={32} /><Flag tag={w.owners[partner].tag} width={26} />
+                  <span className="deal-mid"><b>{EQUIP[d.eq].n}</b><span className="muted">{sell ? 'prodej' : 'nákup'} · {sell ? '+' : '−'}{fmtNum(d.fac, 1)} továren · zbývá {fmtInt(d.left)} ks, {d.days} d</span>
+                    <span className="deal-bar"><i style={{ width: `${Math.round(100 * (1 - d.days / MKT.DAYS))}%` }} /></span></span></li>
+              );
+            })}
+          </ul>
+        )}
+      </aside>
+    </div>
+  );
+}
+
 /** Celoobrazovkové okno Průmysl (klávesa I): výroba (linky a dlaždice výzbroje), stavby (státy a fronta), obchod se surovinami. */
 export function IndustryPanel() {
   const state = useGameSlow((s) => s, 500);
@@ -352,7 +419,7 @@ export function IndustryPanel() {
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít okno" title="Zavřít (Esc)"><Icon name="close" size={20} /></button>
       </header>
       <div className="prod-body">
-        {tab === 'prod' ? <ProdTab state={state} me={me} sum={sum} /> : tab === 'trade' ? <TradeTab state={state} me={me} sum={sum} /> : null}
+        {tab === 'prod' ? <ProdTab state={state} me={me} sum={sum} /> : tab === 'trade' ? <TradeTab state={state} me={me} sum={sum} /> : tab === 'mkt' ? <MarketTab state={state} me={me} sum={sum} /> : null}
       </div>
     </div>
   );

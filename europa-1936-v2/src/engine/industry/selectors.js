@@ -1,5 +1,6 @@
 // Dotazy na průmysl pro rozhraní a AI (čisté, bez změn stavu).
 import { nearTrack } from '../army/logistics.js';
+import { marketFac } from './market.js';
 import { hasRail, isCoastal, provLevel } from './commands.js';
 import { getWorld } from '../world.js';
 import { I } from './constants.js';
@@ -35,12 +36,12 @@ function industrySummary(state, o) {
   const res = resFlows(t, dem, ind.trade, o, mods.extract + pm.extract);
   let imports = 0;
   for (const r in res) imports += res[r].imp;
-  const tradeCiv = imports * I.TRADE_CIV * (1 + pm.imp);
+  const tradeCiv = imports * I.TRADE_CIV * (1 + pm.imp) - marketFac(state, o);   // S5b: platby za výzbroj z trhu (+ prodej přidává)
   const used = lines.filter((l) => !isShip(l.eq)).reduce((a, l) => a + l.fac, 0);
   const dockUsed = lines.filter((l) => isShip(l.eq)).reduce((a, l) => a + l.fac, 0);
   return {
     o, civ: t.civ, mil: t.mil, dok: t.dok, dockUsed, dockFree: Math.max(0, t.dok - dockUsed), occupied: t.occ,
-    cons: consOf(state, o), consFac: use.consFac, tradeCiv, imports,
+    cons: consOf(state, o), consFac: use.consFac, tradeCiv, imports, civAfterCons: use.civAfterCons, mkt: marketFac(state, o),
     civAvail: Math.max(0, use.civAfterCons - tradeCiv), milAvail: use.milAvail, milUsed: used, milFree: Math.max(0, Math.floor(use.milAvail - used + 1e-9)),
     points: Math.max(0, use.civAfterCons - tradeCiv) * I.IC_PER_FAC * (1 + mods.build + pm.build) * out,
     effCap: I.EFF_CAP + mods.effCap,
