@@ -116,6 +116,12 @@ export function drawCounter(ctx, c, x, y, look, opts) {
   // stín
   ctx.fillStyle = 'rgba(0,0,0,0.38)';
   roundRect(ctx, x0 + 1.5, y0 + 2, w, h + (2 * COUNTER.BAR + COUNTER.GAP + 1.5) * s, 3.5 * s); ctx.fill();
+  // ZM1: skupina více divizí – za žetonem vykukuje druhý (balíček), aby byla skupina poznat i bez čísla
+  if (c.n > 1) {
+    const o = Math.max(2, 3 * s);
+    ctx.fillStyle = look.fill; roundRect(ctx, x0 + o, y0 - o, w, h, 3 * s); ctx.fill();
+    ctx.strokeStyle = 'rgba(6,10,14,0.85)'; ctx.lineWidth = 1; ctx.stroke();
+  }
   // tělo žetonu: svislý přechod
   const grad = ctx.createLinearGradient(0, y0, 0, y0 + h);
   grad.addColorStop(0, look.top); grad.addColorStop(1, look.fill);

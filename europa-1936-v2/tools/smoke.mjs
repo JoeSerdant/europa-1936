@@ -754,7 +754,8 @@ try {
   // výkon vrstvy žetonů (čas příkazů v jednom snímku)
   const unitsMs = await E(() => {
     const m = window.__e1936.map, r = m.renderer;
-    m.cam.zoom = 1; m.cam.x = 1000; m.cam.y = 900;
+    const c0 = r.units.counters[0] || { x: 5100, y: 1950 };   // ZM1: zblízka nad žetony (v dálce se skrývají, měření by bylo prázdné)
+    m.cam.zoom = 2; m.cam.x = c0.x; m.cam.y = c0.y;
     let guard = 0; do { r.draw(m.cam, m.dpr); } while (r.pending && guard++ < 300);
     const t = []; for (let i = 0; i < 30; i++) { r.draw(m.cam, m.dpr); t.push(r.stats.unitsMs); }
     t.sort((a, b) => a - b);
