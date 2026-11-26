@@ -65,6 +65,13 @@ export function Legend() {
     );
   } else if (mode === 'weather') {
     body = <p className="legend-note">Bílá = mráz (zpomaluje pochod a obnovu organizace, snižuje útok), hnědá = bláto na jaře a na podzim, oranžová = vedro. Barvy se mění s ročním obdobím.</p>;
+  } else if (mode === 'airsup') {
+    body = (
+      <>
+        <div className="ramp"><div style={{ background: 'linear-gradient(90deg, rgb(214,68,48), rgb(156,122,70), rgb(98,176,92))' }} /><span>nepřítel</span><span>vaše převaha</span></div>
+        <p className="legend-note">Převaha ve vzduchu nad strategickými regiony podle hlídek a stíhání (vaše strana proti nepřátelům). Při nepřátelské převaze vaše divize v regionu slábnou v útoku i obraně. Šedé regiony nikdo nehlídá.</p>
+      </>
+    );
   } else if (mode === 'states') {
     body = <p>Odstíny rozlišují jednotlivé státy – stát je jednotka vlastnictví.</p>;
   }

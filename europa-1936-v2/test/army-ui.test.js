@@ -568,7 +568,7 @@ describe('selektory armády pro rozhraní', () => {
 // ------------------------------------------------------------------------------------------------------------------------------
 describe('mapový režim Zásobování', () => {
   it('je sedmý v seznamu režimů (klávesa 7), za ním Průmysl (klávesa 8)', () => {
-    expect(MODES.length).toBe(11);
+    expect(MODES.length).toBe(12);
     expect(MODES[6].id).toBe('supply');
     expect(MODES[7].id).toBe('industry');
     expect(MODES[8].id).toBe('resistance');

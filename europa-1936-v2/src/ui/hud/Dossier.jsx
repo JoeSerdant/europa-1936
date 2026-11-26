@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUi, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { fogOn, visibleLand, seesDivision, seesFleet, getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, RESOURCES, personaOf } from '../../engine/index.js';
+import { fogOn, visibleLand, seesDivision, seesFleet, getWorld, fleetsInSea, diplomacyOf, TERRAIN_CS, CLIMATE_CS, divisionsByProvince, stateIndustry, occupationOf, fortOf, weatherAt, BUILDINGS, RESOURCES, personaOf, AIR } from '../../engine/index.js';
 import { selectLabel, setSelection, declareWarOn, makePeaceWith, playerIdx, setIndTab, openPanel, pickBuild, justifyOn, selectFleet, openBattle } from '../actions.js';
 
 /** Otevře panel Stavby (bez přepínání – už otevřený zůstane). */
@@ -102,9 +102,15 @@ function StateIndustry({ s }) {
         <span title={`${BUILDINGS.inf.n}: úroveň ${info.inf} z ${BUILDINGS.inf.max}`}><Icon name="road" size={15} /><Pips n={info.inf} max={BUILDINGS.inf.max} q={q('inf').length} /></span>
         <span title={`${BUILDINGS.afb.n}: úroveň ${info.afb} z ${BUILDINGS.afb.max}`}><Icon name="plane" size={15} /><Pips n={info.afb} max={BUILDINGS.afb.max} q={q('afb').length} /></span>
         <span title={`${BUILDINGS.radar.n}: úroveň ${info.radar} z ${BUILDINGS.radar.max}`}><Icon name="eye" size={15} /><Pips n={info.radar} max={BUILDINGS.radar.max} q={q('radar').length} /></span>
+        <span title={`${BUILDINGS.aa.n}: úroveň ${info.aa} z ${BUILDINGS.aa.max}`}><Icon name="target" size={15} /><Pips n={info.aa} max={BUILDINGS.aa.max} q={q('aa').length} /></span>
         {info.port ? <span title={`${BUILDINGS.nb.n}: úroveň ${info.nb} z ${BUILDINGS.nb.max} – opravy lodí`}><Icon name="ship" size={15} /><Pips n={info.nb} max={BUILDINGS.nb.max} q={q('nb').length} /></span> : null}
         <span title={info.hub ? `${BUILDINGS.hub.n}: postaven` : `${BUILDINGS.hub.n}: není`}><Icon name="box" size={15} /><Pips n={info.hub} max={1} q={q('hub').length} /></span>
       </div>
+      {info.dmg > 0 && (   /* S8: továrny poškozené bombardováním – pruh, opravuje se denně */
+        <div className="st-dmg" title={`Bombardováním poškozeno ${Math.round(info.dmg * 100)} % továren a loděnic státu – nepracují, dokud se neopraví (asi ${Math.ceil(info.dmg / AIR.DMG_REPAIR)} dní).`}>
+          <Icon name="attack" size={14} /><span className="st-dmg-bar"><i style={{ width: `${Math.round(info.dmg * 100)}%` }} /></span><b>{Math.round(info.dmg * 100)} %</b>
+        </div>
+      )}
       {res.length > 0 && (
         <div className="st-res">{res.map(([r, n]) => <span key={r} title={`${RESOURCES[r].n}: těžba ${fmtNum(n, 1)} za den`}><ResIcon r={r} size={20} /><b>{fmtNum(n, 1)}</b></span>)}</div>
       )}

@@ -7,8 +7,8 @@ import { fmtNum, fmtDays } from '../format.js';
 import { queueFlow } from './flow.js';
 
 // Stavby jako v HOI4 (M103): úzký panel vlevo – nejdřív budova, pak klik na stát na mapě (mapa v režimu Stavby ukazuje, kde to jde).
-const KINDS = ['civ', 'mil', 'dok', 'inf', 'rail', 'afb', 'radar', 'nb', 'hub', 'fort', 'cfort'];   // F4c: námořní základna, zásobovací uzel, pobřežní pevnost; S6: železnice
-const KIND_ICON = { civ: 'industry', mil: 'army', dok: 'navy', inf: 'supply', afb: 'air', radar: 'eye', nb: 'ship', hub: 'box', fort: 'shield', cfort: 'flag', rail: 'road' };
+const KINDS = ['civ', 'mil', 'dok', 'inf', 'rail', 'afb', 'radar', 'aa', 'nb', 'hub', 'fort', 'cfort'];   // S8: protiletadlová obrana   // F4c: námořní základna, zásobovací uzel, pobřežní pevnost; S6: železnice
+const KIND_ICON = { civ: 'industry', mil: 'army', dok: 'navy', inf: 'supply', afb: 'air', radar: 'eye', aa: 'target', nb: 'ship', hub: 'box', fort: 'shield', cfort: 'flag', rail: 'road' };
 const TABS = [{ id: 'build', name: 'Stavby' }, { id: 'prod', name: 'Výroba' }, { id: 'trade', name: 'Obchod' }];
 
 /** Státy (pevnost: provincie) s nejvíc volného místa pro budovu `kind` – rychlá volba bez hledání na mapě. */

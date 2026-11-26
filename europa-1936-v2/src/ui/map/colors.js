@@ -7,6 +7,7 @@ import { friendsOf } from '../../engine/dip/accessCore.js';
 import { infraOf } from '../../engine/industry/infra.js';
 import { buildRoom, fortRoom } from '../../engine/industry/selectors.js';
 import { BUILDINGS } from '../../data/industry/buildings.js';
+import { airSupOf } from '../../engine/air/zones.js';
 
 export const SEA_COLOR = '#17364f';
 export const LAKE_COLOR = '#3f6d8f';
@@ -26,6 +27,7 @@ export const MODES = [
   { id: 'resistance', name: 'Odboj', hint: 'Odboj v okupovaných státech' },
   { id: 'compliance', name: 'Poddajnost', hint: 'Poddajnost okupovaných států' },
   { id: 'weather', name: 'Počasí', hint: 'Mráz, bláto a vedro podle ročního období' },
+  { id: 'airsup', name: 'Vzdušná převaha', hint: 'Kdo ovládá nebe nad strategickými regiony' },   // S8
 ];
 
 export const CLIMATE_COLORS = {
@@ -86,6 +88,7 @@ export function fillColors(world, game, mode, focus = 0) {
   const me = game && game.player ? world.ownerIdx[game.player] : 0;
   const reach = mode === 'supply' && me ? supplyFlow(game.ctrl, me, infraOf(game), friendsOf(game.dip, me), seaPorts(game, me)) : null;
   // M103: režim „Stavby“ – kde jde zvolená budova postavit (zelená podle volného místa), kde je plno (hnědá), cizí ztlumené
+  const az = {};   // S8: převaha podle regionu (mezipaměť pro jeden výpočet)
   const bk = mode.startsWith('build:') ? mode.slice(6) : '';
   const room = new Map();
   const roomOf = (p) => {
@@ -146,6 +149,13 @@ export function fillColors(world, game, mode, focus = 0) {
         if (!e) { c = mix(ownerRgb[o], [40, 44, 48], 0.62); break; }
         const v = mode === 'resistance' ? e.r : 1 - e.c;     // červená = vysoký odboj / nízká poddajnost
         c = mix([98, 176, 92], [214, 68, 48], clamp01(v));
+        break;
+      }
+      case 'airsup': {   // S8: převaha strany hráče nad regionem – zelená = naše, červená = nepřítel, šedá = nikdo nelétá
+        const r = world.region[p];
+        if (!(r in az)) az[r] = me && game ? airSupOf(game, me, r) : null;
+        const v = az[r], base = mix(ownerRgb[o], [40, 44, 48], 0.62);
+        c = v == null ? base : mix(base, mix([214, 68, 48], [98, 176, 92], v), 0.78);
         break;
       }
       case 'supply': {

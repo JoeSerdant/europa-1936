@@ -531,6 +531,9 @@ kbd {
 .st-slot .icon { position: relative; z-index: 1; }
 .st-shared { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 8px; }
 .st-shared > span { display: inline-flex; align-items: center; gap: 6px; color: var(--brass-hi); }
+.st-dmg { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; color: #e08a6a; font-size: 12px; }
+.st-dmg-bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.st-dmg-bar > i { display: block; height: 100%; background: linear-gradient(90deg, #b8553a, #e08a6a); }   /* S8: poškození továren bombardováním */
 .st-res { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
 .st-res > span { display: inline-flex; align-items: center; gap: 5px; padding: 3px 7px 3px 4px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
 .st-res b { font: 600 13px/1 var(--display); color: var(--paper); }
