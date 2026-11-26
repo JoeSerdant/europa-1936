@@ -11,6 +11,7 @@ import { countryStats } from '../selectors.js';
 import { getWorld } from '../world.js';
 import { manMult } from '../politics/core.js';
 import { atWar } from './war.js';
+import { NAV } from '../nav/constants.js';
 
 function dailyReinforce(ctx) {
   const mil = ctx.mil;
@@ -99,6 +100,18 @@ function monthlyManpower(ctx) {
   }
 }
 
+/** S9: příprava vylodění – divize stojící ve vlastním přístavu (ne v boji, ne na pochodu) se denně připravuje o 1/`NAV.PREP_DAYS`; jinde příprava zmizí. */
+function dailyPrep(ctx) {
+  const w = getWorld(), step = 1 / NAV.PREP_DAYS, ctrl = ctx.state.ctrl;
+  for (let id = 1; id < ctx.divs.length; id++) {
+    const d = ctx.divs[id];
+    if (!d) continue;
+    const here = w.portLevel[d.p] > 0 && ctrl[d.p] === d.o && !d.b && !d.path.length;
+    if (here) { if ((d.ip || 0) < 1) editDiv(ctx, id).ip = Math.min(1, Math.round(((d.ip || 0) + step) * 100) / 100); }
+    else if (d.ip) delete editDiv(ctx, id).ip;
+  }
+}
+
 /** Denní krok armády jako generátor (F2): přestávky po zásobování a po každé plánované armádě (`plansSteps`). */
 export function* dailySteps(ctx) {
   dailySupply(ctx);
@@ -108,6 +121,7 @@ export function* dailySteps(ctx) {
   dailyDigIn(ctx);
   dailyPlanning(ctx);
   dailyFallback(ctx);   // F4c: ústupové linie
+  dailyPrep(ctx);       // S9: příprava vylodění
   dailyLeaders(ctx);
   yield* plansSteps(ctx);
   const d = dateOfHour(ctx.tick);

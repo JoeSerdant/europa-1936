@@ -7,3 +7,4 @@ export { minesAndRepairs } from './day.js';
 export { transportsOf, tradeRoute, tradeStatus, tradeFactor, convoysOf, routeRisk, needOf } from './convoy.js';
 export { createNav } from './setup.js';
 export { SHIPS, SHIP_IDS, SHIP_PROD, NAVY_NATIONAL } from '../../data/navy/index.js';
+export { shipLvSnap, refitNeed, refitBlock, refitFleet, refitDok, refitDaysOf, refitBaseAt } from './refit.js';   // S9

@@ -103,6 +103,7 @@ export const HIST_STRATEGIES = [
   { id: 'ger_ruin', tag: 'GER', from: 3260, until: 3800, needWar: 'SOV', spirit: 'zhroucene_hospodarstvi' },   // M96: bombardované továrny, ztracená ropa
   // vylodění Spojenců: Sicílie a Itálie 1943, Normandie 1944
   // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
+  { id: 'egy_holdout', tag: 'EGY', from: 1600, until: 3600, holdout: true, share: 0.995 },   // S9: Egypt (britská základna) nikdy nepadl – kapituluje až při úplné okupaci
   { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true, share: 0.995 },   // W6: vlastní hranice – posledních pár provincií padne až s kapitulací 8. 5. 1945
   { id: 'hun_holdout', tag: 'HUN', from: 2000, until: 3381, holdout: true },   // W2: Maďarsko vytrvá do dubna 1945 (Budapešť padla v únoru, poslední území 4. 4. 1945)
   { id: 'slo_holdout', tag: 'SLO', from: 2000, until: 3395, holdout: true },   // Slovensko do dubna 1945
@@ -112,7 +113,7 @@ export const HIST_STRATEGIES = [
   { id: 'usa_hun_border', tag: 'USA', from: 2000, until: 3200, noEnter: 'HUN' },   // F3: do 8. 5. 1945
   { id: 'ger_surrender', tag: 'GER', from: 3415, until: 3800, armistice: 'SOV', held: 20, force: 3415, conf: true },   // F4c: natvrdo 8. 5. 1945
   { id: 'ita_holdout', tag: 'ITA', from: 2400, until: 2795, holdout: true },   // F4: režim vydrží do vylodění na Sicílii a pádu v září 1943
-  { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },
+  { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2795 },   // S9: příměří 27. 8. 1943 natvrdo (nezávisle na průběhu vylodění na Sicílii)
   { id: 'husky', tag: 'ENG', from: 2650, until: 2950, invade: 'ITA', at: 'ITA' },
   { id: 'overlord', tag: 'ENG', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },
   { id: 'overlord_usa', tag: 'USA', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },

@@ -1388,6 +1388,27 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Rozhraní**: mapový režim *Vzdušná převaha* (zelená = převaha strany hráče, červená = nepřítel, šedá = nikdo nehlídá; překreslí se
   při změně `air.az`), karta státu ukazuje protiletadlovou obranu jako tečky a poškození továren jako pruh, panel Staveb nabízí budovu.
 
+## 4zzzzzzzzzzzzzzz. Přestavby flotil, úder na přístav a příprava vylodění (S9, `GAME_VERSION = 56`)
+
+- **Přestavby** (`nav/refit.js`): flotila má `f.lv` = snímek úrovní a návrhů svých typů lodí (`{ typ: úroveň, des: { typ: návrh } }`,
+  `shipLvSnap`) ze stavby (`formFleet`, nová hra a scénář přes `snapFleets`) nebo z poslední přestavby; sílu počítá `fleetPower(…, f.lv)`
+  (typ, který snímek nezná, má úroveň země). Zastaralé typy vrací `refitNeed`. `refitFleet` (kontroly `refitBlock`: flotila stojí
+  v oblasti s vlastním přístavem s námořní základnou, není na cestě) nastaví `f.rf` = dny (`NAV.REFIT_DAYS`, každá úroveň základny
+  nad první o 10 % méně); `refitDay` v `navDay` odpočítává, po dokončení nový snímek a záznam deníku `refit` (jen hráč); ztráta
+  základny přestavbu přeruší. Během přestavby flotila nepluje ani nebere misi, v boji má `NAV.REFIT_POW` síly a zabírá
+  `NAV.REFIT_DOK` loděnice na loď (`refitDok`, odečítá `industryDay` od kapacity lodních linek).
+- **Úder na přístav** (mise křídla `port`, letouny `bit`, `tac`, `str`): cílem je nepřátelský stát s přístavem; flotily nepřítele, které
+  stojí (bez cesty) v mořích přístavů státu, dostanou poškození jako úder na lodě × `AIR.PORT_K`; protiletadlová obrana státu sestřeluje.
+  AI: každé `AI.S9_PORT_EVERY`-té křídlo strategických bombardérů (`portStrikeTarget`), přestavba zastaralé flotily doma bez mise
+  a bez krytí vylodění (`aiRefit`, jedna najednou, týdně). S historickou AI úder na přístav nepoužívá (ochromení flotil ve Středomoří
+  měnilo průběh války); koleje `egy_holdout` (Egypt kapituluje jen při úplné okupaci) a `ita_armistice` s `force` = začátek okna
+  (příměří Itálie 27. 8. 1943 natvrdo).
+- **Příprava vylodění**: divize má `d.ip` (0–1) – roste o 1/`NAV.PREP_DAYS` denně, když stojí ve vlastním přístavu mimo boj a pochod
+  (`dailyPrep`), jinde zmizí. Na nepřátelské pobřeží vypluje jen s `NAV.PREP_MIN` (`sailBlock`); při vylodění ztratí navíc
+  `NAV.PREP_ORG × (1 − ip)` organizace a příprava se vynuluje.
+- **Rozhraní**: karta flotily ukazuje zastaralou techniku s tlačítkem Přestavět (důvod zákazu v nápovědě) a průběh přestavby,
+  křídlo má misi Úder na přístav, lišta výběru ukazuje přípravu vylodění divizí v přístavu.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1603,6 +1624,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S9** | **Námořnictvo**: přestavby flotil v přístavu (technika a návrhy se u lodí projeví až po přestavbě), úder letectva na přístav, příprava vylodění divizí | ✅ |
 | **S8** | **Letecké zóny a strategické bombardování**: převaha ve vzduchu nad strategickými regiony (postih divizí), poškození továren bombardováním a jejich oprava, protiletadlová obrana, mapový režim Vzdušná převaha | ✅ |
 | **S7** | **Odboj a okupační zákony**: zákony pro okupovaná území, posádky za lidskou sílu, kolaborantské vlády | ✅ |
 | **S6** | **Zásobování jako v HOI4**: lokomotivy a nákladní auta jako výzbroj zásobování s opotřebením, stavba železnice po provinciích | ✅ |

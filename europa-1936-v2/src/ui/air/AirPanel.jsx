@@ -8,8 +8,8 @@ import { airOf, targetsFor, missionBlock, getWorld, PLANES, PLANE_IDS, AIR, afbO
 import { playerIdx, formAirWing, disbandAirWing, reinforceAirWing, setAirMission, selectLabel, nukeState } from '../actions.js';
 import { fmtInt } from '../format.js';
 
-const MISSIONS = { air: 'Hlídky', int: 'Stíhání bombardérů', cas: 'Podpora boje', bomb: 'Bombardování', nav: 'Úder na lodě' };   // F4c: stíhání a úder na lodě
-const MISSION_ICON = { '': 'stop', air: 'shield', int: 'plane', cas: 'swords', bomb: 'target', nav: 'ship' };   // UI: mise jako ikony
+const MISSIONS = { air: 'Hlídky', int: 'Stíhání bombardérů', cas: 'Podpora boje', bomb: 'Bombardování', nav: 'Úder na lodě', port: 'Úder na přístav' };   // S9: úder na přístav   // F4c: stíhání a úder na lodě
+const MISSION_ICON = { '': 'stop', air: 'shield', int: 'plane', cas: 'swords', bomb: 'target', nav: 'ship', port: 'navy' };   // UI: mise jako ikony
 const stateName = (s) => getWorld().states[s].n;
 const COLOR = { sti: '#7fb5c9', bit: '#d6b55c', tac: '#d9533a', str: '#b86dd1', pal: '#5fa38a' };
 

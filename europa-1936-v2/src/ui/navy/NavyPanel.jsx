@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { navyOf, SHIPS, SHIP_IDS, getWorld, industryOf, NAV_MISSIONS, NAV_MISSION_IDS } from '../../engine/index.js';
-import { playerIdx, newFleet, selectFleet, fleetMission, stopSelectedFleet, disbandSelectedFleet, renameSelectedFleet, selectLabel } from '../actions.js';
+import { playerIdx, newFleet, selectFleet, fleetMission, refitOwnFleet, stopSelectedFleet, disbandSelectedFleet, renameSelectedFleet, selectLabel } from '../actions.js';
 import { fmtInt, fmtDays } from '../format.js';
 import { EquipIcon } from '../industry/EquipIcon.jsx';
 
@@ -40,6 +40,16 @@ function Fleet({ f, sel, home }) {
       {f.dm ? (
         <div className="fl-deck low" title="Poškození flotily: oslabuje palbu i odolnost. Opravuje se v oblasti s vlastním přístavem – rychleji s námořní základnou.">
           <Icon name="build" size={14} /><span className="deck-bar"><i style={{ width: `${Math.round(f.dm * 100)}%`, background: '#d4573a' }} /></span><b>{Math.round(f.dm * 100)} %</b>
+        </div>
+      ) : null}
+      {f.rf ? (   /* S9: přestavba v přístavu */
+        <div className="fl-deck" title="Přestavba: flotila stojí v přístavu, v boji má poloviční sílu a zabírá loděnice. Po dokončení dostane nejnovější techniku a návrhy lodí.">
+          <Icon name="build" size={14} /><span className="deck-bar"><i style={{ width: `${Math.round(100 * (1 - f.rf / Math.max(f.rf, f.refitDays)))}%`, background: '#7fb5c9' }} /></span><b>{fmtDays(f.rf)}</b>
+        </div>
+      ) : f.old ? (
+        <div className="fl-refit">
+          <span title={`Zastaralé typy lodí: ${f.old}. Výzkum a nové návrhy se u lodí projeví až po přestavbě v přístavu s námořní základnou.`}><Icon name="research" size={13} />Zastaralá technika</span>
+          <button className="sbtn sm" disabled={!!f.refitWhy} onClick={() => refitOwnFleet(f.id)} title={f.refitWhy || `Přestavět v přístavu (${fmtDays(f.refitDays)}, zabírá loděnice).`}><Icon name="build" size={13} />Přestavět</button>
         </div>
       ) : null}
       {f.blocked ? <p className="pol-block">Protivník ovládá oblast.</p> : null}

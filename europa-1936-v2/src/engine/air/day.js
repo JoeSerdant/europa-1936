@@ -48,11 +48,12 @@ export function airDay(state) {
   for (const wg of wings) if (wg && wg.m === 'int') intc.set(key(wg.o, wg.to), (intc.get(key(wg.o, wg.to)) || 0) + power(wg, 'atk') * AIR.INT_MULT);
   const foesInt = (o, s) => { let e = 0; for (const [k, v] of intc) { const [p, z] = k.split(':').map(Number); if (z === s && p !== o && atWar(state.mil, o, p)) e += v; } return e; };
   const strikers = new Set();   // `${o}:${s}` – země s údernými misemi nad státem (stíhání má co stíhat)
-  for (const wg of wings) if (wg && (wg.m === 'cas' || wg.m === 'bomb' || wg.m === 'nav')) strikers.add(key(wg.o, wg.to));
+  for (const wg of wings) if (wg && (wg.m === 'cas' || wg.m === 'bomb' || wg.m === 'nav' || wg.m === 'port')) strikers.add(key(wg.o, wg.to));
   const enemyStrikes = (o, s) => { for (const k of strikers) { const [p, z] = k.split(':').map(Number); if (z === s && p !== o && atWar(state.mil, o, p)) return true; } return false; };
   // F4c: úder na lodě – nepřátelské flotily v mořích u cílového státu
   const fleetsNear = (o, s) => (state.nav ? state.nav.fleets.map((f, i) => (f && atWar(state.mil, o, f.o) && seasOfState(s).includes(f.p) ? i : 0)).filter(Boolean) : []);
   const navStrikes = [];
+  const portSeas = (s) => new Set(w.states[s].v.filter((p) => w.portLevel[p] > 0).map((p) => w.portSea[p]));   // S9: moře přístavů státu
   const foesPatrol = (o, s) => {
     let e = 0;
     for (const [k, v] of patrol) { const [p, z] = k.split(':').map(Number); if (z === s && p !== o && atWar(state.mil, o, p)) e += v; }
@@ -88,10 +89,14 @@ export function airDay(state) {
       const cov = rocket ? 1 : cover(wg.o, wg.to, e + foesInt(wg.o, wg.to));   // F4c: nepřátelské stíhání oslabí krytí úderných misí
       frac = rocket ? AIR.ROCKET_USE : frac + AIR.LOSS_INT * (1 - cov);
       const tgt = state.stateOwner[wg.to];   // S8: protiletadlová obrana nepřátelského státu sestřeluje bombardéry a bitevní letouny
-      if (!rocket && (wg.m === 'bomb' || wg.m === 'cas') && tgt && tgt !== wg.o && atWar(state.mil, wg.o, tgt)) frac += AIR.AA_LOSS * aaOf(state.ind, wg.to);
+      if (!rocket && (wg.m === 'bomb' || wg.m === 'cas' || wg.m === 'port') && tgt && tgt !== wg.o && atWar(state.mil, wg.o, tgt)) frac += AIR.AA_LOSS * aaOf(state.ind, wg.to);
       if (wg.m === 'nav') {
         const near = fleetsNear(wg.o, wg.to);
         if (near.length) { frac += AIR.LOSS_NAV; navStrikes.push({ ids: near, p: power(wg, 'cas') * cov }); }
+      }
+      if (wg.m === 'port') {   // S9: úder na přístav – flotily, které stojí v přístavních vodách cíle (bez cesty), dostanou víc
+        const ports = portSeas(wg.to), near = state.nav ? state.nav.fleets.map((f, i) => (f && !f.path.length && ports.has(f.p) && atWar(state.mil, wg.o, f.o) ? i : 0)).filter(Boolean) : [];
+        if (near.length) { frac += AIR.LOSS_NAV; navStrikes.push({ ids: near, p: power(wg, PLANES[wg.t].cas > PLANES[wg.t].bomb ? 'cas' : 'bomb') * cov * AIR.PORT_K }); }
       }
       if (wg.m === 'cas') {
         sup[key(wg.o, wg.to)] = (sup[key(wg.o, wg.to)] || 0) + power(wg, 'cas') * cov;

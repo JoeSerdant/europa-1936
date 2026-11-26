@@ -8,6 +8,7 @@ import { convoysOf, tradeFactor } from '../nav/convoy.js';
 import { polModsOf, outMult, consOf } from '../politics/core.js';
 import { fuelDay } from '../fuel/index.js';
 import { AIR } from '../air/constants.js';
+import { refitDok } from '../nav/refit.js';
 import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
 
 const warKey = (a, b) => (a < b ? a * 1000 + b : b * 1000 + a);
@@ -24,7 +25,7 @@ export function industryDay(state) {
   const use = new Array(nO), dem = new Array(nO);
   for (let o = 1; o < nO; o++) {
     use[o] = factoryUse(tally[o], consOf(state, o));
-    linesBy[o] = trimAllLines(linesBy[o], use[o].milAvail, tally[o].dok);
+    linesBy[o] = trimAllLines(linesBy[o], use[o].milAvail, Math.max(0, tally[o].dok - refitDok(state, o)));   // S9: přestavby flotil zabírají loděnice
     dem[o] = demandOf(linesBy[o], state.mil.lv[o]);
   }
 

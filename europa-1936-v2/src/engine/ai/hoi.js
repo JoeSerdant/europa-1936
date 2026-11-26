@@ -14,6 +14,7 @@ import { orderRail, railBlock } from '../army/commands.js';
 import { build, buildFort, hasRail, provLevel } from '../industry/commands.js';
 import { buildRoom, fortRoom } from '../industry/selectors.js';
 import { reservedFleets } from './invasion.js';
+import { refitBlock, refitFleet } from '../nav/refit.js';
 import { AI } from './constants.js';
 
 /** Nečinné bojové flotily země (bez mise, nestojí na cestě, nejsou krytím invaze), vzestupně. */
@@ -59,11 +60,26 @@ export function navStrikeTarget(state, o, base, range) {
   return best;
 }
 
+/** S9: nepřátelský přístavní stát v doletu z `base`, v jehož přístavních vodách stojí nepřátelská válečná flotila (cíl úderu na přístav); 0 = žádný. */
+export function portStrikeTarget(state, o, base, range) {
+  const w = getWorld(), idle = new Set();
+  for (const f of state.nav.fleets) if (f && !f.path.length && atWar(state.mil, o, f.o) && powerOf(f.ships).atk) idle.add(f.p);
+  if (!idle.size) return 0;
+  let best = 0, bk = Infinity;
+  for (let s = 1; s < w.states.length; s++) {
+    const e = state.stateOwner[s];
+    if (!e || !atWar(state.mil, o, e) || !w.states[s].v.some((p) => w.portLevel[p] > 0 && idle.has(w.portSea[p]))) continue;
+    const km = stateKm(base, s);
+    if (km <= range && km < bk) { bk = km; best = s; }
+  }
+  return best;
+}
+
 /** Vlastní stát, nad kterým nepřítel létá údernou misi (cíl stíhání), nejbližší k základně `base` v doletu; 0 = žádný. */
 export function interceptTarget(state, o, base, range) {
   let best = 0, bk = Infinity;
   for (const wg of state.air.wings) {
-    if (!wg || !atWar(state.mil, o, wg.o) || !(wg.m === 'cas' || wg.m === 'bomb' || wg.m === 'nav') || state.stateOwner[wg.to] !== o) continue;
+    if (!wg || !atWar(state.mil, o, wg.o) || !(wg.m === 'cas' || wg.m === 'bomb' || wg.m === 'nav' || wg.m === 'port') || state.stateOwner[wg.to] !== o) continue;
     const km = stateKm(base, wg.to);
     if (km <= range && km < bk) { bk = km; best = wg.to; }
   }
@@ -79,6 +95,11 @@ export function aiAirMissions(state, o) {
     const range = PLANES[wg.t].range;
     if (wg.m === 'nav' && !navStrikeTarget(state, o, wg.s, range)) { state = setMission(state, wg.id, null); continue; }   // cíl odplul – křídlo se vrátí k běžným misím
     if (wg.m === 'int' && !interceptTarget(state, o, wg.s, range)) { state = setMission(state, wg.id, null); continue; }
+    if (wg.m === 'port' && !portStrikeTarget(state, o, wg.s, range)) { state = setMission(state, wg.id, null); continue; }   // S9: flotila odplula
+    if (!state.ai.hist && wg.t === 'str' && wg.m !== 'port' && wg.id % AI.S9_PORT_EVERY === 0) {   // jen volná historie: s historickou AI by ochromení flotil změnilo průběh války   // S9: každé tolikáté křídlo strategických bombardérů udeří na přístav s flotilou
+      const ps = portStrikeTarget(state, o, wg.s, range);
+      if (ps) { state = setMission(state, wg.id, 'port', ps); continue; }
+    }
     const ns = PLANES[wg.t].roles.includes('nav') && wg.m !== 'nav' ? navStrikeTarget(state, o, wg.s, range) : 0;
     if (ns && seasOfState(ns).length) {
       if ((k++ % AI.F4C_NAV_EVERY) === 0) state = setMission(state, wg.id, 'nav', ns);   // každé tolikáté křídlo s cílem v doletu
@@ -148,3 +169,16 @@ export function aiBuildsF4c(state, o) {
   return hs ? build(state, hs, 'hub') : state;
 }
 void BUILDINGS;
+
+/** S9: přestavba zastaralé flotily, která stojí doma bez mise a není krytím vylodění (jedna přestavba země najednou). */
+export function aiRefit(state, o) {
+  const fl = state.nav.fleets;
+  if (fl.some((f) => f && f.o === o && f.rf)) return state;
+  const res = new Set(reservedFleets(state, o));
+  for (let i = 1; i < fl.length; i++) {
+    const f = fl[i];
+    if (!f || f.o !== o || f.m || res.has(i) || refitBlock(state, i)) continue;
+    return refitFleet(state, i);
+  }
+  return state;
+}
