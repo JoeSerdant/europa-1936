@@ -7,7 +7,8 @@ import { getWorld, countryName, countryStats, formatDate, formatClock, togglePau
 import { setHelp, setMenuOpen, openOverview, togglePanel, playerIdx } from '../actions.js';
 import { fmtInt, fmtPop, fmtSpeed } from '../format.js';
 import { uiScale } from '../scale.js';
-import { targetBreakdown, ppBreakdown, manBreakdown, facBreakdown, fuelBreakdown, convoyBreakdown } from './breakdown.js';
+import { targetBreakdown, ppBreakdown, manBreakdown, facBreakdown, fuelBreakdown, convoyBreakdown, logBreakdown } from './breakdown.js';
+import { logRatios } from '../../engine/army/logistics.js';
 
 /** UI2: bublina s rozpisem hodnoty (jako v HOI4) – titulek, hodnota s cílem, řádky zdrojů, dopady a popis. Počítá se až při najetí myší. */
 function StatTip({ b, at }) {
@@ -166,6 +167,7 @@ export function TopBar() {
   const fuel = useGame((s) => { if (!s.player) return ''; const f = fuelOf(s, getWorldIdx(s)); return `${Math.floor(f.stock)}|${f.gain.toFixed(1)}|${f.use.toFixed(1)}|${f.low ? 1 : 0}`; });
   const [fuelStock, fuelGain, fuelUse, fuelLow] = fuel ? fuel.split('|') : [];
   const tension = useGame((s) => Math.round(worldTension(s) * 100));
+  const logi = useGame((s) => { if (!s.player) return 100; const r = logRatios(s, getWorld().ownerIdx[s.player]); return Math.round(Math.min(r.tr, r.tk) * 100); });
   return (
     <header className="topbar">
       <div className="tb-country">
@@ -192,6 +194,7 @@ export function TopBar() {
             <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} num={facN} opt tip={facBreakdown} />
             <Stat icon="general" label="Zkušenosti: armáda / letectvo / námořnictvo" value={xp} opt="wide" />
             <Stat icon="navy" label="Volné transporty" value={fmtInt(convoys)} opt tip={convoyBreakdown} />
+            <Stat icon="road" label="Logistika" value={`${logi} %`} num={logi} min={5} unit=" %" opt tip={logBreakdown} />
             {fuel && <Stat icon="supply" label="Palivo" hint={`Palivo: zásoba ${fuelStock}, výroba ${fuelGain} a spotřeba ${fuelUse} za den${fuelLow === '1' ? ' (nedostatek)' : ''}`} value={fuelStock} opt tip={fuelBreakdown} />}
             <Stat icon="regions" label="Napětí ve světě" value={`${tension} %`} num={tension} min={3} unit=" %" opt />
           </div>

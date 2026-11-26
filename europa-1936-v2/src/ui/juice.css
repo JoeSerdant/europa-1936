@@ -96,3 +96,5 @@
 .stat-tip dd.up { color: #9fd07e; }
 .stat-tip dd.down { color: #ff8b73; }
 .stat-tip p { margin: 4px 0 0; padding-top: 6px; border-top: 1px solid var(--rule); font-size: 12.5px; line-height: 1.4; color: var(--text-2); }
+
+.topbar:has(.stat-tip) { z-index: 40; }   /* UI2: bublina rozpisu nad lištou oken a upozorněními */
