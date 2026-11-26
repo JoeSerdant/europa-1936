@@ -1183,3 +1183,21 @@ button.st-row:hover { background: var(--ink-3); }
 /* UI10: stavby jako v HOI4 – paleta rozdělená na státní a provinční budovy */
 .bp-group { display: flex; flex-direction: column; gap: 4px; }
 .bp-gh { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; padding: 4px 8px; font: 600 12.5px/1 var(--display); letter-spacing: 0.04em; color: var(--paper); background: linear-gradient(90deg, #2a2516, #171a1c 75%); box-shadow: inset 0 0 0 1px #4a3f22; }
+
+/* UI14: vláda jako v HOI4 – portrét vůdce s tlačítkem národního cíle, duchové jako řada ikon */
+.lc-top { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: start; gap: 10px; }
+.lc-top .lc-portrait { width: 120px; height: 140px; max-height: none; aspect-ratio: auto; }
+.lc-portrait > svg { width: 100%; height: 100%; }
+.lc-focus { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 8px; width: 100%; padding: 7px 9px; border: 0; color: var(--brass-hi); text-align: left; background: linear-gradient(90deg, #2a2516, #171a1c); box-shadow: inset 0 0 0 1px var(--brass-lo); cursor: pointer; }
+.lc-focus > span:not(.bar) { display: flex; flex-direction: column; min-width: 0; }
+.lc-focus i { font-style: normal; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-3); }
+.lc-focus b { font: 600 14px/1.15 var(--display); color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-focus .bar { grid-column: 1 / -1; height: 4px; }
+.lc-focus.idle b { color: #ff9b86; }
+.lc-focus:hover { box-shadow: inset 0 0 0 1px var(--brass); }
+.lc-spirits li:not(.none) { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; color: var(--brass-hi); background: radial-gradient(circle at 35% 30%, #3a4a5a, #141c25 70%); box-shadow: inset 0 0 0 2px #5f7d99; }
+.lc-spirits li.good { box-shadow: inset 0 0 0 2px #7fb24d; color: #cfe3b8; }
+.lc-spirits li.bad { box-shadow: inset 0 0 0 2px #c95a45; color: #ffb19e; }
+.lc-spirits li.mixed { box-shadow: inset 0 0 0 2px var(--brass); }
+.prod-screen.politics-panel .leader-card { display: flex; flex-direction: column; align-items: stretch; }   /* UI14: portrét s cílem nahoře, pod ním vůdce, strany a duchové */
+.prod-screen.politics-panel .leader-card .lc-top .lc-portrait { grid-row: auto; }

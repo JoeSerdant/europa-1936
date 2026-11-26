@@ -4,7 +4,7 @@ const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h =
 const SKIN = ['#d9b08c', '#c99a74', '#e2bd98', '#b88563', '#d4a57e'];
 const HAIR = ['#2b221a', '#5a4632', '#8a7356', '#c9c2b4', '#3d3026'];
 
-/** Portrét `w`×`h`: `name` (rysy), `color` (uniforma, hex), `rank` 'M' | 'G' | '' (bez velitele = prázdný rámeček). */
+/** Portrét `w`×`h`: `name` (rysy), `color` (uniforma, hex), `rank` 'M' | 'G' | 'L' (UI14: civilní vůdce – oblek s kravatou, bez čepice) | '' (bez velitele = prázdný rámeček). */
 export function Portrait({ name = '', color = '#55606a', rank = '', w = 44, h = 54, className = '' }) {
   if (!rank) {
     return (
@@ -18,7 +18,8 @@ export function Portrait({ name = '', color = '#55606a', rank = '', w = 44, h = 
   const k = hash(name);
   const skin = SKIN[k % SKIN.length], hair = HAIR[(k >> 3) % HAIR.length];
   const jaw = 8 + ((k >> 6) % 3), mus = (k >> 9) % 3, glasses = (k >> 12) % 5 === 0;
-  const stars = rank === 'M' ? 4 : 2;
+  const civ = rank === 'L';
+  const stars = civ ? 0 : rank === 'M' ? 4 : 2;
   return (
     <svg className={`portrait ${className}`} width={w} height={h} viewBox="0 0 44 54" aria-hidden="true">
       <defs>
@@ -26,10 +27,11 @@ export function Portrait({ name = '', color = '#55606a', rank = '', w = 44, h = 
       </defs>
       <rect x="0" y="0" width="44" height="54" fill={`url(#pbg${k})`} />
       {/* trup a výložky */}
-      <path d="M4 54 Q5 38 22 35 Q39 38 40 54 Z" fill={color} />
+      <path d="M4 54 Q5 38 22 35 Q39 38 40 54 Z" fill={civ ? '#2a2f36' : color} />
       <path d="M4 54 Q5 38 22 35 Q39 38 40 54 Z" fill="#000" opacity="0.25" />
-      <path d="M16 36 L22 46 L28 36" fill="none" stroke="#e8e0c8" strokeWidth="1.2" opacity="0.8" />
-      <rect x="6" y="39" width="9" height="3" rx="1" fill="#d6b55c" /><rect x="29" y="39" width="9" height="3" rx="1" fill="#d6b55c" />
+      {civ ? <><path d="M17 36 L22 44 L27 36 Z" fill="#e8e0c8" /><path d="M21 37 L23 37 L23.6 46 L22 48 L20.4 46 Z" fill={color} /></>
+        : <><path d="M16 36 L22 46 L28 36" fill="none" stroke="#e8e0c8" strokeWidth="1.2" opacity="0.8" />
+          <rect x="6" y="39" width="9" height="3" rx="1" fill="#d6b55c" /><rect x="29" y="39" width="9" height="3" rx="1" fill="#d6b55c" /></>}
       {/* krk a hlava */}
       <rect x="18.5" y="28" width="7" height="8" fill={skin} />
       <ellipse cx="22" cy="22" rx={jaw} ry="10" fill={skin} />
@@ -39,11 +41,13 @@ export function Portrait({ name = '', color = '#55606a', rank = '', w = 44, h = 
       {mus === 1 && <path d="M18.5 27 Q22 25.4 25.5 27 Q22 28 18.5 27 Z" fill={hair} />}
       {mus === 2 && <path d="M20 27 H24 V28 H20 Z" fill={hair} />}
       <path d="M20 29.5 Q22 30.5 24 29.5" fill="none" stroke="#7a4c36" strokeWidth="0.8" />
-      {/* čepice */}
-      <path d="M11 15 Q22 4 33 15 L33 16.5 L11 16.5 Z" fill={color} />
-      <path d="M11 15 Q22 4 33 15 L33 16.5 L11 16.5 Z" fill="#000" opacity="0.15" />
-      <path d="M10 16.5 H34 L31 19 H13 Z" fill="#1b140d" />
-      <circle cx="22" cy="12.5" r="1.6" fill="#d6b55c" />
+      {/* čepice (civilní vůdce ji nemá) */}
+      {!civ && <>
+        <path d="M11 15 Q22 4 33 15 L33 16.5 L11 16.5 Z" fill={color} />
+        <path d="M11 15 Q22 4 33 15 L33 16.5 L11 16.5 Z" fill="#000" opacity="0.15" />
+        <path d="M10 16.5 H34 L31 19 H13 Z" fill="#1b140d" />
+        <circle cx="22" cy="12.5" r="1.6" fill="#d6b55c" />
+      </>}
       {/* hvězdy hodnosti */}
       {Array.from({ length: stars }, (_, i) => <path key={i} transform={`translate(${22 - (stars - 1) * 3 + i * 6} 49)`} d="M0 -2.2 L0.6 -0.7 L2.1 -0.7 L0.9 0.3 L1.3 1.9 L0 1 L-1.3 1.9 L-0.9 0.3 L-2.1 -0.7 L-0.6 -0.7 Z" fill="#f0d98e" />)}
       <rect x="0.5" y="0.5" width="43" height="53" fill="none" stroke="#8d7638" />
