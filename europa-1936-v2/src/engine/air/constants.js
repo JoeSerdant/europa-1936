@@ -24,6 +24,17 @@ export const AIR = {
   ACE_BONUS: 0.05,        // bonus síly hlídek křídla za každý stupeň es
   ACE_MAX: 3,             // nejvyšší stupeň es
   FORM_MAX: 400,
+  // S8: vzdušné zóny (převaha nad strategickým regionem) a strategické bombardování
+  AZ_INT: 0.5,            // stíhání se do převahy v regionu počítá polovinou síly
+  AZ_MIN: 40,             // nepřítel potřebuje aspoň tolik síly v regionu, aby převaha něco znamenala
+  AZ_ATK: 0.15,           // postih útoku divizí při úplné nepřátelské převaze (od 50 % podílu lineárně)
+  AZ_DEF: 0.08,           // postih obrany divizí při úplné nepřátelské převaze
+  BOMB_DMG: 0.00004,      // poškození továren státu za jednotku efektivní síly bombardování (podíl za den)
+  BOMB_DMG_DAY: 0.04,     // nejvíc za den
+  DMG_MAX: 0.8,           // nejvyšší poškození továren státu
+  DMG_REPAIR: 0.01,       // oprava poškozených továren za den
+  AA_RED: 0.12,           // protiletadlová obrana: o tolik méně poškození za úroveň
+  AA_LOSS: 0.006,         // denní ztráty letadel bombardujících a podporujících nad státem s protiletadlovou obranou (za úroveň)
   ROCKET_USE: 0.15,       // rakety (M82): podíl křídla raket spotřebovaný za den mise
   NUKE_DAYS: 150,         // jaderná zbraň: dnů výroby jedné bomby po dokončení technologie
   NUKE_MAX: 5,            // nejvíc bomb ve skladu

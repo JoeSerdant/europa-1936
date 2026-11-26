@@ -16,6 +16,8 @@ import { atMap, editDiv, removeDiv, relocate, removeBattle, editBattle, editGen,
 import { statsOf, lackOf, modsOf } from './unit.js';
 import { fuelRatio, FUEL } from '../fuel/index.js';
 import { chooseTactics, tacticEffects, leadOf } from './tactics.js';
+import { airPenalty } from '../air/zones.js';
+import { AIR } from '../air/constants.js';
 
 /** Násobek zásahu podle poměru průrazu a pancíře cíle. */
 export function pierceMult(pierce, armor) {
@@ -60,6 +62,8 @@ function profile(ctx, id, role, info) {
   const side = att ? info.attSide : info.depSide;
   const asup = ctx.state.air && ctx.state.air.sup;   // M30: podpora z letadel (klíč `vlastník:stát`)
   if (asup) a += asup[`${d.o}:${getWorld().provState[d.p]}`] || 0;
+  const azp = airPenalty(ctx.state, d.o, getWorld().region[info.p]);   // S8: nepřátelská převaha ve vzduchu nad regionem bitvy
+  if (azp) { a -= AIR.AZ_ATK * azp; f -= AIR.AZ_DEF * azp; }
   const mine = att ? info.tac.att : info.tac.dep, theirs = att ? info.tac.dep : info.tac.att;   // M77: taktiky
   a += mine.atk - theirs.foe; f += mine.def;
   a -= side.stack + side.over;

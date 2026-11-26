@@ -7,6 +7,7 @@ import { modsOf } from '../research/core.js';
 import { convoysOf, tradeFactor } from '../nav/convoy.js';
 import { polModsOf, outMult, consOf } from '../politics/core.js';
 import { fuelDay } from '../fuel/index.js';
+import { AIR } from '../air/constants.js';
 import { tallyOwners, factoryUse, trimAllLines, demandOf, resFlows, lineFactor, lineRate } from './core.js';
 
 const warKey = (a, b) => (a < b ? a * 1000 + b : b * 1000 + a);
@@ -114,7 +115,13 @@ export function industryDay(state) {
     }
   }
   const build = ind.build.filter((b) => !doneIds.has(b.id) && !dropped.has(b.id)).map((b) => (progress.has(b.id) ? { ...b, prog: progress.get(b.id) } : b));
-  const next = { ...ind, st, inf, fort, cf, rail, build, lines, trade, ver: ind.ver + (done.length || dropped.size ? 1 : 0) };
+  let dmg = ind.dmg || {};   // S8: poškozené továrny se denně opravují
+  for (const k in dmg) {
+    if (dmg === ind.dmg) dmg = { ...dmg };
+    const v = Math.round((dmg[k] - AIR.DMG_REPAIR) * 1000) / 1000;
+    if (v > 0) dmg[k] = v; else delete dmg[k];
+  }
+  const next = { ...ind, st, inf, fort, cf, rail, dmg, build, lines, trade, ver: ind.ver + (done.length || dropped.size ? 1 : 0) };
   const mil = stockOwn ? { ...state.mil, stock } : state.mil;
   const player = state.player ? w.ownerIdx[state.player] : 0;
   const nav = poolOwn ? { ...state.nav, pool: navPool, ver: state.nav.ver + 1 } : state.nav;

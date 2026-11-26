@@ -159,6 +159,8 @@ export class MapRenderer {
     const occChanged = occSt !== this.lastOccSt;
     this.lastOccSt = occSt;
     if (!ownerChanged && occChanged && (this.mode === 'resistance' || this.mode === 'compliance')) { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
+    const az = game.air ? game.air.az : null;   // S8: režim Vzdušná převaha se překreslí při změně zón
+    if (az !== this.lastAz) { this.lastAz = az; if (!ownerChanged && this.mode === 'airsup') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); } }
     if (!ownerChanged && indChanged && this.mode === 'industry') { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }
     const bq = game.ind ? game.ind.build : null;   // M103: režim Stavby se překreslí po zadání stavby
     if (!ownerChanged && this.mode.startsWith('build:') && (bq !== this.lastBuildQ || indChanged)) { this.fills = fillColors(this.world, game, this.mode, this.focus); this.invalidate(); }

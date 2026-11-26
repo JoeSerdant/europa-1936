@@ -12,6 +12,7 @@ import { fuelAirMult } from '../fuel/index.js';
 import { nukeProduction } from './nuke.js';
 import { modsOf as techModsOf } from '../research/core.js';
 import { designMultOf } from '../design/core.js';
+import { zonePowers, aaOf } from './zones.js';
 
 const DFIELD = { atk: 'atk', cas: 'cas', bomb: 'bomb' };   // M97: pole síly letounu → násobek návrhu
 import { planesOf, coastStatesOf, powerOf } from '../nav/core.js';
@@ -86,6 +87,8 @@ export function airDay(state) {
       const rocket = !!PLANES[wg.t].rocket;   // M82: raketu nikdo nezastaví, ale letí jen jednou
       const cov = rocket ? 1 : cover(wg.o, wg.to, e + foesInt(wg.o, wg.to));   // F4c: nepřátelské stíhání oslabí krytí úderných misí
       frac = rocket ? AIR.ROCKET_USE : frac + AIR.LOSS_INT * (1 - cov);
+      const tgt = state.stateOwner[wg.to];   // S8: protiletadlová obrana nepřátelského státu sestřeluje bombardéry a bitevní letouny
+      if (!rocket && (wg.m === 'bomb' || wg.m === 'cas') && tgt && tgt !== wg.o && atWar(state.mil, wg.o, tgt)) frac += AIR.AA_LOSS * aaOf(state.ind, wg.to);
       if (wg.m === 'nav') {
         const near = fleetsNear(wg.o, wg.to);
         if (near.length) { frac += AIR.LOSS_NAV; navStrikes.push({ ids: near, p: power(wg, 'cas') * cov }); }
@@ -95,8 +98,10 @@ export function airDay(state) {
       } else if (wg.m === 'bomb') {
         const t = state.stateOwner[wg.to];
         if (t && atWar(state.mil, wg.o, t)) {
-          const b = bombs.get(t) || { p: 0, from: wg.o, s: wg.to };
-          b.p += power(wg, 'bomb') * cov;
+          const b = bombs.get(t) || { p: 0, from: wg.o, s: wg.to, st: new Map() };
+          const v = power(wg, 'bomb') * cov;
+          b.p += v;
+          b.st.set(wg.to, (b.st.get(wg.to) || 0) + v);   // S8: síla nad jednotlivými státy (poškození továren)
           bombs.set(t, b);
         }
       }
@@ -130,9 +135,16 @@ export function airDay(state) {
   const supOut = {};
   for (const k in sup) supOut[k] = Math.min(AIR.CAS_MAX, sup[k] * AIR.CAS_COEF);
 
-  // 4) bombardování: podpora války, stabilita a sklady cíle
-  let pol = state.pol, mil = state.mil, next = state;
+  // 4) bombardování: podpora války, stabilita a sklady cíle; S8: poškození továren bombardovaného státu (`ind.dmg`, menší s protiletadlovou obranou)
+  let pol = state.pol, mil = state.mil, next = state, dmg = state.ind.dmg || {}, dmgOwn = false;
   for (const [t, b] of bombs) {
+    for (const [s, v] of b.st) {
+      if (state.stateOwner[s] !== t || state.ctrl[w.states[s].cap] !== t) continue;   // okupovaný stát okupant nebombarduje kvůli továrnám
+      const d = Math.min(AIR.BOMB_DMG_DAY, v * AIR.BOMB_DMG) * Math.max(0, 1 - AIR.AA_RED * aaOf(state.ind, s));
+      if (!(d > 0)) continue;
+      if (!dmgOwn) { dmg = { ...dmg }; dmgOwn = true; }
+      dmg[s] = Math.round(Math.min(AIR.DMG_MAX, (dmg[s] || 0) + d) * 1000) / 1000;
+    }
     const ws = Math.min(AIR.BOMB_WS_MAX, b.p * AIR.BOMB_WS), st = Math.min(AIR.BOMB_STOCK_MAX, b.p * AIR.BOMB_STOCK);
     const own = pol.own.slice();
     own[t] = { ...own[t], ws: Math.max(0, own[t].ws - ws), stab: Math.max(0, own[t].stab - ws * 0.3) };
@@ -148,11 +160,12 @@ export function airDay(state) {
   }
   // 5) výsledek: zrušená křídla s nulou letadel nezůstávají
   const changedSup = JSON.stringify(supOut) !== JSON.stringify(air.sup);
-  const out = { ...air, wings, pool, sup: changedSup ? supOut : air.sup, ver: air.ver + 1 };
+  const az = zonePowers(w, patrol, intc);   // S8: vzdušné zóny (stejný objekt, když se nic nezměnilo)
+  const out = { ...air, wings, pool, sup: changedSup ? supOut : air.sup, az: JSON.stringify(az) === JSON.stringify(air.az) ? air.az : az, ver: air.ver + 1 };
   const made = nukeProduction(state);   // M82: výroba atomových bomb
   if (made) out.nuke = made.nuke;
   const player = state.player ? w.ownerIdx[state.player] : 0;
-  let res = { ...next, pol, mil, air: out, ...(nav !== state.nav ? { nav } : {}) };
+  let res = { ...next, pol, mil, air: out, ...(nav !== state.nav ? { nav } : {}), ...(dmgOwn ? { ind: { ...next.ind, dmg, ver: next.ind.ver + 1 } } : {}) };
   for (const a of aces) if (a.o === player) res = logAdd(res, a);
   if (made) for (const o of made.ready) if (o === player) res = logAdd(res, { k: 'nukeready', o });
   return res;

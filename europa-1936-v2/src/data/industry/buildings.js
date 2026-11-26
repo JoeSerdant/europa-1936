@@ -10,6 +10,7 @@ export const BUILDINGS = {
   dok: { n: 'Námořní loděnice', ab: 'LOD', cost: 900, days: 60, slot: true, port: true, info: 'Staví lodě na lodních linkách. Jen ve státě s přístavem.' },
   afb: { n: 'Letiště', ab: 'LET', cost: 450, days: 30, slot: false, max: 5, info: 'Zvyšuje kapacitu letecké základny státu (60 letadel na úroveň). Letadla potřebují letiště.' },
   radar: { n: 'Radar', ab: 'RAD', cost: 300, days: 35, slot: false, max: 3, info: 'Radarová stanice státu: nepřátelská letadla nad ním potkají silnější obranu (jako 5 stíhaček na úroveň).' },
+  aa: { n: 'Protiletadlová obrana', ab: 'PLO', cost: 300, days: 30, slot: false, max: 5, info: 'Protiletadlová děla státu: o 12 % menší poškození továren bombardováním za úroveň a ztráty nepřátelských bombardérů a bitevních letounů nad státem.' },   // S8
   fort: { n: 'Pevnost', ab: 'PEV', cost: 350, days: 40, slot: false, max: 5, province: true, info: 'Opevnění provincie: obránce v ní dostává bonus k obraně (12 % za úroveň).' },
   nb: { n: 'Námořní základna', ab: 'NZ', cost: 400, days: 30, slot: false, max: 5, port: true, info: 'Opravuje poškozené lodě flotil v přilehlé mořské oblasti (rychleji s každou úrovní). Jen ve státě s přístavem.' },   // F4c
   hub: { n: 'Zásobovací uzel', ab: 'ZU', cost: 600, days: 45, slot: false, max: 1, rail: true, info: 'Nový zdroj zásob v hlavní provincii státu (jako železniční uzel): napojený železnicí na hlavní město zásobuje frontu daleko od domova.' },   // F4c

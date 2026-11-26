@@ -125,6 +125,14 @@ export function aiBuildsF4c(state, o) {
     for (let p = 1; p <= w.L; p++) if (w.portLevel[p] && w.vp[p] >= AI.F4C_CFORT_VP && state.ctrl[p] === o && provLevel(state.ind, p, 'cfort') < AI.F4C_CFORT && fortRoom(state, p, o, 'cfort').n && w.vp[p] > bv) { bv = w.vp[p]; best = p; }
     if (best) return buildFort(state, best, 'cfort');
   }
+  // S8: protiletadlová obrana do nejvíc bombardovaného vlastního státu (jedna stavba najednou)
+  if (!state.ind.build.some((b) => b.o === o && b.k === 'aa')) {
+    let as = 0, ad = AI.S8_AA_DMG;
+    for (const k of Object.keys(state.ind.dmg || {}).map(Number).sort((a, b) => a - b)) {
+      if (state.stateOwner[k] === o && state.ind.dmg[k] >= ad && ((state.ind.st[k] && state.ind.st[k].aa) || 0) < AI.S8_AA_MAX && buildRoom(state, k, 'aa', o).n) { ad = state.ind.dmg[k]; as = k; }
+    }
+    if (as) return build(state, as, 'aa');
+  }
   const lack = new Map(), lackP = new Map();
   for (const d of state.mil.divs) if (d && d.o === o && d.sup < AI.F4C_HUB_SUP) { const s = w.provState[d.p]; lack.set(s, (lack.get(s) || 0) + 1); lackP.set(d.p, (lackP.get(d.p) || 0) + 1); }
   // S6: železnice do provincie s nejvíc vlastními hladovějícími divizemi (vedle existující trati, do úrovně AI.S6_RAIL), jedna stavba najednou

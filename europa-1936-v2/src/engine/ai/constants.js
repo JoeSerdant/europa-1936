@@ -145,6 +145,8 @@ export const AI = {
   F4C_MINE_SHIPS: 3,                // klade miny flotila s aspoň tolika torpédoborci a ponorkami
   F4C_NAV_EVERY: 3,                 // každé tolikáté úderné křídlo útočí na lodě (když je cíl)
   F4C_RAIL_STEPS: 8,                // divize s cestou aspoň tolika provincií vlastním územím jede vlakem
+  S8_AA_DMG: 0.1,                   // S8: AI staví protiletadlovou obranu ve státě s aspoň takovým poškozením továren
+  S8_AA_MAX: 3,                     // do této úrovně
   F4C_NB: 2,                        // námořní základna AI do této úrovně
   F4C_CFORT: 2,                     // pobřežní pevnost AI do této úrovně
   F4C_CFORT_VP: 5,                  // jen v přístavech s aspoň tolika vítěznými body

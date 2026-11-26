@@ -122,7 +122,7 @@ try {
     check(`režim ${key} = ${mode}`, on === mode, on);
     if (key === '2') await shot('terrain');
   }
-  check('mapové režimy jsou řada 11 tlačítek s ikonami (HOI4)', (await page.locator('.mm .mm-btn').count()) === 11 && (await page.locator('.mm .mm-btn.on').count()) === 1);
+  check('mapové režimy jsou řada 12 tlačítek s ikonami (HOI4)', (await page.locator('.mm .mm-btn').count()) === 12 && (await page.locator('.mm .mm-btn.on').count()) === 1);
   await shot('mapmodes');
   await page.locator('.mm .mm-btn[aria-label="Státy"]').click();
   check('klik na ikonu přepne režim', (await page.locator('.mm').getAttribute('data-mode')) === 'Státy');
@@ -357,7 +357,7 @@ try {
   await page.keyboard.press('t');
   await page.waitForSelector('.build-panel', { timeout: 3000 });
   // M103: stavby jako v HOI4 – úzký panel vlevo, mapa zůstává vidět; budova se zvolí a staví se klikem na stát na mapě
-  check('klávesa T otevře panel Stavby vlevo (mapa zůstane vidět) s volbou budov', (await ui()).panel === 'industry' && (await page.locator('.build-panel .bp-tile').count()) === 11 && (await page.locator('.industry-panel').count()) === 0);
+  check('klávesa T otevře panel Stavby vlevo (mapa zůstane vidět) s volbou budov', (await ui()).panel === 'industry' && (await page.locator('.build-panel .bp-tile').count()) === 12 && (await page.locator('.industry-panel').count()) === 0);
   const nb = () => E(() => { const g = window.__e1936.gameStore.getState(); return g.ind.build.filter((b) => b.o === window.__e1936.engine.getWorld().ownerIdx.GER).length; });
   const b0 = await nb();
   await page.locator('.build-panel').getByRole('radio', { name: 'Civilní továrna' }).click();

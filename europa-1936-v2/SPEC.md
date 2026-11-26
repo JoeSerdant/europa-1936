@@ -1369,6 +1369,25 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Vynucená kapitulace** (řádek `armistice` s `full`, `forcedEnd`) předá `capitulate` vítěze z koleje: i když okupant zemi
   ještě neobsadil, proběhne konference a uvolní se národ (Vichy) – jinak by kolej Francii vzala bez Vichy a bez Indočíny.
 
+## 4zzzzzzzzzzzzzz. Letecké zóny a strategické bombardování (S8, `GAME_VERSION = 55`)
+
+- **Vzdušné zóny** (`air/zones.js`): `air.az[region] = { vlastník: síla }` – síla hlídek (mise `air`) a stíhání (`int`, váha
+  `AIR.AZ_INT`) křídel, jejichž cílový stát leží v regionu (`regionOfState` = region hlavní provincie); přepočítá ji `airDay`
+  (`zonePowers`, stejný objekt, když se nic nezměnilo). Strana země = ona a ti, kdo bojují s některým z jejích nepřátel v regionu
+  (`zoneSides`); `airSupOf` = podíl převahy (null = nikdo nelétá).
+- **Postih v boji** (`airPenalty`, mezipaměť podle `air.az` a `mil.wars`): nepřátelská převaha nad regionem bitvy od 50 % podílu
+  lineárně do 1, jen když nepřítel má aspoň `AIR.AZ_MIN` síly; útok divize − `AIR.AZ_ATK` × postih, obrana − `AIR.AZ_DEF` × postih
+  (`army/combat.js`).
+- **Strategické bombardování**: síla bombardérů nad jednotlivými státy poškodí jejich továrny a loděnice – `ind.dmg[stát]` (0 až
+  `AIR.DMG_MAX`, denně nejvíc `AIR.BOMB_DMG_DAY`, jen stát, který cíl sám drží). `tallyOwners` počítá jen nepoškozené továrny (zaokrouhleno
+  po státech, mezipaměť zahrnuje `ind.dmg`); `industryDay` denně opraví `AIR.DMG_REPAIR`. Podpora války, stabilita a sklady se dál
+  ubírají jako dřív.
+- **Protiletadlová obrana** (`aa`, budova státu do úrovně 5): poškození × (1 − `AIR.AA_RED` × úroveň) a ztráty bombardérů a bitevních
+  letounů nad nepřátelským státem + `AIR.AA_LOSS` × úroveň denně.
+- **AI** (`aiBuildsF4c`): za války staví protiletadlovou obranu do nejvíc poškozeného vlastního státu (od `AI.S8_AA_DMG`, do `AI.S8_AA_MAX`).
+- **Rozhraní**: mapový režim *Vzdušná převaha* (zelená = převaha strany hráče, červená = nepřítel, šedá = nikdo nehlídá; překreslí se
+  při změně `air.az`), karta státu ukazuje protiletadlovou obranu jako tečky a poškození továren jako pruh, panel Staveb nabízí budovu.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1584,6 +1603,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S8** | **Letecké zóny a strategické bombardování**: převaha ve vzduchu nad strategickými regiony (postih divizí), poškození továren bombardováním a jejich oprava, protiletadlová obrana, mapový režim Vzdušná převaha | ✅ |
 | **S7** | **Odboj a okupační zákony**: zákony pro okupovaná území, posádky za lidskou sílu, kolaborantské vlády | ✅ |
 | **S6** | **Zásobování jako v HOI4**: lokomotivy a nákladní auta jako výzbroj zásobování s opotřebením, stavba železnice po provinciích | ✅ |
 | **W6** | **Rozhodnutí jako v HOI4**: nové podmínky (rok, cíl, válka se zemí, státy), 7 kategorií, ~60 rozhodnutí včetně národních, cíle odemykající rozhodnutí | ✅ |

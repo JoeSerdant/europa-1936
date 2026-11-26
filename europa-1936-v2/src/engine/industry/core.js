@@ -33,7 +33,8 @@ export function tallyOwners(state) {
   const { ind, ctrl, stateOwner: so } = state;
   const hit = tallyCache.get(ind.st);
   const occSt = state.occ ? state.occ.st : null, occLaw = state.occ ? state.occ.law : null, occCol = state.occ ? state.occ.col : null;
-  if (hit && hit.ctrl === ctrl && hit.so === so && hit.occ === occSt && hit.law === occLaw && hit.col === occCol) return hit.tally;
+  const dmg = ind.dmg || null;   // S8: továrny poškozené bombardováním
+  if (hit && hit.ctrl === ctrl && hit.so === so && hit.occ === occSt && hit.law === occLaw && hit.col === occCol && hit.dmg === dmg) return hit.tally;
   const w = getWorld();
   const tally = Array.from({ length: w.owners.length }, () => ({ civ: 0, mil: 0, dok: 0, res: {}, occ: 0 }));
   for (let s = 1; s < w.states.length; s++) {
@@ -41,7 +42,8 @@ export function tallyOwners(state) {
     if (!e || !o) continue;
     const c = ctrl[w.states[s].cap];
     if (c === o || !c) {
-      tally[o].civ += e.civ; tally[o].mil += e.mil; tally[o].dok += e.dok || 0;
+      const d = dmg && dmg[s] ? 1 - dmg[s] : 1, cut = (v) => (d < 1 ? Math.round((v || 0) * d) : v || 0);
+      tally[o].civ += cut(e.civ); tally[o].mil += cut(e.mil); tally[o].dok += cut(e.dok);
       for (const r in e.res) tally[o].res[r] = (tally[o].res[r] || 0) + e.res[r];
     } else {
       tally[o].occ++;
@@ -50,7 +52,7 @@ export function tallyOwners(state) {
       for (const r in e.res) tally[c].res[r] = (tally[c].res[r] || 0) + e.res[r] * f;
     }
   }
-  tallyCache.set(ind.st, { ctrl, so, occ: occSt, law: occLaw, col: occCol, tally });
+  tallyCache.set(ind.st, { ctrl, so, occ: occSt, law: occLaw, col: occCol, dmg, tally });
   return tally;
 }
 

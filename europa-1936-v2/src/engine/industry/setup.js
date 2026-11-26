@@ -32,6 +32,7 @@ export function createInd(w, rng) {
     inf: new Array(w.states.length).fill(0),
     fort: {},
     cf: {},   // F4c: pobřežní pevnosti podle provincie
+    dmg: {},    // S8: poškození továren státu strategickým bombardováním (0–0,8)
     rail: {},   // S6: postavená železnice podle provincie (úroveň 1–5)
     cons: new Array(w.owners.length).fill(0),
     build: [], lines: [], trade: [],
