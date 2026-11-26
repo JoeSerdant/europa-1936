@@ -6,6 +6,7 @@ import {
   isUnlocked, TECHS, DOC, BUREAUS, BUREAU_IDS, BUREAU_CATS, BUREAU, bureausOf, bureauBlock,
 } from '../../engine/index.js';
 import { Icon } from '../common/Icon.jsx';
+import { EquipIcon } from '../industry/EquipIcon.jsx';
 import { playerIdx, applyDesign, hireOwnBureau } from '../actions.js';
 
 const pct = (v) => `${v >= 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %`;
@@ -46,25 +47,59 @@ function Bureaus({ state, me }) {
   );
 }
 
-/** Řádek slotu: výběr modulu (zamčené moduly jsou vidět s technologií, která je odemkne). */
-function Slot({ state, me, type, slot, value, onPick }) {
-  const opts = MODULE_IDS.filter((id) => fits(type, slot, id));
+const SLOT_ICON = { zbran: 'attack', vyzbroj: 'attack', pancir: 'shield', ochrana: 'shield', motor: 'speed', pohon: 'speed', drak: 'plane', dopl: 'plus' };
+const fxText = (mod) => Object.entries(mod.fx).map(([k, v]) => `${DESIGN_STATS[k]} ${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)} %`).join(', ');
+
+/** UI9: slot návrhu jako dlaždice (jako v návrháři HOI4) – ikona druhu slotu a zvolený modul; klik otevře moduly pod sloty. */
+function Slot({ slot, value, open, onOpen }) {
+  const mod = value ? MODULES[value] : null;
   return (
-    <label className="ds-slot">
-      <span className="muted">{SLOT_NAMES[slot]}</span>
-      <select value={value || ''} onChange={(e) => onPick(e.target.value || null)}>
-        <option value="">Standardní</option>
-        {opts.map((id) => {
-          const mod = MODULES[id], lock = mod.unlock && !isUnlocked(state, me, mod.unlock);
-          const fx = Object.entries(mod.fx).map(([k, v]) => `${DESIGN_STATS[k]} ${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)} %`).join(', ');
-          return <option key={id} value={id} disabled={lock}>{mod.n}{lock ? ` (chybí ${TECHS[mod.unlock].n})` : ''} – {fx}</option>;
-        })}
-      </select>
-    </label>
+    <button className={`ds-slot ${open ? 'open' : ''} ${mod ? 'set' : ''}`} onClick={onOpen} aria-expanded={open} aria-label={`${SLOT_NAMES[slot]}: ${mod ? mod.n : 'standardní'}`} title={mod ? `${mod.n}: ${fxText(mod)}` : 'Standardní provedení'}>
+      <span className="dsl-ic"><Icon name={SLOT_ICON[slot] || 'plus'} size={22} /></span>
+      <i>{SLOT_NAMES[slot]}</i>
+      <b>{mod ? mod.n : 'Standardní'}</b>
+    </button>
   );
 }
 
-/** Okno Konstrukční kancelář (klávesa B, M97): návrhy variant tanků, lodí a letadel z modulů. */
+/** Moduly pro otevřený slot jako dlaždice (zamčené ukazují technologii, která je odemkne). */
+function ModulePicker({ state, me, type, slot, value, onPick }) {
+  const opts = MODULE_IDS.filter((id) => fits(type, slot, id));
+  return (
+    <div className="ds-mods" role="radiogroup" aria-label={`Moduly: ${SLOT_NAMES[slot]}`}>
+      <button role="radio" aria-checked={!value} className={`ds-mod ${!value ? 'on' : ''}`} onClick={() => onPick(null)}><b>Standardní</b><span>bez změn</span></button>
+      {opts.map((id) => {
+        const mod = MODULES[id], lock = mod.unlock && !isUnlocked(state, me, mod.unlock);
+        return (
+          <button key={id} role="radio" aria-checked={value === id} data-id={id} className={`ds-mod ${value === id ? 'on' : ''}`} disabled={lock} onClick={() => onPick(id)} title={lock ? `Chybí technologie ${TECHS[mod.unlock].n}` : fxText(mod)}>
+            <b>{mod.n}</b><span>{fxText(mod)}</span>{lock ? <em>chybí {TECHS[mod.unlock].n}</em> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Srovnání vlastností jako dvojice pruhů (současný / nový), lepší zeleně, horší červeně. */
+function StatBars({ keys, now, next }) {
+  const max = Math.max(1.5, ...keys.map((k) => Math.max(now[k], next[k])));
+  return (
+    <div className="ds-bars">
+      {keys.map((k) => {
+        const better = k === 'cost' ? next[k] < now[k] : next[k] > now[k], worse = k === 'cost' ? next[k] > now[k] : next[k] < now[k];
+        return (
+          <div key={k} className={`dsb ${better ? 'better' : worse ? 'worse' : ''}`}>
+            <span className="dsb-n">{DESIGN_STATS[k]}</span>
+            <span className="dsb-bars"><i className="now" style={{ width: `${(now[k] / max) * 100}%` }} /><i className="next" style={{ width: `${(next[k] / max) * 100}%` }} /></span>
+            <span className="dsb-v">{pct(now[k])} → <b>{pct(next[k])}</b></span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Okno Konstrukční kancelář (klávesa B, M97; UI9 jako návrhář HOI4): silueta, sloty modulů jako dlaždice, moduly jako dlaždice, srovnání pruhy. */
 export function DesignPanel() {
   const state = useGameSlow((s) => s, 700);
   const me = playerIdx(state);
@@ -74,7 +109,8 @@ export function DesignPanel() {
   const cur = designOf(lv, type);
   const [draft, setDraft] = useState(() => ({ ...(cur ? cur.mods : {}) }));
   const [nm, setNm] = useState('');
-  useEffect(() => { setDraft({ ...(cur ? cur.mods : {}) }); setNm(''); }, [type, cur]);
+  const [slotOpen, setSlotOpen] = useState('');
+  useEffect(() => { setDraft({ ...(cur ? cur.mods : {}) }); setNm(''); setSlotOpen(''); }, [type, cur]);
   const types = DESIGN_TYPE_IDS.filter((t) => DESIGN_TYPES[t].cat === cat);
   const now = designMult(cur), next = useMemo(() => designMult({ mods: draft }), [draft]);
   if (!me) return <div className="prod-screen design-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nenavrhujete výzbroj.</p></div></div>;
@@ -101,17 +137,14 @@ export function DesignPanel() {
         {cat === 'bu' ? <Bureaus state={state} me={me} /> : (
         <section className="ds-edit" aria-label={`Návrh: ${t.n}`}>
           <div className="sec-head"><h3>{t.n}</h3><span className="muted">současný návrh: {cur ? cur.nm : 'standardní'}</span></div>
-          <div className="ds-slots">
-            {t.slots.map((slot) => <Slot key={slot} state={state} me={me} type={type} slot={slot} value={draft[slot]} onPick={(id) => setDraft({ ...draft, [slot]: id })} />)}
+          <div className="ds-stage">
+            <span className="ds-pic" aria-hidden="true"><EquipIcon eq={type} size={190} /></span>
+            <div className="ds-slots">
+              {t.slots.map((slot) => <Slot key={slot} slot={slot} value={draft[slot]} open={slotOpen === slot} onOpen={() => setSlotOpen(slotOpen === slot ? '' : slot)} />)}
+            </div>
           </div>
-          <table className="ds-stats">
-            <thead><tr><th>Vlastnost</th><th>Současný</th><th>Nový</th></tr></thead>
-            <tbody>{SHOWN[t.cat].map((k) => (
-              <tr key={k} className={next[k] > now[k] ? (k === 'cost' ? 'worse' : 'better') : next[k] < now[k] ? (k === 'cost' ? 'better' : 'worse') : ''}>
-                <td>{DESIGN_STATS[k]}</td><td>{pct(now[k])}</td><td>{pct(next[k])}</td>
-              </tr>
-            ))}</tbody>
-          </table>
+          {slotOpen ? <ModulePicker state={state} me={me} type={type} slot={slotOpen} value={draft[slotOpen]} onPick={(id) => setDraft({ ...draft, [slotOpen]: id })} /> : <p className="muted">Klikněte na slot a vyberte modul.</p>}
+          <StatBars keys={SHOWN[t.cat]} now={now} next={next} />
           <label className="ds-name"><span className="muted">Název návrhu</span><input value={nm} maxLength={30} placeholder={`${t.n} vz. ${Math.floor(1936 + state.tick / 8766)}`} onChange={(e) => setNm(e.target.value)} /></label>
           <p className="muted">Zavedení stojí {cost} zkušeností ({xp} k dispozici, strop {DOC.XP_MAX}). Linky vyrábějící tento typ se přezbrojí a ztratí část efektivity.</p>
           <button className="btn primary" disabled={!!why} title={why || 'Zavést návrh'} onClick={() => applyDesign(type, draft, nm)}><b>Zavést návrh</b>{why ? <span>{why}</span> : null}</button>

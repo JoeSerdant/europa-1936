@@ -460,7 +460,7 @@ try {
   await page.keyboard.press('j');
   await page.waitForSelector('.decisions-panel .dec-card', { timeout: 3000 });
   const ppBefore = await E(() => window.__e1936.gameStore.getState().pol.own[window.__e1936.engine.getWorld().ownerIdx.GER].pp);
-  check('klávesa J otevře Rozhodnutí se záložkami kategorií a kartami', (await ui()).panel === 'decisions' && (await page.locator('.dec-tabs [role=tab]').count()) >= 6 && (await page.locator('.dec-card').count()) >= 4);
+  check('klávesa J otevře Rozhodnutí se záložkami, oddíly kategorií a řádky (UI7)', (await ui()).panel === 'decisions' && (await page.locator('.dec-tabs [role=tab]').count()) >= 7 && (await page.locator('.dec-sec').count()) >= 5 && (await page.locator('.dec-card').count()) >= 10);
   await page.locator('.dec-tabs [role=tab]', { hasText: 'Diplomacie' }).click();
   await page.waitForTimeout(200);
   check('záložka Diplomacie ukáže diplomatické mise (W6)', (await page.locator('.dec-card', { hasText: 'Diplomatická mise' }).count()) >= 5);
@@ -485,11 +485,12 @@ try {
   await page.keyboard.press('k');
   // M97: Konstrukční kancelář – návrh lehkého tanku
   await page.keyboard.press('b');
-  await page.waitForSelector('.design-panel .ds-slot select', { timeout: 3000 });
-  check('klávesa B otevře Konstrukční kancelář s typy a sloty', (await ui()).panel === 'design' && (await page.locator('.ds-type').count()) === 3 && (await page.locator('.ds-slot select').count()) === 4);
+  await page.waitForSelector('.design-panel .ds-slot', { timeout: 3000 });
+  check('klávesa B otevře Konstrukční kancelář s typy a sloty jako dlaždicemi (UI9)', (await ui()).panel === 'design' && (await page.locator('.ds-type').count()) === 3 && (await page.locator('.ds-slot').count()) === 4 && (await page.locator('.design-panel select').count()) === 0);
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); gameStore.setState(engine.addXp(s, engine.getWorld().ownerIdx.GER, 'land', 60)); });
   await page.waitForTimeout(800);
-  await page.locator('.ds-slot select').first().selectOption('tk_kan_l');
+  await page.locator('.ds-slot').first().click();
+  await page.locator('.ds-mod[data-id="tk_kan_l"]').click();
   await page.getByRole('button', { name: /Zavést návrh/ }).click();
   await page.waitForTimeout(800);
   check('„Zavést návrh“ uloží návrh lehkého tanku', await E(() => { const s = window.__e1936.gameStore.getState(); const lv = s.mil.lv[window.__e1936.engine.getWorld().ownerIdx.GER]; return !!(lv && lv.des && lv.des.ltanky && lv.des.ltanky.mods.zbran === 'tk_kan_l'); }));

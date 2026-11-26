@@ -33,17 +33,21 @@ function describe(world, comp) {
   return { x: c[0], y: c[1], w: x1 - x0, h: y1 - y0, area: sa, prov: best, n: comp.length };
 }
 
-/** Popisky zemí podle aktuálních vlastníků: pole { idx, tag, name, x, y, w, h } (největší souvislá část země). */
+/** Popisky zemí podle aktuálních vlastníků: pole { idx, tag, name, x, y, w, h } (souvislá část s hlavním městem, jinak největší část mimo kolonie). */
 export function countryLabels(world, game) {
   const byOwner = Array.from({ length: world.owners.length }, () => []);
   for (let p = 1; p <= world.L; p++) byOwner[game ? game.stateOwner[world.provState[p]] : world.provOwner0[p]].push(p);
   const out = [];
   byOwner.forEach((list, idx) => {
     if (!idx || !list.length) return;
-    const comps = components(world, list).map((c) => describe(world, c));
-    comps.sort((a, b) => b.area - a.area);
-    const d = comps[0];
     const o = world.owners[idx];
+    // název patří na jádro země (UI6): část s hlavním městem; jinak největší část bez kolonií (Francie ne v Africe, Dánsko ne v Grónsku)
+    const raw = components(world, list);
+    const core = raw.find((c) => c.includes(o.cap));
+    const colony = (p) => { const st = world.states[world.provState[p]]; return !!(st && st.c); };
+    const weight = (c) => c.reduce((a, p) => a + (colony(p) ? 0.1 : 1) * Math.max(1, world.area[p]), 0);
+    const pick = core || raw.reduce((best, c) => (weight(c) > weight(best) ? c : best), raw[0]);
+    const d = describe(world, pick);
     out.push({ idx, tag: o.tag, name: o.name, x: d.x, y: d.y, w: d.w, h: d.h, n: list.length });
   });
   return out;

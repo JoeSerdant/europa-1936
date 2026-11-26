@@ -76,17 +76,22 @@ export function BuildPanel() {
       <nav className="bp-tabs" role="tablist">
         {TABS.map((t) => <button key={t.id} role="tab" aria-selected={t.id === 'build'} className={t.id === 'build' ? 'on' : ''} onClick={() => setIndTab(t.id)}>{t.name}</button>)}
       </nav>
-      <div className="bp-grid" role="radiogroup" aria-label="Budova">
-        {KINDS.map((k) => {
-          const B = BUILDINGS[k];
-          return (
-            <button key={k} role="radio" aria-checked={kind === k} className={`bp-tile ${kind === k ? 'on' : ''}`} onClick={() => pickBuild(kind === k ? null : k)}
-              title={`${B.n}: ${B.info} Cena ${B.cost} bodů, nejdřív za ${B.days} dní.`} aria-label={B.n}>
-              <Icon name={KIND_ICON[k]} size={24} /><span>{B.n}</span><small>{B.cost}</small>
-            </button>
-          );
-        })}
-      </div>
+      {[['Státní budovy', KINDS.filter((k) => !BUILDINGS[k].province)], ['Provinční budovy', KINDS.filter((k) => BUILDINGS[k].province)]].map(([title, list]) => (
+        <section key={title} className="bp-group" aria-label={title}>
+          <h4 className="bp-gh">{title}</h4>
+          <div className="bp-grid" role="radiogroup" aria-label={`Budova – ${title}`}>
+            {list.map((k) => {
+              const B = BUILDINGS[k];
+              return (
+                <button key={k} role="radio" aria-checked={kind === k} className={`bp-tile ${kind === k ? 'on' : ''}`} onClick={() => pickBuild(kind === k ? null : k)}
+                  title={`${B.n}: ${B.info} Cena ${B.cost} bodů, nejdřív za ${B.days} dní.`} aria-label={B.n}>
+                  <Icon name={KIND_ICON[k]} size={24} /><span>{B.n}</span><small>{B.cost}</small>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ))}
       {kind ? (
         <div className="bp-hint">
           <p><b>{BUILDINGS[kind].n}</b> – klikněte na {BUILDINGS[kind].province ? 'provincii' : 'zelený stát'} na mapě. <kbd>Shift</kbd> zaplní vše, <kbd>Esc</kbd> ukončí.</p>
