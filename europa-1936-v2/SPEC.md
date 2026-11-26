@@ -1152,6 +1152,16 @@ Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a da
     Jugoslávie 12 a Řecko 25 dní po vstupu Německa do války (válka podle plánů 6. 4. 1941); Itálie vytrvá do září 1943 (`ita_holdout`).
 - **Horní lišta jako v HOI4**: vlajka (klik = Vláda), vedle ní národní cíl (kruh postupu, název, dny; bez cíle bliká) a výzkumné sloty jako dlaždice
   s postupem (volný slot bliká); ukazatele uprostřed; datum a rychlost vpravo nahoře.
+- **UI1–UI5 – rozhraní podle obrázků HOI4** (vlastní kresba, žádné převzaté obrázky):
+  - *Strom národních cílů* (`ui/nat/NatPanel.jsx`, rozložení jen `focusLayout` v `ui/nat/focusLayout.js`): cíl = kruhová ikona druhu (`focusCat`: průmysl, výzkum, armáda, letectvo, námořnictvo, politika, diplomacie) s jmenovkou a dny,
+    kruh postupu u plněného cíle, zlatý hotový; řádek = nejdelší řetěz předpokladů, rodič uprostřed nad potomky (primární rodič = nejhlubší předpoklad, další předpoklady slabší spojnicí),
+    podstromy se skládají podle obrysů, samostatné stromy vedle sebe; vylučující se cíle v jednom řádku spojuje červená čárkovaná čára se značkou „!“ (`exclusivePairs`);
+    nahoře zvýraznění druhu a hledání bez diakritiky (`focusMatches`, posune strom na první shodu); klik na dostupný cíl ho zahájí; účinky, vyloučení a chybějící předpoklady ukáže okno při najetí; přiblížení 15–140 %.
+  - *Rozpisy horní lišty* (`ui/hud/breakdown.js`): najetí na stabilitu, podporu války, politickou moc, lidskou sílu, továrny, palivo a transporty ukáže bublinu se zdroji
+    (`modSources`: zákony, poradci, cíle, duchové, průběžný cíl, cíle bloku – součet = `polModsOf`), cílem, dopady a popisem.
+  - *Důstojnický sbor*: záložky větví, směry jako sloupce s odznakem, stupně pod sebou s číslem a spojnicí.
+  - *Vláda*: zákony a poradci v řadě slotů „Zákony a vláda“, náčelníci štábů v řadě „Vojenský štáb“; volby se otevřou jako dlaždice pod řadou přes celou šířku.
+  - *Nábor*: vlevo fronta výcviku a sklad, vpravo šablony divizí.
 - **Přehled vpravo** (outliner, `ui/hud/Outliner.jsx`, data jen z `outlinerData` v `ui/hud/outliner.js`): oddíly Národní cíl, Výzkum, Bitvy (převaha
   hráčovy strany), Armády (počet divizí, organizace, boj, zásoby), Výcvik, Flotily, Letectvo, Výroba (továrny, efektivita), Stavby (postup);
   klik vede na mapu (armáda = výběr divizí a let kamery), do okna bitvy nebo do okna. Sbalitelný celý (`ui.outliner`) i po oddílech; skrytý,

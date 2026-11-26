@@ -474,8 +474,8 @@ try {
   await shot('decisions');
   await page.keyboard.press('j');
   await page.keyboard.press('k');
-  await page.waitForSelector('.doctrine-panel .doc-branch', { timeout: 3000 });
-  check('klávesa K otevře doktríny: 3 větve a 27 stupňů', (await ui()).panel === 'doctrine' && (await page.locator('.doc-branch').count()) === 3 && (await page.locator('.doc-level').count()) === 27);
+  await page.waitForSelector('.doctrine-panel .doc-cols', { timeout: 3000 });
+  check('klávesa K otevře doktríny: 3 záložky větví, 3 směry po 3 stupních (UI3)', (await ui()).panel === 'doctrine' && (await page.locator('.doc-tabs [role="tab"]').count()) === 3 && (await page.locator('.doc-track').count()) === 3 && (await page.locator('.doc-level').count()) === 9);
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); gameStore.setState(engine.addXp(s, engine.getWorld().ownerIdx.GER, 'land', 100)); });
   await page.waitForTimeout(1000);
   await page.locator('.doc-level.available .sbtn').first().click();
@@ -559,10 +559,14 @@ try {
 
   // politika (M21): panel Politika (P), zákony, poradci, horní lišta
   const topPol = await page.locator('.topbar').innerText();
-  check('horní lišta ukazuje stabilitu, podporu války a politickou moc', /Stabilita/.test(await page.locator('.stat[title="Stabilita"]').getAttribute('title')) && (await page.locator('.stat[title="Politická moc"]').count()) === 1, topPol.replace(/\s+/g, ' ').slice(-80));
+  check('horní lišta ukazuje stabilitu, podporu války a politickou moc', (await page.locator('.stat[aria-label="Stabilita"]').count()) === 1 && (await page.locator('.stat[aria-label="Politická moc"]').count()) === 1, topPol.replace(/\s+/g, ' ').slice(-80));
+  await page.locator('.stat[aria-label="Stabilita"]').hover();
+  await page.waitForTimeout(150);
+  check('UI2: najetí na stabilitu ukáže rozpis (základ, zdroje, dopady)', (await page.locator('.stat-tip dl div').count()) >= 2 && /Základ/.test(await page.locator('.stat-tip').innerText()));
+  await page.mouse.move(5, 600);
   await page.keyboard.press('p');
   await page.waitForSelector('.politics-panel', { timeout: 3000 });
-  check('klávesa P otevře panel Politika se zákony a poradci', (await ui()).panel === 'politics' && (await page.locator('.pol-law').count()) === 3 && (await page.locator('.pol-adv').count()) === 4);
+  check('klávesa P otevře panel Politika se zákony a poradci', (await ui()).panel === 'politics' && (await page.locator('.pol-law').count()) === 3 && (await page.locator('.pol-adv:not(.hc)').count()) === 4);
   await E(() => { const { gameStore, engine } = window.__e1936; const s = gameStore.getState(); const o = engine.getWorld().ownerIdx.GER; const own = s.pol.own.slice(); own[o] = { ...own[o], pp: 400, ws: 0.9 }; gameStore.setState({ ...s, pol: { ...s.pol, own } }); });
   await page.waitForTimeout(900);
   // UI jako v HOI4: zákon a poradce jsou sloty – klik otevře volby jako dlaždice
@@ -571,16 +575,19 @@ try {
   check('klik na slot zákona otevře volby jako dlaždice', (await page.locator('.pol-law.open .pol-opt-tile').count()) >= 3);
   await shot('politics-top');
   await page.locator('.pol-law').first().getByRole('button', { name: /Raná mobilizace/ }).click();
-  await page.locator('.pol-adv').nth(3).locator('.pol-slot-main').click();
+  await page.locator('.pol-adv:not(.hc)').nth(3).locator('.pol-slot-main').click();
   await page.waitForTimeout(150);
-  await page.locator('.pol-adv').nth(3).getByRole('button', { name: /Akademik/ }).click();
+  await page.locator('.pol-adv:not(.hc)').nth(3).getByRole('button', { name: /Akademik/ }).click();
   await page.waitForTimeout(250);
   const pol1 = await E(() => { const { gameStore, engine } = window.__e1936; const e = gameStore.getState().pol.own[engine.getWorld().ownerIdx.GER]; return { eco: e.laws.eco, sci: e.adv.sci, pp: e.pp }; });
   check('zákon a poradce se zadají a zaplatí politickou mocí', pol1.eco === 'early' && pol1.sci === 'akademik' && pol1.pp < 400, `${pol1.eco}, ${pol1.sci}, zbývá ${pol1.pp}`);
   // F4: vrchní velení – tři karty náčelníků štábů, najmutí klikem na dlaždici
   check('vůdce má koláč stran a duchy jako ikony', (await page.locator('.pol-pie path').count()) >= 2 && (await page.locator('.lc-spirits li .icon').count()) >= 1);
-  check('politika má tři karty vrchního velení', (await page.locator('.hc-card').count()) === 3 && (await page.locator('.hc-opt').count()) >= 9);
-  await page.locator('.hc-card').first().getByRole('button', { name: /Teoretik obrněných sil/ }).click();
+  check('politika má tři sloty vojenského štábu (UI4)', (await page.locator('.pol-adv.hc').count()) === 3);
+  await page.locator('.pol-adv.hc').first().locator('.pol-slot-main').click();
+  await page.waitForTimeout(200);
+  check('klik na slot štábu otevře náčelníky jako dlaždice', (await page.locator('.pol-adv.hc.open .pol-opt-tile').count()) >= 3);
+  await page.locator('.pol-adv.hc').first().getByRole('button', { name: /Teoretik obrněných sil/ }).click();
   await page.waitForTimeout(250);
   const hc1 = await E(() => { const { gameStore, engine } = window.__e1936; return gameStore.getState().pol.own[engine.getWorld().ownerIdx.GER].adv.army; });
   check('náčelník generálního štábu se najme klikem na dlaždici', hc1 === 'nac_tanky', String(hc1));
@@ -592,9 +599,12 @@ try {
   await page.keyboard.press('c');
   await page.waitForSelector('.nat-panel', { timeout: 3000 });
   check('klávesa C otevře panel Cíle se stromem cílů', (await ui()).panel === 'nat' && (await page.locator('.focus-card').count()) >= 8 && (await page.locator('.focus-card.available').count()) >= 1);
-  await page.locator('.focus-card.available').first().getByRole('button', { name: 'Zahájit' }).click();
+  check('UI1: strom cílů má hledání, filtr druhů a značky vylučujících se cílů', (await page.locator('.ft-search input').count()) === 1 && (await page.locator('.ft-cats .icon-btn').count()) >= 6 && (await page.locator('.focus-links .fx-excl').count()) >= 1);
+  await page.locator('.focus-card.available').first().hover();
+  check('UI1: najetí na cíl ukáže okno s účinky', (await page.locator('.focus-info').count()) === 1);
+  await page.locator('button.focus-card.available').first().click();
   await page.waitForSelector('.nat-panel .rs-slot:not(.empty)', { timeout: 3000 });
-  check('„Zahájit“ spustí plnění cíle', (await page.locator('.focus-card.active').count()) === 1);
+  check('klik na dostupný cíl spustí jeho plnění', (await page.locator('.focus-card.active').count()) === 1);
   await shot('nat');
   // M103: přiblížení stromu cílů – oddálit tlačítkem i kolečkem, celý strom
   await page.getByRole('button', { name: 'Oddálit' }).click();

@@ -463,3 +463,12 @@
 .q-card .q-bar { position: relative; height: 13px; }
 .q-card .q-bar em { position: absolute; inset: 0; display: grid; place-items: center; font: 600 10px/1 var(--display); font-style: normal; color: var(--paper); text-shadow: 0 1px 1px #000; }
 .dz-pick .cls-icon { flex: none; color: var(--brass-hi); }
+
+/* UI5: nábor jako v HOI4 – vlevo fronta náboru a sklad, vpravo seznam šablon s tlačítky Zařadit a Upravit */
+.recruit-panel .rec-cols { grid-template-columns: minmax(340px, 0.72fr) minmax(0, 1.6fr); }
+.recruit-panel .rec-tpls { padding: 0 4px 0 18px; }
+.recruit-panel .rec-deploy { padding-right: 12px; }
+.recruit-panel .rec-deploy .stock { padding: 10px 0 0; border: 0; border-top: 1px solid var(--rule); }
+.recruit-panel .prod-left .stock { padding: 10px 0 0; border-bottom: 0; }
+:root.uw-1500 .recruit-panel .rec-cols { grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.5fr); }
+.recruit-panel .rec-tpls > .sec-head { justify-content: flex-start; gap: 16px; }   /* tlačítko u nadpisu – vpravo nahoře bývají oznámení */

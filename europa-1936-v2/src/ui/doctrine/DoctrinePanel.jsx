@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Icon } from '../common/Icon.jsx';
 import { Screen } from '../common/Screen.jsx';
@@ -11,6 +11,7 @@ function Level({ l }) {
   const st = STATUS(l);
   return (
     <article className={`doc-level ${st}`} aria-label={l.n}>
+      <span className="dl-step" aria-hidden="true">{l.done ? '✓' : l.level}</span>
       <header><b>{l.n}</b><span className="muted">stupeň {l.level}</span></header>
       <p className="muted">{l.info}</p>
       <footer>
@@ -20,32 +21,40 @@ function Level({ l }) {
   );
 }
 
-/** Okno Důstojnický sbor (klávesa K): tři větve doktrín (pozemní, letecká, námořní) se zkušenostmi a směry po třech stupních. */
+/** Okno Důstojnický sbor (klávesa K) jako v HOI4 (UI3): záložky větví (pozemní, letecká, námořní), směry jako sloupce, stupně pod sebou. */
 export function DoctrinePanel() {
   const state = useGameSlow((s) => s, 700);
   const me = playerIdx(state);
   const view = useMemo(() => (me ? doctrinesOf(state, me) : []), [state.doc, me]);
+  const [tab, setTab] = useState(0);
   if (!me) return <div className="prod-screen doctrine-panel"><div className="prod-body"><p className="empty">Jako pozorovatel nevedete žádné doktríny.</p></div></div>;
+  const b = view[Math.min(tab, view.length - 1)];
   return (
     <Screen cls="doctrine-panel" title="Důstojnický sbor" icon="general" head={(
       <div className="lg-use">
-        {view.map((b) => <span key={b.id} title={`${b.xp} (strop ${DOC.XP_MAX})`}><i>{b.xp}</i><b>{Math.floor(b.have)}</b></span>)}
+        {view.map((x) => <span key={x.id} title={`${x.xp} (strop ${DOC.XP_MAX})`}><i>{x.xp}</i><b>{Math.floor(x.have)}</b></span>)}
       </div>
     )}>
-      <div className="prod-body doc-body">
-        {view.map((b) => (
-          <section key={b.id} className="doc-branch" aria-label={b.n}>
-            <div className="sec-head"><h3><Icon name={b.icon} size={16} /> {b.n}</h3><span className="muted">{Math.floor(b.have)} zkušeností</span></div>
-            {b.tracks.map((t) => (
-              <div key={t.id} className={`doc-track ${t.excluded ? 'excluded' : ''}`}>
-                <h4>{t.n}<span className="muted"> · {t.info}</span></h4>
-                <div className="doc-levels">{t.levels.map((l) => <Level key={l.id} l={l} />)}</div>
-              </div>
-            ))}
-            {!b.chosen && <p className="muted">První stupeň určí směr celé větve.</p>}
-          </section>
+      <nav className="doc-tabs" role="tablist" aria-label="Větve doktrín">
+        {view.map((x, i) => (
+          <button key={x.id} role="tab" aria-selected={x === b} className={x === b ? 'on' : ''} onClick={() => setTab(i)}>
+            <Icon name={x.icon} size={16} /> {x.n}<i>{Math.floor(x.have)} zk.</i>
+          </button>
         ))}
-      </div>
+      </nav>
+      {b ? (
+        <div className="prod-body doc-body" aria-label={b.n}>
+          {!b.chosen ? <p className="doc-hint">Vyberte směr: první přijatý stupeň určí směr celé větve, ostatní směry se uzavřou.</p> : null}
+          <div className="doc-cols" style={{ gridTemplateColumns: `repeat(${b.tracks.length}, minmax(0, 1fr))` }}>
+            {b.tracks.map((t) => (
+              <section key={t.id} className={`doc-track ${t.excluded ? 'excluded' : ''} ${t.levels.some((l) => l.done) ? 'chosen' : ''}`} aria-label={t.n}>
+                <header className="dt-head"><span className="dt-badge"><Icon name={b.icon} size={22} /></span><h4>{t.n}</h4><p className="muted">{t.info}</p></header>
+                <div className="doc-levels">{t.levels.map((l) => <Level key={l.id} l={l} />)}</div>
+              </section>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </Screen>
   );
 }

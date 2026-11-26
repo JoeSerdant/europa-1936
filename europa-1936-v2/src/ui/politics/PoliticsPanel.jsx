@@ -81,12 +81,12 @@ function Law({ cat, open, onOpen }) {
 }
 
 /** Poradce jako slot s portrétem (vlastní silueta): klik otevře volby. */
-function Advisor({ a, open, onOpen }) {
+function Advisor({ a, open, onOpen, hc = false }) {
   return (
-    <section className={`pol-adv ${open ? 'open' : ''}`} aria-label={a.n}>
+    <section className={`pol-adv ${hc ? 'hc' : ''} ${open ? 'open' : ''}`} aria-label={a.n}>
       <div className="pol-slot adv">
         <button className="pol-slot-main" onClick={onOpen} aria-expanded={open} title={a.current ? `${a.n}: ${a.current.info}` : `${a.n}: neobsazeno – vyberte poradce`}>
-          <span className={`pol-portrait ${a.current ? '' : 'empty'}`}>{a.current ? <Portrait name={a.current.n} w={40} h={50} /> : <Icon name="plus" size={20} />}<i><Icon name={ADV_ICON[a.slot] || 'general'} size={12} /></i></span>
+          <span className={`pol-portrait ${a.current ? '' : 'empty'}`}>{a.current ? <Portrait name={a.current.n} w={40} h={50} /> : <Icon name={hc ? ADV_SLOTS[a.slot].icon : 'plus'} size={20} />}<i><Icon name={hc ? ADV_SLOTS[a.slot].icon : ADV_ICON[a.slot] || 'general'} size={12} /></i></span>
           <span className="pol-slot-txt"><i>{a.n}</i><b>{a.current ? a.current.n : 'Neobsazeno'}</b><em>{a.current ? modText(a.current.mod, null, a.current.doc) : 'klikněte a vyberte'}</em></span>
         </button>
         {a.current ? <button className="icon-btn sm" onClick={() => dismissAdv(a.slot)} aria-label={`Propustit: ${a.current.n}`} title="Propustit (cena se nevrací)"><Icon name="close" size={14} /></button> : null}
@@ -118,28 +118,11 @@ function PartyPie({ rows }) {
   );
 }
 
-/** F4: vrchní velení – tři karty náčelníků štábů (armáda, námořnictvo, letectvo) s volbami jako dlaždicemi. */
-function HighCommand({ list }) {
+/** F4/UI4: vrchní velení jako řada slotů (jako „Vojenský štáb“ v HOI4) – klik na slot otevře náčelníky jako dlaždice. */
+function HighCommand({ list, open, setOpen }) {
   return (
-    <div className="hc-grid">
-      {list.map((a) => (
-        <section key={a.slot} className={`hc-card ${a.current ? 'on' : ''}`} aria-label={a.n}>
-          <header>
-            <span className="hc-ic" aria-hidden="true"><Icon name={ADV_SLOTS[a.slot].icon} size={22} /></span>
-            <span className="hc-nm"><b>{a.n}</b><i className="muted">{a.current ? `${a.current.n}: ${modText(null, null, a.current.doc)}` : 'Neobsazeno'}</i></span>
-            {a.current ? <button className="icon-btn sm" onClick={() => dismissAdv(a.slot)} aria-label={`Propustit: ${a.current.n}`} title="Propustit (cena se nevrací)"><Icon name="close" size={14} /></button> : null}
-          </header>
-          <div className="hc-opts">
-            {a.options.map((o) => (
-              <button key={o.id} className={`hc-opt ${o.active ? 'on' : ''}`} disabled={o.active || !!o.block} onClick={() => hireAdv(a.slot, o.id)} aria-pressed={o.active} title={o.block || o.info}>
-                <b>{o.n}</b>
-                <span>{modText(null, null, o.doc)}</span>
-                <i>{o.active ? 've službě' : `${o.pp} PM`}</i>
-              </button>
-            ))}
-          </div>
-        </section>
-      ))}
+    <div className="pol-row hc-row">
+      {list.map((a) => <Advisor key={a.slot} a={a} hc open={open === `h${a.slot}`} onOpen={() => setOpen(open === `h${a.slot}` ? '' : `h${a.slot}`)} />)}
     </div>
   );
 }
@@ -242,10 +225,13 @@ export function PoliticsPanel() {
         <div className="prod-cols pol-cols">
           <LeaderCard tag={state.player} p={p} spirits={spirits} state={state} me={me} />
           <div className="prod-left">
-            <div className="sec-head"><h3>Zákony</h3></div>
-            <div className="law-grid">{p.laws.map((c) => <Law key={c.cat} cat={c} open={open === `l${c.cat}`} onOpen={() => setOpen(open === `l${c.cat}` ? '' : `l${c.cat}`)} />)}</div>
-            <div className="sec-head"><h3>Vrchní velení</h3><span className="muted">náčelníci štábů: bonusy armády, námořnictva a letectva</span></div>
-            <HighCommand list={p.advisors.filter((a) => ADV_SLOTS[a.slot].hc)} />
+            <div className="sec-head"><h3>Zákony a vláda</h3><span className="muted">klikněte na slot a vyberte</span></div>
+            <div className="pol-row law-grid">
+              {p.laws.map((c) => <Law key={c.cat} cat={c} open={open === `l${c.cat}`} onOpen={() => setOpen(open === `l${c.cat}` ? '' : `l${c.cat}`)} />)}
+              {p.advisors.filter((a) => !ADV_SLOTS[a.slot].hc).map((a) => <Advisor key={a.slot} a={a} open={open === `a${a.slot}`} onOpen={() => setOpen(open === `a${a.slot}` ? '' : `a${a.slot}`)} />)}
+            </div>
+            <div className="sec-head"><h3>Vojenský štáb</h3><span className="muted">náčelníci štábů: bonusy armády, námořnictva a letectva</span></div>
+            <HighCommand list={p.advisors.filter((a) => ADV_SLOTS[a.slot].hc)} open={open} setOpen={setOpen} />
             {mechs.length ? <>
               <div className="sec-head"><h3>Národní mechanika</h3><span className="muted">zvláštní vnitřní situace země</span></div>
               <div className="mech-grid">{mechs.map((m) => <MechCard key={m.id} m={m} />)}</div>
@@ -255,10 +241,6 @@ export function PoliticsPanel() {
               <div className="occ-grid">{occ.map((x) => <OccCard key={x.o} state={state} me={me} x={x} open={open === `o${x.o}`} onOpen={() => setOpen(open === `o${x.o}` ? '' : `o${x.o}`)} />)}</div>
             </> : null}
           </div>
-          <aside className="prod-right">
-            <div className="sec-head"><h3>Poradci</h3></div>
-            {p.advisors.filter((a) => !ADV_SLOTS[a.slot].hc).map((a) => <Advisor key={a.slot} a={a} open={open === `a${a.slot}`} onOpen={() => setOpen(open === `a${a.slot}` ? '' : `a${a.slot}`)} />)}
-          </aside>
         </div>
       </div>
     </Screen>
