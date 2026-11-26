@@ -1426,6 +1426,23 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Rozhraní**: okno Diplomacie, karta Váš blok – splněné cíle (fajfka a bonus v nápovědě), rozpracované s pruhem postupu, vedoucí
   vybírá z dlaždic; u pozvání předpověď hlasování (podíl hlasů pro, rozpis v nápovědě) a akce Vyloučit z bloku.
 
+## 4zzzzzzzzzzzzzzzzz. Mechaniky jednotlivých zemí (S4, `GAME_VERSION = 58`)
+
+- **Stav**: `nat.mech[id]` = ukazatel 0–100 každé mechaniky z `MECHS` (`data/nat/mechanics.js`; `validateState` vyžaduje objekt).
+- **Mechanika** = země `tag`, okno dní `from`–`until`, popisky ukazatele, pásma `bands` (`min`, duch, název; platí první splněné od
+  nejvyššího) a historické kroky `hist` ([den, změna]). Denně `mechDay` (v `natDay`): u AI země provede historický krok v daný den
+  (posun `shiftOf` ve volné historii; hráčova země nikdy), pak udrží jen ducha aktuálního pásma (`addSpirit` / `removeSpirit`);
+  mimo okno nebo po kapitulaci země duchy mechaniky odebere. Bonusy a postihy pásem jsou obyčejní národní duchové (`SPIRITS`,
+  `mod` + `army`).
+- **Mechaniky**: Velká čistka (SSSR – paranoia; pásmo Čistky = počáteční duch `cistky`, nad 75 Velký teror; národní cíl Konec čistek
+  ukazatel sníží), Jednota republiky a Jednota nacionalistů (Španělsko 1936–1939: jednotná fronta / rozkol), Armáda a loďstvo
+  (Japonsko: převaha armády / loďstva), Jednota Číny (rozdrobení / jednotná fronta), Izolacionismus (USA: izolacionismus,
+  opatrná neutralita, arzenál demokracie).
+- **Rozhodnutí** (`DECISIONS`, kategorie Národní, účinek `mech` – `shiftMech`): hráč posouvá ukazatel; AI tato rozhodnutí nebere
+  (bez `ai`), její průběh dávají historické kroky.
+- **Rozhraní**: okno Politika, oddíl Národní mechanika – karta s ukazatelem, značkami hranic pásem, aktuálním pásmem a účinky
+  jeho ducha v nápovědě.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1641,6 +1658,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S4** | **Mechaniky jednotlivých zemí**: Velká čistka (SSSR), jednota frakcí obou stran ve Španělsku, armáda vs. loďstvo (Japonsko), jednota Číny, izolacionismus USA – ukazatele s pásmy a rozhodnutími | ✅ |
 | **S10** | **Frakce**: společné cíle bloků s trvalými bonusy pro členy, vážené hlasování o přijetí a vyloučení členů | ✅ |
 | **S9** | **Námořnictvo**: přestavby flotil v přístavu (technika a návrhy se u lodí projeví až po přestavbě), úder letectva na přístav, příprava vylodění divizí | ✅ |
 | **S8** | **Letecké zóny a strategické bombardování**: převaha ve vzduchu nad strategickými regiony (postih divizí), poškození továren bombardováním a jejich oprava, protiletadlová obrana, mapový režim Vzdušná převaha | ✅ |

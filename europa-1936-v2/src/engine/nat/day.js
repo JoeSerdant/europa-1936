@@ -1,4 +1,5 @@
 // Denní krok národních cílů a událostí (M22): naplánované a podmíněné události, plnění cíle, výběr cíle a voleb AI zemí.
+import { mechDay } from './mech.js';
 import { getWorld } from '../world.js';
 import { EVENTS, EVENT_BY_ID, FOCUS_BY_ID } from '../../data/nat/index.js';
 import { NAT } from './constants.js';
@@ -66,6 +67,7 @@ export function fireEvent(state, o, id, player) {
 export function natDay(state) {
   const w = getWorld();
   state = expireSpirits(state);   // M74: dočasní národní duchové
+  state = mechDay(state);   // S4: národní mechaniky
   const player = state.player ? w.ownerIdx[state.player] : 0;
   for (let o = 1; o < w.owners.length; o++) {
     let own = state.nat.own[o];

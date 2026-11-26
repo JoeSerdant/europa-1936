@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useGameSlow } from '../store.js';
 import { Portrait } from '../army/Portrait.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { politicsOf, focusTree, spiritsOf, ADV_SLOTS, nextElection, formatDate, occupiedBy, occLawOf, hasCollab, collabBlock, OCC_LAWS, OCC_LAW_IDS, getWorld } from '../../engine/index.js';
+import { politicsOf, focusTree, spiritsOf, ADV_SLOTS, nextElection, formatDate, occupiedBy, occLawOf, hasCollab, collabBlock, OCC_LAWS, OCC_LAW_IDS, getWorld, mechsOf, MECHS, SPIRITS } from '../../engine/index.js';
 import { COUNTRIES, IDEOLOGIES } from '../../data/countries.js';
 import { Flag } from '../common/Flag.jsx';
 import { playerIdx, changeLaw, hireAdv, dismissAdv, backParty, changeOccLaw, makeCollab } from '../actions.js';
@@ -198,6 +198,22 @@ function LeaderCard({ tag, p, spirits, state, me }) {
 /** Otevřený slot (zákon nebo poradce) – stav komponenty, ne hry. */
 const usePick = () => useState('');
 
+/** S4: národní mechanika – ukazatel s pásmy (značky hranic), aktuální pásmo a jeho duch v nápovědě. */
+function MechCard({ m }) {
+  const M = MECHS[m.id], sp = m.band.spirit ? SPIRITS[m.band.spirit] : null;
+  return (
+    <section className={`mech-card ${m.active ? '' : 'off'}`} aria-label={M.n} title={M.info}>
+      <header><b>{M.n}</b><span className={`mech-band ${sp ? sp.tone : ''}`} title={sp ? `${sp.n}: ${sp.info} ${modText(sp.mod, sp.army)}` : 'Bez zvláštních účinků'}>{m.band.n}</span></header>
+      <div className="mech-gauge" aria-label={`${M.g} ${Math.round(m.v)} %`}>
+        <i style={{ width: `${m.v}%` }} />
+        {M.bands.filter((b) => b.min > 0).map((b) => <em key={b.min} style={{ left: `${b.min}%` }} />)}
+      </div>
+      <div className="mech-ends"><span>{M.lo}</span><b>{M.g} {Math.round(m.v)}</b><span>{M.hi}</span></div>
+      <p className="muted">{m.active ? 'Ukazatel posouvají rozhodnutí (okno Rozhodnutí, záložka Národní).' : 'Mechanika teď neběží.'}</p>
+    </section>
+  );
+}
+
 /** Záložka Politika: stabilita, podpora války, politická moc (PM), zákony a poradci. */
 export function PoliticsPanel() {
   const state = useGameSlow((s) => s, 600);
@@ -206,6 +222,7 @@ export function PoliticsPanel() {
   const p = politicsOf(state, me);
   const [open, setOpen] = usePick();
   const occ = occupiedBy(state, me);   // S7
+  const mechs = mechsOf(state, me);   // S4
   const spirits = [
     ...spiritsOf(state, me).map((x) => ({ k: `s${x.id}`, n: x.days ? `${x.n} (${x.days} d)` : x.n, kind: `spirit ${x.tone}`, icon: x.tone === 'bad' ? 'resistance' : 'flag', hint: `${x.info} ${modText(x.mod, x.army)}${x.days ? ` · ještě ${x.days} dní` : ''}` })),
     ...p.laws.map((c) => { const o = c.options.find((x) => x.active); return { k: `l${c.cat}`, n: o.n, kind: 'law', icon: LAW_ICON[c.cat] || 'gavel', hint: `${c.n}: ${o.info}` }; }),
@@ -229,6 +246,10 @@ export function PoliticsPanel() {
             <div className="law-grid">{p.laws.map((c) => <Law key={c.cat} cat={c} open={open === `l${c.cat}`} onOpen={() => setOpen(open === `l${c.cat}` ? '' : `l${c.cat}`)} />)}</div>
             <div className="sec-head"><h3>Vrchní velení</h3><span className="muted">náčelníci štábů: bonusy armády, námořnictva a letectva</span></div>
             <HighCommand list={p.advisors.filter((a) => ADV_SLOTS[a.slot].hc)} />
+            {mechs.length ? <>
+              <div className="sec-head"><h3>Národní mechanika</h3><span className="muted">zvláštní vnitřní situace země</span></div>
+              <div className="mech-grid">{mechs.map((m) => <MechCard key={m.id} m={m} />)}</div>
+            </> : null}
             {occ.length ? <>
               <div className="sec-head"><h3>Okupovaná území</h3><span className="muted">okupační zákon, odboj a poddajnost podle země</span></div>
               <div className="occ-grid">{occ.map((x) => <OccCard key={x.o} state={state} me={me} x={x} open={open === `o${x.o}`} onOpen={() => setOpen(open === `o${x.o}` ? '' : `o${x.o}`)} />)}</div>

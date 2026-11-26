@@ -1,2 +1,2 @@
 // Označení verze hry zobrazené v hlavním menu (při dokončení milníku se zvedne).
-export const VERSION_LABEL = 'Verze 0.300 · Dark Times – společné cíle bloků a hlasování';
+export const VERSION_LABEL = 'Verze 0.310 · Dark Times – mechaniky jednotlivých zemí';
