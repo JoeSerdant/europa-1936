@@ -16,6 +16,8 @@ import { hasWar } from '../../engine/army/war.js';
 import { tallyOwners } from '../../engine/industry/core.js';
 import { C as ARMY } from '../../engine/army/constants.js';
 import { countryStats } from '../../engine/selectors.js';
+import { tplStats } from '../../engine/army/unit.js';
+import { logNeed, logRatios } from '../../engine/army/logistics.js';
 import { industryOf, fuelOf, transportsOf, manpowerOf } from '../../engine/index.js';
 
 const pct = (v, d = 0) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v * 100).toFixed(d).replace('.', ',')} %`;
@@ -78,13 +80,16 @@ export function ppBreakdown(state, o) {
 /** Rozpis lidské síly: volná, v poli, měsíční přírůstek a jeho násobky. */
 export function manBreakdown(state, o) {
   const w = getWorld(), st = countryStats(state, w.owners[o].tag);
-  let n = 0;
-  for (const d of state.mil.divs) if (d && d.o === o) n++;
+  let n = 0, field = 0, train = 0, q = 0;
+  const men = (tpl) => { try { return tplStats(state.mil, tpl).men || 0; } catch { return 0; } };
+  for (const d of state.mil.divs) if (d && d.o === o) { n++; field += men(d.tpl) * Math.max(0, Math.min(1, d.hp ?? 1)); }
+  for (const x of state.mil.queue) if (x.o === o) { q++; train += men(x.tpl); }
   const own = state.pol.own[o];
   const growth = st ? st.manPop * 1000 * ARMY.MAN_GROWTH_MONTH * manMult(state, o) : 0;
   const rows = [
     { n: 'Volná lidská síla', v: num(manpowerOf(state, o)) },
-    { n: 'Divize v poli', v: num(n) },
+    { n: `V poli (${n} divizí)`, v: num(field) },
+    { n: `Ve výcviku (${q})`, v: num(train) },
     { n: 'Měsíční přírůstek', v: `+${num(growth)}`, tone: 'up' },
     ...modSources(state, o, 'man').map((r) => ({ n: r.n, v: pct(r.v, 1), tone: tone(r.v) })),
     { n: 'Podpora války', v: pct(POL.WS_MAN_BASE + POL.WS_MAN_SLOPE * own.ws - 1, 1), tone: tone(POL.WS_MAN_BASE + POL.WS_MAN_SLOPE * own.ws - 1) },
@@ -132,5 +137,21 @@ export function convoyBreakdown(state, o) {
       { n: 'Volné', v: num(t.free), tone: 'up' },
     ],
     text: 'Transportní lodě vozí dovážené suroviny po moři a převážejí divize. Chybějící konvoje snižují dodávky obchodu.',
+  };
+}
+
+/** UI13: rozpis logistiky (jako „Logistics Fulfillment“ v HOI4) – lokomotivy a nákladní auta: potřeba, sklad, pokrytí. */
+export function logBreakdown(state, o) {
+  const need = logNeed(state.mil, o), r = logRatios(state, o), st = state.mil.stock[o] || {};
+  const p = (x) => `${Math.round(x * 100)} %`;
+  return {
+    title: 'Logistika', value: Math.min(r.tr, r.tk),
+    rows: [
+      { n: 'Lokomotivy: potřeba', v: num(need.trains) },
+      { n: 'Lokomotivy: ve skladu', v: `${num(st.vlaky || 0)} (${p(r.tr)})`, tone: r.tr < 1 ? 'down' : 'up' },
+      { n: 'Nákladní auta: potřeba', v: num(need.trucks) },
+      { n: 'Nákladní auta: ve skladu', v: `${num(st.auta || 0)} (${p(r.tk)})`, tone: r.tk < 1 ? 'down' : 'up' },
+    ],
+    text: 'Pokrytí logistiky říká, jak dobře zásobovací linie stačí. Chybí-li lokomotivy nebo nákladní auta pro všechny divize, dostávají jednotky méně zásob.',
   };
 }

@@ -1,7 +1,7 @@
 // UI2: rozpisy hodnot horní lišty – součet zdrojů odpovídá bonusům enginu a cíl stability sedí.
 import { describe, it, expect } from 'vitest';
 import { createGame, getWorld, polModsOf } from '../src/engine/index.js';
-import { modSources, targetBreakdown, ppBreakdown, manBreakdown, facBreakdown, fuelBreakdown, convoyBreakdown } from '../src/ui/hud/breakdown.js';
+import { modSources, targetBreakdown, ppBreakdown, manBreakdown, facBreakdown, fuelBreakdown, convoyBreakdown, logBreakdown } from '../src/ui/hud/breakdown.js';
 import { targetsOf } from '../src/engine/politics/day.js';
 
 describe('UI2: rozpisy horní lišty', () => {
@@ -27,7 +27,7 @@ describe('UI2: rozpisy horní lišty', () => {
   });
   it('ostatní rozpisy mají titulek, řádky a popis', () => {
     const o = w.ownerIdx.GER;
-    for (const b of [ppBreakdown(s, o), manBreakdown(s, o), facBreakdown(s, o), fuelBreakdown(s, o), convoyBreakdown(s, o)]) {
+    for (const b of [ppBreakdown(s, o), manBreakdown(s, o), facBreakdown(s, o), fuelBreakdown(s, o), convoyBreakdown(s, o), logBreakdown(s, o)]) {
       expect(b.title.length).toBeGreaterThan(3);
       expect(b.rows.length).toBeGreaterThan(1);
       expect(b.text.length).toBeGreaterThan(20);

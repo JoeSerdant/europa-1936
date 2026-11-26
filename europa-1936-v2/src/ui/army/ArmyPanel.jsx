@@ -8,6 +8,7 @@ import {
 } from '../actions.js';
 import { summarize, planText, pct, provName, RANK_NAMES, SKILLS } from './helpers.js';
 import { ClsIcon, Bar, Status } from './parts.jsx';
+import { Portrait } from './Portrait.jsx';
 
 // ---- přetahování (HTML5 drag & drop): co se právě táhne ----
 let dragPayload = null;
@@ -59,21 +60,41 @@ function GenLine({ gen }) {
   );
 }
 
+const SKILL_ICON = { a: 'attack', d: 'shield', pl: 'target', lg: 'supply', mn: 'speed' };
+const traitTip = (t) => (TRAITS[t] ? `${TRAITS[t].n}: ${TRAITS[t].info}` : t);
+
+/** UI12: dovednosti velitele jako ikony s čísly (jako v HOI4). */
+function Skills({ g }) {
+  return <span className="gc-skills">{SKILLS.map(([k, n]) => <i key={k} title={`${n}: ${g[k] || 1}`}><Icon name={SKILL_ICON[k]} size={12} />{g[k] || 1}</i>)}</span>;
+}
+
+/** UI12: karta velitele jako v HOI4 – portrét s úrovní, hodnost a jméno, dovednosti, vlastnosti jako odznaky. */
+function GenCard({ g, on, note, onPick }) {
+  const body = (
+    <>
+      <span className="gc-por"><Portrait name={g.gen.nm} rank={g.gen.r} w={48} h={58} /><em title={`Úroveň ${g.level}`}>{g.level}</em></span>
+      <span className="gc-txt">
+        <i>{RANK_NAMES[g.gen.r]}</i><b>{g.gen.nm}</b>
+        <Skills g={g.gen} />
+        {g.gen.tr.length ? <span className="gc-tr">{g.gen.tr.map((t) => <span key={t} className="gc-trait" title={traitTip(t)}>{TRAITS[t] ? TRAITS[t].n : t}</span>)}</span> : null}
+        {note ? <span className="pick-sub">{note}</span> : null}
+      </span>
+    </>
+  );
+  return onPick
+    ? <button role="option" aria-selected={on} className={`gen-card ${on ? 'on' : ''}`} onClick={stop(onPick)}>{body}</button>
+    : <div className="gen-card cur">{body}</div>;
+}
+
 function CommanderPicker({ kind, id, gens, current, onClose }) {
   const list = kind === 'group' ? gens.filter((g) => g.gen.r === 'M') : gens;
   return (
-    <div className="picker" role="listbox" aria-label="Velitelé">
+    <div className="picker gen-picker" role="listbox" aria-label="Velitelé">
       {current ? <button className="pick-none" onClick={stop(() => { setCommander(kind, id, 0); onClose(); })}>Odvolat velitele</button> : null}
       {list.length === 0 && <p className="muted">{kind === 'group' ? 'Žádný polní maršál k dispozici.' : 'Žádný velitel k dispozici.'}</p>}
       {list.map((g) => (
-        <button key={g.id} role="option" aria-selected={g.id === current} className={`pick ${g.id === current ? 'on' : ''}`}
-          onClick={stop(() => { setCommander(kind, id, g.id); onClose(); })}>
-          <GenLine gen={g} />
-          <span className="pick-sub">
-            úroveň {g.level}{g.gen.tr.length ? ` · ${g.gen.tr.map((t) => (TRAITS[t] ? TRAITS[t].n : t)).join(', ')}` : ''}
-            {g.post && !(g.post.kind === kind && g.post.id === id) ? ' · velí jinde (bude přeložen)' : ''}
-          </span>
-        </button>
+        <GenCard key={g.id} g={g} on={g.id === current} onPick={() => { setCommander(kind, id, g.id); onClose(); }}
+          note={g.post && !(g.post.kind === kind && g.post.id === id) ? 'velí jinde (bude přeložen)' : ''} />
       ))}
     </div>
   );
@@ -85,7 +106,7 @@ function CommanderRow({ kind, id, cmd, gens }) {
   return (
     <div className="cmd">
       <div className="cmd-main">
-        {g ? <GenLine gen={g} /> : <span className="muted">{kind === 'group' ? 'Bez polního maršála' : 'Bez velitele'}</span>}
+        {g ? <GenCard g={g} /> : <span className="gen-empty"><Portrait w={48} h={58} /><span className="muted">{kind === 'group' ? 'Bez polního maršála' : 'Bez velitele'}</span></span>}
         <button className="sbtn" onClick={stop(() => setPick(!pick))} aria-expanded={pick}><Icon name="general" size={14} />{g ? 'Změnit' : 'Jmenovat'}</button>
       </div>
       {pick && <CommanderPicker kind={kind} id={id} gens={gens} current={cmd} onClose={() => setPick(false)} />}
