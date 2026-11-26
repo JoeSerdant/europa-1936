@@ -114,4 +114,14 @@ describe('barvy a popisky', () => {
     const sl = stateLabels(W);
     expect(sl.filter(Boolean).length).toBe(W.states.length - 1);
   });
+  it('UI6: název země leží na jejím jádru (u hlavního města), ne na koloniích', () => {
+    const labels = countryLabels(W, null);
+    for (const tag of ['FRA', 'ENG', 'DEN', 'ITA', 'HOL', 'POR', 'BEL']) {
+      const l = labels.find((x) => x.tag === tag);
+      if (!l) continue;
+      const cap = W.land[W.owners[W.ownerIdx[tag]].cap].c;
+      const km = Math.hypot(l.x - cap[0], l.y - cap[1]) * W.frame.km;
+      expect(km, tag).toBeLessThan(1500);
+    }
+  });
 });

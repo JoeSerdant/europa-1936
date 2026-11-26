@@ -1162,6 +1162,11 @@ Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a da
   - *Důstojnický sbor*: záložky větví, směry jako sloupce s odznakem, stupně pod sebou s číslem a spojnicí.
   - *Vláda*: zákony a poradci v řadě slotů „Zákony a vláda“, náčelníci štábů v řadě „Vojenský štáb“; volby se otevřou jako dlaždice pod řadou přes celou šířku.
   - *Nábor*: vlevo fronta výcviku a sklad, vpravo šablony divizí.
+  - *Rozhodnutí* (UI7): záložka „Vše“ a kategorie; kategorie jsou oddíly s nadpisem (sbalitelné), rozhodnutí řádky (ikona, název, stav, cena v PM, tlačítko), podrobnosti v okně při najetí.
+  - *Zpravodajská agentura* (UI8): agenti jako sloty, operace jako dlaždice s cenou a dobou, cílová země jako dlaždice s vlajkou a přehledem (hledání); žádný rozbalovací seznam.
+  - *Konstrukční kancelář* (UI9): silueta výzbroje, sloty modulů jako dlaždice, moduly otevřeného slotu jako dlaždice (zamčené s chybějící technologií), srovnání vlastností pruhy.
+  - *Stavby* (UI10): paleta rozdělená na státní a provinční budovy.
+  - *Mapa v dálce* (UI6): název země leží na části s hlavním městem (jinak na největší části mimo kolonie – `countryLabels`); noční světla měst se při oddálení zmenšují a ztlumí a pod zoomem 0,55 svítí jen velká města.
 - **Přehled vpravo** (outliner, `ui/hud/Outliner.jsx`, data jen z `outlinerData` v `ui/hud/outliner.js`): oddíly Národní cíl, Výzkum, Bitvy (převaha
   hráčovy strany), Armády (počet divizí, organizace, boj, zásoby), Výcvik, Flotily, Letectvo, Výroba (továrny, efektivita), Stavby (postup);
   klik vede na mapu (armáda = výběr divizí a let kamery), do okna bitvy nebo do okna. Sbalitelný celý (`ui.outliner`) i po oddílech; skrytý,
