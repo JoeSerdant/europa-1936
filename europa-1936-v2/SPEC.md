@@ -1166,6 +1166,7 @@ Vlastní pravidla a čísla po vzoru mechanik HOI4 (bez převzatých textů a da
   - *Zpravodajská agentura* (UI8): agenti jako sloty, operace jako dlaždice s cenou a dobou, cílová země jako dlaždice s vlajkou a přehledem (hledání); žádný rozbalovací seznam.
   - *Konstrukční kancelář* (UI9): silueta výzbroje, sloty modulů jako dlaždice, moduly otevřeného slotu jako dlaždice (zamčené s chybějící technologií), srovnání vlastností pruhy.
   - *Stavby* (UI10): paleta rozdělená na státní a provinční budovy.
+  - *Výběr země* (UI11): velmoci jako karty s portrétem (vlastní kresba `Portrait`) a vlajkou, ostatní země jako mřížka vlajek se záložkami oblastí (`regionOf` podle polohy hlavního města).
   - *Mapa v dálce* (UI6): název země leží na části s hlavním městem (jinak na největší části mimo kolonie – `countryLabels`); noční světla měst se při oddálení zmenšují a ztlumí a pod zoomem 0,55 svítí jen velká města.
 - **Přehled vpravo** (outliner, `ui/hud/Outliner.jsx`, data jen z `outlinerData` v `ui/hud/outliner.js`): oddíly Národní cíl, Výzkum, Bitvy (převaha
   hráčovy strany), Armády (počet divizí, organizace, boj, zásoby), Výcvik, Flotily, Letectvo, Výroba (továrny, efektivita), Stavby (postup);
