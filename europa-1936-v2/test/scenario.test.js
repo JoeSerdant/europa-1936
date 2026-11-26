@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { logRatios } from '../src/engine/army/logistics.js';
 import { createGame, getWorld, advance, atWar, divisionCount, industryOf, airOf, packGame, unpackGame, formatDate, SCENARIOS, validateState, hasCapitulated, isUnlocked } from '../src/engine/index.js';
 
 const W = getWorld();
@@ -48,5 +49,14 @@ describe('scénáře', () => {
     expect(JSON.stringify(a.mil.wars)).toBe(JSON.stringify(b.mil.wars));
     expect(a.mil.battles.length).toBeGreaterThanOrEqual(0);
     expect(unpackGame(JSON.parse(JSON.stringify(packGame(a)))).error).toBeUndefined();
+  });
+
+  it('UI15: větší armáda scénáře 1939 má i lokomotivy a nákladní auta (logistika 100 %)', () => {
+    const s = createGame({ player: 'GER', scenario: 1939 });
+    for (const tag of ['GER', 'SOV', 'FRA', 'ENG']) {
+      const r = logRatios(s, getWorld().ownerIdx[tag]);
+      expect(r.tr, tag).toBe(1);
+      expect(r.tk, tag).toBe(1);
+    }
   });
 });

@@ -4,7 +4,9 @@ import { getWorld } from './world.js';
 import { SCENARIOS } from '../data/scenarios.js';
 import { COUNTRIES } from '../data/countries.js';
 import { DEFAULT_SPLIT } from '../data/industry/index.js';
-import { EQUIP } from '../data/army/equipment.js';
+import { EQUIP, EQUIP_IDS } from '../data/army/equipment.js';
+import { logNeed } from './army/logistics.js';
+import { C as ARMY_C } from './army/constants.js';
 import { TECHS, TECH_IDS } from '../data/research/index.js';
 import { apportion } from './industry/setup.js';
 import { I } from './industry/constants.js';
@@ -67,13 +69,24 @@ function growArmy(state, o, f) {
   const divs = state.mil.divs.slice();
   const nr = {};
   for (const d of divs) if (d) nr[`${d.o}:${d.tpl}`] = Math.max(nr[`${d.o}:${d.tpl}`] || 0, d.nr);
+  const inArmy = {};   // UI15: nové divize jdou do armády předlohy, dokud nemá strop ARMY_CAP (jinak by hráč začínal s desítkami divizí mimo armády)
+  for (const d of divs) if (d && d.o === o && d.army) inArmy[d.army] = (inArmy[d.army] || 0) + 1;
   for (let k = 0; k < add; k++) {
     const src = divs[mine[Math.floor((k * mine.length) / add) % mine.length]];
     const key = `${o}:${src.tpl}`;
     nr[key] = (nr[key] || 0) + 1;
-    divs.push({ ...src, nr: nr[key], army: 0, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0 });
+    const army = src.army && state.mil.armies[src.army] && (inArmy[src.army] || 0) < ARMY_C.ARMY_CAP ? src.army : 0;
+    if (army) inArmy[army]++;
+    divs.push({ ...src, nr: nr[key], army, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0 });
   }
-  return { ...state, mil: { ...state.mil, divs, ver: state.mil.ver + 1 } };
+  // UI15: výzbroj zásobování roste s armádou (lokomotivy × f, nákladní auta aspoň na potřebu zásobování) – jinak by větší armáda scénáře začínala bez logistiky
+  const stock = state.mil.stock.slice(), st = { ...(stock[o] || {}) };
+  for (const id of EQUIP_IDS) if (EQUIP[id].log && st[id]) st[id] = Math.round(st[id] * f);
+  const need = logNeed({ divs }, o);
+  if ((st.auta || 0) < need.trucks) st.auta = need.trucks;
+  if ((st.vlaky || 0) < need.trains) st.vlaky = need.trains;
+  stock[o] = st;
+  return { ...state, mil: { ...state.mil, divs, stock, ver: state.mil.ver + 1 } };
 }
 
 /** Zvětší letectvo (křídla v rezervě a na letištích do kapacity, zbytek do rezervy). */
