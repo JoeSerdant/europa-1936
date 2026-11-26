@@ -8,6 +8,7 @@ import { hasAccess } from '../dip/accessCore.js';
 import { NAV, NAV_MISSIONS } from './constants.js';
 import { homeSea, powerOf, seaRoute, seaBlocked, coastSeasOf, isSeaLabel } from './core.js';
 import { transportsOf } from './convoy.js';
+import { shipLvSnap } from './refit.js';
 
 const patch = (state, p) => ({ ...state, nav: { ...state.nav, ...p, ver: state.nav.ver + 1 } });
 const ok = (state, o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length && !!state.nav.pool[o];
@@ -32,7 +33,7 @@ export function formFleet(state, o, ships, nm = '') {
   const poolArr = state.nav.pool.slice();
   poolArr[o] = rest;
   const id = state.nav.fn + 1;
-  const fleet = { o, nm: cleanName(nm) || `${id}. flotila`, p: home.sea, ships: clean, c: {}, mx: powerOf(clean).hp, to: 0, path: [], prog: 0, m: '', pl: 0 };   // M90: paluby se doplní v přístavu (`refillDecks`)
+  const fleet = { o, nm: cleanName(nm) || `${id}. flotila`, p: home.sea, ships: clean, c: {}, mx: powerOf(clean).hp, to: 0, path: [], prog: 0, m: '', pl: 0, lv: shipLvSnap(state, o, clean) };   // S9: nové lodě mají nejnovější úrovně   // M90: paluby se doplní v přístavu (`refillDecks`)
   return patch(state, { fn: id, pool: poolArr, fleets: [...state.nav.fleets, ...new Array(id - state.nav.fleets.length).fill(null), fleet] });
 }
 
@@ -69,7 +70,7 @@ export function renameFleet(state, id, nm) {
 /** Pošle flotilu do mořské oblasti `label` (cesta po mořských oblastech). */
 export function orderFleet(state, id, label) {
   const f = fleetOf(state, id);
-  if (!f || !isSeaLabel(label)) return state;
+  if (!f || f.rf || !isSeaLabel(label)) return state;   // S9: přestavovaná flotila nepluje
   if (label === f.p) return f.path.length ? setFleet(state, id, { to: 0, path: [], prog: 0 }) : state;
   const r = seaRoute(f.p, new Set([label]), null);
   if (!r) return state;
@@ -79,7 +80,7 @@ export function orderFleet(state, id, label) {
 /** Zadá flotile misi (`''` = bez mise, jinak klíč `NAV_MISSIONS`). */
 export function setFleetMission(state, id, m) {
   const f = fleetOf(state, id);
-  if (!f || (m !== '' && !NAV_MISSIONS[m]) || (f.m || '') === m) return state;
+  if (!f || (m !== '' && !NAV_MISSIONS[m]) || (f.m || '') === m || (f.rf && m)) return state;
   return setFleet(state, id, { m });
 }
 
@@ -113,9 +114,11 @@ export function sailBlock(state, divIds, dest) {
     if (!atWar(mil, o, c) && !hasAccess(state.dip, o, c)) return 'Na cizí neutrální území se vylodit nelze.';   // M67: přístav spojence ano
     for (const d of mil.divs) if (d && d.p === dest && atWar(mil, o, d.o)) return 'Cíl hájí nepřátelské divize – vylodění jen na nehájenou provincii.';
   }
+  const invade = c !== o && atWar(mil, o, c);   // S9: vylodění na nepřátelské pobřeží potřebuje přípravu
   for (const id of divIds) {
     const d = mil.divs[id];
     if (!d || d.o !== o) return 'Divize patří různým zemím nebo neexistuje.';
+    if (invade && (d.ip || 0) < NAV.PREP_MIN) return `Divize nejsou připravené k vylodění (příprava ${Math.round((d.ip || 0) * 100)} %, potřeba ${Math.round(NAV.PREP_MIN * 100)} %). Nechte je stát v přístavu.`;
     if (d.b) return 'Divize v boji nemůže vyplout.';
     if (!w.portLevel[d.p]) return 'Divize musí stát v přístavu.';
     if (state.ctrl[d.p] !== o) return 'Přístav musí ovládat vlastní země.';

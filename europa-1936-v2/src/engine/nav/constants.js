@@ -38,7 +38,14 @@ export const NAV = {
   MINE_DECAY: 0.01,     // denní úbytek min (moře je odnáší)
   MINE_DMG: 0.0008,     // denní poškození flotily za každou nepřátelskou minu v její oblasti (odminovávající polovina)
   MINE_RISK: 0.003,     // riziko konvoje za nepřátelskou minu v oblasti trasy (nejvýš RAID_MAX)
-  CFORT_ORG: 0.25,      // pobřežní pevnost: vyloďující se divize ztratí tento podíl organizace za úroveň
+  CFORT_ORG: 0.25,
+  // S9: přestavby flotil a příprava vylodění
+  REFIT_DAYS: 30,       // dní přestavby flotily v přístavu s námořní základnou (každá úroveň základny nad první o 10 % rychleji)
+  REFIT_POW: 0.5,       // síla flotily v boji během přestavby
+  REFIT_DOK: 0.25,      // loděnic na každou přestavovanou loď (chybí výrobním linkám lodí)
+  PREP_DAYS: 20,        // dní přípravy vylodění na 100 % (divize stojí v přístavu)
+  PREP_MIN: 0.5,        // nejmenší příprava, se kterou divize vyplují na nepřátelské pobřeží
+  PREP_ORG: 0.5,        // ztráta organizace při vylodění bez přípravy (× chybějící příprava)      // pobřežní pevnost: vyloďující se divize ztratí tento podíl organizace za úroveň
 };
 
 /** Mise flotil (M81): '' = bez mise (drží oblast). */

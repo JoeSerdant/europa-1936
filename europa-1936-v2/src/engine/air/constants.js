@@ -34,7 +34,8 @@ export const AIR = {
   DMG_MAX: 0.8,           // nejvyšší poškození továren státu
   DMG_REPAIR: 0.01,       // oprava poškozených továren za den
   AA_RED: 0.12,           // protiletadlová obrana: o tolik méně poškození za úroveň
-  AA_LOSS: 0.006,         // denní ztráty letadel bombardujících a podporujících nad státem s protiletadlovou obranou (za úroveň)
+  AA_LOSS: 0.006,
+  PORT_K: 2,              // S9: úder na přístav – poškození flotil stojících v přístavních vodách cíle (násobek úderu na lodě)         // denní ztráty letadel bombardujících a podporujících nad státem s protiletadlovou obranou (za úroveň)
   ROCKET_USE: 0.15,       // rakety (M82): podíl křídla raket spotřebovaný za den mise
   NUKE_DAYS: 150,         // jaderná zbraň: dnů výroby jedné bomby po dokončení technologie
   NUKE_MAX: 5,            // nejvíc bomb ve skladu

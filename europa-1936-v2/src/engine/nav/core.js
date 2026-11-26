@@ -41,14 +41,16 @@ export function powerOf(ships) {
 }
 
 /** Síla lodí země `o` s úrovní techniky typů lodí (M96, `mil.lv[o][typ]`): palba +`NAV.LV_ATK` a odolnost +`NAV.LV_HP` za úroveň nad první. */
-export function fleetPower(state, o, ships) {
+export function fleetPower(state, o, ships, flv = null) {
   const lv = state.mil.lv && state.mil.lv[o];
-  if (!lv) return powerOf(ships);
+  if (!lv && !flv) return powerOf(ships);
   let hp = 0, atk = 0, n = 0;
   for (const id of SHIP_IDS) {
     const c = ships[id] || 0;
     if (!c) continue;
-    const l = (lv[id] || 1) - 1, dm = lv.des ? multOf(lv, id) : ONE;   // M97: návrh varianty lodi
+    // S9: flotila počítá s úrovní a návrhem ze stavby nebo poslední přestavby (`f.lv`); typ, který snímek nezná, má úroveň země
+    const src = flv && flv[id] ? flv : lv || {};
+    const l = (src[id] || 1) - 1, dm = src.des ? multOf(src, id) : ONE;   // M97: návrh varianty lodi
     hp += c * SHIPS[id].hp * (1 + NAV.LV_HP * l) * dm.hp; atk += c * SHIPS[id].atk * (1 + NAV.LV_ATK * l) * dm.atk; n += c;
   }
   return { hp, atk, n };

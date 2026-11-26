@@ -6,10 +6,10 @@
 //  carrier palubní letoun (M90): nesestavuje se do křídel na letištích, doplňuje paluby letadlových lodí (`deck` v SHIPS); `nav` = síla úderu na lodě
 export const PLANES = {
   sti: { n: 'Stíhací letoun', ab: 'STÍ', atk: 6, cas: 0.4, bomb: 0, range: 600, unlock: null, roles: ['air', 'int'], info: 'Vybojuje nadvládu ve vzduchu a kryje vlastní letadla.' },
-  bit: { n: 'Bitevní letoun', ab: 'BIT', atk: 2, cas: 5, bomb: 1, range: 450, unlock: null, roles: ['cas', 'nav'], info: 'Podporuje pozemní boje: bonus k útoku divizí ve zvoleném státě.' },
-  tac: { n: 'Taktický bombardér', ab: 'TAK', atk: 1, cas: 3, bomb: 4, range: 800, unlock: null, roles: ['cas', 'bomb', 'nav'], info: 'Univerzální: podpora boje i bombardování.' },
+  bit: { n: 'Bitevní letoun', ab: 'BIT', atk: 2, cas: 5, bomb: 1, range: 450, unlock: null, roles: ['cas', 'nav', 'port'], info: 'Podporuje pozemní boje: bonus k útoku divizí ve zvoleném státě.' },
+  tac: { n: 'Taktický bombardér', ab: 'TAK', atk: 1, cas: 3, bomb: 4, range: 800, unlock: null, roles: ['cas', 'bomb', 'nav', 'port'], info: 'Univerzální: podpora boje i bombardování.' },
   rak: { n: 'Raketa', ab: 'RAK', atk: 0, cas: 0, bomb: 14, range: 900, unlock: 'rakety', roles: ['bomb'], rocket: true, info: 'Úder na zázemí, který stíhači ani radar nezastaví. Každá raketa letí jen jednou: křídlo na misi se rychle spotřebuje.' },
-  str: { n: 'Strategický bombardér', ab: 'STR', atk: 0.5, cas: 0, bomb: 10, range: 1500, unlock: 'strbomb', roles: ['bomb'], info: 'Dálkové bombardování zázemí: ničí zásoby a podlamuje podporu války.' },
+  str: { n: 'Strategický bombardér', ab: 'STR', atk: 0.5, cas: 0, bomb: 10, range: 1500, unlock: 'strbomb', roles: ['bomb', 'port'], info: 'Dálkové bombardování zázemí: ničí zásoby a podlamuje podporu války.' },
   pal: { n: 'Palubní letoun', ab: 'PAL', atk: 4, cas: 3, bomb: 0, nav: 1.3, range: 400, unlock: null, roles: [], carrier: true, info: 'Startuje z letadlové lodi: první úder v námořní bitvě a podpora bojů na pobřeží. Do flotil se doplňuje v domovském přístavu.' },
 };
 export const PLANE_IDS = Object.keys(PLANES);

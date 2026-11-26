@@ -1,4 +1,5 @@
 // Dotazy na námořnictvo pro rozhraní a AI (čisté, bez změn stavu).
+import { refitNeed, refitBlock, refitDaysOf } from './refit.js';
 import { getWorld } from '../world.js';
 import { SHIPS, SHIP_IDS } from '../../data/navy/index.js';
 import { powerOf, fleetSpeed, homeSea, seaBlocked, deckOf, planesOf } from './core.js';
@@ -15,7 +16,7 @@ export function navyOf(state, o) {
     const f = state.nav.fleets[i];
     if (!f || f.o !== o) continue;
     const pw = powerOf(f.ships);
-    fleets.push({ id: i, ...f, hp: pw.hp, atk: pw.atk, count: pw.n, speed: fleetSpeed(f.ships), at: w.seaName(f.p), moving: f.path.length > 0, dest: f.to ? w.seaName(f.to) : '', blocked: seaBlocked(state, o, f.p), deck: deckOf(f.ships), planes: planesOf(f) });
+    fleets.push({ id: i, ...f, hp: pw.hp, atk: pw.atk, count: pw.n, speed: fleetSpeed(f.ships), at: w.seaName(f.p), moving: f.path.length > 0, dest: f.to ? w.seaName(f.to) : '', blocked: seaBlocked(state, o, f.p), deck: deckOf(f.ships), planes: planesOf(f), old: refitNeed(state, f).length, refitWhy: refitBlock(state, i), refitDays: refitDaysOf(state, f) });   // S9: přestavba
   }
   const pool = state.nav.pool[o];
   const sail = state.nav.sail.filter((s) => s.o === o).map((s) => ({ ...s, left: Math.max(0, Math.ceil(s.arrive - state.tick)) }));

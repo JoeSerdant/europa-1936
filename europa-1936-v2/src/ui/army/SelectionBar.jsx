@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { armyTree, divisionView, ARMY, getWorld, marchEta } from '../../engine/index.js';
+import { armyTree, divisionView, ARMY, getWorld, marchEta, NAV } from '../../engine/index.js';
 import { Portrait } from './Portrait.jsx';
 import {
   playerIdx, ownSelected, newArmy, addSelectionToArmy, removeSelectionFromArmy, stopSelected, disbandSelected, focusSelection, clearSelection, toggleDivision, toggleRailMode,
@@ -85,6 +85,8 @@ export function SelectionBar() {
   const cmd = army && army.cmd ? state.mil.gens[army.cmd] : null;
   const mixedOwners = sum.owners.size > 1;
   const march = mine && moving ? marchEta(state, ids) : null;   // F3: cíl a odhad příjezdu nejpomalejší divize
+  const inPort = mine ? ids.map((id) => state.mil.divs[id]).filter((d) => d && w.portLevel[d.p] > 0) : [];   // S9: příprava vylodění v přístavu
+  const prep = inPort.length ? Math.min(...inPort.map((d) => d.ip || 0)) : -1;
 
   return (
     <section className="panel selbar" aria-label="Vybrané jednotky">
@@ -105,6 +107,11 @@ export function SelectionBar() {
       <div className="sel-meters">
         <div title={`Síla ${pct(sum.hp)}`}><Icon name="army" size={15} /><Bar v={sum.hp} kind="hp" /><b>{pct(sum.hp)}</b></div>
         <div title={`Organizace ${pct(sum.org)}`}><Icon name="flag" size={15} /><Bar v={sum.org} kind="org" /><b>{pct(sum.org)}</b></div>
+        {prep >= 0 && (
+          <div className="sel-prep" title={`Příprava vylodění ${pct(prep)} (nejméně připravená divize v přístavu). Na nepřátelské pobřeží lze vyplout od ${pct(NAV.PREP_MIN)}; čím lepší příprava, tím menší ztráta organizace při vylodění. Divize se připravuje, když stojí ve vlastním přístavu.`}>
+            <Icon name="navy" size={15} /><Bar v={prep} kind="org" /><b>{pct(prep)}</b>
+          </div>
+        )}
       </div>
       {view ? (
         <div className="sel-chips">

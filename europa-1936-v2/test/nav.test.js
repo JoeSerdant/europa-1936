@@ -196,6 +196,8 @@ describe('přeprava a vylodění', () => {
     let s = declareWar(emptyBattlefield('ENG'), 'ENG', 'FRA');
     const [s2, id] = addDivision(s, 'ENG', 'pesi', port);
     s = s2;
+    const divs = s.mil.divs.slice(); divs[id] = { ...divs[id], ip: 1 };   // S9: divize je připravená k vylodění
+    s = { ...s, mil: { ...s.mil, divs } };
     // cíl: pobřežní provincie Francie bez obránců, nejbližší k Portsmouthu po moři
     let best = 0, bk = Infinity;
     const goals = (p) => { const out = new Set(); W.forCoast(p, (l) => out.add(l)); return out; };

@@ -10,6 +10,7 @@ import { createNat } from './nat/setup.js';
 import { createDip } from './dip/setup.js';
 import { createLog } from './log.js';
 import { createNav } from './nav/setup.js';
+import { snapFleets } from './nav/refit.js';
 import { createAir } from './air/setup.js';
 import { createDoc } from './doc/setup.js';
 import { createOcc } from './occ/setup.js';
@@ -20,7 +21,7 @@ import { createStat, recordStat } from './stat/index.js';
 import { createRules } from './rules.js';
 import { DIFF_IDS } from '../data/ai/difficulty.js';
 
-export const GAME_VERSION = 55;
+export const GAME_VERSION = 56;
 export const SPEEDS = [0, 4, 12, 36, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza); F3: rychlost 1 = den za 6 s jako v HOI4
 export const MAX_SPEED = 5;
 
@@ -64,5 +65,5 @@ export function createGame({ player = null, seed = 1936, aiLevel = 0, hist = tru
     ai: { level: [1, 2, 3].includes(aiLevel) ? aiLevel : 0, diff: DIFF_IDS.includes(diff) ? diff : aiLevel === 1 ? -1 : aiLevel === 3 ? 1 : 0, hist: hist ? 1 : 0, inv: [], ...(hist ? {} : { salt: (Number(seed) >>> 0) || 1 }) },   // M24: nastavení AI (viz SPEC § 4g); F2: `salt` = semínko pro volby AI ve volné historii
     rules: createRules(rules),   // M76: pravidla hry (mlha války …)
   };
-  return recordStat(applyScenario({ ...base, nav: createNav(w, base) }, scenario));   // M27: námořnictvo (viz SPEC § 4j); potřebuje přístavy podle vlastnictví
+  return recordStat(snapFleets(applyScenario({ ...base, nav: createNav(w, base) }, scenario)));   // S9: flotily si pamatují úrovně lodí   // M27: námořnictvo (viz SPEC § 4j); potřebuje přístavy podle vlastnictví
 }

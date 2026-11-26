@@ -66,7 +66,7 @@ export function routeRisk(state, route, from, to) {
   const seas = new Set(route.seas);
   for (const f of state.nav.fleets) {
     if (!f || !seas.has(f.p)) continue;
-    const atk = fleetPower(state, f.o, f.ships).atk * (1 - (f.dm || 0));   // M96: úrovně lodí; F4c: poškození
+    const atk = fleetPower(state, f.o, f.ships, f.lv).atk * (1 - (f.dm || 0));   // M96: úrovně lodí; F4c: poškození
     if (!atk) continue;
     const dm = docMods(state, f.o);
     if (atWar(state.mil, to, f.o) || atWar(state.mil, from, f.o)) {

@@ -24,7 +24,7 @@ import { advanceInvasions } from './invasion.js';
 import { aiCommand } from '../cmd/index.js';
 import { aiLend } from '../dip/lend.js';
 import { aiVolunteers } from './volunteers.js';
-import { aiMines, aiAirMissions, aiRail, aiBuildsF4c } from './hoi.js';
+import { aiMines, aiAirMissions, aiRail, aiBuildsF4c, aiRefit } from './hoi.js';
 import { COUNTRIES_WORLD } from '../../data/world/countries.js';
 const QUIET_TAGS = new Set(Object.keys(COUNTRIES_WORLD));
 
@@ -71,7 +71,7 @@ export function* aiDaySteps(state) {
     state = aiVolunteers(state, o);   // F4: dobrovolníci, licence a atašé
     state = aiAirMissions(aiMines(state, o), o);   // F4c: miny, úder na lodě, stíhání
     state = aiRail(state, o);   // F4c: dlouhé přesuny vlakem
-    if ((Math.floor(state.tick / 24) + o) % 7 === 0) state = aiBuildsF4c(state, o);   // F4c: základny, pobřežní pevnosti, zásobovací uzly (týdně)
+    if ((Math.floor(state.tick / 24) + o) % 7 === 0) state = aiRefit(aiBuildsF4c(state, o), o);   // S9: přestavby flotil (týdně)   // F4c: základny, pobřežní pevnosti, zásobovací uzly (týdně)
     state = aiFuel(state, o);    // M87: dovoz ropy při nedostatku paliva
     state = aiPara(state, o);    // M87: výsadkové divize a výsadky
     state = aiCommand(state, o);

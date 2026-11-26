@@ -12,6 +12,7 @@ import { docMods } from '../doc/core.js';
 import { fuelNavMult } from '../fuel/index.js';
 import { seaGraph, seaKm, powerOf, fleetPower, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf, deckOf, planesOf, damageOf, enemyMines, baseLevelAt } from './core.js';
 import { modsOf as techModsOf } from '../research/core.js';
+import { refitDay } from './refit.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
 
@@ -58,7 +59,9 @@ function arrivals(state) {
     }
     const port = w.portLevel[place] > 0;
     const cfl = landed && state.ind.cf && place !== prev ? state.ind.cf[place] || 0 : 0;
-    divs[s.id] = { ...d, p: place, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0, org: d.org * (landed && !port ? NAV.LAND_ORG : 1) * (1 - NAV.CFORT_ORG * cfl) };
+    const unprep = landed && prev !== s.o && atWar(state.mil, s.o, prev) ? NAV.PREP_ORG * (1 - (d.ip || 0)) : 0;   // S9: nepřipravené vylodění stojí organizaci
+    divs[s.id] = { ...d, p: place, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0, org: d.org * (landed && !port ? NAV.LAND_ORG : 1) * (1 - NAV.CFORT_ORG * cfl) * (1 - unprep) };
+    delete divs[s.id].ip;
     if (o_isPlayer(s.o, player)) logs.push({ k: 'landing', o: s.o, x: landed ? place : s.from, a: landed ? 1 : 0 });
     else if (landed && prev !== s.o && prev === player) logs.push({ k: 'lands', o: s.o, x: place, b: prev });   // M71: nepřítel se vylodil na území hráče
   }
@@ -122,7 +125,7 @@ function combat(state) {
     const mis = (i) => (f0[i].m === 'patrol' ? 1 + NAV.MISSION_PATROL : f0[i].m === 'raid' ? NAV.MISSION_EVADE : 1);
     const fire = (i) => (1 + docMods(state, f0[i].o).fire) * (1 + techModsOf(state, f0[i].o).nav) * mis(i);   // M96: námořní technologie
     const sum = (list) => list.reduce((a, i) => {
-      const sh = f0[i].ships, p = fleetPower(state, f0[i].o, sh), ok = 1 - damageOf(f0[i]);   // F4c: poškozená flotila je slabší
+      const sh = f0[i].ships, p = fleetPower(state, f0[i].o, sh, f0[i].lv), ok = (1 - damageOf(f0[i])) * (f0[i].rf ? NAV.REFIT_POW : 1);   // F4c: poškozená flotila je slabší; S9: přestavovaná také
       return { hp: a.hp + p.hp * ok, atk: a.atk + p.atk * fire(i) * ok, air: a.air + airPower(sh, f0[i].pl || 0) * fire(i), asw: a.asw + aswOf(sh) * ok, ss: a.ss + (sh.ss || 0), pl: a.pl + planesOf(f0[i]) };
     }, { hp: 0, atk: 0, air: 0, asw: 0, ss: 0, pl: 0 });
     const pa = sum(idsA), pb = sum(idsB);
@@ -312,6 +315,6 @@ export function minesAndRepairs(state) {
 }
 
 export function navDay(state) {
-  return minesAndRepairs(refillDecks(raids(sinkings(combat(state)))));
+  return refitDay(minesAndRepairs(refillDecks(raids(sinkings(combat(state))))));   // S9: přestavby
 }
 void SHIPS; void seaGraph;

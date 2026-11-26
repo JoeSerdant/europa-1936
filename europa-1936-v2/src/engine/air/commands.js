@@ -80,6 +80,11 @@ export function missionBlock(state, id, m, to) {
     if (!e || !atWar(state.mil, wg.o, e)) return 'Bombardovat lze jen stát země, se kterou jste ve válce.';
   }
   if (m === 'nav' && !seasOfState(to).length) return 'Úder na lodě míří na moře u pobřeží – zvolte pobřežní stát.';   // F4c
+  if (m === 'port') {   // S9: úder na přístav nepřítele
+    const e = state.stateOwner[to];
+    if (!e || !atWar(state.mil, wg.o, e)) return 'Úder na přístav jen na stát země, se kterou jste ve válce.';
+    if (!w.states[to].v.some((p) => w.portLevel[p] > 0)) return 'Ve státě není přístav.';
+  }
   return null;
 }
 

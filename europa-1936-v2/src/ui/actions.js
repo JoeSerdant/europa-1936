@@ -7,7 +7,7 @@ import {
   setPlan, clearPlan, setPlanMode, suggestFront, takeCommand, marchPreview,
   recruit, cancelRecruit, createTemplate, editTemplate, deleteTemplate, validateTemplate,
   justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, warBlock, peaceBlock, inviteBlock, justReady,
-  formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, setFleetMission, orderSail, sailBlock, navyOf, SHIPS,
+  formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, setFleetMission, refitFleet, orderSail, sailBlock, navyOf, SHIPS,
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID, setContinuous, contBlock,
   setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
@@ -985,6 +985,7 @@ export function nukeState(s) {
 }
 /** Zadá vlastní flotile misi (M81). */
 export const fleetMission = (id, m) => (ownFleet(gameStore.getState(), id) ? run(setFleetMission, id, m) : false);
+export const refitOwnFleet = (id) => (ownFleet(gameStore.getState(), id) ? run(refitFleet, id) : false);   // S9: přestavba flotily
 export const stopSelectedFleet = () => { const id = uiStore.getState().fleetSel; return ownFleet(gameStore.getState(), id) ? run(stopFleet, id) : false; };
 export function disbandSelectedFleet() {
   const id = uiStore.getState().fleetSel;
