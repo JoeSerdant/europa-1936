@@ -184,7 +184,7 @@ export function applyScenario(state, id) {
   fac.fill(0);
   for (const f of sc.factions) {
     const mem = f.mem.map((t) => w.ownerIdx[t]).filter((o) => o && !cap[o]);
-    facs.push({ nm: f.nm, ldr: w.ownerIdx[f.ldr], mem });
+    facs.push({ nm: f.nm, ldr: w.ownerIdx[f.ldr], mem, g: [], gd: [] });   // S10
     for (const o of mem) fac[o] = facs.length - 1;
   }
   s = { ...s, dip: { ...s.dip, fac, facs, ver: s.dip.ver + 1 } };

@@ -1,4 +1,5 @@
 // Denní krok diplomacie (M23): kapitulace zemí, zapomínání změn vztahů v míru, vypršení ospravedlnění.
+import { facGoalsDay } from './facgoals.js';
 import { getWorld } from '../world.js';
 import { hasWar, enemiesOf, atWar } from '../army/war.js';
 import { friendsOf } from './accessCore.js';
@@ -86,6 +87,7 @@ export function dipDay(state) {
   state = pactDay(state);   // M75: nabídky a zaniklé pakty
   state = overseasDay(state);   // M79: zámořská pomoc
   state = exileDay(state);   // M83: obnova exilových zemí
+  state = facGoalsDay(state);   // S10: společné cíle bloků (týdně)
   // kapitulace
   const player = state.player ? w.ownerIdx[state.player] || 0 : 0;
   for (let o = 1; o < w.owners.length; o++) {

@@ -64,7 +64,7 @@ export function aiDiplomacy(state, o) {
       if (f.tag !== tag || day0 < f.from + shift) continue;
       if (!state.dip.fac[o]) { state = createFaction(state, o, f.nm); continue; }
       if (state.dip.facs[state.dip.fac[o]].ldr !== o) continue;
-      for (const t of f.invite) { const to = w.ownerIdx[t]; if (to && !state.dip.fac[to]) state = inviteToFaction(state, o, to); }
+      for (const t of f.invite) { const to = w.ownerIdx[t]; if (to && !state.dip.fac[to]) state = inviteToFaction(state, o, to, true); }   // S10: historický blok bez hlasování
     }
   }
   // historické záruky nezávislosti

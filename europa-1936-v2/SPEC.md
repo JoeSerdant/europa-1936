@@ -1409,6 +1409,23 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Rozhraní**: karta flotily ukazuje zastaralou techniku s tlačítkem Přestavět (důvod zákazu v nápovědě) a průběh přestavby,
   křídlo má misi Úder na přístav, lišta výběru ukazuje přípravu vylodění divizí v přístavu.
 
+## 4zzzzzzzzzzzzzzzz. Společné cíle bloků a hlasování (S10, `GAME_VERSION = 57`)
+
+- **Stav**: blok `dip.facs[id] = { nm, ldr, mem, g, gd }` – `g` rozpracované společné cíle (nejvýš `DIP.FAC_GOAL_SLOTS`), `gd` splněné
+  (chybějící pole = prázdné; nové bloky je mají od `createFaction`, `createDip` a scénáře).
+- **Cíle** (`data/dip/facgoals.js`, `FAC_GOALS`): druh `kind` (divize, továrny, lodě, letadla, členové, vítězné body) s prahem `v`
+  a bonusem `mod` (klíče z `NO_POL`). Volí a ruší je vedoucí (`setFacGoal` / `dropFacGoal`, kontroly `facGoalBlock`), postup počítá
+  `facProgress`, týdenní `facGoalsDay` (v `dipDay`) splněné přesune do `gd` a zapíše `facgoal`. Bonusy splněných cílů má každý člen
+  přes `polModsOf` (`facModsOf`, mezipaměť podle klíče splněných cílů); kdo z bloku odejde, bonus ztratí.
+- **Hlasování** (`facVote`): váha hlasu = 1 + továrny / `DIP.VOTE_FAC`, vedoucí × `DIP.VOTE_LDR`; navrhovatel hlasuje pro, ostatní
+  pro přijetí při vztahu s kandidátem ≥ `DIP.VOTE_REL` (a bez války s ním), pro vyloučení při vztahu < `DIP.VOTE_KICK_REL`; projde
+  s nadpoloviční vahou. Přijetí: `inviteBlock` (historické bloky `HIST_FACTIONS` hlasování obchází – `inviteToFaction(…, true)`).
+  Vyloučení: `kickFromFaction` (kontroly `kickBlock`: jen vedoucí, ne za války), vyloučenému klesne vztah k vedoucímu o `DIP.KICK_REL`,
+  záznam deníku `kick`.
+- **AI** (`ai/faction.js`, měsíčně): vedoucí zvolí cíl s nejlepším poměrem postup × váha `ai`.
+- **Rozhraní**: okno Diplomacie, karta Váš blok – splněné cíle (fajfka a bonus v nápovědě), rozpracované s pruhem postupu, vedoucí
+  vybírá z dlaždic; u pozvání předpověď hlasování (podíl hlasů pro, rozpis v nápovědě) a akce Vyloučit z bloku.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1624,6 +1641,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S10** | **Frakce**: společné cíle bloků s trvalými bonusy pro členy, vážené hlasování o přijetí a vyloučení členů | ✅ |
 | **S9** | **Námořnictvo**: přestavby flotil v přístavu (technika a návrhy se u lodí projeví až po přestavbě), úder letectva na přístav, příprava vylodění divizí | ✅ |
 | **S8** | **Letecké zóny a strategické bombardování**: převaha ve vzduchu nad strategickými regiony (postih divizí), poškození továren bombardováním a jejich oprava, protiletadlová obrana, mapový režim Vzdušná převaha | ✅ |
 | **S7** | **Odboj a okupační zákony**: zákony pro okupovaná území, posádky za lidskou sílu, kolaborantské vlády | ✅ |

@@ -8,7 +8,7 @@ export function createDip(w) {
   for (const f of START_FACTIONS) {
     const mem = f.mem.map((t) => w.ownerIdx[t]).filter(Boolean);
     if (!mem.length) continue;
-    facs.push({ nm: f.nm, ldr: w.ownerIdx[f.ldr], mem });
+    facs.push({ nm: f.nm, ldr: w.ownerIdx[f.ldr], mem, g: [], gd: [] });   // S10: společné cíle
     for (const o of mem) fac[o] = facs.length - 1;
   }
   // W1: historické loutky na startu (Mandžukuo, Mongolsko, Tuva, Filipíny, Indie)

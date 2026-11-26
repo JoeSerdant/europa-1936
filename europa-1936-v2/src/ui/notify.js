@@ -3,8 +3,8 @@
 
 /** Skupiny zpráv: id → { n: název, info, kinds: druhy záznamů deníku (`e.k`) }. Druh mimo seznam patří do skupiny `other`. */
 export const NOTIFY_GROUPS = {
-  war: { n: 'Války a mír', info: 'Vyhlášení války, mír, kapitulace, mírové konference, ultimáta, volby, změny vlád a občanské války.', kinds: ['elect', 'war', 'goal', 'peace', 'cap', 'cede', 'civil', 'gov', 'ult', 'ultq', 'release', 'exile', 'restore', 'puppet', 'annex', 'take', 'tribute', 'free', 'rebel', 'collab'] },
-  dip: { n: 'Diplomacie', info: 'Bloky, záruky, pakty o neútočení, vojenský přístup, půjčky, dobrovolníci, atašé, licence a zámořská pomoc.', kinds: ['faction', 'join', 'gar', 'garend', 'nap', 'napq', 'napend', 'access', 'accend', 'lend', 'aid', 'spy', 'vol', 'volback', 'att', 'lic'] },
+  war: { n: 'Války a mír', info: 'Vyhlášení války, mír, kapitulace, mírové konference, ultimáta, volby, změny vlád a občanské války.', kinds: ['elect', 'war', 'goal', 'peace', 'cap', 'cede', 'civil', 'gov', 'ult', 'ultq', 'release', 'exile', 'restore', 'puppet', 'annex', 'take', 'tribute', 'free', 'rebel', 'collab', 'kick'] },
+  dip: { n: 'Diplomacie', info: 'Bloky, záruky, pakty o neútočení, vojenský přístup, půjčky, dobrovolníci, atašé, licence a zámořská pomoc.', kinds: ['faction', 'join', 'facgoal', 'gar', 'garend', 'nap', 'napq', 'napend', 'access', 'accend', 'lend', 'aid', 'spy', 'vol', 'volback', 'att', 'lic'] },
   research: { n: 'Výzkum a doktríny', info: 'Dokončené technologie a přijaté doktríny.', kinds: ['tech', 'doctrine'] },
   focus: { n: 'Národní cíle a události', info: 'Splněné národní cíle a rozhodnutí v událostech.', kinds: ['focus', 'event'] },
   build: { n: 'Stavby', info: 'Dokončené budovy a pevnosti.', kinds: ['built'] },

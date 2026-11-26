@@ -11,6 +11,7 @@ import { ideologyOf } from '../politics/parties.js';
 import { pactOf, voidPacts } from './pact.js';
 import { joiningGuarantors, breakGuarantees } from './guarantee.js';
 import { heldBack, skipsWar } from './entry.js';
+import { facVote } from './facgoals.js';
 import { relOf, setRel, sameFaction, campOf, factionId, hasCapitulated, warScore, pairKey, formerAlly } from './core.js';
 
 const ok = (o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length;
@@ -154,7 +155,7 @@ export function inviteScore(state, o, target) {
 }
 
 /** Proč blok nejde založit nebo pozvat (český text), nebo null. */
-export function inviteBlock(state, o, target) {
+export function inviteBlock(state, o, target, hist = false) {
   if (!ok(o) || !ok(target) || o === target) return 'Neplatná země.';
   const f = state.dip.facs[factionId(state, o)];
   if (!f) return 'Nejste v žádném bloku.';
@@ -164,6 +165,7 @@ export function inviteBlock(state, o, target) {
   if (f.mem.length >= DIP.FAC_MAX_MEM) return 'Blok je plný.';
   if (atWar(state.mil, o, target) || f.mem.some((m) => atWar(state.mil, m, target))) return 'Země je ve válce s členem bloku.';
   if (inviteScore(state, o, target) < DIP.INVITE_MIN) return 'Země pozvání odmítá (špatné vztahy).';
+  if (!hist) { const v = facVote(state, o, target, 'join'); if (!v.pass) return `Členové bloku přijetí odmítli (pro ${Math.round((100 * v.yes) / (v.yes + v.no))} % hlasů).`; }   // S10: hlasování (historické bloky bez hlasování)
   return null;
 }
 
@@ -173,7 +175,7 @@ export function createFaction(state, o, nm) {
   const p = state.pol.own[o];
   if (p.pp < DIP.FAC_PP) return state;
   const name = cleanName(nm) || `Blok ${getWorld().owners[o].name}`;
-  const facs = [...state.dip.facs, { nm: name, ldr: o, mem: [o] }];
+  const facs = [...state.dip.facs, { nm: name, ldr: o, mem: [o], g: [], gd: [] }];   // S10: společné cíle
   const fac = state.dip.fac.slice();
   fac[o] = facs.length - 1;
   const pol = state.pol.own.slice();
@@ -182,8 +184,8 @@ export function createFaction(state, o, nm) {
 }
 
 /** Pozve zemi do bloku vedoucího `o`; pozvaný přijme podle skóre pozvání. */
-export function inviteToFaction(state, o, target) {
-  if (inviteBlock(state, o, target)) return state;
+export function inviteToFaction(state, o, target, hist = false) {
+  if (inviteBlock(state, o, target, hist)) return state;
   const id = state.dip.fac[o];
   const facs = state.dip.facs.slice();
   facs[id] = { ...facs[id], mem: [...facs[id].mem, target] };
