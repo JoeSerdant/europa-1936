@@ -13,6 +13,8 @@ import { docHour } from './doc/system.js';
 import { endHour } from './end.js';
 import { occHour } from './occ/system.js';
 import { spyHour } from './spy/system.js';
+import { raidDay } from './raid/raids.js';
+const raidHour = (s) => (s.tick % 24 === 0 ? raidDay(s) : s);
 import { cmdHour } from './cmd/index.js';
 import { statHour } from './stat/index.js';
 
@@ -25,7 +27,7 @@ export function* hourSteps(state) {
   let s = yield* armyHourSteps({ ...state, tick: state.tick + 1 });
   const midnight = s.tick % 24 === 0;
   if (midnight) yield;   // o půlnoci mají denní kroky i ostatní systémy – přestávky mezi skupinami
-  s = industryHour(airHour(navHour(occHour(s))));
+  s = industryHour(raidHour(airHour(navHour(occHour(s)))));   // S5c: nájezdy (o půlnoci)
   if (midnight) yield;
   s = dipHour(natHour(politicsHour(researchHour(spyHour(docHour(s))))));
   if (midnight) yield;

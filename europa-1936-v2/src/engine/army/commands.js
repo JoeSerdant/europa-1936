@@ -1,5 +1,6 @@
 // Příkazy armády: čisté funkce (state, …) → nový stav; při neplatném vstupu vrací tentýž objekt.
 // Příkazy nekontrolují, komu divize patří vůči hráči – to dělá rozhraní (ui/actions.js); engine je neutrální, aby jím šla řídit i AI.
+import { sfBlock } from './special.js';
 import { isUnlocked } from '../research/core.js';
 import { getWorld } from '../world.js';
 import { C } from './constants.js';
@@ -155,6 +156,7 @@ export function recruit(state, tplId, prov, count = 1) {
   if (!tpl || !Number.isInteger(count) || count < 1 || count > 20) return state;
   if (!Number.isInteger(prov) || !w.isLand(prov) || state.ctrl[prov] !== tpl.o) return state;
   if (mil.queue.length + count > C.QUEUE_MAX) return state;
+  if (sfBlock(mil, tplId, count)) return state;   // S5c: strop speciálních jednotek
   const o = tpl.o, st = deriveStats(tpl);
   if (mil.man[o] < st.men * count) return state;
   const stock = mil.stock[o];

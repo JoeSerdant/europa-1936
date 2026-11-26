@@ -9,6 +9,7 @@ import { NAV, NAV_MISSIONS } from './constants.js';
 import { homeSea, powerOf, seaRoute, seaBlocked, coastSeasOf, isSeaLabel } from './core.js';
 import { transportsOf } from './convoy.js';
 import { shipLvSnap } from './refit.js';
+import { isMarine } from '../army/special.js';
 
 const patch = (state, p) => ({ ...state, nav: { ...state.nav, ...p, ver: state.nav.ver + 1 } });
 const ok = (state, o) => Number.isInteger(o) && o >= 1 && o < getWorld().owners.length && !!state.nav.pool[o];
@@ -118,7 +119,8 @@ export function sailBlock(state, divIds, dest) {
   for (const id of divIds) {
     const d = mil.divs[id];
     if (!d || d.o !== o) return 'Divize patří různým zemím nebo neexistuje.';
-    if (invade && (d.ip || 0) < NAV.PREP_MIN) return `Divize nejsou připravené k vylodění (příprava ${Math.round((d.ip || 0) * 100)} %, potřeba ${Math.round(NAV.PREP_MIN * 100)} %). Nechte je stát v přístavu.`;
+    if (invade && (d.ip || 0) < NAV.PREP_MIN && !isMarine(mil, d))   // S5c: námořní pěchota se vylodí bez přípravy
+ return `Divize nejsou připravené k vylodění (příprava ${Math.round((d.ip || 0) * 100)} %, potřeba ${Math.round(NAV.PREP_MIN * 100)} %). Nechte je stát v přístavu.`;
     if (d.b) return 'Divize v boji nemůže vyplout.';
     if (!w.portLevel[d.p]) return 'Divize musí stát v přístavu.';
     if (state.ctrl[d.p] !== o) return 'Přístav musí ovládat vlastní země.';
