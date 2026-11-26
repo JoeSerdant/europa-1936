@@ -622,7 +622,7 @@ export class MapRenderer {
       const vp = world.vp[p];
       if (vp < 3 && z < 1.2) continue;
       if (vp < 10 && z < 0.55) continue;   // UI6: v dálce jen velká města, jinak se hustá Evropa slije do bílé skvrny
-      const s = (5 + Math.sqrt(vp) * 2.6) * Math.min(2.2, Math.max(0.3, z * 0.9));
+      const s = (5 + Math.sqrt(vp) * 2.6) * Math.min(1.25, Math.max(0.3, z * 0.9));   // UI15: zblízka menší, aby světla nezakrývala mapu
       const [sx, sy] = worldToScreen(cam, c[0], c[1]);
       ctx.globalAlpha = Math.min(1, (n - 0.25) * 1.6) * 0.85 * Math.min(1, Math.max(0.3, z));
       ctx.drawImage(glow, sx - s, sy - s, s * 2, s * 2);
