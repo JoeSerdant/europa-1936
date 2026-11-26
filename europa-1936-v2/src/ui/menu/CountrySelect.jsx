@@ -1,11 +1,25 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useUi, useGame } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { mapController as mc } from '../map/controller.js';
+import { lonLatOf } from '../map/sun.js';
+import { Portrait } from '../army/Portrait.jsx';
 import { COUNTRIES, IDEOLOGIES, TIER_NAMES, DIFF_NAMES } from '../../data/countries.js';
 
-const TIER_HEADS = { 1: 'Velmoci', 2: 'Regionální mocnosti', 3: 'Malé státy' };
+const REGIONS = [['eu', 'Evropa'], ['na', 'Sev. Amerika'], ['sa', 'Již. Amerika'], ['me', 'Blízký východ'], ['af', 'Afrika'], ['as', 'Asie'], ['oc', 'Oceánie']];
+
+/** UI11: oblast země podle polohy hlavního města (jen pro filtr výběru, jako záložky v HOI4). */
+export function regionOf(w, tag) {
+  const cap = w.land[w.owners[w.ownerIdx[tag]].cap];
+  const [lon, lat] = lonLatOf(cap.c[0], cap.c[1]);
+  if (lon < -30) return lat > 7 ? 'na' : 'sa';
+  if (lat < -12 && lon > 100) return 'oc';
+  if (lon >= 60) return 'as';
+  if (lon >= 34 && lat < 42) return 'me';
+  if (lat < 35) return 'af';
+  return 'eu';
+}
 import { allCountries, countryStats, getWorld, SCENARIOS, SCENARIO_IDS, RULES, RULE_IDS, DIFFICULTY, DIFF_IDS } from '../../engine/index.js';
 import { goMenu, pickCountry, startGame, setAiOptions, INSETS } from '../actions.js';
 import { fmtInt, fmtPop, fmtArea } from '../format.js';
@@ -18,7 +32,7 @@ function Pips({ n, total = 5 }) {
   );
 }
 
-/** Obrazovka výběru země: seznam vlevo, mapa uprostřed (klik na zemi ji vybere), karta země vpravo. */
+/** Obrazovka výběru země (UI11 jako v HOI4): velmoci jako karty s portrétem a vlajkou, ostatní země jako mřížka vlajek se záložkami oblastí; mapa uprostřed, karta země vpravo. */
 export function CountrySelect() {
   const pickTag = useUi((s) => s.pickTag);
   const aiDiff = useUi((s) => s.aiDiff);   // F3: pět stupňů obtížnosti
@@ -28,12 +42,11 @@ export function CountrySelect() {
   const sc = SCENARIOS[scenario] || SCENARIOS[1936];
   const dead = !!pickTag && !!sc.dead && sc.dead.includes(pickTag);
   const owner = useGame((s) => s.stateOwner);
-  const groups = useMemo(() => {
-    const list = allCountries().filter((c) => COUNTRIES[c.tag]);
-    return [1, 2, 3].map((tier) => ({
-      tier,
-      items: list.filter((c) => COUNTRIES[c.tag].tier === tier).sort((a, b) => a.name.localeCompare(b.name, 'cs')),
-    })).filter((g) => g.items.length);
+  const [region, setRegion] = useState('all');
+  const { majors, others, regs } = useMemo(() => {
+    const w0 = getWorld();
+    const list = allCountries().filter((c) => COUNTRIES[c.tag]).map((c) => ({ ...c, reg: regionOf(w0, c.tag) })).sort((a, b) => a.name.localeCompare(b.name, 'cs'));
+    return { majors: list.filter((c) => COUNTRIES[c.tag].tier === 1), others: list.filter((c) => COUNTRIES[c.tag].tier !== 1), regs: REGIONS.filter(([id]) => list.some((c) => c.reg === id && COUNTRIES[c.tag].tier !== 1)) };
   }, []);
   useEffect(() => {
     mc.stopDrift();
@@ -58,22 +71,37 @@ export function CountrySelect() {
           <h2>Vyberte zemi</h2>
         </header>
         <div className="scroll">
-          {groups.map((g) => (
-            <section key={g.tier}>
-              <h3>{TIER_HEADS[g.tier]}</h3>
-              <ul>
-                {g.items.map((c) => (
-                  <li key={c.tag}>
-                    <button className={c.tag === pickTag ? 'on' : ''} onClick={() => pickCountry(c.tag)} aria-pressed={c.tag === pickTag}>
-                      <Flag tag={c.tag} width={34} />
-                      <span className="nm">{c.name}</span>
-                      <Pips n={COUNTRIES[c.tag].diff} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          <section aria-label="Velmoci">
+            <h3>Velmoci</h3>
+            <ul className="cs-majors">
+              {majors.map((c) => (
+                <li key={c.tag}>
+                  <button className={c.tag === pickTag ? 'on' : ''} onClick={() => pickCountry(c.tag)} aria-pressed={c.tag === pickTag} aria-label={c.name} title={`${c.name} · ${COUNTRIES[c.tag].leader}`}>
+                    <Portrait name={COUNTRIES[c.tag].leader} color={c.color} rank="M" w={64} h={78} />
+                    <Flag tag={c.tag} width={56} />
+                    <span className="nm">{c.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section aria-label="Ostatní země">
+            <nav className="cs-regs" role="tablist" aria-label="Oblast">
+              <button role="tab" aria-selected={region === 'all'} className={region === 'all' ? 'on' : ''} onClick={() => setRegion('all')}>Vše</button>
+              {regs.map(([id, n]) => <button key={id} role="tab" aria-selected={region === id} className={region === id ? 'on' : ''} onClick={() => setRegion(id)}>{n}</button>)}
+            </nav>
+            <ul className="cs-flags">
+              {others.filter((c) => region === 'all' || c.reg === region).map((c) => (
+                <li key={c.tag}>
+                  <button className={c.tag === pickTag ? 'on' : ''} onClick={() => pickCountry(c.tag)} aria-pressed={c.tag === pickTag} aria-label={c.name} title={`${c.name} · ${TIER_NAMES[COUNTRIES[c.tag].tier]} · obtížnost ${DIFF_NAMES[COUNTRIES[c.tag].diff]}`}>
+                    <Flag tag={c.tag} width={46} />
+                    <span className="nm">{c.name}</span>
+                    <Pips n={COUNTRIES[c.tag].diff} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         </div>
       </aside>
 

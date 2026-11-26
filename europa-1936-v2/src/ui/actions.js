@@ -27,7 +27,7 @@ import { writeSave, readSave, deleteSave, slotName, nextAutoSlot } from './saves
 /** Plochy zakryté panely na jednotlivých obrazovkách (CSS pixely) – kamera středí pohledy do zbytku. */
 export const INSETS = {
   menu: { l: 0, r: 0, t: 0, b: 0 },
-  select: { l: 336, r: 396, t: 0, b: 0 },
+  select: { l: 388, r: 396, t: 0, b: 0 },   // UI11: širší seznam zemí
   game: { l: 70, r: 0, t: 56, b: 0 },
   gameDossier: { l: 70, r: 394, t: 56, b: 0 },
 };

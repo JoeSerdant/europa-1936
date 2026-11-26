@@ -540,3 +540,18 @@ kbd {
 /* úzké okno: jen vlajka (jako v HOI4), datum na jednom řádku */
 .tb-date b { white-space: nowrap; }
 :root.uw-1499 .tb-name { display: none; }
+
+/* UI11: výběr země jako v HOI4 – velmoci jako karty s portrétem, ostatní jako mřížka vlajek podle oblastí */
+.select-list { width: 360px; }
+.select-list .cs-majors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; padding: 0 10px; }
+.select-list .cs-majors li button { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; padding: 6px 2px 5px; border: 0; border-left: 0; background: linear-gradient(#1a2531, #10171f); box-shadow: inset 0 0 0 1px var(--rule-hi); }
+.select-list .cs-majors li button.on { box-shadow: inset 0 0 0 2px var(--brass); background: linear-gradient(#2a2516, #14181b); }
+.select-list .cs-majors .nm { font: 600 12px/1.1 var(--display); text-align: center; }
+.cs-regs { display: flex; flex-wrap: wrap; gap: 3px; padding: 12px 10px 6px; }
+.cs-regs button { padding: 4px 7px; border: 0; font: 600 11.5px/1 var(--display); color: var(--text-2); background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+.cs-regs button.on { color: var(--brass-hi); box-shadow: inset 0 0 0 1px var(--brass); }
+.select-list .cs-flags { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 0 10px; }
+.select-list .cs-flags li button { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; padding: 5px 2px 4px; border: 0; border-left: 0; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+.select-list .cs-flags li button.on { box-shadow: inset 0 0 0 2px var(--brass); }
+.select-list .cs-flags .nm { width: 100%; font-size: 10.5px; line-height: 1.1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.select-list .cs-flags .pips { transform: scale(0.8); }
