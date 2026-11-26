@@ -38,3 +38,5 @@ export { raidBlock, orderRaid, cancelRaid, raidChance, raidsFor, raidTargets } f
 export { isSpecial, isMarine, sfCap, sfUsed, sfBlock } from './army/special.js';
 export { hasWar } from './army/war.js';   // S5c: rozhraní (nájezdy jen za války)
 export { RAID, RAID_KINDS } from '../data/army/raids.js';
+export { medalBlock, awardMedal, medalCap, medalsUsed, medalBonus } from './army/medals.js';   // S5d
+export { MEDALS, MEDAL_IDS, MEDAL } from '../data/army/medals.js';

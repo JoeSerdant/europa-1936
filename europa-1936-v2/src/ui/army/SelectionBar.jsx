@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { armyTree, divisionView, ARMY, getWorld, marchEta, NAV, isSpecial, raidTargets, raidsFor, RAID_KINDS, hasWar } from '../../engine/index.js';
-import { raidWith, cancelOwnRaid } from '../actions.js';
+import { armyTree, divisionView, ARMY, getWorld, marchEta, NAV, isSpecial, raidTargets, raidsFor, RAID_KINDS, hasWar, MEDALS, MEDAL_IDS, MEDAL, medalBlock } from '../../engine/index.js';
+import { raidWith, cancelOwnRaid, awardOwnMedal } from '../actions.js';
 import { Portrait } from './Portrait.jsx';
 import {
   playerIdx, ownSelected, newArmy, addSelectionToArmy, removeSelectionFromArmy, stopSelected, disbandSelected, focusSelection, clearSelection, toggleDivision, toggleRailMode,
@@ -59,6 +59,19 @@ const MINI_MAX = 36;
 
 /** Dolní lišta vybraných jednotek (M102): u jedné divize ikony s čísly, u více mřížka mini karet; povely jen ikonami s nápovědou. */
 /** S5c: nájezd speciální jednotky – druh jako ikony, cíle jako dlaždice se šancí; připravovaný nájezd s odpočtem a zrušením. */
+function MedalBox({ state, id, me }) {   // S5d: vyznamenání zkušené divize
+  const d = state.mil.divs[id];
+  if (d.md) { const M = MEDALS[d.md]; return <span className="chip medal on" title={`${M.n}: ${M.info}`}><Icon name={M.icon} size={14} />{M.n}</span>; }
+  if (medalBlock(state, me, id, MEDAL_IDS[0]) && /Zkušení|nejvýš/.test(medalBlock(state, me, id, MEDAL_IDS[0]))) return null;
+  return (
+    <span className="medal-box" aria-label="Vyznamenání">
+      {MEDAL_IDS.map((m) => { const why = medalBlock(state, me, id, m); return (
+        <button key={m} className="mis-btn" disabled={!!why} onClick={() => awardOwnMedal(id, m)} title={why || `${MEDALS[m].n}: ${MEDALS[m].info} Cena ${MEDAL.CP} velitelské moci.`} aria-label={MEDALS[m].n}><Icon name={MEDALS[m].icon} size={14} /></button>
+      ); })}
+    </span>
+  );
+}
+
 function RaidBox({ state, id }) {
   const [k, setK] = useState('');
   const w = getWorld(), d = state.mil.divs[id];
@@ -154,6 +167,7 @@ export function SelectionBar() {
           <Chip icon="xp" title={`Zkušenost: ${view.xpName}`}><span className="xp-pips">{[0, 1, 2, 3, 4].map((i) => <i key={i} className={view.xpLevel >= i ? 'on' : ''} />)}</span></Chip>
           {view.dig >= 1 && <Chip icon="dig" title="Zakopání (obrana +4 % za stupeň)">{Math.floor(view.dig)}/5</Chip>}
           <Chip icon="supply" title="Zásobování" bad={view.supply < 0.7}>{pct(view.supply)}</Chip>
+          {mine ? <MedalBox state={state} id={ids[0]} me={me} /> : first.md ? <span className="chip medal on" title={MEDALS[first.md].n}><Icon name={MEDALS[first.md].icon} size={14} /></span> : null}
           {mine && isSpecial(state.mil, first) && hasWar(state.mil, first.o) ? <RaidBox state={state} id={ids[0]} /> : null}
         </div>
       ) : (

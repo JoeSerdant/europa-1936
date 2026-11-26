@@ -39,5 +39,30 @@ export const MECHS = {
     bands: [{ min: 70, spirit: 'izolacionismus', n: 'Izolacionismus' }, { min: 40, spirit: 'opatrna_neutralita', n: 'Opatrná neutralita' }, { min: 0, spirit: 'arzenal_demokracie', n: 'Arzenál demokracie' }],
     hist: [[1400, -15], [1897, -20], [2167, -40]],   // pokladna a doprava 1939, půjčka a pronájem 1941, Pearl Harbor
   },
+  // ---- S5d: rovnováha sil velmocí (dvě strany ukazatele, oba konce dávají vlastní ducha) ----
+  eng_bop: {
+    tag: 'ENG', n: 'Říše a Evropa', g: 'Zaměření', lo: 'Evropa', hi: 'impérium', start: 60, from: 0, until: 3600,
+    info: 'Londýn se dívá buď k vlastním koloniím a obchodu, nebo k pevnině, kde rostou hrozby.',
+    bands: [{ min: 70, spirit: 'zamereni_imperium', n: 'Říše především' }, { min: 31, spirit: '', n: 'Rovnováha' }, { min: 0, spirit: 'zamereni_evropa', n: 'Evropa především' }],
+    hist: [[1340, -30]],   // vstup do války 1939
+  },
+  fra_bop: {
+    tag: 'FRA', n: 'Levice a pravice', g: 'Vláda', lo: 'pravice', hi: 'levice', start: 50, from: 0, until: 1634,
+    info: 'Lidová fronta slibuje sociální reformy, pravice zbrojení a pořádek. Země je rozdělená.',
+    bands: [{ min: 70, spirit: 'lidova_fronta', n: 'Lidová fronta' }, { min: 31, spirit: '', n: 'Křehký střed' }, { min: 0, spirit: 'pravicova_vlada', n: 'Vláda pořádku' }],
+    hist: [[155, 25], [1035, -35]],   // vítězství Lidové fronty 1936, dekrety a zbrojení 1938
+  },
+  ger_bop: {
+    tag: 'GER', n: 'Strana a armáda', g: 'Moc', lo: 'armáda', hi: 'strana', start: 55, from: 0, until: 3600,
+    info: 'Generálové a stranické špičky soupeří o vliv na vedení války.',
+    bands: [{ min: 70, spirit: 'moc_strany', n: 'Moc strany' }, { min: 31, spirit: '', n: 'Soupeření' }, { min: 0, spirit: 'moc_armady', n: 'Moc armády' }],
+    hist: [[765, 20]],   // odvolání velení armády 1938
+  },
+  ita_bop: {
+    tag: 'ITA', n: 'Strana a koruna', g: 'Moc', lo: 'koruna', hi: 'strana', start: 65, from: 0, until: 3600,
+    info: 'Režim vládne, ale král a armáda čekají na jeho první velký neúspěch.',
+    bands: [{ min: 65, spirit: 'rezim_strany', n: 'Pevný režim' }, { min: 36, spirit: '', n: 'Nejistota' }, { min: 0, spirit: 'moc_koruny', n: 'Koruna přebírá moc' }],
+    hist: [[2762, -40]],   // pád režimu v létě 1943
+  },
 };
 export const MECH_IDS = Object.keys(MECHS);

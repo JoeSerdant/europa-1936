@@ -31,6 +31,15 @@ export const SPIRITS = {
   izolacionismus: { n: 'Izolacionismus', info: 'Veřejnost odmítá jakoukoli účast v cizích válkách.', tone: 'bad', mod: { ws: -0.1 } },
   opatrna_neutralita: { n: 'Opatrná neutralita', info: 'Země pomáhá, ale jen za hotové a na vlastních lodích odběratelů.', tone: 'mixed', mod: { ws: -0.05, prod: 0.02 } },
   arzenal_demokracie: { n: 'Arzenál demokracie', info: 'Továrny pracují pro celý svobodný svět.', tone: 'good', mod: { prod: 0.05, build: 0.05 } },
+  // S5d: pásma rovnováhy sil velmocí
+  zamereni_imperium: { n: 'Říše především', info: 'Loďstvo a obchod drží impérium pohromadě.', tone: 'mixed', mod: { extract: 0.05, imp: -0.05, ws: -0.03 } },
+  zamereni_evropa: { n: 'Evropa především', info: 'Celá říše se soustředí na válku v Evropě.', tone: 'good', mod: { man: 0.03, ws: 0.03 } },
+  lidova_fronta: { n: 'Lidová fronta', info: 'Sociální reformy a čtyřicetihodinový týden: klid v ulicích, pomalejší zbrojení.', tone: 'mixed', mod: { stab: 0.03, prod: -0.03 } },
+  pravicova_vlada: { n: 'Vláda pořádku', info: 'Dekrety a přesčasy ve zbrojovkách.', tone: 'mixed', mod: { prod: 0.03, stab: -0.03 } },
+  moc_strany: { n: 'Moc strany', info: 'Strana ovládla armádu i hospodářství a žene zemi do války.', tone: 'mixed', mod: { ws: 0.04, stab: -0.02 } },
+  moc_armady: { n: 'Moc armády', info: 'Generálové rozhodují o válce sami.', tone: 'mixed', mod: { ws: -0.03 }, army: { def: 0.03 } },
+  rezim_strany: { n: 'Pevný režim', info: 'Strana drží zemi pevně v rukou.', tone: 'good', mod: { ws: 0.03 } },
+  moc_koruny: { n: 'Koruna přebírá moc', info: 'Král a armáda se připravují zbavit se diktátora a ukončit válku.', tone: 'mixed', mod: { stab: 0.05, ws: -0.08 } },
   // dočasní duchové (přidává je engine nebo účinek `spirit`)
   porevolucni_chaos: { n: 'Porevoluční chaos', info: 'Po převratu se úřady teprve skládají a továrny stojí.', tone: 'bad', mod: { prod: -0.1, build: -0.1 } },
   vitezna_nalada: { n: 'Vítězná nálada', info: 'Vítězství ve válce stmelilo zemi.', tone: 'good', mod: { stab: 0.04, ws: 0.04 } },

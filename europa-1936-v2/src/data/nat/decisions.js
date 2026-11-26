@@ -45,6 +45,15 @@ export const DECISIONS = [
   { id: 'chi_provincni_armady', cat: 'nat', n: 'Začlenit provinční armády', info: 'Provinční vojska přejdou pod ústřední velení.', cost: 45, cd: 365, when: { tag: ['CHI'], year: 1937 }, fx: [{ t: 'mech', id: 'chi_unity', v: 10 }, { t: 'man', v: 0.003 }] },
   { id: 'usa_pokladna', cat: 'nat', n: 'Prodej za hotové', info: 'Spojenci mohou kupovat zbraně, pokud je zaplatí a odvezou.', cost: 30, cd: 99999, when: { tag: ['USA'], year: 1939 }, fx: [{ t: 'mech', id: 'usa_iso', v: -15 }] },
   { id: 'usa_lend_lease', cat: 'nat', n: 'Zákon o půjčce a pronájmu', info: 'Spojenci dostanou zbraně hned a zaplatí později.', cost: 50, cd: 99999, when: { tag: ['USA'], year: 1940 }, fx: [{ t: 'mech', id: 'usa_iso', v: -25 }] },
+  // ---- S5d: rovnováha sil velmocí ----
+  { id: 'eng_bop_evropa', cat: 'nat', n: 'Pevninský závazek', info: 'Posílit vojsko pro Evropu na úkor koloniálních posádek.', cost: 25, cd: 180, when: { tag: ['ENG'] }, fx: [{ t: 'mech', id: 'eng_bop', v: -15 }] },
+  { id: 'eng_bop_rise', cat: 'nat', n: 'Imperiální obrana', info: 'Loďstvo a posádky střeží cesty říše.', cost: 25, cd: 180, when: { tag: ['ENG'] }, fx: [{ t: 'mech', id: 'eng_bop', v: 15 }] },
+  { id: 'fra_bop_reformy', cat: 'nat', n: 'Sociální reformy', info: 'Ústupky odborům a levici.', cost: 25, cd: 180, when: { tag: ['FRA'] }, fx: [{ t: 'mech', id: 'fra_bop', v: 15 }] },
+  { id: 'fra_bop_dekrety', cat: 'nat', n: 'Mimořádné dekrety', info: 'Prodloužení pracovní doby a zbrojení.', cost: 25, cd: 180, when: { tag: ['FRA'] }, fx: [{ t: 'mech', id: 'fra_bop', v: -15 }] },
+  { id: 'ger_bop_strana', cat: 'nat', n: 'Stranický dohled nad armádou', info: 'Komisaři strany u štábů.', cost: 25, cd: 180, when: { tag: ['GER'] }, fx: [{ t: 'mech', id: 'ger_bop', v: 15 }] },
+  { id: 'ger_bop_armada', cat: 'nat', n: 'Volná ruka generálům', info: 'Velení dostane víc samostatnosti.', cost: 25, cd: 180, when: { tag: ['GER'] }, fx: [{ t: 'mech', id: 'ger_bop', v: -15 }] },
+  { id: 'ita_bop_strana', cat: 'nat', n: 'Stranické shromáždění', info: 'Masová shromáždění upevňují režim.', cost: 25, cd: 180, when: { tag: ['ITA'] }, fx: [{ t: 'mech', id: 'ita_bop', v: 15 }] },
+  { id: 'ita_bop_koruna', cat: 'nat', n: 'Ústupky koruně', info: 'Král dostane zpět část pravomocí.', cost: 25, cd: 180, when: { tag: ['ITA'] }, fx: [{ t: 'mech', id: 'ita_bop', v: -15 }] },
   // ---- W6: rozhodnutí jako v HOI4 (obecná) ----
   { id: 'valecne_dluhopisy', cat: 'eco', n: 'Válečné dluhopisy', info: 'Půl roku vyšší výroba za cenu úspor obyvatel.', cost: 40, cd: 365, when: { war: true, year: 1938 }, fx: [{ t: 'spirit', id: 'd_dluhopisy', days: 180 }], ai: true },
   { id: 'stavebni_brigady', cat: 'eco', n: 'Stavební brigády', info: 'Čtyři měsíce rychlejší stavby v celé zemi.', cost: 35, cd: 240, when: { war: false }, fx: [{ t: 'spirit', id: 'd_stavebni_brigady', days: 120 }], ai: true },
