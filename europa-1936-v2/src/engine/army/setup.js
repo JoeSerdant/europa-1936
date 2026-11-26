@@ -10,7 +10,7 @@ import { NATIONAL, TPL_KINDS, NAMES, TRAIT_IDS, EQUIP_IDS, EQUIP } from '../../d
 import { COUNTRIES } from '../../data/countries.js';
 
 export const emptyMil = (nOwners) => ({
-  ver: 0, bn: 0, qn: 0, wars: [],
+  ver: 0, bn: 0, qn: 0, wars: [], raids: [], rn: 0,   // S5c: připravované nájezdy speciálních jednotek
   tpl: [null], divs: [null], armies: [null], groups: [null], gens: [null],
   battles: [], queue: [],
   stock: Array.from({ length: nOwners }, () => null),

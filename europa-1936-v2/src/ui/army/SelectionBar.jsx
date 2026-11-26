@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useGameSlow, useUi } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
-import { armyTree, divisionView, ARMY, getWorld, marchEta, NAV } from '../../engine/index.js';
+import { armyTree, divisionView, ARMY, getWorld, marchEta, NAV, isSpecial, raidTargets, raidsFor, RAID_KINDS, hasWar } from '../../engine/index.js';
+import { raidWith, cancelOwnRaid } from '../actions.js';
 import { Portrait } from './Portrait.jsx';
 import {
   playerIdx, ownSelected, newArmy, addSelectionToArmy, removeSelectionFromArmy, stopSelected, disbandSelected, focusSelection, clearSelection, toggleDivision, toggleRailMode,
@@ -57,6 +58,36 @@ function MiniDiv({ id, state }) {
 const MINI_MAX = 36;
 
 /** Dolní lišta vybraných jednotek (M102): u jedné divize ikony s čísly, u více mřížka mini karet; povely jen ikonami s nápovědou. */
+/** S5c: nájezd speciální jednotky – druh jako ikony, cíle jako dlaždice se šancí; připravovaný nájezd s odpočtem a zrušením. */
+function RaidBox({ state, id }) {
+  const [k, setK] = useState('');
+  const w = getWorld(), d = state.mil.divs[id];
+  const cur = raidsFor(state, d.o).find((r) => r.d === id);
+  if (cur) {
+    const left = Math.max(0, Math.ceil((cur.at - state.tick) / 24));
+    return (
+      <div className="raid-box" aria-label="Nájezd">
+        <Icon name={RAID_KINDS[cur.k].icon} size={16} /><span>Nájezd: {RAID_KINDS[cur.k].n} – {w.states[cur.s].n}, za {left} d</span>
+        <button className="icon-btn sm" onClick={() => cancelOwnRaid(cur.id)} title="Zrušit nájezd" aria-label="Zrušit nájezd"><Icon name="close" size={14} /></button>
+      </div>
+    );
+  }
+  const targets = k ? raidTargets(state, id, k) : [];
+  return (
+    <div className="raid-box" aria-label="Nájezd">
+      <span className="muted">Nájezd:</span>
+      {Object.entries(RAID_KINDS).map(([kk, K]) => (
+        <button key={kk} className={`mis-btn ${k === kk ? 'on' : ''}`} aria-pressed={k === kk} onClick={() => setK(k === kk ? '' : kk)} title={`${K.n}: ${K.info}`} aria-label={K.n}><Icon name={K.icon} size={15} /></button>
+      ))}
+      {k ? (targets.length ? targets.map((x) => (
+        <button key={x.s} className="tg-chip" onClick={() => { raidWith(id, k, x.s); setK(''); }} title={`${w.states[x.s].n}: ${x.km} km, šance na úspěch ${Math.round(x.chance * 100)} %. Příprava 7 dní.`}>
+          <b>{w.states[x.s].n}</b><i>{Math.round(x.chance * 100)} %</i>
+        </button>
+      )) : <span className="muted">Žádný cíl v dosahu.</span>) : null}
+    </div>
+  );
+}
+
 export function SelectionBar() {
   const sel = useUi((s) => s.selDivs);
   const railMode = useUi((s) => s.railMode);
@@ -123,6 +154,7 @@ export function SelectionBar() {
           <Chip icon="xp" title={`Zkušenost: ${view.xpName}`}><span className="xp-pips">{[0, 1, 2, 3, 4].map((i) => <i key={i} className={view.xpLevel >= i ? 'on' : ''} />)}</span></Chip>
           {view.dig >= 1 && <Chip icon="dig" title="Zakopání (obrana +4 % za stupeň)">{Math.floor(view.dig)}/5</Chip>}
           <Chip icon="supply" title="Zásobování" bad={view.supply < 0.7}>{pct(view.supply)}</Chip>
+          {mine && isSpecial(state.mil, first) && hasWar(state.mil, first.o) ? <RaidBox state={state} id={ids[0]} /> : null}
         </div>
       ) : (
         <>

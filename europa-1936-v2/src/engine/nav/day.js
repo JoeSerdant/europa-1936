@@ -13,6 +13,7 @@ import { fuelNavMult } from '../fuel/index.js';
 import { seaGraph, seaKm, powerOf, fleetPower, fleetSpeed, seaRoute, homeSeas, seaBlocked, airPower, aswOf, deckOf, planesOf, damageOf, enemyMines, baseLevelAt } from './core.js';
 import { modsOf as techModsOf } from '../research/core.js';
 import { refitDay } from './refit.js';
+import { isMarine } from '../army/special.js';
 
 const friendly = (state, a, b) => a === b || sameFaction(state, a, b);
 
@@ -59,8 +60,9 @@ function arrivals(state) {
     }
     const port = w.portLevel[place] > 0;
     const cfl = landed && state.ind.cf && place !== prev ? state.ind.cf[place] || 0 : 0;
-    const unprep = landed && prev !== s.o && atWar(state.mil, s.o, prev) ? NAV.PREP_ORG * (1 - (d.ip || 0)) : 0;   // S9: nepřipravené vylodění stojí organizaci
-    divs[s.id] = { ...d, p: place, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0, org: d.org * (landed && !port ? NAV.LAND_ORG : 1) * (1 - NAV.CFORT_ORG * cfl) * (1 - unprep) };
+    const marine = isMarine(state.mil, d);   // S5c: námořní pěchota se vylodí bez ztráty organizace
+    const unprep = landed && !marine && prev !== s.o && atWar(state.mil, s.o, prev) ? NAV.PREP_ORG * (1 - (d.ip || 0)) : 0;   // S9: nepřipravené vylodění stojí organizaci
+    divs[s.id] = { ...d, p: place, path: [], prog: 0, b: 0, rt: 0, hold: 0, dig: 0, org: d.org * (landed && !port && !marine ? NAV.LAND_ORG : 1) * (1 - NAV.CFORT_ORG * cfl) * (1 - unprep) };
     delete divs[s.id].ip;
     if (o_isPlayer(s.o, player)) logs.push({ k: 'landing', o: s.o, x: landed ? place : s.from, a: landed ? 1 : 0 });
     else if (landed && prev !== s.o && prev === player) logs.push({ k: 'lands', o: s.o, x: place, b: prev });   // M71: nepřítel se vylodil na území hráče

@@ -8,7 +8,7 @@ export const NOTIFY_GROUPS = {
   research: { n: 'Výzkum a doktríny', info: 'Dokončené technologie a přijaté doktríny.', kinds: ['tech', 'doctrine'] },
   focus: { n: 'Národní cíle a události', info: 'Splněné národní cíle a rozhodnutí v událostech.', kinds: ['focus', 'event'] },
   build: { n: 'Stavby', info: 'Dokončené budovy a pevnosti.', kinds: ['built'] },
-  military: { n: 'Vojenské operace', info: 'Vylodění, výsadky, potopené lodě, konvoje, bombardování, letecká esa a jaderné zbraně.', kinds: ['landing', 'lands', 'inv', 'drop', 'sunk', 'convoy', 'bombed', 'ace', 'nuke', 'nukeready', 'refit'] },
+  military: { n: 'Vojenské operace', info: 'Vylodění, výsadky, potopené lodě, konvoje, bombardování, letecká esa a jaderné zbraně.', kinds: ['landing', 'lands', 'inv', 'drop', 'sunk', 'convoy', 'bombed', 'ace', 'nuke', 'nukeready', 'refit', 'raid'] },
   other: { n: 'Ostatní', info: 'Ostatní zprávy.', kinds: [] },
 };
 export const NOTIFY_IDS = Object.keys(NOTIFY_GROUPS);

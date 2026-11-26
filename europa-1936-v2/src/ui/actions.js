@@ -14,7 +14,7 @@ import {
   orderDrop, dropBlock, AIR, dropNuke, nukeBlock, confClaim, confClaimsDone,
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf, orderRail, railBlock,
   volKind, volBlock, sendVolunteers, recallVolunteers, attBlock, sendAttache, recallAttache, licBlock, buyLicence, PLANES,
-  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, setDesign, hireBureau, bureauBlock, offerBlock, offerOnMarket, withdrawOffer, buyBlock, buyFromMarket, industryOf, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS, buildRoom, fortRoom,
+  tightenControl, loosenControl, useAbility, abilityBlock, ABILITIES, guarantee, revokeGuarantee, guaranteeBlock, accessBlock, grantBlock, requestAccess, grantAccess, revokeAccess, demand, demandSpec, demandBlock, DEMAND_BY_ID, lendLease, lendBlock, lendMax, EQUIP, buildFort, hireAgent, startOp, cancelOp, ackEnd, takeDecision, adoptDoctrine, setDesign, hireBureau, bureauBlock, offerBlock, offerOnMarket, withdrawOffer, buyBlock, buyFromMarket, industryOf, raidBlock, orderRaid, cancelRaid, confPuppet, confAnnex, confSkip, confTake, confTribute, annexPuppet, confRelease, runCheat, formWing, disbandWing, reinforceWing, setMission, rebaseWing, missionBlock, build, cancelBuild, moveBuild, addLine, setLineFactories, setLineEquip, addTrade, setTradeAmount, cancelTrade, stateIndustry, IND, BUILDINGS, buildRoom, fortRoom,
   setOccLaw, setCollab, collabBlock, OCC_LAWS,   // S7
 } from '../engine/index.js';
 import { gameStore, uiStore, setUi, NONE } from './store.js';
@@ -1230,6 +1230,15 @@ export function licenceFrom(tag, k) {
 // ============================================================ doktríny (M34)
 export const adoptDoc = (id) => !!playerIdx() && run(adoptDoctrine, playerIdx(), id);
 /** M97: zavede návrh varianty výzbroje hráčovy země. */
+/** S5c: nájezd speciální divize hráče. */
+export function raidWith(id, k, st) {
+  const s = gameStore.getState(), me = playerIdx(s), d = s.mil.divs[id];
+  if (!me || !d || d.o !== me) return false;
+  const why = raidBlock(s, id, k, st);
+  if (why) { toast(why); return false; }
+  return run(orderRaid, id, k, st);
+}
+export const cancelOwnRaid = (rid) => { const s = gameStore.getState(), me = playerIdx(s), r = (s.mil.raids || []).find((x) => x.id === rid); return !!me && !!r && r.o === me && run(cancelRaid, rid); };
 /** S5b: mezinárodní trh – vystavení, stažení a nákup výzbroje. */
 export function sellOnMarket(eq, n) {
   const s = gameStore.getState(), me = playerIdx(s);

@@ -1474,6 +1474,24 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Rozhraní**: okno Průmysl, záložka Trh se zbraněmi – nabídky jako karty (výzbroj, prodávající, cena za 100 kusů, tlačítko
   koupit, kolik unesou volné továrny), prodej ze skladu dlaždicemi, vlastní nabídky a probíhající obchody s průběhem.
 
+## 4zzzzzzzzzzzzzzzzzzzz. Speciální jednotky a nájezdy (S5c, `GAME_VERSION = 61`)
+
+- **Speciální jednotky** (`army/special.js`): prapory s `sf` (výsadkový prapor, nová námořní pěchota `namor` s `marine`, odemyká
+  ji technologie Výsadkové čluny). Divize je speciální, když aspoň `RAID.SF_SHARE` liniových praporů je speciálních; země smí mít
+  nejvýš `sfCap` = max(`RAID.SF_BASE`, divize × `RAID.SF_PER_DIV`) speciálních divizí včetně výcviku (`sfBlock` v `recruit`).
+- **Námořní pěchota** (`isMarine`): na nepřátelské pobřeží vypluje bez přípravy (`sailBlock`) a vylodí se bez ztráty organizace
+  (`arrivals`: bez `NAV.LAND_ORG` a bez postihu za přípravu).
+- **Nájezdy** (`raid/raids.js`, stav `mil.raids = [{ id, o, d, k, s, at }]`, čítač `mil.rn`; `validateState`): `orderRaid`
+  (kontroly `raidBlock`: speciální divize mimo boj, nepřátelský stát do `RAID.KM`, cíl odpovídá druhu – letiště, přístav, továrny)
+  naplánuje vyhodnocení za `RAID.PREP` dní; `raidDay` (o půlnoci mezi letectvem a průmyslem) rozhodne podle `raidChance`
+  (základ + zkušenosti + organizace − divize v cílovém státě, radar u letiště, protiletadlová obrana; mezi `RAID.MIN` a `RAID.MAX`)
+  a hashe `rand01` (ne `state.rng`). Úspěch: letiště – ztráta `RAID.PLANES` letadel křídel na základně; přístav – poškození
+  flotil stojících v přístavních vodách; sklady – `RAID.STOCK` výzbroje cílové země; továrny – poškození `ind.dmg` jako po
+  bombardování (S8). Divize ztratí organizaci, při neúspěchu i sílu. Záznam deníku `raid` pro hráče (útočník i cíl).
+- **AI** nájezdy nepodniká (výsadky dál přes `aiPara`); strop speciálních divizí AI výsadkáře neomezuje (drží jich `AI.PARA_DIVS`).
+- **Rozhraní**: lišta výběru speciální divize za války – druh nájezdu jako ikony, cíle jako dlaždice se šancí, připravovaný
+  nájezd s odpočtem a zrušením.
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1689,6 +1707,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S5c** | **Speciální jednotky a nájezdy**: výsadkáři a námořní pěchota se stropem počtu, nájezdy na letiště, přístavy, sklady a továrny, vylodění námořní pěchoty bez přípravy | ✅ |
 | **S5b** | **Mezinárodní trh**: nabídky výzbroje ze skladu, nákup za civilní továrny po dobu dodávky, AI prodává přebytky | ✅ |
 | **S5a** | **Konstrukční kanceláře**: kancelář v každém oboru výzbroje (pěchota, obrněná technika, letectví, loďařství) se zaměřením, úrovně ze zkušeností výroby | ✅ |
 | **S4** | **Mechaniky jednotlivých zemí**: Velká čistka (SSSR), jednota frakcí obou stran ve Španělsku, armáda vs. loďstvo (Japonsko), jednota Číny, izolacionismus USA – ukazatele s pásmy a rozhodnutími | ✅ |

@@ -36,11 +36,18 @@ export const BATTALIONS = {
     info: 'Vycvičení pro hory a pahorkatiny: tam útočí a brání se lépe a pohybují se rychleji.',
   },
   vysad: {
-    n: 'Výsadkový prapor', ab: 'VÝS', sym: 'inf', w: 2, hp: 17, org: 60, men: 800, days: 130, spd: 4, sup: 0.05, para: true,
+    n: 'Výsadkový prapor', ab: 'VÝS', sym: 'inf', w: 2, hp: 17, org: 60, men: 800, days: 130, spd: 4, sup: 0.05, para: true, sf: true,   // S5c: speciální jednotka
     soft: 4.2, hard: 0.6, pierce: 3, def: 14, brk: 2.5, armor: 0, hardness: 0,
     need: { pusky: 110, podpora: 6 }, kind: 'pusky', terr: {},
     unlock: 'vysadek',
     info: 'Lehká výběrová pěchota. Divize složená jen z výsadkových praporů umí seskočit z letiště do týlu nepřítele.',
+  },
+  namor: {   // S5c: námořní pěchota – speciální jednotka pro vylodění (bez přípravy a bez ztráty organizace při vylodění)
+    n: 'Námořní pěchota', ab: 'NAM', sym: 'inf', w: 2, hp: 17, org: 60, men: 800, days: 120, spd: 4, sup: 0.05, sf: true, marine: true,
+    soft: 4.2, hard: 0.6, pierce: 3, def: 15, brk: 2, armor: 0, hardness: 0,
+    need: { pusky: 100, podpora: 6 }, kind: 'pusky', terr: {},
+    unlock: 'nav_vysad',
+    info: 'Výběrová pěchota pro výsadky z moře. Divize složená hlavně z námořní pěchoty se vylodí bez přípravy a bez ztráty organizace a umí nájezdy.',
   },
   motor: {
     n: 'Motorizovaný prapor', ab: 'MOT', sym: 'mot', w: 2, hp: 22, org: 45, men: 1000, days: 80, spd: 8, sup: 0.08, fuel: 0.03,

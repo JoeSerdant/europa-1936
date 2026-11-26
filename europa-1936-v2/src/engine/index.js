@@ -34,3 +34,7 @@ export * from './dip/index.js';
 export * from './ai/index.js';
 export { BATTALIONS, SUPPORT, ALL_UNITS, GRID, TERRAIN_RULES, RIVER, EQUIP, EQUIP_IDS, TRAITS, TPL_KINDS } from '../data/army/index.js';
 export { runCheat, CHEAT_HELP } from './cheats.js';
+export { raidBlock, orderRaid, cancelRaid, raidChance, raidsFor, raidTargets } from './raid/raids.js';   // S5c
+export { isSpecial, isMarine, sfCap, sfUsed, sfBlock } from './army/special.js';
+export { hasWar } from './army/war.js';   // S5c: rozhraní (nájezdy jen za války)
+export { RAID, RAID_KINDS } from '../data/army/raids.js';

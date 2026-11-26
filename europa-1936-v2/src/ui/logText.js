@@ -10,6 +10,7 @@ import { IDEOLOGIES } from '../data/countries.js';
 import { OVERSEAS } from '../data/dip/overseas.js';
 import { PLANES } from '../data/air/planes.js';
 import { FAC_GOALS } from '../data/dip/facgoals.js';
+import { RAID_KINDS } from '../data/army/raids.js';
 import { ACE_NAMES } from '../engine/air/constants.js';
 import { EQUIP } from '../data/army/index.js';
 import { BUILDINGS } from '../data/industry/buildings.js';
@@ -35,6 +36,7 @@ export function logLine(e, me = 0) {
     case 'focus': return { icon: 'flag', tone: 'good', world: false, mine: true, text: `Národní cíl splněn: ${FOCUS_BY_ID[e.x]?.n || e.x}.` };
     case 'built': return { icon: 'industry', tone: 'good', world: false, mine: true, text: `Stavba dokončena: ${BUILDINGS[e.x]?.n || e.x}${e.p ? ` (${w.provName(e.p)})` : e.s && w.states[e.s] ? ` (${w.states[e.s].n})` : ''}.` };
     case 'landing': return { icon: 'army', tone: e.a ? 'good' : 'info', world: false, mine: true, text: e.a ? `Vylodění dokončeno: ${w.provName(e.x)}.` : `Vylodění se nezdařilo, divize se vrátila: ${w.provName(e.x)}.` };
+    case 'raid': return { icon: 'attack', tone: e.o === me ? (e.y ? 'good' : 'bad') : (e.y ? 'bad' : 'good'), world: false, mine: true, text: e.o === me ? `Nájezd na ${RAID_KINDS[e.x]?.n.toLowerCase() || e.x} (${w.states[e.s]?.n}) ${e.y ? 'uspěl' : 'selhal – jednotka utrpěla ztráty'}.` : `Nepřátelský nájezd na ${RAID_KINDS[e.x]?.n.toLowerCase() || e.x} (${w.states[e.s]?.n}) ${e.y ? 'uspěl' : 'jsme odrazili'}.` };   // S5c
     case 'mkt': return { icon: 'trade', tone: 'info', world: false, mine: e.a === me || e.b === me, text: e.a === me ? `${w.owners[e.b].name} kupuje na trhu vaši výzbroj: ${fmtNum0(e.y)} ks (${eqName(e.x)}).` : `Nákup na trhu od ${w.owners[e.a].name}: ${fmtNum0(e.y)} ks (${eqName(e.x)}).` };   // S5b
     case 'refit': return { icon: 'navy', tone: 'good', world: false, mine: true, text: `Přestavba flotily ${e.x} je hotová – lodě mají nejnovější techniku.` };   // S9
     case 'bombed': return { icon: 'air', tone: 'bad', world: false, mine: true, text: `Letecký útok na ${w.states[e.s]?.n || 'váš stát'}: klesla podpora války a část zásob byla zničena.` };
