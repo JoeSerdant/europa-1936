@@ -1,6 +1,7 @@
 // Návrhář výzbroje (M97): násobky statistik a ceny z návrhů variant. Návrhy žijí v úrovních výzbroje země `mil.lv[o].des = { typ: { nm, mods: { slot: modul } } }`,
 // takže mezipaměti statistik divizí (podle objektu úrovní) se po změně návrhu obnoví samy. Čisté funkce.
 import { DESIGN_TYPES, MODULES } from '../../data/design/modules.js';
+import { bureauMods } from './bureau.js';
 
 export const ONE = Object.freeze({ atk: 1, def: 1, armor: 1, speed: 1, hp: 1, cas: 1, bomb: 1, cost: 1 });
 const cache = new WeakMap();   // návrh → násobky
@@ -21,8 +22,18 @@ export function designMult(des) {
 
 /** Návrh typu `type` z úrovní výzbroje `lv` (= mil.lv[o]), nebo null. */
 export const designOf = (lv, type) => (lv && lv.des && lv.des[type]) || null;
-/** Násobky typu `type` pro úrovně `lv`. */
-export const multOf = (lv, type) => designMult(designOf(lv, type));
+const withBu = new WeakMap();   // násobky návrhu → Map(klíč kanceláře → násobky s kanceláří)
+/** Násobky typu `type` pro úrovně `lv`: návrh varianty (M97) a najatá konstrukční kancelář oboru (S5a). */
+export function multOf(lv, type) {
+  const base = designMult(designOf(lv, type)), bm = bureauMods(lv, type);
+  if (!bm) return base;
+  const key = JSON.stringify(bm);
+  let m = withBu.get(base);
+  if (!m) { m = new Map(); withBu.set(base, m); }
+  let r = m.get(key);
+  if (!r) { r = {}; for (const k in ONE) r[k] = Math.max(0.5, base[k] + (bm[k] || 0)); r = Object.freeze(r); m.set(key, r); }
+  return r;
+}
 /** Násobky typu `type` země `o`. */
 export const designMultOf = (state, o, type) => multOf(state.mil.lv && state.mil.lv[o], type);
 

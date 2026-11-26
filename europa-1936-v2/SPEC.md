@@ -1443,6 +1443,22 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Rozhraní**: okno Politika, oddíl Národní mechanika – karta s ukazatelem, značkami hranic pásem, aktuálním pásmem a účinky
   jeho ducha v nápovědě.
 
+## 4zzzzzzzzzzzzzzzzzz. Konstrukční kanceláře (S5a, `GAME_VERSION = 59`)
+
+- **Stav**: najatá kancelář oboru je v úrovních výzbroje země `mil.lv[o].bu = { obor: { id, lv } }` (mění se jen při najmutí a postupu,
+  takže mezipaměti statistik divizí podle objektu úrovní se obnoví samy); zkušenosti `ind.bux['země:obor']` (`validateState`).
+- **Data** (`data/design/bureaus.js`): obory `BUREAU_CATS` (pěchotní výzbroj, obrněná technika, letectví, loďařství – seznam druhů
+  výzbroje), kanceláře `BUREAUS` (`per` = účinek za úroveň s klíči z `DESIGN_STATS`, `ai` = volba AI), čísla `BUREAU`.
+- **Účinek**: `multOf(lv, typ)` = násobky návrhu varianty + `bureauMods` (per × úroveň); čtou ho statistiky divizí (`tplStats`),
+  cena výroby (`itemCost`), síla letadel (`airDay`) a lodí (`fleetPower` – u lodí přes snímek flotily, tedy až po přestavbě, S9).
+- **Najmutí** `hireBureau` (kontroly `bureauBlock`; `BUREAU.PP` politické moci, výměna v oboru začíná od 1. úrovně bez zkušeností).
+  **Postup** `bureauDay` (v `industryDay`): zkušenosti = továrny na linkách oboru × `BUREAU.XP_FAC` denně, další úroveň po
+  `BUREAU.XP_LV` × úroveň, nejvýš `BUREAU.MAX`.
+- **AI** (`ai/bureau.js`, měsíčně): v oboru, ve kterém vyrábí a nemá kancelář, najme kancelář s `ai` (levnější výroba), když jí zbude
+  `AI.S5_BU_PP_KEEP` politické moci.
+- **Rozhraní**: okno Konstrukční kancelář, záložka Kanceláře – karta oboru s najatou kanceláří (úroveň jako tečky, postup jako pruh)
+  a nabídkou kanceláří jako dlaždic (účinek a cena v nápovědě).
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1658,6 +1674,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S5a** | **Konstrukční kanceláře**: kancelář v každém oboru výzbroje (pěchota, obrněná technika, letectví, loďařství) se zaměřením, úrovně ze zkušeností výroby | ✅ |
 | **S4** | **Mechaniky jednotlivých zemí**: Velká čistka (SSSR), jednota frakcí obou stran ve Španělsku, armáda vs. loďstvo (Japonsko), jednota Číny, izolacionismus USA – ukazatele s pásmy a rozhodnutími | ✅ |
 | **S10** | **Frakce**: společné cíle bloků s trvalými bonusy pro členy, vážené hlasování o přijetí a vyloučení členů | ✅ |
 | **S9** | **Námořnictvo**: přestavby flotil v přístavu (technika a návrhy se u lodí projeví až po přestavbě), úder letectva na přístav, příprava vylodění divizí | ✅ |

@@ -13,6 +13,7 @@ import { aiDesign } from './design.js';
 import { aiDecisions } from './decisions.js';
 import { aiOccupation } from './occ.js';
 import { aiFacGoals } from './faction.js';
+import { aiBureaus } from './bureau.js';
 import { aiSpy } from './spy.js';
 import { aiForts } from './forts.js';
 import { aiStrategy } from './strategy.js';
@@ -58,6 +59,7 @@ export function* aiDaySteps(state) {
     state = aiDecisions(state, o);
     state = aiOccupation(state, o);   // S7: okupační zákony a kolaborantské vlády
     state = aiFacGoals(state, o);   // S10: společné cíle bloku
+    state = aiBureaus(state, o);   // S5a: konstrukční kanceláře
     state = aiParties(state, o);
     state = aiSpy(state, o);
     state = aiForts(state, o);

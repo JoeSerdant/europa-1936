@@ -64,7 +64,7 @@ export function factoryUse(t, cons) {
 }
 
 /** Výrobní body na kus podle úrovně výzbroje země (`lv` = mil.lv[o], M20) a návrhu varianty (M97). */
-export const itemCost = (eq, lv) => PROD[eq].cost * (1 + I.LV_COST * (((lv && lv[eq]) || 1) - 1)) * (lv && lv.des ? multOf(lv, eq).cost : 1);
+export const itemCost = (eq, lv) => PROD[eq].cost * (1 + I.LV_COST * (((lv && lv[eq]) || 1) - 1)) * (lv && (lv.des || lv.bu) ? multOf(lv, eq).cost : 1);
 
 /** Kusy za den, které linka vyrobí při své efektivitě (bez vlivu nedostatku surovin). */
 export const lineRate = (l, lv = null) => (l.fac * I.IC_PER_FAC * l.eff) / itemCost(l.eq, lv);
