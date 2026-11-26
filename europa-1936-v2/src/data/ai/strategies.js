@@ -103,6 +103,7 @@ export const HIST_STRATEGIES = [
   { id: 'ger_ruin', tag: 'GER', from: 3260, until: 3800, needWar: 'SOV', spirit: 'zhroucene_hospodarstvi' },   // M96: bombardované továrny, ztracená ropa
   // vylodění Spojenců: Sicílie a Itálie 1943, Normandie 1944
   // konec války v Evropě: Německo vytrvá do jara 1945, pak bezpodmínečně kapituluje (nejpozději v létě 1945)
+  { id: 'egy_holdout', tag: 'EGY', from: 1600, until: 3600, holdout: true, share: 0.995 },   // S9: Egypt (britská základna) nikdy nepadl – kapituluje až při úplné okupaci
   { id: 'ger_holdout', tag: 'GER', from: 2000, until: 3415, holdout: true, share: 0.995 },   // W6: vlastní hranice – posledních pár provincií padne až s kapitulací 8. 5. 1945
   { id: 'hun_holdout', tag: 'HUN', from: 2000, until: 3381, holdout: true },   // W2: Maďarsko vytrvá do dubna 1945 (Budapešť padla v únoru, poslední území 4. 4. 1945)
   { id: 'slo_holdout', tag: 'SLO', from: 2000, until: 3395, holdout: true },   // Slovensko do dubna 1945

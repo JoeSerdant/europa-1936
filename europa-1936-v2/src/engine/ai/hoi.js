@@ -96,7 +96,7 @@ export function aiAirMissions(state, o) {
     if (wg.m === 'nav' && !navStrikeTarget(state, o, wg.s, range)) { state = setMission(state, wg.id, null); continue; }   // cíl odplul – křídlo se vrátí k běžným misím
     if (wg.m === 'int' && !interceptTarget(state, o, wg.s, range)) { state = setMission(state, wg.id, null); continue; }
     if (wg.m === 'port' && !portStrikeTarget(state, o, wg.s, range)) { state = setMission(state, wg.id, null); continue; }   // S9: flotila odplula
-    if (wg.t === 'str' && wg.m !== 'port' && wg.id % AI.S9_PORT_EVERY === 0) {   // S9: každé tolikáté křídlo strategických bombardérů udeří na přístav s flotilou
+    if (!state.ai.hist && wg.t === 'str' && wg.m !== 'port' && wg.id % AI.S9_PORT_EVERY === 0) {   // jen volná historie: s historickou AI by ochromení flotil změnilo průběh války   // S9: každé tolikáté křídlo strategických bombardérů udeří na přístav s flotilou
       const ps = portStrikeTarget(state, o, wg.s, range);
       if (ps) { state = setMission(state, wg.id, 'port', ps); continue; }
     }

@@ -76,7 +76,7 @@ describe('S9: úder na přístav', () => {
     expect(missionBlock({ ...s0, air: { ...s0.air, wings: [null, { id: 1, o: GER, t: 'tac', n: 1, s: base, m: null, to: 0, c: 0, a: 0 }] } }, 1, 'port', ps)).not.toMatch(/přístav|válce/);
     const port = strike('port').nav.fleets[fid].dm || 0, nav = strike('nav').nav.fleets[fid].dm || 0;
     expect(port).toBeGreaterThan(nav);
-    expect(portStrikeTarget(s0, GER, base, 5000)).toBeGreaterThan(0);
+    expect(portStrikeTarget(s0, GER, base, 5000)).toBeGreaterThan(0);   // cíl pro AI (útočí jen ve volné historii)
   });
 });
 
