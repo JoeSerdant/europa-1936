@@ -113,7 +113,7 @@ export const HIST_STRATEGIES = [
   { id: 'usa_hun_border', tag: 'USA', from: 2000, until: 3200, noEnter: 'HUN' },   // F3: do 8. 5. 1945
   { id: 'ger_surrender', tag: 'GER', from: 3415, until: 3800, armistice: 'SOV', held: 20, force: 3415, conf: true },   // F4c: natvrdo 8. 5. 1945
   { id: 'ita_holdout', tag: 'ITA', from: 2400, until: 2795, holdout: true },   // F4: režim vydrží do vylodění na Sicílii a pádu v září 1943
-  { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2870 },
+  { id: 'ita_armistice', tag: 'ITA', from: 2795, until: 3000, armistice: 'ENG', held: 3, force: 2795 },   // S9: příměří 27. 8. 1943 natvrdo (nezávisle na průběhu vylodění na Sicílii)
   { id: 'husky', tag: 'ENG', from: 2650, until: 2950, invade: 'ITA', at: 'ITA' },
   { id: 'overlord', tag: 'ENG', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },
   { id: 'overlord_usa', tag: 'USA', from: 3075, until: 3400, invade: 'GER', at: 'FRA' },
