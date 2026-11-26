@@ -1492,6 +1492,19 @@ s více cíli AI utrácí politickou moc jinde a Barbarossa by čekala, až ji n
 - **Rozhraní**: lišta výběru speciální divize za války – druh nájezdu jako ikony, cíle jako dlaždice se šancí, připravovaný
   nájezd s odpočtem a zrušením.
 
+## 4zzzzzzzzzzzzzzzzzzzzz. Vyznamenání a rovnováha sil (S5d, `GAME_VERSION = 62`)
+
+- **Vyznamenání** (`army/medals.js`, data `MEDALS` a čísla `MEDAL` v `data/army/medals.js`): divize má nejvýš jedno (`d.md`).
+  `awardMedal` (kontroly `medalBlock`: divize se zkušenostmi aspoň „Zkušení“, `MEDAL.CP` velitelské moci, strop vyznamenaných divizí
+  `medalCap` = `MEDAL.BASE` + divize × `MEDAL.PER_DIV`). Bonus `medalBonus` (`atk` / `def`) přičítá `army/combat.js` k útoku a obraně
+  divize v boji.
+- **Rovnováha sil**: čtyři další mechaniky v `MECHS` (S4) – Říše a Evropa (Británie), Levice a pravice (Francie do pádu 1940),
+  Strana a armáda (Německo), Strana a koruna (Itálie). Oba konce ukazatele dávají vlastního ducha, střed nic; historické kroky
+  (vstup Británie do války, Lidová fronta a dekrety, odvolání velení armády 1938, pád režimu v Itálii 1943) a dvojice rozhodnutí
+  hráče pro každou zemi.
+- **Rozhraní**: lišta výběru zkušené vlastní divize – tři vyznamenání jako ikony (cena a důvod zákazu v nápovědě), udělené
+  vyznamenání jako odznak; rovnováha sil v okně Politika (oddíl Národní mechanika).
+
 ## 5. Rozhraní
 
 Obrazovky (`uiStore.screen`): `menu` → `select` → `game`. **Jedno trvalé plátno mapy** (`MapView`) leží pod všemi obrazovkami; React kreslí jen HUD.
@@ -1707,6 +1720,7 @@ oboje přes `@fontsource` (OFL); panely se seříznutými rohy. Vlajky jsou vlas
 | **W3** | **Národní cíle velmocí světa**: velké stromy USA, Japonska a Číny s politickými cestami a modernizací | ✅ |
 | **W4** | **Vlastní cíle všech zemí světa**: 38 zemí s vlastními názvy a jedinečnými cíli podle surovin, terénu a sousedů | ✅ |
 | **W5** | **Volby cest ve všech stromech**: armádní doktrína, průmysl, zahraniční politika a podpůrné služby pro každou zemi | ✅ |
+| **S5d** | **Vyznamenání a rovnováha sil**: vyznamenání zkušených divizí za velitelskou moc, rovnováha sil Británie, Francie, Německa a Itálie | ✅ |
 | **S5c** | **Speciální jednotky a nájezdy**: výsadkáři a námořní pěchota se stropem počtu, nájezdy na letiště, přístavy, sklady a továrny, vylodění námořní pěchoty bez přípravy | ✅ |
 | **S5b** | **Mezinárodní trh**: nabídky výzbroje ze skladu, nákup za civilní továrny po dobu dodávky, AI prodává přebytky | ✅ |
 | **S5a** | **Konstrukční kanceláře**: kancelář v každém oboru výzbroje (pěchota, obrněná technika, letectví, loďařství) se zaměřením, úrovně ze zkušeností výroby | ✅ |

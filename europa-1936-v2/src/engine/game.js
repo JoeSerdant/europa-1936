@@ -21,7 +21,7 @@ import { createStat, recordStat } from './stat/index.js';
 import { createRules } from './rules.js';
 import { DIFF_IDS } from '../data/ai/difficulty.js';
 
-export const GAME_VERSION = 61;
+export const GAME_VERSION = 62;
 export const SPEEDS = [0, 4, 12, 36, 96, 240];   // herních hodin za reálnou sekundu při rychlosti 1–5 (index 0 = pauza); F3: rychlost 1 = den za 6 s jako v HOI4
 export const MAX_SPEED = 5;
 

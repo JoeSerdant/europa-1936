@@ -17,6 +17,7 @@ import { statsOf, lackOf, modsOf } from './unit.js';
 import { fuelRatio, FUEL } from '../fuel/index.js';
 import { chooseTactics, tacticEffects, leadOf } from './tactics.js';
 import { airPenalty } from '../air/zones.js';
+import { medalBonus } from './medals.js';
 import { AIR } from '../air/constants.js';
 
 /** Násobek zásahu podle poměru průrazu a pancíře cíle. */
@@ -64,6 +65,8 @@ function profile(ctx, id, role, info) {
   if (asup) a += asup[`${d.o}:${getWorld().provState[d.p]}`] || 0;
   const azp = airPenalty(ctx.state, d.o, getWorld().region[info.p]);   // S8: nepřátelská převaha ve vzduchu nad regionem bitvy
   if (azp) { a -= AIR.AZ_ATK * azp; f -= AIR.AZ_DEF * azp; }
+  const md = medalBonus(d);   // S5d: vyznamenání divize
+  if (md) { a += md.atk; f += md.def; }
   const mine = att ? info.tac.att : info.tac.dep, theirs = att ? info.tac.dep : info.tac.att;   // M77: taktiky
   a += mine.atk - theirs.foe; f += mine.def;
   a -= side.stack + side.over;
