@@ -6,6 +6,22 @@ import { COUNTRIES } from '../../data/countries.js';
 import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension, fuelOf, SPEEDS, FOCUS_BY_ID, researchOf } from '../../engine/index.js';
 import { setHelp, setMenuOpen, openOverview, togglePanel, playerIdx } from '../actions.js';
 import { fmtInt, fmtPop, fmtSpeed } from '../format.js';
+import { uiScale } from '../scale.js';
+import { targetBreakdown, ppBreakdown, manBreakdown, facBreakdown, fuelBreakdown, convoyBreakdown } from './breakdown.js';
+
+/** UI2: bublina s rozpisem hodnoty (jako v HOI4) – titulek, hodnota s cílem, řádky zdrojů, dopady a popis. Počítá se až při najetí myší. */
+function StatTip({ b, at }) {
+  if (!b) return null;
+  return (
+    <div className="stat-tip" role="tooltip" style={{ left: at.x, top: at.y }}>
+      <b className="st-title">{b.title}</b>
+      {b.target != null ? <span className="st-now">Nyní {Math.round(b.value * 100)} % · cíl {Math.round(b.target * 100)} %</span> : null}
+      <dl>{b.rows.map((r, i) => <div key={i}><dt>{r.n}</dt><dd className={r.tone || ''}>{r.v}</dd></div>)}</dl>
+      {b.effects ? <><b className="st-sub">Dopady</b><dl>{b.effects.map((r, i) => <div key={i}><dt>{r.n}</dt><dd className={r.tone || ''}>{r.v}</dd></div>)}</dl></> : null}
+      <p>{b.text}</p>
+    </div>
+  );
+}
 
 /** Datum, hodiny a ovládání času. Samostatná komponenta: s během času se překresluje jen ona. */
 function Clock() {
@@ -103,14 +119,24 @@ function useDelta(num, min) {
   return fx;
 }
 
-function Stat({ icon, label, value, opt = false, hint = '', num = null, min = 1, unit = '' }) {
+function Stat({ icon, label, value, opt = false, hint = '', num = null, min = 1, unit = '', tip = null }) {
   const fx = useDelta(num, min);
   const sign = fx ? (fx.d > 0 ? 'up' : 'down') : '';
+  const [open, setOpen] = useState(null);
+  const enter = (e) => {
+    if (!tip) return;
+    const r = e.currentTarget.getBoundingClientRect(), k = uiScale();
+    const x = Math.min(r.left / k, window.innerWidth / k - 380);
+    setOpen({ x: Math.max(6, x), y: r.bottom / k + 6 });
+  };
+  const s = open && tip ? gameStore.getState() : null;
+  const o = s && s.player ? getWorld().ownerIdx[s.player] : 0;
   return (
-    <div className={`stat ${opt === 'wide' ? 'opt wide' : opt ? 'opt' : ''} ${sign}`} title={hint || label}>
+    <div className={`stat ${opt === 'wide' ? 'opt wide' : opt ? 'opt' : ''} ${sign}`} title={tip ? undefined : hint || label} aria-label={label} onPointerEnter={enter} onPointerLeave={() => setOpen(null)}>
       <Icon name={icon} size={18} />
       <span><i>{label}</i><b key={fx ? fx.k : 0}>{value}</b></span>
       {fx && <em key={fx.k} className={`stat-fly ${sign}`}>{fx.d > 0 ? '+' : '−'}{fmtInt(Math.abs(fx.d))}{unit}</em>}
+      {o ? <StatTip b={tip(s, o)} at={open} /> : null}
     </div>
   );
 }
@@ -158,15 +184,15 @@ export function TopBar() {
             <Stat icon="provinces" label="Provincie" value={fmtInt(stats.provinces)} opt="wide" />
             <Stat icon="victory" label="Vítězné body" value={fmtInt(stats.vp)} num={stats.vp} />
             <Stat icon="army" label="Divize" value={fmtInt(divisions)} num={divisions} />
-            <Stat icon="recruit" label="Lidská síla" value={fmtPop(manpower / 1000)} />
-            <Stat icon="shield" label="Stabilita" value={`${stab} %`} num={stab} min={3} unit=" %" opt />
-            <Stat icon="swords" label="Podpora války" value={`${ws} %`} num={ws} min={3} unit=" %" opt />
-            <Stat icon="general" label="Politická moc" value={fmtInt(pp)} num={pp} min={10} />
+            <Stat icon="recruit" label="Lidská síla" value={fmtPop(manpower / 1000)} tip={manBreakdown} />
+            <Stat icon="shield" label="Stabilita" value={`${stab} %`} num={stab} min={3} unit=" %" opt tip={(st, o) => targetBreakdown(st, o, 'stab')} />
+            <Stat icon="swords" label="Podpora války" value={`${ws} %`} num={ws} min={3} unit=" %" opt tip={(st, o) => targetBreakdown(st, o, 'ws')} />
+            <Stat icon="general" label="Politická moc" value={fmtInt(pp)} num={pp} min={10} tip={ppBreakdown} />
             <Stat icon="army" label="Velitelská moc" value={fmtInt(cp)} opt />
-            <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} num={facN} opt />
+            <Stat icon="industry" label="Továrny civ. / vojen. / loděnic" value={fac} num={facN} opt tip={facBreakdown} />
             <Stat icon="general" label="Zkušenosti: armáda / letectvo / námořnictvo" value={xp} opt="wide" />
-            <Stat icon="navy" label="Volné transporty" value={fmtInt(convoys)} opt />
-            {fuel && <Stat icon="supply" label="Palivo" hint={`Palivo: zásoba ${fuelStock}, výroba ${fuelGain} a spotřeba ${fuelUse} za den${fuelLow === '1' ? ' (nedostatek)' : ''}`} value={fuelStock} opt />}
+            <Stat icon="navy" label="Volné transporty" value={fmtInt(convoys)} opt tip={convoyBreakdown} />
+            {fuel && <Stat icon="supply" label="Palivo" hint={`Palivo: zásoba ${fuelStock}, výroba ${fuelGain} a spotřeba ${fuelUse} za den${fuelLow === '1' ? ' (nedostatek)' : ''}`} value={fuelStock} opt tip={fuelBreakdown} />}
             <Stat icon="regions" label="Napětí ve světě" value={`${tension} %`} num={tension} min={3} unit=" %" opt />
           </div>
         )}

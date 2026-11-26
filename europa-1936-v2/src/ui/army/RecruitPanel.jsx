@@ -136,14 +136,10 @@ export function RecruitPanel() {
         <button className="icon-btn close" onClick={closeSide} aria-label="Zavřít okno" title="Zavřít (Esc)"><Icon name="close" size={20} /></button>
       </header>
       <div className="prod-body">
-        <div className="prod-cols">
-          <div className="prod-left">
-            <div className="sec-head"><h3>Šablony divizí ({ids.length})</h3><button className="sbtn" onClick={() => openDesigner(0)}><Icon name="plus" size={14} />Nová šablona</button></div>
-            <div className="tpl-grid">
-              {ids.map((id) => <TemplateCard key={id} view={templateView(state, id)} man={man} stock={stock} room={room} used={used(id)} />)}
-            </div>
-          </div>
-          <aside className="prod-right">
+        <div className="prod-cols rec-cols">
+          <div className="prod-left rec-deploy">
+            <div className="sec-head"><h3>Ve výcviku{queued ? ` (${queued})` : ''}</h3><span className="muted">fronta náboru a rozmístění</span></div>
+            <Queue state={state} me={me} />
             <section className="stock">
               <div className="sec-head"><h3>Sklad výzbroje</h3></div>
               <div className="stk-grid">
@@ -153,8 +149,12 @@ export function RecruitPanel() {
                 })}
               </div>
             </section>
-            <div className="sec-head"><h3>Ve výcviku{queued ? ` (${queued})` : ''}</h3></div>
-            <Queue state={state} me={me} />
+          </div>
+          <aside className="prod-right rec-tpls">
+            <div className="sec-head"><h3>Šablony divizí ({ids.length})</h3><button className="sbtn" onClick={() => openDesigner(0)}><Icon name="plus" size={14} />Nová šablona</button></div>
+            <div className="tpl-grid">
+              {ids.map((id) => <TemplateCard key={id} view={templateView(state, id)} man={man} stock={stock} room={room} used={used(id)} />)}
+            </div>
           </aside>
         </div>
       </div>

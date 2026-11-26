@@ -83,3 +83,16 @@
 @media (prefers-reduced-motion: reduce) {
   .banner, .banner-ic, .banner-shine, .banner-rays, .banner-body li, .news-paper, .event-dialog, .stat-fly, .stat.up b, .stat.down b, .mb-dot, .alert.warn { animation: none !important; }
 }
+
+/* UI2: rozpis hodnoty horní lišty (jako v HOI4) */
+.stat-tip { position: fixed; z-index: 60; width: 370px; display: flex; flex-direction: column; gap: 5px; padding: 10px 13px 11px; color: var(--text); background: rgba(8, 12, 17, 0.97); box-shadow: inset 0 0 0 1px var(--rule-hi), 0 10px 28px rgba(0, 0, 0, 0.65); pointer-events: none; text-align: left; }
+.stat-tip .st-title { font: 600 16px/1.1 var(--display); color: var(--brass-hi); }
+.stat-tip .st-now { font-size: 12.5px; color: var(--text-2); }
+.stat-tip .st-sub { margin-top: 3px; font: 600 12.5px/1 var(--display); color: var(--brass-hi); }
+.stat-tip dl { display: flex; flex-direction: column; gap: 1px; margin: 0; }
+.stat-tip dl > div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.35; }
+.stat-tip dt { color: var(--text-2); }
+.stat-tip dd { margin: 0; font-weight: 600; color: var(--paper); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat-tip dd.up { color: #9fd07e; }
+.stat-tip dd.down { color: #ff8b73; }
+.stat-tip p { margin: 4px 0 0; padding-top: 6px; border-top: 1px solid var(--rule); font-size: 12.5px; line-height: 1.4; color: var(--text-2); }

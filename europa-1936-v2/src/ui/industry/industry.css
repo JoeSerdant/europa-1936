@@ -120,30 +120,61 @@ li.on > .pol-opt { opacity: 1; box-shadow: inset 3px 0 0 var(--brass), inset 0 0
 .focus-wrap .focus-scroll { flex: 1; min-height: 0; cursor: grab; }
 .focus-wrap .focus-scroll.dragging { cursor: grabbing; user-select: none; }
 .focus-zoom { position: relative; }
-.focus-tree.far .tech-fx, .focus-tree.far .fc-ex { display: none; }
-.focus-tree.far .focus-card header b { font-size: 22px; }
+.focus-tree.far .fn-name { font-size: 15px; }
+.focus-tree.far .fn-days { display: none; }
 .focus-zbar { position: absolute; right: 18px; top: 10px; z-index: 3; display: flex; align-items: center; gap: 4px; padding: 4px 6px; background: rgba(10, 17, 24, 0.94); box-shadow: inset 0 0 0 1px var(--rule-hi), 0 6px 18px rgba(0, 0, 0, 0.5); }
 .fz-v { min-width: 44px; text-align: center; font: 600 13px/1 var(--display); color: var(--brass-hi); font-variant-numeric: tabular-nums; }
+/* UI1: strom cílů jako v HOI4 – kruhová ikona a jmenovka, rovné spojnice, „!“ mezi vylučujícími se cíli */
+.focus-scroll { background: radial-gradient(ellipse at 50% 0%, rgba(40, 52, 64, 0.35), transparent 70%), #0b1118; }
 .focus-links { position: absolute; left: 0; top: 0; pointer-events: none; }
-.focus-links path { fill: none; stroke: var(--rule-hi); stroke-width: 1.5; }
+.focus-links path { fill: none; stroke: #4d6276; stroke-width: 2; }
 .focus-links path.done { stroke: var(--brass); }
-.focus-links path.any { stroke-dasharray: 4 3; }
-.focus-card { position: absolute; display: flex; flex-direction: column; gap: 3px; min-width: 0; overflow: hidden; padding: 6px 8px; background: #111b25; box-shadow: inset 0 0 0 1px var(--rule); }
-.focus-card header { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
-.focus-card header b { font: 600 14px/1.15 var(--display); color: var(--paper); }
-.focus-card header .muted { flex: none; font-size: 11px; }
-.focus-card .tech-fx { display: block; flex: 1; min-height: 0; overflow: hidden; font-size: 11.5px; line-height: 1.3; }
-.focus-card .tech-fx li { display: block; padding: 0; overflow: hidden; color: var(--brass-hi); white-space: nowrap; text-overflow: ellipsis; background: none; }
-.focus-card.path-alt { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 #b5653a; }
-.focus-card.path-hist { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 #6f8fae; }
-.focus-card .fc-path { margin-right: 6px; font: 600 10px/1 var(--display); font-style: normal; letter-spacing: 0.05em; color: var(--brass-hi); }
-.focus-card .fc-ex { font-size: 11px; line-height: 1.2; }
-.focus-card footer { display: flex; align-items: center; gap: 3px 8px; margin-top: auto; font-size: 12px; }
-.focus-card footer .sbtn { margin-left: auto; min-height: 24px; padding: 0 9px; font-size: 12.5px; }
-.focus-card.locked, .focus-card.excluded { opacity: 0.5; }
-.focus-card.done { opacity: 0.8; box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule); }
-.focus-card.active { box-shadow: inset 3px 0 0 var(--sel), inset 0 0 0 1px var(--rule-hi); }
-.focus-card.available { box-shadow: inset 0 0 0 1px var(--brass); }
+.focus-links path.any { stroke-dasharray: 5 4; }
+.focus-links path.side { stroke-opacity: 0.45; stroke-width: 1.4; }   /* další předpoklad (cíl leží pod jiným rodičem) */
+.focus-links .fx-excl path { stroke: #d2483a; stroke-width: 2; stroke-dasharray: 3 3; }
+.focus-links .fx-excl circle { fill: #2a0f0c; stroke: #ff6a47; stroke-width: 1.6; }
+.focus-links .fx-excl text { fill: #ffb19e; font: 700 12px/1 var(--display); }
+.focus-card { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 0; border: 0; background: none; color: var(--text); text-align: center; cursor: default; }
+button.focus-card { cursor: pointer; }
+.fn-icon { position: relative; display: grid; place-items: center; border-radius: 50%; color: #8796a6; background: radial-gradient(circle at 35% 30%, #2b3a49, #121a23 70%); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55); }
+.fn-icon > .fn-svg { position: absolute; inset: 0; }
+.fn-ring { fill: none; stroke: #3b4b5b; stroke-width: 3; }
+.fn-prog { fill: none; stroke: var(--brass-hi); stroke-width: 3.5; stroke-linecap: round; }
+.fn-path { position: absolute; right: -4px; top: -3px; width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center; font: 700 9px/1 var(--display); font-style: normal; color: #0b1118; background: #6f8fae; }
+.fn-path.alt { background: #d08a55; }
+.fn-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; width: 100%; min-height: 30px; padding: 3px 6px; font: 600 12px/1.2 var(--display); color: var(--text-2); background: linear-gradient(#18222d, #111922); box-shadow: inset 0 0 0 1px #2c3a48; border-radius: 3px; }
+.fn-days { font-size: 10.5px; color: var(--text-3, #7d8a97); font-variant-numeric: tabular-nums; }
+.focus-card.available .fn-icon { color: var(--paper); background: radial-gradient(circle at 35% 30%, #3d5368, #17222d 70%); }
+.focus-card.available .fn-ring { stroke: #8fb3d4; }
+.focus-card.available .fn-name { color: var(--paper); box-shadow: inset 0 0 0 1px #5f7d99; background: linear-gradient(#22313f, #16212c); }
+button.focus-card.available:hover .fn-name, button.focus-card.available:focus-visible .fn-name { box-shadow: inset 0 0 0 2px var(--brass-hi); outline: none; }
+button.focus-card.available:hover .fn-ring { stroke: var(--brass-hi); }
+.focus-card.active .fn-icon { color: var(--brass-hi); box-shadow: 0 0 14px rgba(255, 207, 77, 0.45); }
+.focus-card.active .fn-name { color: var(--brass-hi); box-shadow: inset 0 0 0 1px var(--brass); }
+.focus-card.done .fn-icon { color: #1c1406; background: radial-gradient(circle at 35% 30%, #f0d27a, #9c7a2c 75%); }
+.focus-card.done .fn-ring { stroke: #c9a24a; }
+.focus-card.done .fn-name { color: #e8d9a8; background: linear-gradient(#3a3016, #251e0e); box-shadow: inset 0 0 0 1px #7a6328; }
+.focus-card.locked { opacity: 0.85; }
+.focus-card.locked .fn-name { color: #8a97a5; }
+.focus-card.excluded { opacity: 0.45; }
+.focus-card.excluded .fn-name { color: #c98c80; text-decoration: line-through; }
+.focus-card.dim { opacity: 0.18; }
+.focus-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 6px 14px; border-bottom: 1px solid var(--rule); }
+.ft-cats { display: flex; gap: 3px; }
+.ft-cats .icon-btn.on { color: var(--brass-hi); box-shadow: inset 0 0 0 1px var(--brass); }
+.ft-search { display: flex; align-items: center; gap: 6px; padding: 3px 8px; color: var(--text-3, #7d8a97); background: #0e151d; box-shadow: inset 0 0 0 1px var(--rule-hi); }
+.ft-search input { width: 180px; border: 0; outline: none; color: var(--paper); background: transparent; font: 13px var(--text-font, inherit); }
+.ft-cont { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-left: auto; font-size: 12px; }
+.ft-cont .sbtn { padding: 3px 7px; font-size: 11.5px; }
+.focus-info { position: absolute; left: 14px; bottom: 12px; z-index: 3; width: 330px; max-height: 60%; overflow: auto; display: flex; flex-direction: column; gap: 4px; padding: 9px 11px; background: rgba(8, 13, 19, 0.96); box-shadow: inset 0 0 0 1px var(--rule-hi), 0 8px 24px rgba(0, 0, 0, 0.6); pointer-events: none; }
+.focus-info header { display: flex; align-items: center; gap: 7px; color: var(--brass-hi); }
+.focus-info header b { flex: 1; font: 600 15px/1.15 var(--display); color: var(--paper); }
+.focus-info .tech-fx { display: block; margin: 2px 0; font-size: 12.5px; }
+.focus-info .tech-fx li { display: block; padding: 1px 0; color: #9fd07e; background: none; }
+.focus-info p { margin: 0; font-size: 12px; }
+.fi-ex { color: #ff9b86; }
+.fi-need { color: #e3b13f; }
+.fi-go { color: var(--brass-hi); font-weight: 600; }
 .event-dialog { width: 600px; max-width: calc(calc(100 * var(--uvw)) - 48px); }
 .ev-text { color: var(--text-2); font-size: 16px; line-height: 1.45; }
 .ev-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; padding: 10px 14px; text-align: left; border: 0; color: var(--text); background: var(--ink-3); box-shadow: inset 0 0 0 1px var(--rule-hi); cursor: pointer; }
@@ -433,25 +464,37 @@ button.st-row:hover { background: var(--ink-3); }
 .conf-opts .btn span { font-size: 12.5px; font-weight: 400; opacity: 0.85; }
 
 /* ------------------------------------------------------------------ doktríny (M34) */
-.doc-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; overflow-y: auto; align-content: start; }
-.doc-branch { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.doc-branch .sec-head h3 { display: flex; align-items: center; gap: 8px; }
-.doc-track { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: rgba(15, 24, 33, 0.7); box-shadow: inset 0 0 0 1px var(--rule); }
-.doc-track.excluded { opacity: 0.4; }
-.doc-track h4 { font: 600 15px/1.2 var(--display); color: var(--paper); }
-.doc-track h4 .muted { font: 400 12.5px/1.2 var(--body); }
-.doc-levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.doc-level { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); min-width: 0; }
-.doc-level header { display: flex; flex-direction: column; line-height: 1.15; }
-.doc-level header b { font: 600 13.5px/1.2 var(--display); color: var(--paper); }
-.doc-level p { font-size: 12px; flex: 1; }
-.doc-level.done { box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px var(--rule-hi); }
-.doc-level.locked { opacity: 0.6; }
+/* UI3: důstojnický sbor jako v HOI4 – záložky větví, směry ve sloupcích, stupně pod sebou se spojnicí */
+.doc-tabs { display: flex; gap: 4px; padding: 8px 14px 0; border-bottom: 1px solid var(--rule); }
+.doc-tabs button { display: flex; align-items: center; gap: 7px; padding: 8px 16px; border: 0; font: 600 14px/1 var(--display); color: var(--text-2); background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+.doc-tabs button i { font: 400 12px/1 var(--body); font-style: normal; color: var(--text-3); }
+.doc-tabs button.on { color: var(--brass-hi); background: linear-gradient(#26313b, #151d25); box-shadow: inset 0 0 0 1px var(--brass), inset 0 -2px 0 var(--brass); }
+.doc-body { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.doc-hint { margin: 0; padding: 8px 12px; font-size: 13px; color: var(--brass-hi); background: rgba(60, 50, 20, 0.35); box-shadow: inset 3px 0 0 var(--brass); }
+.doc-cols { display: grid; gap: 16px; align-items: start; }
+.doc-track { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px; background: linear-gradient(rgba(24, 34, 45, 0.85), rgba(12, 18, 25, 0.85)); box-shadow: inset 0 0 0 1px var(--rule); }
+.doc-track.chosen { box-shadow: inset 0 0 0 1px var(--brass), 0 0 18px rgba(255, 207, 77, 0.12); }
+.doc-track.excluded { opacity: 0.38; }
+.dt-head { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.dt-badge { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: var(--brass-hi); background: radial-gradient(circle at 35% 30%, #34465a, #121a23 70%); box-shadow: inset 0 0 0 2px #4d6276; }
+.doc-track.chosen .dt-badge { box-shadow: inset 0 0 0 2px var(--brass); }
+.dt-head h4 { margin: 0; font: 600 17px/1.15 var(--display); color: var(--paper); }
+.dt-head p { margin: 0; font-size: 12.5px; line-height: 1.3; }
+.doc-levels { position: relative; display: flex; flex-direction: column; gap: 10px; }
+.doc-levels::before { content: ''; position: absolute; left: 21px; top: 14px; bottom: 14px; width: 2px; background: #3b4b5b; }
+.doc-level { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 9px 11px 9px 46px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+.dl-step { position: absolute; left: 10px; top: 9px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font: 700 12px/1 var(--display); color: var(--text-2); background: #18222d; box-shadow: inset 0 0 0 2px #4d6276; }
+.doc-level header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; line-height: 1.15; }
+.doc-level header b { font: 600 14.5px/1.2 var(--display); color: var(--paper); }
+.doc-level header .muted { flex: none; font-size: 11.5px; }
+.doc-level p { margin: 0; font-size: 12.5px; line-height: 1.35; }
+.doc-level.done { box-shadow: inset 0 0 0 1px var(--brass); background: rgba(60, 50, 20, 0.3); }
+.doc-level.done .dl-step { color: #1c1406; background: #d9b65a; box-shadow: none; }
+.doc-level.available .dl-step { color: var(--paper); box-shadow: inset 0 0 0 2px #8fb3d4; }
+.doc-level.locked { opacity: 0.62; }
 .doc-level footer { font-size: 12px; }
 .doc-level .sbtn { width: 100%; justify-content: center; }
-/* dřív @media (max-width: 1500px) – UI: podle šířky rozhraní po zvětšení */
-:root.uw-1500 .doc-body { grid-template-columns: 1fr; }
-:root.uw-1500 .doc-levels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+:root.uw-1500 .doc-cols { gap: 10px; }
 
 
 /* ------------------------------------------------------------------ rozhodnutí (M35) */
@@ -1052,3 +1095,22 @@ button.st-row:hover { background: var(--ink-3); }
 .occ-col { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
 .occ-col.on { color: var(--brass-hi); }
 :root.uw-1500 .occ-grid { grid-template-columns: 1fr; }
+
+/* UI4: vláda jako v HOI4 – zákony, poradci a vojenský štáb jako řady slotů; volby se otevřou pod řadou přes celou šířku */
+.politics-panel .pol-cols { grid-template-columns: 300px minmax(0, 1fr); }
+:root.uw-1500 .politics-panel .pol-cols { grid-template-columns: 240px minmax(0, 1fr); }
+.pol-row { display: grid; grid-template-columns: repeat(auto-fill, 104px); gap: 8px; align-items: start; margin-bottom: 14px; }
+.pol-row > .pol-law, .pol-row > .pol-adv { display: contents; }
+.pol-row .pol-slot:not(.adv), .pol-row .pol-slot.adv { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 104px; height: 118px; padding: 8px 4px 6px; text-align: center; background: linear-gradient(180deg, #1a2531, #10171f); box-shadow: inset 0 0 0 1px var(--rule-hi); }
+.pol-row .pol-slot.adv { padding: 0; }
+.pol-row .pol-slot-main { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; height: 100%; padding: 8px 4px 6px; text-align: center; }
+.pol-row .pol-slot-ic { width: 54px; height: 54px; flex: none; }
+.pol-row .pol-portrait { width: 44px; height: 54px; flex: none; }
+.pol-row .pol-slot-txt { align-items: center; gap: 1px; width: 100%; }
+.pol-row .pol-slot-txt i { font-size: 10px; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.pol-row .pol-slot-txt b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12.5px; line-height: 1.15; }
+.pol-row .pol-slot-txt em { display: none; }
+.pol-row .pol-slot.adv > .icon-btn { position: absolute; right: 2px; top: 2px; }
+.pol-row .pol-law.open > .pol-slot, .pol-row .pol-adv.open .pol-slot { box-shadow: inset 0 0 0 2px var(--brass); }
+.pol-row .pol-pick { grid-column: 1 / -1; margin: 0; padding: 8px; background: rgba(8, 13, 19, 0.92); box-shadow: inset 0 0 0 1px var(--brass-lo); }
+.pol-row .pol-adv.hc .pol-portrait.empty { color: var(--text-3); }
