@@ -1,10 +1,12 @@
 import { COUNTRIES_WORLD } from './world/countries.js';
 
 // Země hry (tagy odpovídají src/data/world.json): popis pro výběr země, vlajka (jednoduché geometrické vrstvy), vůdce a výchozí ideologie v lednu 1936.
-// Texty a vlajky jsou vlastní (zjednodušené; bez státních znaků a bez symbolů extremistických režimů).
+// Texty a vlajky jsou vlastní (vlajky kreslené podle skutečných, UI16; bez státních znaků a bez symbolů extremistických režimů).
 //
 // Vlajka = vrstvy v plátně 30×20: ['r', barva, x, y, w, h] obdélník, ['c', barva, cx, cy, r] kruh, ['p', barva, 'x,y x,y …'] mnohoúhelník,
-// ['s', barva, cx, cy, r] pěticípá hvězda, ['l', barva, šířka, x1, y1, x2, y2] čára.
+// ['s', barva, cx, cy, r, natočení?] pěticípá hvězda, ['l', barva, šířka, x1, y1, x2, y2] čára; UI16: ['st', [barvy], počet, x, y, w, h] pruhy,
+// ['sg', barva, x, y, w, h, řádků, sloupců, r] mřížka hvězd, ['u', x, y, w, h] Union Jack, ['sun', barva, cx, cy, r, paprsků, disk?, barva disku?] slunce,
+// ['sn', barva, cx, cy, r, cípů] hvězda s n cípy, ['so', výplň, obrys, cx, cy, r, šířka obrysu] hvězda s obrysem, ['ring', barva, cx, cy, r, šířka] prstenec, ['pa', barva, d] cesta SVG.
 
 const H3 = (a, b, c) => [['r', a, 0, 0, 30, 6.67], ['r', b, 0, 6.67, 30, 6.66], ['r', c, 0, 13.33, 30, 6.67]];
 const V3 = (a, b, c) => [['r', a, 0, 0, 10, 20], ['r', b, 10, 0, 10, 20], ['r', c, 20, 0, 10, 20]];
@@ -36,8 +38,7 @@ export const COUNTRIES = {
   ENG: {
     leader: 'Stanley Baldwin', government: 'Konstituční monarchie', ideology: 'democracy', tier: 1, diff: 1,
     blurb: 'Říše na čtyřech kontinentech, loďstvo bez soupeře a slabá pozemní armáda. Londýn se válce vyhýbá, dokud to jde.',
-    flag: [['r', '#1f3a7a', 0, 0, 30, 20], ['l', '#f2f2f2', 4, 0, 0, 30, 20], ['l', '#f2f2f2', 4, 30, 0, 0, 20], ['l', '#c8102e', 1.4, 0, 0, 30, 20], ['l', '#c8102e', 1.4, 30, 0, 0, 20],
-      ['r', '#f2f2f2', 12, 0, 6, 20], ['r', '#f2f2f2', 0, 7, 30, 6], ['r', '#c8102e', 13.2, 0, 3.6, 20], ['r', '#c8102e', 0, 8.2, 30, 3.6]],
+    flag: [['u', 0, 0, 30, 20]],
   },
   IRE: {
     leader: 'Éamon de Valera', government: 'Svobodný stát', ideology: 'democracy', tier: 3, diff: 3,
@@ -82,7 +83,7 @@ export const COUNTRIES = {
   POR: {
     leader: 'António Salazar', government: 'Nový stát', ideology: 'neutrality', tier: 3, diff: 3,
     blurb: 'Autoritářský stát se nejstarším spojenectvím v Evropě. Chudý a neutrální, s državami daleko za mořem.',
-    flag: [['r', '#0a6b2f', 0, 0, 12, 20], ['r', '#d4202a', 12, 0, 18, 20], ['c', '#f2c200', 12, 10, 4]],
+    flag: [['r', '#046a38', 0, 0, 12, 20], ['r', '#da291c', 12, 0, 18, 20], ['ring', '#ffe900', 12, 10, 3.6, 1.1], ['l', '#ffe900', 0.6, 8.4, 10, 15.6, 10], ['l', '#ffe900', 0.6, 12, 6.4, 12, 13.6]],
   },
   DEN: {
     leader: 'Thorvald Stauning', government: 'Konstituční monarchie', ideology: 'democracy', tier: 3, diff: 4,
@@ -152,8 +153,7 @@ export const COUNTRIES = {
   GRE: {
     leader: 'Jiří II.', government: 'Konstituční monarchie', ideology: 'democracy', tier: 3, diff: 3,
     blurb: 'Řecko hledá klid po letech převratů. Silné námořní tradice, nejistá armáda a dlouhé pobřeží k obraně.',
-    flag: [['r', '#0d5eaf', 0, 0, 30, 20], ['r', '#f2f2f2', 11, 2.2, 19, 2.2], ['r', '#f2f2f2', 11, 6.7, 19, 2.2], ['r', '#f2f2f2', 0, 11.1, 30, 2.2], ['r', '#f2f2f2', 0, 15.6, 30, 2.2],
-      ['r', '#0d5eaf', 0, 0, 11, 11], ['r', '#f2f2f2', 4.5, 0, 2, 11], ['r', '#f2f2f2', 0, 4.5, 11, 2]],
+    flag: [['st', ['#0d5eaf', '#f2f2f2'], 9, 0, 0, 30, 20], ['r', '#0d5eaf', 0, 0, 11.11, 11.11], ['r', '#f2f2f2', 4.44, 0, 2.22, 11.11], ['r', '#f2f2f2', 0, 4.44, 11.11, 2.22]],
   },
   ALB: {
     leader: 'Zogu I.', government: 'Království', ideology: 'neutrality', tier: 3, diff: 5,
@@ -163,7 +163,7 @@ export const COUNTRIES = {
   TUR: {
     leader: 'Mustafa Kemal Atatürk', government: 'Republika', ideology: 'neutrality', tier: 2, diff: 3,
     blurb: 'Modernizovaná republika, která drží průlivy. Neutrální, ale s pozorným pohledem na všechny sousedy.',
-    flag: [['r', '#e30a17', 0, 0, 30, 20], ['c', '#f2f2f2', 11, 10, 5.2], ['c', '#e30a17', 12.6, 10, 4.2], ['s', '#f2f2f2', 17, 10, 2.4]],
+    flag: [['r', '#e30a17', 0, 0, 30, 20], ['c', '#f2f2f2', 10.6, 10, 5], ['c', '#e30a17', 11.85, 10, 4], ['s', '#f2f2f2', 16.4, 10, 2.5, -90]],
   },
   ICE: {
     leader: 'Hermann Jónasson', government: 'Království pod dánskou korunou', ideology: 'democracy', tier: 3, diff: 5,
@@ -173,7 +173,7 @@ export const COUNTRIES = {
   SOV: {
     leader: 'Josif Stalin', government: 'Diktatura jedné strany', ideology: 'communism', tier: 1, diff: 3,
     blurb: 'Největší země světa s pětiletkami a obrovskou armádou. Čistky ji ale oslabují zevnitř.',
-    flag: [['r', '#c8102e', 0, 0, 30, 20], ['s', '#f2c200', 6, 6, 3.2]],
+    flag: [['r', '#c8102e', 0, 0, 30, 20], ['so', '#f2c200', '#e0a800', 5.6, 4.6, 2.5, 0.25]],
   },
   EGY: {
     leader: 'Farúk I.', government: 'Království', ideology: 'neutrality', tier: 3, diff: 4,
