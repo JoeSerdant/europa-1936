@@ -1,7 +1,7 @@
 import { COUNTRIES_WORLD } from './world/countries.js';
 
 // Země hry (tagy odpovídají src/data/world.json): popis pro výběr země, vlajka (jednoduché geometrické vrstvy), vůdce a výchozí ideologie v lednu 1936.
-// Texty a vlajky jsou vlastní (vlajky kreslené podle skutečných, UI16; bez státních znaků a bez symbolů extremistických režimů).
+// Texty a vlajky jsou vlastní (vlajky kreslené podle skutečných, UI16; bez státních znaků, nikdy hákový kříž – Německo má železný kříž, SSSR srp a kladivo, UI17).
 //
 // Vlajka = vrstvy v plátně 30×20: ['r', barva, x, y, w, h] obdélník, ['c', barva, cx, cy, r] kruh, ['p', barva, 'x,y x,y …'] mnohoúhelník,
 // ['s', barva, cx, cy, r, natočení?] pěticípá hvězda, ['l', barva, šířka, x1, y1, x2, y2] čára; UI16: ['st', [barvy], počet, x, y, w, h] pruhy,
@@ -28,7 +28,7 @@ export const COUNTRIES = {
   GER: {
     leader: 'Adolf Hitler', government: 'Diktatura jedné strany', ideology: 'fascism', tier: 1, diff: 3,
     blurb: 'Hospodářsky oživená, ale diplomaticky osamělá velmoc. Versailleská pouta povolují: armáda se přezbrojuje a Porýní čeká na vojáky.',
-    flag: H3('#111111', '#f2f2f2', '#c8102e'),
+    flag: [['r', '#c8241c', 0, 0, 30, 20], ['r', '#f2f2f2', 0, 8.25, 30, 3.5], ['r', '#f2f2f2', 10.85, 0, 3.5, 20], ['r', '#111111', 0, 8.95, 30, 2.1], ['r', '#111111', 11.549999999999999, 0, 2.1, 20], ['c', '#111111', 12.6, 10, 4.55], ['c', '#f2f2f2', 12.6, 10, 4.2], ['p', '#111111', '12.05,9.45 10.70,6.50 14.50,6.50 13.15,9.45 16.10,8.10 16.10,11.90 13.15,10.55 14.50,13.50 10.70,13.50 12.05,10.55 9.10,11.90 9.10,8.10'], ['p', '#f2f2f2', '12.28,9.68 11.15,7.25 14.05,7.25 12.92,9.68 15.35,8.55 15.35,11.45 12.92,10.32 14.05,12.75 11.15,12.75 12.28,10.32 9.85,11.45 9.85,8.55'], ['p', '#111111', '12.32,9.72 11.35,7.60 13.85,7.60 12.88,9.72 15.00,8.75 15.00,11.25 12.88,10.28 13.85,12.40 11.35,12.40 12.32,10.28 10.20,11.25 10.20,8.75'], ['r', '#111111', 0, 0, 9.9, 7.2], ['st', ['#111111', '#f2f2f2', '#c8241c'], 3, 0, 0, 9.6, 6.9], ['p', '#f2f2f2', '4.46,3.11 3.80,1.70 5.80,1.70 5.14,3.11 6.55,2.45 6.55,4.45 5.14,3.79 5.80,5.20 3.80,5.20 4.46,3.79 3.05,4.45 3.05,2.45'], ['p', '#111111', '4.54,3.19 4.00,2.00 5.60,2.00 5.06,3.19 6.25,2.65 6.25,4.25 5.06,3.71 5.60,4.90 4.00,4.90 4.54,3.71 3.35,4.25 3.35,2.65']],
   },
   FRA: {
     leader: 'Albert Lebrun', government: 'Třetí republika', ideology: 'democracy', tier: 1, diff: 2,
@@ -173,7 +173,7 @@ export const COUNTRIES = {
   SOV: {
     leader: 'Josif Stalin', government: 'Diktatura jedné strany', ideology: 'communism', tier: 1, diff: 3,
     blurb: 'Největší země světa s pětiletkami a obrovskou armádou. Čistky ji ale oslabují zevnitř.',
-    flag: [['r', '#c8102e', 0, 0, 30, 20], ['so', '#f2c200', '#e0a800', 5.6, 4.6, 2.5, 0.25]],
+    flag: [['r', '#c8102e', 0, 0, 30, 20], ['so', '#c8102e', '#f2c200', 4.6, 1.75, 1.0, 0.3], ['pa', '#f2c200', 'M5.07,2.67 A2.2,2.2 0 1 1 2.59,5.90 L2.53,5.16 A1.75,1.75 0 1 0 5.10,3.03 Z'], ['l', '#f2c200', 0.6, 2.49, 5.95, 1.44, 6.95], ['l', '#f2c200', 0.5, 6.35, 7.15, 3.55, 4.35], ['p', '#f2c200', '3.85,3.16 4.38,3.70 2.90,5.18 2.36,4.65']],
   },
   EGY: {
     leader: 'Farúk I.', government: 'Království', ideology: 'neutrality', tier: 3, diff: 4,
