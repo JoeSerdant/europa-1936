@@ -40,3 +40,4 @@ export { hasWar } from './army/war.js';   // S5c: rozhraní (nájezdy jen za vá
 export { RAID, RAID_KINDS } from '../data/army/raids.js';
 export { medalBlock, awardMedal, medalCap, medalsUsed, medalBonus } from './army/medals.js';   // S5d
 export { MEDALS, MEDAL_IDS, MEDAL } from '../data/army/medals.js';
+export { FORMABLES, FORMABLE_IDS } from '../data/nat/formables.js';

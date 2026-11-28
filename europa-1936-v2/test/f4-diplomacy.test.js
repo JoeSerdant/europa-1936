@@ -200,8 +200,8 @@ describe('F4: vrchní velení', () => {
       expect(opts.length).toBeGreaterThanOrEqual(3);
       for (const [, a] of opts) expect(Object.keys(a.doc).length).toBeGreaterThan(0);
     }
-    const POLX = W.ownerIdx.POL;   // P1: obecní poradci – země bez vlastních osobností
-    let s = setPol(createGame({ player: 'POL' }), POLX, { pp: 500 });
+    const POLX = W.ownerIdx.BEL;   // P1: obecní poradci – země bez vlastních osobností
+    let s = setPol(createGame({ player: 'BEL' }), POLX, { pp: 500 });
     const atk0 = docMods(s, POLX).atk, fire0 = docMods(s, POLX).fire;
     s = hireAdvisor(s, POLX, 'army', 'nac_utok');
     expect(docMods(s, POLX).atk).toBeCloseTo(atk0 + 0.05, 6);

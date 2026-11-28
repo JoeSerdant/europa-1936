@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { COUNTRIES } from '../../data/countries.js';
+import { FORMABLES } from '../../data/nat/formables.js';
 
 /** Body pěticípé hvězdy (vnitřní poloměr 0,382 – pravidelná hvězda). `rot` = natočení ve stupních (0 = cípem nahoru). */
 export function starPoints(cx, cy, r, rot = 0) {
@@ -46,10 +47,10 @@ function UnionJack({ x, y, w, h, id }) {
  * Vrstvy: r obdélník, c kruh, p mnohoúhelník, s hvězda, l čára, st pruhy, sg mřížka hvězd, u Union Jack, sun slunce s paprsky,
  * so hvězda s obrysem, pa cesta SVG, ring prstenec.
  */
-export function Flag({ tag, width = 36, className = '', title }) {
+export function Flag({ tag, width = 36, className = '', title, form = '' }) {
   const uid = useId().replace(/:/g, '');
   const d = COUNTRIES[tag];
-  const layers = d ? d.flag : [['r', '#555', 0, 0, 30, 20]];
+  const layers = form && FORMABLES[form] ? FORMABLES[form].flag : d ? d.flag : [['r', '#555', 0, 0, 30, 20]];   // P3: vlajka vyhlášeného národa
   const body = layers.map((l, i) => {
     switch (l[0]) {
       case 'r': return <rect key={i} fill={l[1]} x={l[2]} y={l[3]} width={l[4]} height={l[5]} />;

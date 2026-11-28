@@ -1,6 +1,7 @@
 // Provedení účinků cílů a událostí (M22): čistá funkce `(state, o, fx[]) → state`, mění politiku, průmysl, výzkum, armádu a příznaky země.
 import { shiftMech } from './mech.js';
 import { getWorld } from '../world.js';
+import { FORMABLES } from '../../data/nat/formables.js';
 import { LAWS, ADVISORS } from '../../data/politics/index.js';
 import { TECHS } from '../../data/research/index.js';
 import { IND_NATIONAL } from '../../data/industry/index.js';
@@ -136,6 +137,7 @@ function applyOne(state, o, e) {
     case 'spirit': return addSpirit(state, o, e.id, e.days || 0);   // M74: národní duch (days = trvání, bez něj trvale)
     case 'unspirit': return removeSpirit(state, o, e.id);
     case 'mech': return shiftMech(state, e.id, e.v);   // S4: posun ukazatele národní mechaniky
+    case 'form': return FORMABLES[e.id] ? touch(state, o, (own) => ({ ...own, form: e.id })) : state;   // P3: vyhlášení formovatelného národa
     case 'flag': return touch(state, o, (own) => ({ ...own, flags: { ...own.flags, [e.id]: 1 } }));
     case 'event': return touch(state, o, (own) => ({ ...own, sched: [...own.sched, { id: e.id, at: state.tick + e.days * 24 }] }));
     default: return state;

@@ -6,6 +6,7 @@ import { MORE_TREES, WORLD_TREES, EXTRA } from './focuses_more.js';
 import { WORLD_BIG } from './focuses_world.js';
 import { pathRows } from './focuses_paths.js';
 import { moreRows } from './focuses_more2.js';
+import { moreRows3, altDeepRows } from './focuses_more3.js';
 import { BIG_TREES, GROW, DEFAULT_BIG, grow } from './focuses_big.js';
 import { XL_GROW, XL_SMALL } from './focuses_xl.js';
 import { ALT_GROW, MOD_GROW } from './focuses_alt.js';
@@ -104,6 +105,7 @@ for (const tag in MOD_GROW) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], MOD_GROW[t
 for (const tag in FOCUS_TREES) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], pathRows(tag));   // W5: doktrína, průmysl, zahraniční politika, podpůrné služby
 FOCUS_TREES.DEFAULT = grow(DEFAULT_BIG, pathRows('DEF'));
 for (const tag in FOCUS_TREES) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], moreRows(tag === 'DEFAULT' ? 'DEF' : tag));   // P2: šest dalších větví pro všechny
+for (const tag in FOCUS_TREES) FOCUS_TREES[tag] = grow(FOCUS_TREES[tag], [...moreRows3(tag === 'DEFAULT' ? 'DEF' : tag), ...altDeepRows(FOCUS_TREES[tag])]);   // P3: pět větví a prohloubení alternativních cest
 
 /** Vyhledání cíle podle id (unikátní napříč stromy). */
 export const FOCUS_BY_ID = {};

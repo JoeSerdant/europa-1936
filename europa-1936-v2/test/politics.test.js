@@ -126,30 +126,31 @@ describe('zákony', () => {
   });
 });
 
-describe('poradci', () => {   // obecní poradci (Polsko nemá vlastní osobnosti); osobnosti a vůdce v P1 níže
-  const s0 = set(createGame({ player: 'POL' }), POL_, { pp: 500 });
+describe('poradci', () => {
+  const BEL_ = idx('BEL');   // obecní poradci (Belgie nemá vlastní osobnosti); osobnosti a vůdce v P1 níže
+  const s0 = set(createGame({ player: 'BEL' }), BEL_, { pp: 500 });
   it('najmutí, přepsání a propuštění; špatný slot nebo málo moci nic nezmění', () => {
-    const a = hireAdvisor(s0, POL_, 'sci', 'akademik');
-    expect(a.pol.own[POL_].adv.sci).toBe('akademik');
-    expect(a.pol.own[POL_].pp).toBe(500 - ADVISORS.akademik.pp);
-    expect(hireAdvisor(a, POL_, 'sci', 'akademik')).toBe(a);
-    expect(hireAdvisor(s0, POL_, 'pol', 'akademik')).toBe(s0);
-    expect(hireAdvisor(s0, POL_, 'xxx', 'akademik')).toBe(s0);
-    expect(hireAdvisor(s0, POL_, 'sci', 'nikdo')).toBe(s0);
-    expect(hireAdvisor(set(s0, POL_, { pp: 5 }), POL_, 'sci', 'akademik').pol.own[POL_].adv.sci).toBe(0);
-    const b = hireAdvisor(a, POL_, 'sci', 'organizator');
-    expect(b.pol.own[POL_].adv.sci).toBe('organizator');
-    expect(fireAdvisor(b, POL_, 'sci').pol.own[POL_].adv.sci).toBe(0);
-    expect(fireAdvisor(s0, POL_, 'sci')).toBe(s0);
+    const a = hireAdvisor(s0, BEL_, 'sci', 'akademik');
+    expect(a.pol.own[BEL_].adv.sci).toBe('akademik');
+    expect(a.pol.own[BEL_].pp).toBe(500 - ADVISORS.akademik.pp);
+    expect(hireAdvisor(a, BEL_, 'sci', 'akademik')).toBe(a);
+    expect(hireAdvisor(s0, BEL_, 'pol', 'akademik')).toBe(s0);
+    expect(hireAdvisor(s0, BEL_, 'xxx', 'akademik')).toBe(s0);
+    expect(hireAdvisor(s0, BEL_, 'sci', 'nikdo')).toBe(s0);
+    expect(hireAdvisor(set(s0, BEL_, { pp: 5 }), BEL_, 'sci', 'akademik').pol.own[BEL_].adv.sci).toBe(0);
+    const b = hireAdvisor(a, BEL_, 'sci', 'organizator');
+    expect(b.pol.own[BEL_].adv.sci).toBe('organizator');
+    expect(fireAdvisor(b, BEL_, 'sci').pol.own[BEL_].adv.sci).toBe(0);
+    expect(fireAdvisor(s0, BEL_, 'sci')).toBe(s0);
   });
   it('poradci dávají bonusy: výzkum, výroba, stabilita', () => {
-    const a = hireAdvisor(hireAdvisor(s0, POL_, 'sci', 'akademik'), POL_, 'ind', 'koncern');
-    expect(researchOf(a, 'POL').speed).toBeCloseTo(researchOf(s0, 'POL').speed * 1.1, 9);
-    expect(polModsOf(a, POL_).prod).toBeCloseTo(polModsOf(s0, POL_).prod + 0.05, 9);   // nad bonus národních duchů (M74)
-    const d = hireAdvisor(s0, POL_, 'pol', 'diplomat');
-    expect(politicsOf(d, 'POL').target.stab).toBeCloseTo(politicsOf(s0, 'POL').target.stab + 0.04, 9);
-    const t = startResearch(a, POL_, 0, 'pusky2');
-    expect(researchOf(t, 'POL').slots[0].eta).toBeLessThan(researchOf(startResearch(s0, POL_, 0, 'pusky2'), 'POL').slots[0].eta);
+    const a = hireAdvisor(hireAdvisor(s0, BEL_, 'sci', 'akademik'), BEL_, 'ind', 'koncern');
+    expect(researchOf(a, 'BEL').speed).toBeCloseTo(researchOf(s0, 'BEL').speed * 1.1, 9);
+    expect(polModsOf(a, BEL_).prod).toBeCloseTo(polModsOf(s0, BEL_).prod + 0.05, 9);   // nad bonus národních duchů (M74)
+    const d = hireAdvisor(s0, BEL_, 'pol', 'diplomat');
+    expect(politicsOf(d, 'BEL').target.stab).toBeCloseTo(politicsOf(s0, 'BEL').target.stab + 0.04, 9);
+    const t = startResearch(a, BEL_, 0, 'pusky2');
+    expect(researchOf(t, 'BEL').slots[0].eta).toBeLessThan(researchOf(startResearch(s0, BEL_, 0, 'pusky2'), 'BEL').slots[0].eta);
   });
 });
 

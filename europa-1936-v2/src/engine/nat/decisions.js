@@ -30,6 +30,8 @@ export function decisionBlock(state, o, id) {
     if (!state.nat.own[o].done[id]) return `Vyžaduje národní cíl „${FOCUS_BY_ID[id] ? FOCUS_BY_ID[id].n : id}“.`;
   }
   if (c.atWar && !c.atWar.some((t) => w.ownerIdx[t] && atWar(state.mil, o, w.ownerIdx[t]))) return `Jen ve válce se zemí ${c.atWar.map((t) => w.owners[w.ownerIdx[t]]?.name || t).join(' nebo ')}.`;
+  if (c.ownsCaps) for (const t of c.ownsCaps) { const k = w.ownerIdx[t]; if (!k || k === o) continue; const cap = w.owners[k].cap, sid = w.provState[cap]; if (state.stateOwner[sid] !== o) return `Vyžaduje hlavní město země ${w.owners[k].name}.`; }   // P3: formovatelné národy
+  if (state.nat.own[o].form && c.ownsCaps) return 'Národ už je vyhlášen.';
   if (c.owns) for (const n of c.owns) { const sid = w.states.findIndex((x) => x && x.n === n); if (sid < 1 || state.stateOwner[sid] !== o) return `Vyžaduje stát ${n}.`; }
   if (c.faction && !state.dip.fac[o]) return 'Jen pro člena bloku.';
   const war = hasWar(state.mil, o);

@@ -78,6 +78,46 @@ const P = {
     ['sci', 'Jošio Nišina', 'fyzik', 120], ['army', 'Kandži Išiwara', 'plan', 120], ['army', 'Tomojuki Jamašita', 'utok', 150, { focus: 'jap_army' }],
     ['navy', 'Isoroku Jamamoto', 'palba', 150, { focus: 'jap_navy' }], ['navy', 'Osami Nagano', 'konvoje', 120], ['air', 'Minoru Genda', 'podpora', 150],
   ],
+  POL: [
+    ['pol', 'Józef Beck', 'smirce', 120], ['ind', 'Eugeniusz Kwiatkowski', 'planovac', 120], ['sci', 'Stefan Banach', 'akademik', 120],
+    ['army', 'Wacław Stachiewicz', 'plan', 120], ['army', 'Tadeusz Kutrzeba', 'obrana', 120],
+  ],
+  CZE: [
+    ['pol', 'Kamil Krofta', 'smirce', 120], ['pol', 'Milan Hodža', 'reformista', 120, { ideo: 'democracy' }], ['ind', 'Jan Antonín Baťa', 'magnat', 120],
+    ['sci', 'Jaroslav Heyrovský', 'fyzik', 120], ['army', 'Ludvík Krejčí', 'obrana', 120], ['army', 'Sergej Ingr', 'plan', 120],
+  ],
+  SPR: [
+    ['pol', 'Juan Negrín', 'reformista', 120, { ideo: 'democracy' }], ['pol', 'José Calvo Sotelo', 'demagog', 120], ['ind', 'Juan March', 'magnat', 120],
+    ['sci', 'Juan de la Cierva', 'konstrukter', 120], ['army', 'Vicente Rojo', 'plan', 120],
+  ],
+  TUR: [
+    ['pol', 'İsmet İnönü', 'aparatcik', 120], ['pol', 'Tevfik Rüştü Aras', 'smirce', 120], ['ind', 'Celal Bayar', 'planovac', 120], ['army', 'Fevzi Çakmak', 'obrana', 120],
+  ],
+  ROM: [
+    ['pol', 'Nicolae Titulescu', 'smirce', 120], ['ind', 'Nicolae Malaxa', 'magnat', 120], ['sci', 'Henri Coandă', 'konstrukter', 120], ['army', 'Ion Antonescu', 'utok', 120],
+  ],
+  HUN: [
+    ['pol', 'Pál Teleki', 'smirce', 120], ['pol', 'Kálmán Darányi', 'aparatcik', 120], ['ind', 'Ferenc Chorin', 'magnat', 120],
+    ['sci', 'Albert Szent-Györgyi', 'akademik', 120], ['army', 'Henrik Werth', 'plan', 120],
+  ],
+  YUG: [
+    ['pol', 'Milan Stojadinović', 'aparatcik', 120], ['sci', 'Milutin Milanković', 'akademik', 120], ['army', 'Dušan Simović', 'obrana', 120],
+  ],
+  CHI: [
+    ['pol', 'Wang Čchung-chuej', 'smirce', 120], ['ind', 'Sung C’-wen', 'planovac', 120], ['army', 'Paj Čchung-si', 'plan', 120], ['army', 'Čchen Čcheng', 'obrana', 120],
+  ],
+  SWE: [
+    ['pol', 'Rickard Sandler', 'smirce', 120], ['ind', 'Marcus Wallenberg', 'magnat', 120], ['sci', 'The Svedberg', 'akademik', 120], ['army', 'Olof Thörnell', 'obrana', 120],
+  ],
+  FIN: [
+    ['pol', 'Rudolf Holsti', 'smirce', 120], ['ind', 'Risto Ryti', 'planovac', 120], ['sci', 'Artturi Ilmari Virtanen', 'akademik', 120], ['army', 'Erik Heinrichs', 'obrana', 120],
+  ],
+  CAN: [
+    ['pol', 'Oscar D. Skelton', 'smirce', 120], ['ind', 'C. D. Howe', 'stavitel', 120], ['sci', 'Frederick Banting', 'akademik', 120], ['army', 'Andrew McNaughton', 'plan', 120],
+  ],
+  BRA: [
+    ['pol', 'Oswaldo Aranha', 'smirce', 120], ['ind', 'Guilherme Guinle', 'tezar', 120], ['army', 'Pedro de Góis Monteiro', 'plan', 120],
+  ],
 };
 
 const slug = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]+/g, '_').replace(/^_|_$/g, '');
@@ -105,4 +145,15 @@ export const LEADER_TRAITS = {
   CZE: { n: 'Demokratická tradice', mod: { stab: 0.03 } },
   SPR: { n: 'Rozdělená republika', mod: { stab: -0.03 } },
   TUR: { n: 'Otec národa', mod: { stab: 0.04 } },
+  ROM: { n: 'Králova kamarila', mod: { stab: -0.02, prod: 0.02 } },
+  HUN: { n: 'Regent bez krále', mod: { stab: 0.02 } },
+  YUG: { n: 'Regentská rada', mod: { stab: -0.02 } },
+  SWE: { n: 'Lidový domov', mod: { stab: 0.03, cons: 0.01 } },
+  FIN: { n: 'Rolnický prezident', mod: { ws: 0.03 } },
+  CAN: { n: 'Opatrný premiér', mod: { stab: 0.03 } },
+  AST: { n: 'Věrnost koruně', mod: { ws: 0.02 } },
+  BRA: { n: 'Nový stát', mod: { build: 0.03 } },
+  ARG: { n: 'Neblahé desetiletí', mod: { stab: -0.02, extract: 0.03 } },
+  RAJ: { n: 'Místokrál', mod: { man: 0.03 } },
+  MEX: { n: 'Znárodnění ropy', mod: { extract: 0.04 } },
 };
