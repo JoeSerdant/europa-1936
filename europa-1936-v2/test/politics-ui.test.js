@@ -29,12 +29,12 @@ describe('akce politiky', () => {
     expect(ui().toast.text).toMatch(/podporu války/);
   });
   it('poradce: najmutí, nedostatek moci, propuštění', () => {
-    expect(A.hireAdv('sci', 'akademik')).toBe(false);
+    expect(A.hireAdv('sci', 'ger_werner_heisenberg')).toBe(false);
     expect(ui().toast.text).toMatch(/Chybí/);
     pay(300);
-    expect(A.hireAdv('sci', 'akademik')).toBe(true);
-    expect(politicsOf(game(), 'GER').advisors.find((a) => a.slot === 'sci').current.id).toBe('akademik');
-    expect(A.hireAdv('pol', 'akademik')).toBe(false);
+    expect(A.hireAdv('sci', 'ger_werner_heisenberg')).toBe(true);
+    expect(politicsOf(game(), 'GER').advisors.find((a) => a.slot === 'sci').current.id).toBe('ger_werner_heisenberg');
+    expect(A.hireAdv('pol', 'ger_werner_heisenberg')).toBe(false);
     expect(A.dismissAdv('sci')).toBe(true);
     expect(A.dismissAdv('sci')).toBe(false);
     expect(A.hireAdv('sci', 'nikdo')).toBe(false);
@@ -44,7 +44,7 @@ describe('akce politiky', () => {
     expect(ui().panel).toBe('politics');
     A.goMenu(); A.startGame(null);
     expect(A.changeLaw('eco', 'early')).toBe(false);
-    expect(A.hireAdv('sci', 'akademik')).toBe(false);
+    expect(A.hireAdv('sci', 'ger_werner_heisenberg')).toBe(false);
     expect(A.dismissAdv('sci')).toBe(false);
   });
 });

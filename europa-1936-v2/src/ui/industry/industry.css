@@ -1201,3 +1201,7 @@ button.st-row:hover { background: var(--ink-3); }
 .lc-spirits li.mixed { box-shadow: inset 0 0 0 2px var(--brass); }
 .prod-screen.politics-panel .leader-card { display: flex; flex-direction: column; align-items: stretch; }   /* UI14: portrét s cílem nahoře, pod ním vůdce, strany a duchové */
 .prod-screen.politics-panel .leader-card .lc-top .lc-portrait { grid-row: auto; }
+
+/* P1: osobnost poradce – portrét a vlastnost na dlaždici */
+.po-person { display: flex; align-items: center; gap: 6px; }
+.po-trait { padding: 1px 6px; font-style: normal; font-size: 11px; color: #cfe3b8; background: rgba(60, 90, 40, 0.45); box-shadow: inset 0 0 0 1px #4d6b33; }

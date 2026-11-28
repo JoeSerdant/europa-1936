@@ -10,6 +10,7 @@ import { partiesDay, ideologyOf, startIdeology } from './parties.js';
 import { POL_IDEO } from '../../data/politics/national.js';
 import { electionsDay } from './elections.js';
 import { personaOf } from '../ai/persona.js';
+import { advOptions, advBlock } from './advisors.js';
 import { rand01 } from '../nat/core.js';
 import { ADV_SLOTS } from '../../data/politics/advisors.js';
 
@@ -44,10 +45,11 @@ function aiMove(state, o, own) {
   }
   for (const slot of ADV_SLOT_IDS) {
     if (own.adv[slot]) continue;
-    let opts = ADVISOR_IDS.filter((id) => ADVISORS[id].slot === slot).sort((a, b) => ADVISORS[a].pp - ADVISORS[b].pp || (a < b ? -1 : 1));
+    let opts = advOptions(state, o, slot).filter((id) => !advBlock(state, o, id)).sort((a, b) => ADVISORS[a].pp - ADVISORS[b].pp || (a < b ? -1 : 1));
     if (ADV_SLOTS[slot].hc && opts.length) {   // F4: náčelníka generálního štábu volí AI podle stylu velení, ostatní náčelníky podle země
       const want = slot === 'army' ? personaOf(state, o).hc : null;
-      opts = [want && ADVISORS[want] ? want : opts[Math.floor(rand01(0, o, `nacelnik:${slot}`) * opts.length)]];
+      const wt = want && ADVISORS[want] && ADVISORS[want].trait, pick = want && (opts.includes(want) ? want : opts.find((x) => ADVISORS[x].trait === wt));
+      opts = [pick || opts[Math.floor(rand01(0, o, `nacelnik:${slot}`) * opts.length)]];
     }
     if (opts.length && own.pp >= ADVISORS[opts[0]].pp + 50) return { ...own, pp: own.pp - ADVISORS[opts[0]].pp, adv: { ...own.adv, [slot]: opts[0] } };
   }

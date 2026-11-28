@@ -5,6 +5,7 @@ import { tallyOwners } from '../industry/core.js';
 import { POL } from './constants.js';
 import { polModsOf, lawBlock, stabMult, outMult, manMult, consOf } from './core.js';
 import { targetsOf } from './day.js';
+import { advOptions, advBlock } from './advisors.js';
 import { rivalOf, supportBlock, ideologyOf } from './parties.js';
 import { IDEO_ORDER } from '../../data/politics/ideology.js';
 
@@ -35,7 +36,7 @@ export function politicsOf(state, o) {
     })),
     advisors: ADV_SLOT_IDS.map((slot) => ({
       slot, n: ADV_SLOTS[slot].n, current: own.adv[slot] ? { id: own.adv[slot], ...ADVISORS[own.adv[slot]] } : null,
-      options: ADVISOR_IDS.filter((id) => ADVISORS[id].slot === slot).map((id) => ({ id, ...ADVISORS[id], active: own.adv[slot] === id, block: own.pp < ADVISORS[id].pp && own.adv[slot] !== id ? `Chybí politická moc (${Math.ceil(ADVISORS[id].pp - own.pp)}).` : null })),
+      options: advOptions(state, o, slot).map((id) => ({ id, ...ADVISORS[id], active: own.adv[slot] === id, block: own.adv[slot] === id ? null : advBlock(state, o, id) || (own.pp < ADVISORS[id].pp ? `Chybí politická moc (${Math.ceil(ADVISORS[id].pp - own.pp)}).` : null) })),
     })),
   };
 }
