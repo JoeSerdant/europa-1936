@@ -1,5 +1,6 @@
 // Politika (M21): stabilita, podpora války, politická moc, zákony, poradci, dopady na průmysl, výzkum a lidskou sílu, AI-lite, čistota a determinismus.
 import { describe, it, expect } from 'vitest';
+import { advBlock, leaderTraitOf, FOCUS_BY_ID } from '../src/engine/index.js';
 import {
   createGame, getWorld, advance, advanceHour, declareWar, setLaw, hireAdvisor, fireAdvisor, politicsOf, polModsOf, consOf, outMult, manMult, stabMult, lawBlock,
   industryOf, researchOf, startResearch, POL, LAWS, LAW_CATS, ADVISORS, ADV_SLOT_IDS, GAME_VERSION,
@@ -126,29 +127,54 @@ describe('zákony', () => {
 });
 
 describe('poradci', () => {
-  const s0 = set(createGame({ player: 'GER' }), GER, { pp: 500 });
+  const BEL_ = idx('BEL');   // obecní poradci (Belgie nemá vlastní osobnosti); osobnosti a vůdce v P1 níže
+  const s0 = set(createGame({ player: 'BEL' }), BEL_, { pp: 500 });
   it('najmutí, přepsání a propuštění; špatný slot nebo málo moci nic nezmění', () => {
-    const a = hireAdvisor(s0, GER, 'sci', 'akademik');
-    expect(a.pol.own[GER].adv.sci).toBe('akademik');
-    expect(a.pol.own[GER].pp).toBe(500 - ADVISORS.akademik.pp);
-    expect(hireAdvisor(a, GER, 'sci', 'akademik')).toBe(a);
-    expect(hireAdvisor(s0, GER, 'pol', 'akademik')).toBe(s0);
-    expect(hireAdvisor(s0, GER, 'xxx', 'akademik')).toBe(s0);
-    expect(hireAdvisor(s0, GER, 'sci', 'nikdo')).toBe(s0);
-    expect(hireAdvisor(set(s0, GER, { pp: 5 }), GER, 'sci', 'akademik').pol.own[GER].adv.sci).toBe(0);
-    const b = hireAdvisor(a, GER, 'sci', 'organizator');
-    expect(b.pol.own[GER].adv.sci).toBe('organizator');
-    expect(fireAdvisor(b, GER, 'sci').pol.own[GER].adv.sci).toBe(0);
-    expect(fireAdvisor(s0, GER, 'sci')).toBe(s0);
+    const a = hireAdvisor(s0, BEL_, 'sci', 'akademik');
+    expect(a.pol.own[BEL_].adv.sci).toBe('akademik');
+    expect(a.pol.own[BEL_].pp).toBe(500 - ADVISORS.akademik.pp);
+    expect(hireAdvisor(a, BEL_, 'sci', 'akademik')).toBe(a);
+    expect(hireAdvisor(s0, BEL_, 'pol', 'akademik')).toBe(s0);
+    expect(hireAdvisor(s0, BEL_, 'xxx', 'akademik')).toBe(s0);
+    expect(hireAdvisor(s0, BEL_, 'sci', 'nikdo')).toBe(s0);
+    expect(hireAdvisor(set(s0, BEL_, { pp: 5 }), BEL_, 'sci', 'akademik').pol.own[BEL_].adv.sci).toBe(0);
+    const b = hireAdvisor(a, BEL_, 'sci', 'organizator');
+    expect(b.pol.own[BEL_].adv.sci).toBe('organizator');
+    expect(fireAdvisor(b, BEL_, 'sci').pol.own[BEL_].adv.sci).toBe(0);
+    expect(fireAdvisor(s0, BEL_, 'sci')).toBe(s0);
   });
   it('poradci dávají bonusy: výzkum, výroba, stabilita', () => {
-    const a = hireAdvisor(hireAdvisor(s0, GER, 'sci', 'akademik'), GER, 'ind', 'koncern');
-    expect(researchOf(a, 'GER').speed).toBeCloseTo(researchOf(s0, 'GER').speed * 1.1, 9);
-    expect(polModsOf(a, GER).prod).toBeCloseTo(polModsOf(s0, GER).prod + 0.05, 9);   // nad bonus národních duchů (M74)
-    const d = hireAdvisor(s0, GER, 'pol', 'diplomat');
-    expect(politicsOf(d, 'GER').target.stab).toBeCloseTo(politicsOf(s0, 'GER').target.stab + 0.04, 9);
-    const t = startResearch(a, GER, 0, 'pusky2');
-    expect(researchOf(t, 'GER').slots[0].eta).toBeLessThan(researchOf(startResearch(s0, GER, 0, 'pusky2'), 'GER').slots[0].eta);
+    const a = hireAdvisor(hireAdvisor(s0, BEL_, 'sci', 'akademik'), BEL_, 'ind', 'koncern');
+    expect(researchOf(a, 'BEL').speed).toBeCloseTo(researchOf(s0, 'BEL').speed * 1.1, 9);
+    expect(polModsOf(a, BEL_).prod).toBeCloseTo(polModsOf(s0, BEL_).prod + 0.05, 9);   // nad bonus národních duchů (M74)
+    const d = hireAdvisor(s0, BEL_, 'pol', 'diplomat');
+    expect(politicsOf(d, 'BEL').target.stab).toBeCloseTo(politicsOf(s0, 'BEL').target.stab + 0.04, 9);
+    const t = startResearch(a, BEL_, 0, 'pusky2');
+    expect(researchOf(t, 'BEL').slots[0].eta).toBeLessThan(researchOf(startResearch(s0, BEL_, 0, 'pusky2'), 'BEL').slots[0].eta);
+  });
+});
+
+describe('P1: osobnosti a vlastnosti', () => {
+  const s0 = set(createGame({ player: 'GER' }), GER, { pp: 500 });
+  it('velmoc vidí jen své lidi, cizí ani obecné nenajme', () => {
+    const sci = politicsOf(s0, 'GER').advisors.find((a) => a.slot === 'sci').options;
+    expect(sci.every((x) => x.tag === 'GER')).toBe(true);
+    expect(hireAdvisor(s0, GER, 'sci', 'akademik')).toBe(s0);
+    expect(hireAdvisor(s0, GER, 'sci', 'sov_igor_kurcatov')).toBe(s0);
+    const a = hireAdvisor(s0, GER, 'sci', 'ger_werner_heisenberg');
+    expect(a.pol.own[GER].adv.sci).toBe('ger_werner_heisenberg');
+    expect(polModsOf(a, GER).research).toBeCloseTo(polModsOf(s0, GER).research + 0.08, 9);
+  });
+  it('osobnost zamčená cílem nebo ideologií', () => {
+    expect(advBlock(s0, GER, 'ger_albert_speer')).toMatch(/cíl/);
+    const done = { ...s0, nat: { ...s0.nat, own: s0.nat.own.map((x, i) => (i === GER ? { ...x, done: { ...x.done, ger_rearm: 1 } } : x)) } };
+    expect(advBlock(done, GER, 'ger_albert_speer')).toBe(null);
+    expect(advBlock(s0, FRA, 'fra_leon_blum')).toBe(null);
+  });
+  it('vlastnost vůdce platí jen pro výchozí vládu', () => {
+    expect(leaderTraitOf(s0, GER).n).toBeTruthy();
+    expect(leaderTraitOf(set(s0, GER, { gov: 'democracy' }), GER)).toBe(null);
+    for (const [id, a] of Object.entries(ADVISORS)) if (a.tag) { expect(a.mod || a.doc, id).toBeTruthy(); if (a.req && a.req.focus) expect(FOCUS_BY_ID[a.req.focus], id).toBeTruthy(); }
   });
 });
 

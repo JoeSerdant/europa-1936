@@ -3,6 +3,7 @@
 import { getWorld } from '../world.js';
 import { LAWS, ADVISORS, ADV_SLOT_IDS } from '../../data/politics/index.js';
 import { lawBlock } from './core.js';
+import { advBlock } from './advisors.js';
 
 const patch = (state, o, own) => {
   const arr = state.pol.own.slice();
@@ -23,7 +24,7 @@ export function setLaw(state, o, cat, id) {
 export function hireAdvisor(state, o, slot, id) {
   if (!valid(state, o) || !ADV_SLOT_IDS.includes(slot)) return state;
   const adv = ADVISORS[id], own = state.pol.own[o];
-  if (!adv || adv.slot !== slot || own.adv[slot] === id || own.pp < adv.pp) return state;
+  if (!adv || adv.slot !== slot || own.adv[slot] === id || own.pp < adv.pp || advBlock(state, o, id)) return state;
   return patch(state, o, { ...own, pp: own.pp - adv.pp, adv: { ...own.adv, [slot]: id } });
 }
 

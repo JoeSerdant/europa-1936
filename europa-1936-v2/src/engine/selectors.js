@@ -1,4 +1,5 @@
 // Dotazy na stav: čisté funkce (state, ...) → hodnota. Drahé souhrny se cachují podle `ownerVer` (stav je neměnný, takže stačí WeakMap).
+import { FORMABLES as FORMABLES_ } from '../data/nat/formables.js';
 import { getWorld } from './world.js';
 import { dateOfHour, formatDate, formatClock, formatWeekday } from './time.js';
 
@@ -53,3 +54,11 @@ export function allCountries() {
   const w = getWorld();
   return w.owners.map((o, i) => (o && !o.dyn ? { tag: o.tag, idx: i, name: o.name, color: o.color, capital: o.cap } : null)).filter(Boolean);
 }
+
+/** P3: jméno země ve hře – po vyhlášení formovatelného národa jeho jméno. */
+export function countryTitle(state, o) {
+  const w = getWorld(), f = state && state.nat && state.nat.own[o] && state.nat.own[o].form;
+  return f && FORMABLES_[f] ? FORMABLES_[f].n : w.owners[o].name;
+}
+/** P3: id formovatelného národa země (nebo ''). */
+export const formOf = (state, o) => (state && state.nat && state.nat.own[o] && state.nat.own[o].form) || '';

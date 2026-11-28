@@ -1,3 +1,4 @@
+import { PEOPLE } from './people.js';
 // Poradci (M21): čtyři sloty, jednorázová cena v politické moci. Obecné role, žádné skutečné osoby.
 export const ADV_SLOTS = {
   pol: { n: 'Politický poradce' },
@@ -37,4 +38,6 @@ export const ADVISORS = {
   let_podpora: { slot: 'air', n: 'Velitel podpory', pp: 120, doc: { cas: 0.12 }, info: 'Podpora pozemních bojů +12 %.' },
   let_bomby: { slot: 'air', n: 'Velitel bombardérů', pp: 120, doc: { bomb: 0.12 }, info: 'Účinek bombardování +12 %.' },
 };
+for (const [id, t] of Object.entries({ nac_utok: 'utok', nac_obrana: 'obrana', nac_tanky: 'tanky', nac_plan: 'plan', nac_zasoby: 'logistik' })) ADVISORS[id].trait = t;   // P1: obecné role mají vlastnost (AI podle ní hledá osobnost)
+Object.assign(ADVISORS, PEOPLE);   // P1: skuteční lidé s vlastnostmi (každá velmoc vlastní výběr)
 export const ADVISOR_IDS = Object.keys(ADVISORS);

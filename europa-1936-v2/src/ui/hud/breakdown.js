@@ -7,7 +7,7 @@ import { SPIRITS } from '../../data/nat/spirits.js';
 import { CONT_FOCUSES } from '../../data/nat/continuous.js';
 import { FAC_GOALS } from '../../data/dip/facgoals.js';
 import { POL } from '../../engine/politics/constants.js';
-import { polModsOf, stabMult, manMult } from '../../engine/politics/core.js';
+import { polModsOf, stabMult, manMult, leaderTraitOf } from '../../engine/politics/core.js';
 import { polBase } from '../../engine/politics/setup.js';
 import { targetsOf } from '../../engine/politics/day.js';
 import { ideologyOf, startIdeology } from '../../engine/politics/parties.js';
@@ -37,6 +37,8 @@ export function modSources(state, o, key) {
   for (const id in sp) { const S = SPIRITS[id]; if (S?.mod?.[key]) out.push({ n: S.n, v: S.mod[key], spirit: true }); }
   const cid = state.nat?.own[o]?.cont, CF = cid ? CONT_FOCUSES[cid] : null;
   if (CF?.mod?.[key]) out.push({ n: `Průběžný cíl: ${CF.n}`, v: CF.mod[key] });
+  const LT = leaderTraitOf(state, o);
+  if (LT?.mod?.[key]) out.push({ n: `Vůdce: ${LT.n}`, v: LT.mod[key] });
   const fid = state.dip?.fac[o], F = fid ? state.dip.facs[fid] : null;
   for (const g of F?.gd || []) { const G = FAC_GOALS[g]; if (G?.mod?.[key]) out.push({ n: `Cíl bloku: ${G.n}`, v: G.mod[key] }); }
   return out;

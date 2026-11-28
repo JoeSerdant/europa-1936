@@ -1,3 +1,4 @@
+import { FORMABLES } from './formables.js';
 // Popisy účinků cílů a událostí česky (pro rozhraní).
 import { MECHS } from './mechanics.js';
 import { LAWS } from '../politics/laws.js';
@@ -19,6 +20,7 @@ export function fxText(fx) {
     case 'stab': return `Stabilita ${pct(fx.v)}`;
     case 'ws': return `Podpora války ${pct(fx.v)}`;
     case 'spirit': return `Národní duch: ${SPIRITS[fx.id]?.n || fx.id}${fx.days ? ` (${fx.days} dní)` : ''}`;
+    case 'form': return `Vznik státu: ${FORMABLES[fx.id]?.n || fx.id}`;   // P3
     case 'mech': return `${MECHS[fx.id]?.g || 'Ukazatel'} (${MECHS[fx.id]?.n || fx.id}) ${fx.v > 0 ? '+' : '−'}${Math.abs(fx.v)}`;   // S4
     case 'unspirit': return `Zaniká národní duch: ${SPIRITS[fx.id]?.n || fx.id}`;
     case 'party': return `Podpora ${fx.i === 'gov' ? 'vládnoucí strany' : `strany „${IDEOLOGIES[fx.i]?.name || fx.i}“`} ${fx.v > 0 ? '+' : '−'}${Math.abs(fx.v)} b.`;

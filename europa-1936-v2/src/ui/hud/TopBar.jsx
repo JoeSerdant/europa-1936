@@ -3,7 +3,7 @@ import { gameStore, useGame, useGameSlow } from '../store.js';
 import { Flag } from '../common/Flag.jsx';
 import { Icon } from '../common/Icon.jsx';
 import { COUNTRIES } from '../../data/countries.js';
-import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension, fuelOf, SPEEDS, FOCUS_BY_ID, researchOf } from '../../engine/index.js';
+import { getWorld, countryName, countryStats, formatDate, formatClock, togglePause, setSpeed, divisionCount, manpowerOf, industryOf, transportsOf, worldTension, fuelOf, SPEEDS, FOCUS_BY_ID, researchOf, formOf, FORMABLES } from '../../engine/index.js';
 import { setHelp, setMenuOpen, openOverview, togglePanel, playerIdx } from '../actions.js';
 import { fmtInt, fmtPop, fmtSpeed } from '../format.js';
 import { uiScale } from '../scale.js';
@@ -147,6 +147,7 @@ export function TopBar() {
   const owner = useGame((s) => s.stateOwner);
   const stats = useMemo(() => (tag ? countryStats({ stateOwner: owner }, tag) : null), [tag, owner]);
   const info = tag ? COUNTRIES[tag] : null;
+  const form = useGame((s) => (s.player ? formOf(s, getWorld().ownerIdx[s.player]) : ''));   // P3
   const divisions = useGame((s) => (s.player ? divisionCount(s, s.player) : 0));
   const manpower = useGame((s) => (s.player ? manpowerOf(s, s.player) : 0));
   const stab = useGame((s) => (s.player ? Math.round(s.pol.own[getWorld().ownerIdx[s.player]].stab * 100) : 0));
@@ -171,9 +172,9 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="tb-country">
-        {tag ? <button className="tb-flag" onClick={() => togglePanel('politics')} title="Vláda (Q)" aria-label="Vláda"><Flag tag={tag} width={58} /></button> : <span className="flag-none" />}
+        {tag ? <button className="tb-flag" onClick={() => togglePanel('politics')} title="Vláda (Q)" aria-label="Vláda"><Flag tag={tag} form={form} width={58} /></button> : <span className="flag-none" />}
         <div className="tb-name">
-          <b>{tag ? countryName(tag) : 'Pozorovatel'}</b>
+          <b>{tag ? (form ? FORMABLES[form].n : countryName(tag)) : 'Pozorovatel'}</b>
           <span>{info ? `${info.leader} · ${info.government}` : 'Hra bez vlastní země'}</span>
         </div>
       </div>

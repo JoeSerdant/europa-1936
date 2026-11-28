@@ -33,6 +33,7 @@ function Picker({ options, onPick, mods, cost, activeText }) {
     <div className="pol-pick" role="group">
       {options.map((o) => (
         <button key={o.id} className={`pol-opt-tile ${o.active ? 'on' : ''}`} disabled={o.active || !!o.block} onClick={() => onPick(o.id)} aria-pressed={o.active} title={o.block || o.info}>
+          {o.tag ? <span className="po-person"><Portrait name={o.n} rank={ADV_SLOTS[o.slot]?.hc ? 'G' : 'L'} w={30} h={36} /><i className="po-trait">{o.info}</i></span> : null}
           <b>{o.n}</b>
           <span>{mods(o) || 'bez příplatků'}</span>
           <i>{o.active ? activeText : cost(o)}</i>

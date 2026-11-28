@@ -578,20 +578,20 @@ try {
   await page.locator('.pol-law').first().getByRole('button', { name: /Raná mobilizace/ }).click();
   await page.locator('.pol-adv:not(.hc)').nth(3).locator('.pol-slot-main').click();
   await page.waitForTimeout(150);
-  await page.locator('.pol-adv:not(.hc)').nth(3).getByRole('button', { name: /Akademik/ }).click();
+  await page.locator('.pol-adv:not(.hc)').nth(3).getByRole('button', { name: /Werner Heisenberg/ }).click();
   await page.waitForTimeout(250);
   const pol1 = await E(() => { const { gameStore, engine } = window.__e1936; const e = gameStore.getState().pol.own[engine.getWorld().ownerIdx.GER]; return { eco: e.laws.eco, sci: e.adv.sci, pp: e.pp }; });
-  check('zákon a poradce se zadají a zaplatí politickou mocí', pol1.eco === 'early' && pol1.sci === 'akademik' && pol1.pp < 400, `${pol1.eco}, ${pol1.sci}, zbývá ${pol1.pp}`);
+  check('zákon a poradce se zadají a zaplatí politickou mocí', pol1.eco === 'early' && pol1.sci === 'ger_werner_heisenberg' && pol1.pp < 400, `${pol1.eco}, ${pol1.sci}, zbývá ${pol1.pp}`);
   // F4: vrchní velení – tři karty náčelníků štábů, najmutí klikem na dlaždici
   check('vůdce má koláč stran a duchy jako ikony', (await page.locator('.pol-pie path').count()) >= 2 && (await page.locator('.lc-spirits li .icon').count()) >= 1);
   check('politika má tři sloty vojenského štábu (UI4)', (await page.locator('.pol-adv.hc').count()) === 3);
   await page.locator('.pol-adv.hc').first().locator('.pol-slot-main').click();
   await page.waitForTimeout(200);
   check('klik na slot štábu otevře náčelníky jako dlaždice', (await page.locator('.pol-adv.hc.open .pol-opt-tile').count()) >= 3);
-  await page.locator('.pol-adv.hc').first().getByRole('button', { name: /Teoretik obrněných sil/ }).click();
+  await page.locator('.pol-adv.hc').first().getByRole('button', { name: /Ludwig Beck/ }).click();
   await page.waitForTimeout(250);
   const hc1 = await E(() => { const { gameStore, engine } = window.__e1936; return gameStore.getState().pol.own[engine.getWorld().ownerIdx.GER].adv.army; });
-  check('náčelník generálního štábu se najme klikem na dlaždici', hc1 === 'nac_tanky', String(hc1));
+  check('náčelník generálního štábu se najme klikem na dlaždici', hc1 === 'ger_ludwig_beck', String(hc1));
   await shot('politics');
   await page.keyboard.press('p');
   await page.waitForTimeout(150);

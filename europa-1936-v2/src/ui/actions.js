@@ -9,7 +9,7 @@ import {
   justifyWar, startWar, proposePeace, createFaction, inviteToFaction, leaveFaction, setFacGoal, dropFacGoal, facGoalBlock, kickBlock, kickFromFaction, warBlock, peaceBlock, inviteBlock, justReady,
   formFleet, disbandFleet, orderFleet, stopFleet, renameFleet, setFleetMission, refitFleet, orderSail, sailBlock, navyOf, SHIPS,
   startFocus, cancelFocus, chooseEvent, FOCUS_BY_ID, setContinuous, contBlock,
-  setLaw, hireAdvisor, fireAdvisor, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
+  setLaw, hireAdvisor, fireAdvisor, advBlock, lawBlock, LAWS, ADVISORS, supportParty, supportBlock,
   startResearch, cancelResearch, researchOf, isUnlocked, TECHS,
   orderDrop, dropBlock, AIR, dropNuke, nukeBlock, confClaim, confClaimsDone,
   proposePact, answerPact, breakPact, pactBlock, breakBlock, improveRelations, improveBlock, pactOf, orderRail, railBlock,
@@ -865,6 +865,8 @@ export function backParty(ideo) {
 export function hireAdv(slot, id) {
   const s = gameStore.getState(), me = playerIdx(s);
   if (!me || !ADVISORS[id]) return false;
+  const why = advBlock(s, me, id);   // P1: cizí nebo zamčená osobnost
+  if (why) { toast(why); return false; }
   if (s.pol.own[me].pp < ADVISORS[id].pp) { toast(`Chybí politická moc (${Math.ceil(ADVISORS[id].pp - s.pol.own[me].pp)}).`); return false; }
   const ok = run(hireAdvisor, me, slot, id);
   if (ok) toast(`${ADVISORS[id].n} nastoupil do služby.`);

@@ -141,6 +141,8 @@ export class MapRenderer {
     const indChanged = indSt !== this.lastIndSt;
     this.lastIndSt = indSt;
     this.game = game;
+    const fk = game.nat ? game.nat.own.map((x) => (x && x.form) || '').join() : '';   // P3: vyhlášený národ mění jméno na mapě
+    if (fk !== this.formKey) { this.formKey = fk; if (!ownerChanged) this.countryLabels = countryLabels(this.world, game); }
     if (ownerChanged) {
       this.lastOwner = game.stateOwner;
       this.fills = fillColors(this.world, game, this.mode, this.focus);

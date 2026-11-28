@@ -1,4 +1,5 @@
 // Popisky mapy: zeměpisný střed souvislé skupiny provincií (pro názvy zemí a států). Čisté funkce nad světem.
+import { FORMABLES } from '../../data/nat/formables.js';
 
 function components(world, list) {
   const inSet = new Set(list), seen = new Set(), comps = [];
@@ -48,7 +49,8 @@ export function countryLabels(world, game) {
     const weight = (c) => c.reduce((a, p) => a + (colony(p) ? 0.1 : 1) * Math.max(1, world.area[p]), 0);
     const pick = core || raw.reduce((best, c) => (weight(c) > weight(best) ? c : best), raw[0]);
     const d = describe(world, pick);
-    out.push({ idx, tag: o.tag, name: o.name, x: d.x, y: d.y, w: d.w, h: d.h, n: list.length });
+    const fm = game && game.nat && game.nat.own[idx] && game.nat.own[idx].form;   // P3: vyhlášený národ
+    out.push({ idx, tag: o.tag, name: fm && FORMABLES[fm] ? FORMABLES[fm].n : o.name, x: d.x, y: d.y, w: d.w, h: d.h, n: list.length });
   });
   return out;
 }

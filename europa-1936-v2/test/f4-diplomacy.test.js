@@ -200,24 +200,26 @@ describe('F4: vrchní velení', () => {
       expect(opts.length).toBeGreaterThanOrEqual(3);
       for (const [, a] of opts) expect(Object.keys(a.doc).length).toBeGreaterThan(0);
     }
-    let s = setPol(createGame({ player: 'GER' }), GER, { pp: 500 });
-    const atk0 = docMods(s, GER).atk, fire0 = docMods(s, GER).fire;
-    s = hireAdvisor(s, GER, 'army', 'nac_utok');
-    expect(docMods(s, GER).atk).toBeCloseTo(atk0 + 0.05, 6);
-    expect(docMods(s, GER).land).toBe(1);
-    s = hireAdvisor(s, GER, 'navy', 'nam_palba');
-    expect(docMods(s, GER).fire).toBeCloseTo(fire0 + 0.08, 6);
-    s = hireAdvisor(s, GER, 'army', 'nac_plan');
-    expect(docMods(s, GER).planGain).toBeCloseTo(0.25, 6);
-    expect(docMods(s, GER).atk).toBeCloseTo(atk0, 6);
-    expect(hireAdvisor(s, GER, 'army', 'nam_palba')).toBe(s);   // volba z jiného slotu
+    const POLX = W.ownerIdx.BEL;   // P1: obecní poradci – země bez vlastních osobností
+    let s = setPol(createGame({ player: 'BEL' }), POLX, { pp: 500 });
+    const atk0 = docMods(s, POLX).atk, fire0 = docMods(s, POLX).fire;
+    s = hireAdvisor(s, POLX, 'army', 'nac_utok');
+    expect(docMods(s, POLX).atk).toBeCloseTo(atk0 + 0.05, 6);
+    expect(docMods(s, POLX).land).toBe(1);
+    s = hireAdvisor(s, POLX, 'navy', 'nam_palba');
+    expect(docMods(s, POLX).fire).toBeCloseTo(fire0 + 0.08, 6);
+    s = hireAdvisor(s, POLX, 'army', 'nac_plan');
+    expect(docMods(s, POLX).planGain).toBeCloseTo(0.25, 6);
+    expect(docMods(s, POLX).atk).toBeCloseTo(atk0, 6);
+    expect(hireAdvisor(s, POLX, 'army', 'nam_palba')).toBe(s);
+    expect(hireAdvisor(s, POLX, 'army', 'ger_heinz_guderian')).toBe(s);   // cizí osobnost   // volba z jiného slotu
   });
   it('AI najme náčelníka generálního štábu podle stylu velení (Německo: teoretik obrněných sil)', () => {
     let s = createGame({ player: 'FRA', aiLevel: 2 });
     for (let o = 1; o < W.owners.length; o++) if (s.pol.own[o]) s = setPol(s, o, { pp: 1500 });
     s = advance(s, 24 * 10);
-    expect(s.pol.own[GER].adv.army).toBe('nac_tanky');
-    expect(s.pol.own[SOV].adv.army).toBe('nac_utok');
+    expect(ADVISORS[s.pol.own[GER].adv.army].trait).toBe('tanky');   // P1: osobnost s vlastností podle stylu velení
+    expect(ADVISORS[s.pol.own[SOV].adv.army].tag).toBe('SOV');
     expect(s.pol.own[FRA].adv.army).toBe(0);   // hráč si vybírá sám
   });
 });

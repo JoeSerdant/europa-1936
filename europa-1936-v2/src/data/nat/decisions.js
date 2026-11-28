@@ -5,6 +5,8 @@
 //  fx     účinky ve tvaru účinků cílů a událostí (nat/effects.js)    ai   smí je používat AI
 export const DECISION_CATS = { eco: 'Hospodářství', mil: 'Armáda', war: 'Válečné operace', tech: 'Výzkum a vývoj', dip: 'Diplomacie', pol: 'Politika', nat: 'Národní' };   // W6: nové kategorie
 
+import { FORMABLES } from './formables.js';
+
 export const DECISIONS = [
   // ---- hospodářství ----
   { id: 'vyrobni_kampan', cat: 'eco', n: 'Válečná výrobní kampaň', info: 'Mimořádné směny a soutěže závodů: na čtyři měsíce roste výroba, lidé jsou ale unavení.', cost: 50, cd: 365, when: { war: true, stab: [0.35, 1] }, fx: [{ t: 'spirit', id: 'valecne_usili', days: 120 }], ai: true },
@@ -98,4 +100,7 @@ export const DECISIONS = [
   { id: 'tur_neutralita', cat: 'nat', n: 'Hlídání úžin', info: 'Úžiny zůstanou zavřené pro válčící loďstva.', cost: 30, cd: 99999, when: { tag: ['TUR'], year: 1939 }, fx: [{ t: 'stab', v: 0.05 }, { t: 'bld', k: 'radar', n: 1 }], ai: true },
   { id: 'bra_volta', cat: 'nat', n: 'Ocelárna za americký úvěr', info: 'Spojené státy financují ocelárnu (za příklon k nim).', cost: 40, cd: 99999, when: { tag: ['BRA'], year: 1940 }, fx: [{ t: 'factory', k: 'civ', n: 1 }, { t: 'factory', k: 'mil', n: 1 }, { t: 'rel', tag: 'USA', nm: 'Spojené státy', v: 30 }], ai: true },
 ];
+// P3: vyhlášení formovatelných národů (bez `ai` – AI by měnila historii)
+for (const [id, F] of Object.entries(FORMABLES)) DECISIONS.push({ id: `form_${id}`, cat: 'nat', n: `Vyhlásit: ${F.n}`, info: `Sjednocení zemí ${F.members.join(', ')} pod jednou vlajkou. Vyžaduje hlavní města všech členů.`, cost: 50, cd: 99999, when: { tag: F.members, ownsCaps: F.members }, fx: [{ t: 'form', id }, { t: 'stab', v: 0.05 }, { t: 'pp', v: 50 }] });
 export const DECISION_BY_ID = Object.fromEntries(DECISIONS.map((d) => [d.id, d]));
+

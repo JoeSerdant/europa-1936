@@ -1,6 +1,8 @@
 // Společné pomůcky politiky (M21): bonusy zákonů a poradců, dopady stability a podpory války, kontrola zákonů.
 import { facModsOf, facModsKey } from '../dip/facmods.js';
-import { LAWS, ADVISORS, ADV_SLOT_IDS } from '../../data/politics/index.js';
+import { LAWS, ADVISORS, ADV_SLOT_IDS, LEADER_TRAITS } from '../../data/politics/index.js';
+import { getWorld } from '../world.js';
+import { COUNTRIES } from '../../data/countries.js';
 import { I } from '../industry/constants.js';
 import { POL } from './constants.js';
 import { aiMult } from '../ai/core.js';
@@ -55,7 +57,21 @@ function spiritModsOf(state, o) {
 const withCont = new WeakMap();   // bonusy bez průběžného cíle → Map(id cíle → součet)
 /** Všechny bonusy země: zákony, poradci, hotové cíle, národní duchové a průběžný cíl (M85). */
 export function polModsOf(state, o) {
-  return withFac(state, o, contModsOf(state, o));
+  return withLeader(state, o, withFac(state, o, contModsOf(state, o)));
+}
+const withLeaderCache = new WeakMap();   // P1: základ → bonusy s vlastností vůdce
+/** Vlastnost vůdce (LEADER_TRAITS) platí, dokud vládne výchozí strana (`gov` nezměněn). */
+export function leaderTraitOf(state, o) {
+  const tag = getWorld().owners[o]?.tag, T = tag && LEADER_TRAITS[tag], own = state.pol?.own[o];
+  if (!T || !own || (own.gov && own.gov !== COUNTRIES[tag]?.ideology)) return null;
+  return T;
+}
+function withLeader(state, o, base) {
+  const T = leaderTraitOf(state, o);
+  if (!T) return base;
+  let m = withLeaderCache.get(base);
+  if (!m) { m = { ...base }; for (const k in T.mod) m[k] = (m[k] || 0) + T.mod[k]; withLeaderCache.set(base, m); }
+  return m;
 }
 function contModsOf(state, o) {
   const base = spiritModsOf(state, o);
